@@ -1,0 +1,14 @@
+
+# General
+.DS_Store
+.idea
+*.log
+
+# User requested: Ignore assets for now
+frontend/public/assets/*.png
+frontend/public/assets/*.webp
+
+# Dependencies (just in case)
+node_modules/
+target/
+build/
