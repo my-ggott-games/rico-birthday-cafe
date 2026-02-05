@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Pen+Script&family=Outfit:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Outfit:wght@400;700;900&display=swap');
 
 /* Globally hide the default cursor so only the custom cursor is visible */
 * {
@@ -103,4 +103,21 @@ button:active {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-pink-500);
+}
+
+@font-face {
+  font-family: "PuradakGentleGothic";
+  src: url("/fonts/PuradakGentleGothic.otf") format("opentype");
+  font-weight: 400 900;
+  font-style: normal;
+}
+
+@keyframes pinwheel-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }

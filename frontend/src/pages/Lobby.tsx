@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import RicoSlogan from '../components/game/RicoSlogan';
 
 const Lobby: React.FC = () => {
     return (
@@ -17,16 +18,19 @@ const Lobby: React.FC = () => {
             <div className="absolute bottom-0 w-full h-1/3 bg-[#f3e6d8] border-t-8 border-[#D6C0B0]" />
 
             <div className="relative z-10 w-full h-full p-10 flex flex-col">
-                <header className="flex justify-between items-center mb-10">
+                <header className="flex justify-between items-center mb-6">
                     <h2 className="text-4xl font-black text-[#4A3b32] drop-shadow-sm rotate-[-1deg]">
                         ☕ Main Hall
                     </h2>
-                    <div className="bg-white px-4 py-2 rounded-full border-2 border-[#D6C0B0] shadow-sm font-bold text-[#F43F5E]">
+                    <div className="bg-white px-6 py-2 rounded-full border-2 border-[#D6C0B0] shadow-sm font-bold text-[#F43F5E]">
                         Stamps: 0 / 5
                     </div>
                 </header>
 
-                <div className="flex-1 relative">
+                {/* Rico Slogan Component */}
+                <RicoSlogan />
+
+                <div className="flex-1 relative mt-4">
                     {/* Hotspot: TPO Cody (Paper Doll Table) */}
                     <Link to="/game/cody" className="absolute top-10 left-20 group">
                         <motion.div
@@ -82,8 +86,6 @@ const Lobby: React.FC = () => {
                         </motion.div>
                     </Link>
                 </div>
-
-                {/* Decor - Removed */}
             </div>
         </div>
     );
