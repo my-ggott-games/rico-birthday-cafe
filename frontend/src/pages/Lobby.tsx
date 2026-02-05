@@ -67,21 +67,17 @@ const Lobby: React.FC = () => {
                         </motion.div>
                     </Link>
 
-                    {/* Hotspot: Mini Game (Arcade) */}
-                    <Link to="/game/baseball" className="absolute top-20 right-20 group">
+                    {/* Hotspot: Mini Game (Puzzle) */}
+                    <Link to="/game/puzzle" className="absolute top-20 right-20 group">
                         <motion.div
                             whileHover={{ scale: 1.05 }}
                             className="flex flex-col items-center"
                         >
-                            <div className="relative w-40 h-56 bg-purple-500 rounded-t-3xl border-4 border-[#4A3b32] shadow-xl flex flex-col items-center justify-center p-4">
-                                <div className="w-full h-24 bg-black rounded-lg mb-2 border-2 border-gray-600" />
-                                <div className="flex gap-2">
-                                    <div className="w-8 h-8 rounded-full bg-red-400 shadow-inner" />
-                                    <div className="w-8 h-8 rounded-full bg-blue-400 shadow-inner" />
-                                </div>
+                            <div className="relative w-40 h-56 bg-[#a3e635] rounded-t-3xl border-4 border-[#4A3b32] shadow-xl flex flex-col items-center justify-center p-4">
+                                <div className="text-6xl drop-shadow-md">🧩</div>
                             </div>
                             <div className="mt-4 bg-white px-4 py-2 rounded-xl font-bold text-[#4A3b32] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#F43F5E] group-hover:text-white transition-colors">
-                                Mini Game
+                                Birthday Puzzle
                             </div>
                         </motion.div>
                     </Link>

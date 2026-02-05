@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import Lobby from './pages/Lobby';
 import CodyGame from './pages/CodyGame';
+import PuzzleGame from './pages/PuzzleGame';
 import { CursorManager } from './components/game/CursorManager';
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
               <p className="mt-2 text-[#F43F5E] font-bold">Coming Soon!</p>
             </div>
           } />
+          <Route path="/game/puzzle" element={<PuzzleGame />} />
         </Routes>
       </Router>
     </div>

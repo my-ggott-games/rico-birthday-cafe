@@ -230,7 +230,7 @@ const CodyGame: React.FC = () => {
                                 다시하기
                             </button>
                             <button
-                                onClick={() => alert("쨔쟌~ 리코의 생일 코디가 완성되었어요! 🎉")}
+                                onClick={() => alert("쨔쟌~ 나만의 코디가 완성되었어요! 🎉")}
                                 className="bg-[#4A3b32] text-white px-8 py-2 rounded-lg font-bold shadow-lg hover:bg-black transition-colors rotate-[-2deg]"
                             >
                                 완성하기 ✨
