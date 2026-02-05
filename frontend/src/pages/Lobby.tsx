@@ -1,41 +1,93 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const Lobby: React.FC = () => {
     return (
-        <div className="relative w-full h-screen bg-gray-900 overflow-hidden">
-            {/* Background Image Placeholder */}
-            <div className="absolute inset-0 bg-cover bg-center opacity-80" style={{ backgroundImage: 'url(/assets/cafe_interior.png)' }}>
-                {/* Overlay to dim slightly */}
-                <div className="absolute inset-0 bg-black/20"></div>
-            </div>
+        <div className="relative w-full h-screen overflow-hidden bg-[#FFFDF7]">
+            {/* Background: Cafe Interior */}
+            <div className="absolute inset-0 opacity-20 pointer-events-none"
+                style={{
+                    backgroundImage: 'radial-gradient(#F43F5E 2px, transparent 2px), radial-gradient(#F43F5E 2px, transparent 2px)',
+                    backgroundSize: '40px 40px',
+                    backgroundPosition: '0 0, 20px 20px'
+                }}
+            />
+            {/* Floor */}
+            <div className="absolute bottom-0 w-full h-1/3 bg-[#f3e6d8] border-t-8 border-[#D6C0B0]" />
 
-            <div className="relative z-10 w-full h-full">
-                {/* Hotspot: TPO Cody (Wardrobe) */}
-                <Link to="/game/cody" className="absolute top-1/4 left-1/4 group">
-                    <div className="w-32 h-64 bg-white/10 hover:bg-white/30 border-2 border-transparent hover:border-white rounded-lg transition-all flex items-center justify-center backdrop-blur-sm">
-                        <span className="text-white font-bold drop-shadow-md opacity-0 group-hover:opacity-100 transition-opacity">Wardrobe</span>
+            <div className="relative z-10 w-full h-full p-10 flex flex-col">
+                <header className="flex justify-between items-center mb-10">
+                    <h2 className="text-4xl font-black text-[#4A3b32] drop-shadow-sm rotate-[-1deg]">
+                        ☕ Main Hall
+                    </h2>
+                    <div className="bg-white px-4 py-2 rounded-full border-2 border-[#D6C0B0] shadow-sm font-bold text-[#F43F5E]">
+                        Stamps: 0 / 5
                     </div>
-                </Link>
+                </header>
 
-                {/* Hotspot: Itabag (Table) */}
-                <Link to="/game/itabag" className="absolute bottom-1/4 right-1/4 group">
-                    <div className="w-48 h-32 bg-white/10 hover:bg-white/30 border-2 border-transparent hover:border-white rounded-lg transition-all flex items-center justify-center backdrop-blur-sm">
-                        <span className="text-white font-bold drop-shadow-md opacity-0 group-hover:opacity-100 transition-opacity">Itabag Table</span>
-                    </div>
-                </Link>
+                <div className="flex-1 relative">
+                    {/* Hotspot: TPO Cody (Paper Doll Table) */}
+                    <Link to="/game/cody" className="absolute top-10 left-20 group">
+                        <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="flex flex-col items-center"
+                        >
+                            <div className="relative w-48 h-64 bg-pink-100 rounded-t-[20px] rounded-b-[20px] border-4 border-[#4A3b32] shadow-xl overflow-hidden flex items-center justify-center rotate-[-2deg] hover:rotate-0 transition-transform">
+                                {/* Paper Texture bg */}
+                                <div className="absolute inset-0 bg-white"
+                                    style={{ backgroundImage: 'radial-gradient(#eee 2px, transparent 2px)', backgroundSize: '10px 10px' }}
+                                />
+                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                                    <span className="text-4xl filter drop-shadow-sm">✂️</span>
+                                    <span className="bg-[#F43F5E] text-white px-3 py-1 font-black rotate-[-5deg] shadow-md border-2 border-white text-sm">PAPER<br />DOLL</span>
+                                </div>
+                            </div>
+                            <div className="mt-4 bg-white px-4 py-2 rounded-xl font-bold text-[#4A3b32] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#F43F5E] group-hover:text-white transition-colors">
+                                Table Play
+                            </div>
+                        </motion.div>
+                    </Link>
 
-                {/* Hotspot: Number Baseball (Poster) */}
-                <Link to="/game/baseball" className="absolute top-1/4 right-10 group">
-                    <div className="w-24 h-32 bg-white/10 hover:bg-white/30 border-2 border-transparent hover:border-white rounded-lg transition-all flex items-center justify-center backdrop-blur-sm">
-                        <span className="text-white font-bold drop-shadow-md opacity-0 group-hover:opacity-100 transition-opacity">Mini Game</span>
-                    </div>
-                </Link>
+                    {/* Hotspot: Itabag (Display Table) */}
+                    <Link to="/game/itabag" className="absolute bottom-20 right-1/3 group">
+                        <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="flex flex-col items-center"
+                        >
+                            <div className="relative w-64 h-32 bg-white rounded-xl border-4 border-[#4A3b32] shadow-xl flex items-center justify-center relative overflow-visible">
+                                {/* Tablecloth */}
+                                <div className="absolute top-0 w-full h-4 bg-red-100" />
+                                <div className="text-5xl drop-shadow-md">🎒</div>
+                                <span className="absolute -top-4 -right-4 bg-yellow-400 text-white rounded-full p-2 border-2 border-white shadow-sm font-bold text-xs rotate-12">NEW!</span>
+                            </div>
+                            <div className="mt-4 bg-white px-4 py-2 rounded-xl font-bold text-[#4A3b32] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#F43F5E] group-hover:text-white transition-colors">
+                                Decorate Itabag
+                            </div>
+                        </motion.div>
+                    </Link>
 
-                <div className="absolute top-10 left-10 text-white">
-                    <h2 className="text-2xl font-bold drop-shadow-lg">Main Lobby</h2>
-                    <p className="text-sm opacity-80">Explore the cafe!</p>
+                    {/* Hotspot: Mini Game (Arcade) */}
+                    <Link to="/game/baseball" className="absolute top-20 right-20 group">
+                        <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="flex flex-col items-center"
+                        >
+                            <div className="relative w-40 h-56 bg-purple-500 rounded-t-3xl border-4 border-[#4A3b32] shadow-xl flex flex-col items-center justify-center p-4">
+                                <div className="w-full h-24 bg-black rounded-lg mb-2 border-2 border-gray-600" />
+                                <div className="flex gap-2">
+                                    <div className="w-8 h-8 rounded-full bg-red-400 shadow-inner" />
+                                    <div className="w-8 h-8 rounded-full bg-blue-400 shadow-inner" />
+                                </div>
+                            </div>
+                            <div className="mt-4 bg-white px-4 py-2 rounded-xl font-bold text-[#4A3b32] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#F43F5E] group-hover:text-white transition-colors">
+                                Mini Game
+                            </div>
+                        </motion.div>
+                    </Link>
                 </div>
+
+                {/* Decor - Removed */}
             </div>
         </div>
     );

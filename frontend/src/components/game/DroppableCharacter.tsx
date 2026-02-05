@@ -26,7 +26,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({ equipped
             {/* Character Drop Zone - for all items */}
             <div
                 ref={setNodeRef}
-                className="absolute z-0 w-36 h-[400px] border-4 border-dashed border-pink-200 rounded-[3rem] pointer-events-auto bg-white/20 backdrop-blur-[2px]"
+                className="absolute z-0 w-36 h-[400px] pointer-events-auto"
                 style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
             />
 
@@ -37,7 +37,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({ equipped
                         <motion.div
                             layoutId={equippedIds['top']}
                             className="w-full"
-                            transition={{ duration: 0 }}
+                            transition={{ type: "spring", stiffness: 200, damping: 25 }}
                         >
                             <DraggableItem
                                 id={equippedIds['top']}
@@ -56,7 +56,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({ equipped
                         <motion.div
                             layoutId={equippedIds['bottom']}
                             className="w-full"
-                            transition={{ duration: 0 }}
+                            transition={{ type: "spring", stiffness: 200, damping: 25 }}
                         >
                             <DraggableItem
                                 id={equippedIds['bottom']}
@@ -75,7 +75,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({ equipped
                         <motion.div
                             layoutId={equippedIds['onepiece']}
                             className="w-full"
-                            transition={{ duration: 0 }}
+                            transition={{ type: "spring", stiffness: 200, damping: 25 }}
                         >
                             <DraggableItem
                                 id={equippedIds['onepiece']}

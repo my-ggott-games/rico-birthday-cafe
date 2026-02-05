@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DndContext, DragOverlay } from '@dnd-kit/core';
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { DraggableItem } from '../components/game/DraggableItem';
 import { DroppableCharacter } from '../components/game/DroppableCharacter';
@@ -14,6 +14,7 @@ const CodyGame: React.FC = () => {
         bottom: null,
         onepiece: null
     });
+    const [draggedItemSize, setDraggedItemSize] = useState<{ width: number; height: number } | null>(null);
 
     const availableItems = [
         { id: 'top-1', category: 'top', imageSrc: '/assets/cody_top_1.png' },
@@ -23,12 +24,31 @@ const CodyGame: React.FC = () => {
         { id: 'onepiece-1', category: 'onepiece', imageSrc: '/assets/cody_onepiece_1.svg' },
     ];
 
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        })
+    );
+
     const handleReset = () => {
-        setEquippedItems({ top: null, bottom: null, onepiece: null });
+        setEquippedItems({
+            top: null,
+            bottom: null,
+            onepiece: null
+        });
     };
 
     const handleDragStart = (event: DragStartEvent) => {
         setActiveId(String(event.active.id));
+
+        // Measure the dragged element to ensure overlay matches responsive size
+        const draggedElement = document.getElementById(`draggable-item-${event.active.id}`);
+        if (draggedElement) {
+            const rect = draggedElement.getBoundingClientRect();
+            setDraggedItemSize({ width: rect.width, height: rect.height });
+        }
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -37,10 +57,7 @@ const CodyGame: React.FC = () => {
 
         if (over && draggedItem) {
             const dropZoneId = over.id as string;
-
-            // Accept any item in character-zone
             if (dropZoneId === 'character-zone') {
-                // Equipping item onto character
                 setEquippedItems((prev) => {
                     const newIds = { ...prev };
                     if (draggedItem.category === 'onepiece') {
@@ -56,7 +73,7 @@ const CodyGame: React.FC = () => {
                     return newIds;
                 });
             } else {
-                // Dropped in wrong zone - unequip if it was equipped
+                // Should not happen if only drop zone is character-zone, but safe fallback
                 setEquippedItems((prev) => {
                     const newIds = { ...prev };
                     if (Object.values(newIds).includes(draggedItem.id)) {
@@ -69,27 +86,22 @@ const CodyGame: React.FC = () => {
                     return newIds;
                 });
             }
-        } else {
-            // Dropped outside all zones - unequip if it was equipped
-            if (draggedItem) {
-                setEquippedItems((prev) => {
-                    const newIds = { ...prev };
-                    if (Object.values(newIds).includes(draggedItem.id)) {
-                        Object.keys(newIds).forEach(cat => {
-                            if (newIds[cat] === draggedItem.id) {
-                                newIds[cat] = null;
-                            }
-                        });
-                    }
-                    return newIds;
-                });
-            }
+        } else if (!over && draggedItem) {
+            // Drop outside (unequip)
+            setEquippedItems((prev) => {
+                const newIds = { ...prev };
+                if (Object.values(newIds).includes(draggedItem.id)) {
+                    Object.keys(newIds).forEach(cat => {
+                        if (newIds[cat] === draggedItem.id) {
+                            newIds[cat] = null;
+                        }
+                    });
+                }
+                return newIds;
+            });
         }
 
-        // Delay clearing activeId to allow layoutId animation to start
-        setTimeout(() => {
-            setActiveId(null);
-        }, 50);
+        setTimeout(() => setActiveId(null), 50);
     };
 
     const activeItem = activeId ? availableItems.find(i => i.id === activeId) : null;
@@ -102,108 +114,150 @@ const CodyGame: React.FC = () => {
     }, {} as { [key: string]: string });
 
     return (
-        <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-            <div className="h-screen bg-gradient-to-br from-pink-100 via-purple-50 to-orange-100 flex flex-col items-center relative overflow-hidden">
-                {/* Decorative Elements */}
-                <div className="absolute top-6 left-6 text-3xl animate-bounce">✨</div>
-                <div className="absolute top-12 right-12 text-3xl animate-pulse">⭐</div>
-                <div className="absolute bottom-12 left-1/4 text-2xl animate-bounce delay-700">🌸</div>
-                <div className="absolute top-1/2 right-6 text-2xl animate-pulse delay-300">🎀</div>
+        <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+        >
+            <div className="h-screen w-full flex flex-col overflow-hidden font-sans relative select-none">
+                {/* Background: Pink Gingham Check (Tablecloth) */}
+                <div className="absolute inset-0 z-0 bg-[#FFF0F5]"
+                    style={{
+                        backgroundImage: `
+                            linear-gradient(45deg, #FFC0CB 25%, transparent 25%, transparent 75%, #FFC0CB 75%, #FFC0CB),
+                            linear-gradient(45deg, #FFC0CB 25%, transparent 25%, transparent 75%, #FFC0CB 75%, #FFC0CB)
+                         `,
+                        backgroundPosition: '0 0, 20px 20px',
+                        backgroundSize: '40px 40px',
+                        opacity: 0.3
+                    }}
+                />
 
-                <div className="w-full py-3 px-6 flex justify-between items-center bg-white/80 backdrop-blur-md border-b-2 border-pink-300 sticky top-0 z-50">
+                {/* Table Decorations - Removed as per user request */}
+
+                {/* Navbar (Simple floating buttons) */}
+                <div className="absolute top-6 left-6 z-50">
                     <button
                         onClick={() => navigate('/lobby')}
-                        className="px-4 py-1.5 bg-pink-400 text-white rounded-full font-bold shadow-md hover:bg-pink-500 transition-colors text-sm"
+                        className="bg-white/90 backdrop-blur border-2 border-[#ff9eb5] text-[#F43F5E] px-4 py-2 rounded-full font-bold shadow-md hover:scale-105 transition-transform"
                     >
-                        ← 로비로
+                        ← Exit Table
                     </button>
-                    <h1 className="text-2xl lg:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600 drop-shadow-sm">
-                        리코야 옷 입자
-                    </h1>
-                    <div className="w-20"></div>
                 </div>
 
-                <div className="flex flex-1 w-full max-w-7xl px-8 py-4 gap-6 items-stretch overflow-hidden">
-                    {/* Wardrobe Panel */}
-                    <div className="w-1/4 bg-white/90 rounded-[1.5rem] p-4 shadow-xl border-2 border-pink-200 z-10 flex flex-col overflow-hidden">
-                        <h2 className="text-xl text-pink-600 mb-4 font-black text-center border-b border-pink-100 pb-2">
-                            👗 My Closet
-                        </h2>
-                        <div className="grid grid-cols-2 gap-3 flex-1 overflow-y-auto pr-2 custom-scrollbar content-start">
-                            {availableItems.map((item) => {
-                                const isEquipped = Object.values(equippedIds).includes(item.id);
-                                const isDragging = activeId === item.id;
-                                return (
-                                    <div key={item.id} className="aspect-square flex items-center justify-center relative group">
-                                        {/* Optional subtle glow on hover */}
-                                        <div className="absolute inset-0 bg-pink-200/20 rounded-full scale-0 group-hover:scale-100 transition-transform duration-300 pointer-events-none blur-xl" />
-                                        {!isEquipped && (
-                                            <motion.div
-                                                layoutId={!isDragging ? item.id : undefined}
-                                                className="w-full h-full flex items-center justify-center p-2"
-                                                transition={{
-                                                    type: "spring",
-                                                    stiffness: 300,
-                                                    damping: 25,
-                                                    restDelta: 0.001
-                                                }}
-                                            >
-                                                <DraggableItem id={item.id} imageSrc={item.imageSrc} category={item.category} />
-                                            </motion.div>
-                                        )}
-                                    </div>
-                                );
-                            })}
+                {/* Main Workspace: Items on left, Character on mat in center/right */}
+                <div className="relative z-10 w-full h-full flex items-center justify-center p-8 gap-12">
+
+                    {/* Left: Sticker Sheet (Items) */}
+                    <div className="w-1/3 h-[80%] bg-white rounded-sm shadow-xl p-2 rotate-[-2deg] relative">
+                        {/* Tape effect */}
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-6 bg-[#ffecb3]/80 rotate-1 backdrop-blur-sm shadow-sm" />
+
+                        <div className="w-full h-full border-[3px] border-dashed border-gray-200 p-4 flex flex-col">
+                            <h3 className="text-center text-gray-400 font-bold mb-4 font-handwriting text-2xl tracking-widest uppercase">
+                                Sticker Collection
+                            </h3>
+                            <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar grid grid-cols-2 gap-4 content-start p-2">
+                                {availableItems.map((item) => {
+                                    const isEquipped = Object.values(equippedIds).includes(item.id);
+                                    const isDragging = activeId === item.id;
+                                    return (
+                                        <div key={item.id} className="relative aspect-square flex items-center justify-center">
+                                            {/* Sticker Peel Effect Background */}
+                                            <div className="absolute inset-2 bg-gray-100 rounded-lg opacity-50 border border-gray-200" />
+
+                                            {!isEquipped && (
+                                                <motion.div
+                                                    layoutId={!isDragging ? item.id : undefined}
+                                                    transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                                                    className="relative z-10 w-full h-full p-2 cursor-grab active:cursor-grabbing transition-transform"
+                                                >
+                                                    {/* White outline for sticker look */}
+                                                    <div
+                                                        id={`draggable-item-${item.id}`}
+                                                        className="w-full h-full filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.2)]"
+                                                    >
+                                                        <DraggableItem id={item.id} imageSrc={item.imageSrc} category={item.category} />
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
 
-                    {/* Character Stage */}
-                    <div className="flex-1 flex flex-col items-center justify-center gap-6 py-4">
-                        <div className="relative p-6 bg-white/40 rounded-full shadow-2xl border-4 border-white/50 backdrop-blur-sm flex items-center justify-center">
-                            <DroppableCharacter equippedItems={equippedImages} equippedIds={equippedIds} activeId={activeId} />
-                            {/* Stage Spotlight effect */}
-                            <div className="absolute inset-x-0 bottom-4 h-16 bg-white/30 blur-2xl -z-10 rounded-full" />
-                        </div>
+                    {/* Center: Character Zone */}
+                    <div className="flex-1 h-[85%] relative flex items-center justify-center">
+                        {/* Paper Doll Character */}
+                        <div className="relative z-10 filter drop-shadow-[0_5px_5px_rgba(0,0,0,0.3)]">
+                            {/* White paper border effect */}
+                            <div className="absolute inset-[-4px] bg-white rounded-[40%] blur-[1px]" style={{ clipPath: 'content-box' }} />
 
-                        <button className="w-full max-w-xs py-3 bg-gradient-to-r from-pink-400 to-purple-500 text-white rounded-xl font-black text-lg hover:scale-105 transition-all shadow-lg active:scale-95">
-                            ✨ 완성!
-                        </button>
-                    </div>
-
-                    {/* Mission Panel */}
-                    <div className="w-1/4 bg-white/90 rounded-[1.5rem] p-4 shadow-xl border-2 border-pink-200 z-10 flex flex-col justify-between overflow-hidden">
-                        <div>
-                            <h2 className="text-xl text-purple-600 mb-4 font-black text-center border-b border-purple-50 pb-2">
-                                ⭐ Mission
-                            </h2>
-                            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-4 rounded-2xl border-2 border-yellow-200 shadow-inner mb-4">
-                                <p className="text-orange-500 font-black mb-1 text-center text-xs underline decoration-orange-200 decoration-2">Today's Theme</p>
-                                <p className="text-purple-700 text-xl font-black text-center leading-tight">
-                                    "저녁 산책에<br />어울리는 옷"
-                                </p>
+                            <div className="scale-150">
+                                <DroppableCharacter equippedItems={equippedImages} equippedIds={equippedIds} activeId={activeId} />
                             </div>
                         </div>
 
-                        <div className="space-y-3">
+                        {/* Mission Post-it */}
+                        <motion.div
+                            drag
+                            dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="absolute top-10 right-10 bg-[#fff59d] w-48 p-4 shadow-md rotate-3 font-handwriting text-[#4A3b32] cursor-move"
+                        >
+                            <p className="font-bold border-b border-[#ffd54f] mb-2 pb-1 text-center text-3xl">오늘의 할 일</p>
+                            <div className="text-2xl space-y-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-red-500">✔</span>
+                                    <span>카페 방문하기</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-gray-400">□</span>
+                                    <span className="font-bold">리코 생일 축하하기</span>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Action Buttons - High Z-index to prevent overlapping */}
+                        <div className="absolute bottom-8 flex gap-4 z-50">
                             <button
                                 onClick={handleReset}
-                                className="w-full py-3 bg-white text-pink-500 border-2 border-pink-200 rounded-xl font-black text-base hover:bg-pink-50 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
+                                className="bg-white px-6 py-2 rounded-lg font-bold text-[#F43F5E] shadow-sm hover:shadow-md transition-shadow border-2 border-dashed border-[#F43F5E]"
                             >
-                                🔄 옷 리셋하기
+                                다시하기
                             </button>
-                            <div className="bg-pink-50 p-3 rounded-xl border border-pink-100 flex items-center gap-2">
-                                <span className="text-xl">🐕</span>
-                                <p className="text-pink-600 font-bold text-xs">함께하는 즐거운 산책!</p>
-                            </div>
+                            <button
+                                onClick={() => alert("쨔쟌~ 리코의 생일 코디가 완성되었어요! 🎉")}
+                                className="bg-[#4A3b32] text-white px-8 py-2 rounded-lg font-bold shadow-lg hover:bg-black transition-colors rotate-[-2deg]"
+                            >
+                                완성하기 ✨
+                            </button>
                         </div>
                     </div>
+
                 </div>
             </div>
             <DragOverlay>
                 {activeItem ? (
-                    <div style={{ position: 'relative', zIndex: 99999 }}>
-                        <div className="w-32 h-32 flex items-center justify-center scale-110">
-                            <img src={activeItem.imageSrc} alt={activeItem.category} className="max-w-full max-h-full object-contain drop-shadow-2xl" />
+                    <div style={{
+                        position: 'relative',
+                        zIndex: 99999,
+                        pointerEvents: 'none',
+                    }}>
+                        <div
+                            style={{
+                                width: draggedItemSize ? draggedItemSize.width : '8rem', // Fallback to 32 (8rem)
+                                height: draggedItemSize ? draggedItemSize.height : '8rem'
+                            }}
+                            className="flex items-center justify-center scale-100"
+                        >
+                            {/* Sticker drag appearance */}
+                            <div className="filter drop-shadow-[0_15px_15px_rgba(0,0,0,0.3)]">
+                                <img src={activeItem.imageSrc} alt={activeItem.category} className="max-w-full max-h-full object-contain" />
+                            </div>
                         </div>
                     </div>
                 ) : null}
