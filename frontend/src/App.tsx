@@ -4,12 +4,14 @@ import Lobby from './pages/Lobby';
 import CodyGame from './pages/CodyGame';
 import PuzzleGame from './pages/PuzzleGame';
 import { CursorManager } from './components/game/CursorManager';
+import GlobalLoading from './components/common/GlobalLoading';
 
 function App() {
   return (
     <div className="cursor-none">
       <CursorManager />
       <Router>
+        <GlobalLoading />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/lobby" element={<Lobby />} />

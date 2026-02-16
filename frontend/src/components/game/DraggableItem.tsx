@@ -5,9 +5,10 @@ interface DraggableItemProps {
     id: string;
     imageSrc: string;
     category: string;
+    className?: string; // Add optional className
 }
 
-export const DraggableItem: React.FC<DraggableItemProps> = ({ id, imageSrc, category }) => {
+export const DraggableItem: React.FC<DraggableItemProps> = ({ id, imageSrc, category, className }) => {
     const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
         id: id,
         data: { category, imageSrc },
@@ -25,9 +26,9 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({ id, imageSrc, cate
             style={style}
             {...listeners}
             {...attributes}
-            className="w-full h-full p-2 cursor-grab active:cursor-grabbing transition-all flex items-center justify-center"
+            className={className || "w-full h-full p-2 cursor-grab active:cursor-grabbing transition-all flex items-center justify-center"}
         >
-            <img src={imageSrc} alt={category} className="max-w-full max-h-full object-contain pointer-events-none drop-shadow-xl" />
+            <img src={imageSrc} alt={category} className={`${className ? 'w-full h-full' : 'max-w-full max-h-full'} object-contain pointer-events-none ${!className && 'drop-shadow-xl'}`} />
         </div>
     );
 };
