@@ -234,7 +234,6 @@ const PuzzleGame: React.FC = () => {
     const [activeId, setActiveId] = useState<number | null>(null);
     const [completed, setCompleted] = useState(false);
     const [showPopup, setShowPopup] = useState(false);
-    const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
 
     const triggerFireworks = () => {
         const duration = 15 * 1000; // Increased duration
@@ -265,14 +264,6 @@ const PuzzleGame: React.FC = () => {
         }
     }, [completed]);
 
-    // Track window size
-    useEffect(() => {
-        const handleResize = () => {
-            setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-        };
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
 
     // Sensors - increase distance to prevent rotation during drag
     const sensors = useSensors(

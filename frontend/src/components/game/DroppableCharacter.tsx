@@ -34,7 +34,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
             {equippedIds['hair'] && (
                 <motion.img
                     key={`hair-back-${isFinished}`}
-                    src="/assets/riko_hair_back_long.png"
+                    src="/assets/codygame/riko_hair_back_long.png"
                     alt="Hair Back"
                     className={`${overlayStyle} z-[-1]`}
                     initial={isFinished ? { opacity: 0 } : { opacity: 1 }}
@@ -45,7 +45,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
 
             {/* [Layer 2] Base Character Body / Expressions */}
             <motion.img
-                src="/assets/riko_body_default.png"
+                src="/assets/codygame/riko_body_default.png"
                 alt="Base Character"
                 className={`${overlayStyle} z-0`}
                 animate={{ opacity: isFinished ? 0 : 1 }}

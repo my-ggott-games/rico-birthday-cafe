@@ -4,10 +4,12 @@
 .idea
 *.log
 
-# User requested: Ignore assets for now
+# User requested: Ignore main assets but ALLOW codygame assets
 frontend/public/assets/*.png
 frontend/public/assets/*.webp
 frontend/public/assets/*.svg
+!frontend/public/assets/codygame/
+!frontend/public/assets/codygame/*.png
 
 # Dependencies (just in case)
 node_modules/

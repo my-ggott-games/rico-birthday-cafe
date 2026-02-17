@@ -20,8 +20,8 @@ const CodyGame: React.FC = () => {
     const [resultImage, setResultImage] = useState<string | null>(null);
 
     const availableItems = [
-        { id: 'hair-1', category: 'hair', imageSrc: '/assets/rico_hair_front_long.png' },
-        { id: 'onepiece-2', category: 'onepiece', imageSrc: '/assets/riko_clothes_training.png' },
+        { id: 'hair-1', category: 'hair', imageSrc: '/assets/codygame/rico_hair_front_long.png' },
+        { id: 'onepiece-2', category: 'onepiece', imageSrc: '/assets/codygame/riko_clothes_training.png' },
     ];
 
     const sensors = useSensors(
@@ -109,7 +109,7 @@ const CodyGame: React.FC = () => {
 
                         <div className="mt-8 flex gap-4">
                             <button onClick={handleReset} className="bg-white px-8 py-3 rounded-2xl font-bold text-[#4A3b32] border-2 border-[#4A3b32]/10 active:scale-95">다시하기</button>
-                            <button onClick={() => { if (!isFinished) { setIsFinished(true); setResultImage(['/assets/riko_body_smile.png', '/assets/riko_body_wink.png'][Math.floor(Math.random() * 2)]); } }}
+                            <button onClick={() => { if (!isFinished) { setIsFinished(true); setResultImage(['/assets/codygame/riko_body_smile.png', '/assets/codygame/riko_body_wink.png'][Math.floor(Math.random() * 2)]); } }}
                                 className={`px-10 py-3 rounded-2xl font-bold text-white transition-all ${isFinished ? 'bg-gray-400' : 'bg-[#4A3b32] hover:scale-105'}`}>
                                 {isFinished ? "Perfect! ✨" : "코디 끝!✨"}
                             </button>
@@ -130,7 +130,7 @@ const CodyGame: React.FC = () => {
                                                 {/* Back Hair Layer for Preview - Hide when equipped or dragging */}
                                                 {!isEquipped && !isDragging && (
                                                     <div className="absolute w-[384px] h-[700px] -top-[70px] left-1/2 -translate-x-1/2 opacity-100 pointer-events-none">
-                                                        <img src="/assets/riko_hair_back_long.png" className="w-full h-full object-contain" alt="back-preview" />
+                                                        <img src="/assets/codygame/riko_hair_back_long.png" className="w-full h-full object-contain" alt="back-preview" />
                                                     </div>
                                                 )}
 
@@ -184,7 +184,7 @@ const CodyGame: React.FC = () => {
                             {/* Hair back layer - only for hair category */}
                             {activeItem.category === 'hair' && (
                                 <img
-                                    src="/assets/riko_hair_back_long.png"
+                                    src="/assets/codygame/riko_hair_back_long.png"
                                     alt="hair-back"
                                     className="absolute inset-0 w-full h-full object-contain drop-shadow-2xl z-[-1]"
                                 />
