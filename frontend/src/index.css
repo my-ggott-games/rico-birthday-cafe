@@ -64,33 +64,38 @@ a:hover {
 }
 
 /* --- Global Button Theme --- */
-.btn-base {
+/* Common attributes shared by all variants */
+.btn-primary,
+.btn-secondary,
+.btn-disabled {
   @apply rounded-2xl font-bold transition-all active:scale-95 shadow-md flex items-center justify-center border-2;
-}
-
-/* Responsive Sizing */
-.btn-size {
   @apply px-4 py-2 text-sm;
+  /* Default (Mobile) size */
 }
 
 @media (min-width: 768px) {
-  .btn-size {
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-disabled {
     @apply px-8 py-3 text-base;
+    /* PC size */
   }
 }
 
 /* Variants */
 .btn-primary {
-  @apply btn-base btn-size bg-[#4A3b32] text-white border-[#4A3b32] hover:scale-105 shadow-xl;
+  @apply bg-[#4A3b32] text-white border-[#4A3b32] hover:scale-105 shadow-xl;
 }
 
 .btn-secondary {
-  @apply btn-base btn-size bg-white text-[#4A3b32] border-[#4A3b32]/10;
+  @apply bg-white text-[#4A3b32] border-[#4A3b32]/10;
 }
 
 .btn-disabled {
-  @apply btn-base btn-size bg-gray-400 text-white cursor-not-allowed opacity-70;
+  @apply bg-gray-400 text-white cursor-not-allowed opacity-70;
 }
+
 
 /* Original tag styling simplified or removed to prevent conflicts */
 button {

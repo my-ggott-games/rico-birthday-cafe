@@ -140,12 +140,12 @@ const CodyGame: React.FC = () => {
                         </div>
 
                         <div className={`relative z-50 flex gap-4 ${isMobile ? 'mt-2 mb-4' : 'mt-8'}`}>
-                            <button onClick={handleReset} className={btnSecondary}>
+                            <button onClick={handleReset} className="btn-secondary">
                                 다시하기
                             </button>
                             <button
                                 onClick={() => { if (!isFinished) { setIsFinished(true); setResultImage(['/assets/codygame/riko_body_smile.png', '/assets/codygame/riko_body_wink.png'][Math.floor(Math.random() * 2)]); } }}
-                                className={isFinished ? btnDisabled : btnPrimary}
+                                className={isFinished ? "btn-disabled" : "btn-primary"}
                             >
                                 {isFinished ? "공유하기 ✨" : "코디 끝!✨"}
                             </button>
