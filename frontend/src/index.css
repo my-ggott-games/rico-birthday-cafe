@@ -63,29 +63,41 @@ a:hover {
   transform: translateY(-2px);
 }
 
+/* --- Global Button Theme --- */
+.btn-base {
+  @apply rounded-2xl font-bold transition-all active:scale-95 shadow-md flex items-center justify-center border-2;
+}
+
+/* Responsive Sizing */
+.btn-size {
+  @apply px-4 py-2 text-sm;
+}
+
+@media (min-width: 768px) {
+  .btn-size {
+    @apply px-8 py-3 text-base;
+  }
+}
+
+/* Variants */
+.btn-primary {
+  @apply btn-base btn-size bg-[#4A3b32] text-white border-[#4A3b32] hover:scale-105 shadow-xl;
+}
+
+.btn-secondary {
+  @apply btn-base btn-size bg-white text-[#4A3b32] border-[#4A3b32]/10;
+}
+
+.btn-disabled {
+  @apply btn-base btn-size bg-gray-400 text-white cursor-not-allowed opacity-70;
+}
+
+/* Original tag styling simplified or removed to prevent conflicts */
 button {
-  border-radius: 12px;
-  border: 2px solid transparent;
-  padding: 0.8em 1.5em;
-  font-size: 1em;
-  font-weight: 700;
-  font-family: inherit;
-  background-color: white;
-  color: var(--color-choco);
   cursor: pointer;
-  transition: all 0.25s;
-  box-shadow: 0 4px 0 var(--color-latte);
+  font-family: inherit;
 }
 
-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 0 var(--color-latte);
-}
-
-button:active {
-  transform: translateY(2px);
-  box-shadow: 0 0 0 var(--color-latte);
-}
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {

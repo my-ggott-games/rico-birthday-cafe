@@ -10,6 +10,16 @@ const RicoSlogan: React.FC = () => {
             animate={{ y: 0, opacity: 1 }}
             className="w-full max-w-lg mx-auto my-1 transform rotate-[-0.5deg] z-20 pointer-events-none"
         >
+            <style>
+                {`
+                @font-face {
+                    font-family: 'JoseonPalace';
+                    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/ChosunGs.woff') format('woff');
+                    font-weight: normal;
+                    font-display: swap;
+                }
+                `}
+            </style>
             <div className="relative bg-white border-2 border-gray-100 py-3 px-8 flex flex-col items-center justify-center shadow-lg select-none overflow-hidden rounded-sm">
 
                 {/* Left Emblem */}
@@ -57,7 +67,7 @@ const RicoSlogan: React.FC = () => {
                     <h1
                         className="text-4xl font-black text-[#222222] my-1 leading-none tracking-tight"
                         style={{
-                            fontFamily: '"Noto Serif KR", "궁서", "궁서체", "Gungsuh", "Gowun Batang", "Nanum Myeongjo", serif',
+                            fontFamily: "'JoseonPalace', 'Noto Serif KR', serif",
                             fontWeight: 900,
                             WebkitTextStroke: '1.5px #222222'
                         }}

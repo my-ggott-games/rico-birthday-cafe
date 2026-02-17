@@ -1,12 +1,14 @@
 import React, { useState, useLayoutEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { LOADING_MESSAGES } from '../../constants/loadingMessages';
 
 const GlobalLoading: React.FC = () => {
     const location = useLocation();
     const [loading, setLoading] = useState(false);
     const [percent, setPercent] = useState(0);
     const [animationType, setAnimationType] = useState<'rotate' | 'zoom' | 'bob'>('rotate');
+    const [message, setMessage] = useState('');
     // Keep track of the current path to avoid double-triggering on mount if strict mode
     const [prevPath, setPrevPath] = useState<string | null>(null);
 
@@ -24,6 +26,10 @@ const GlobalLoading: React.FC = () => {
         // Randomly choose animation type for this loading session
         const types: ('rotate' | 'zoom' | 'bob')[] = ['rotate', 'zoom', 'bob'];
         setAnimationType(types[Math.floor(Math.random() * types.length)]);
+
+        // Choose a random loading message
+        const randomMsg = LOADING_MESSAGES[Math.floor(Math.random() * LOADING_MESSAGES.length)];
+        setMessage(randomMsg);
 
         // Random duration between 3000ms (3s) and 5000ms (5s)
         const duration = Math.floor(Math.random() * 2000) + 3000;
@@ -110,8 +116,8 @@ const GlobalLoading: React.FC = () => {
                             <img src="/favicon.png" alt="Loading" className="w-20 h-20 object-contain" />
                         </motion.div>
 
-                        <h2 className="text-4xl md:text-5xl font-black text-[#4A3b32] mb-4 tracking-tight">
-                            Loading...
+                        <h2 className="text-xl md:text-2xl font-bold text-[#4A3b32] mb-6 tracking-tight text-center px-4">
+                            {message}
                         </h2>
 
                         <div className="relative w-72 h-8 bg-white rounded-full border-[3px] border-[#4A3b32] overflow-hidden mb-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
@@ -138,9 +144,7 @@ const GlobalLoading: React.FC = () => {
                             </motion.div>
                         </div>
 
-                        <div className="text-4xl font-black text-[#F43F5E] font-handwriting drop-shadow-sm">
-                            {percent}%
-                        </div>
+                        {/* Percentage removed as per user request */}
                     </motion.div>
                 </motion.div>
             )}
