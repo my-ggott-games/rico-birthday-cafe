@@ -9,6 +9,7 @@ interface DroppableCharacterProps {
     activeId: string | null;
     isFinished?: boolean;
     resultImage?: string | null;
+    scale?: number;
 }
 
 export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
@@ -16,7 +17,8 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
     equippedIds,
     activeId,
     isFinished = false,
-    resultImage = null
+    resultImage = null,
+    scale = 1
 }) => {
     const { setNodeRef } = useDroppable({
         id: 'character-zone',
@@ -26,7 +28,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
     const overlayStyle = "absolute inset-0 w-full h-full object-contain pointer-events-none select-none";
 
     return (
-        <div className="relative w-96 h-[700px] flex items-center justify-center">
+        <div className="relative w-96 h-[700px] flex items-center justify-center transition-transform duration-300" style={{ transform: `scale(${scale})` }}>
             {/* 1. Base Character Background (Decorative) */}
             <div className="absolute inset-x-10 inset-y-4 bg-transparent rounded-[40%] blur-[2px] z-0 pointer-events-none" />
 

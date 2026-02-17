@@ -6,6 +6,7 @@ const GlobalLoading: React.FC = () => {
     const location = useLocation();
     const [loading, setLoading] = useState(false);
     const [percent, setPercent] = useState(0);
+    const [animationType, setAnimationType] = useState<'rotate' | 'zoom' | 'bob'>('rotate');
     // Keep track of the current path to avoid double-triggering on mount if strict mode
     const [prevPath, setPrevPath] = useState<string | null>(null);
 
@@ -20,6 +21,9 @@ const GlobalLoading: React.FC = () => {
 
         setLoading(true);
         setPercent(0);
+        // Randomly choose animation type for this loading session
+        const types: ('rotate' | 'zoom' | 'bob')[] = ['rotate', 'zoom', 'bob'];
+        setAnimationType(types[Math.floor(Math.random() * types.length)]);
 
         // Random duration between 3000ms (3s) and 5000ms (5s)
         const duration = Math.floor(Math.random() * 2000) + 3000;
@@ -86,18 +90,24 @@ const GlobalLoading: React.FC = () => {
                     >
                         {/* Animated Rico Icon or Spinner */}
                         <motion.div
-                            animate={{
+                            animate={animationType === 'rotate' ? {
                                 y: [-10, 10, -10],
+                                rotate: [0, 90, 180, 270, 360]
+                            } : animationType === 'zoom' ? {
+                                scale: [0.9, 1.1, 0.9],
+                                y: [-5, 5, -5]
+                            } : {
+                                y: [-15, 15, -15],
                                 rotate: [0, 5, -5, 0]
                             }}
                             transition={{
-                                duration: 2,
+                                duration: animationType === 'rotate' ? 4 : animationType === 'zoom' ? 2 : 1.5,
                                 repeat: Infinity,
-                                ease: "easeInOut"
+                                ease: animationType === 'rotate' ? "linear" : "easeInOut"
                             }}
-                            className="text-8xl mb-6"
+                            className="mb-8 p-3 rounded-full bg-white border-[1px] border-white shadow-lg"
                         >
-                            🍰
+                            <img src="/favicon.png" alt="Loading" className="w-20 h-20 object-contain" />
                         </motion.div>
 
                         <h2 className="text-4xl md:text-5xl font-black text-[#4A3b32] mb-4 tracking-tight">

@@ -18,6 +18,31 @@ const CodyGame: React.FC = () => {
     });
     const [isFinished, setIsFinished] = useState(false);
     const [resultImage, setResultImage] = useState<string | null>(null);
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+    React.useEffect(() => {
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+
+        // Optimization: Pre-load results and character bodies
+        const imagesToPreload = [
+            '/assets/codygame/riko_body_smile.png',
+            '/assets/codygame/riko_body_wink.png',
+            '/assets/codygame/riko_body_default.png',
+            '/assets/codygame/riko_hair_back_long.png',
+            '/assets/codygame/rico_hair_front_long.png',
+            '/assets/codygame/riko_clothes_training.png'
+        ];
+        imagesToPreload.forEach(src => {
+            const img = new Image();
+            img.src = src;
+        });
+
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const isMobile = windowWidth < 768;
+    const characterScale = isMobile ? 0.65 : (windowWidth > 1440 ? 1.3 : 1.1);
 
     const availableItems = [
         { id: 'hair-1', category: 'hair', imageSrc: '/assets/codygame/rico_hair_front_long.png' },
@@ -25,7 +50,11 @@ const CodyGame: React.FC = () => {
     ];
 
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+        useSensor(PointerSensor, {
+            activationConstraint: isMobile
+                ? { delay: 250, tolerance: 5 } // hold for 250ms to drag on mobile (allows scroll)
+                : { distance: 8 }
+        })
     );
 
     const handleReset = () => {
@@ -89,55 +118,69 @@ const CodyGame: React.FC = () => {
 
                 <div className="absolute top-6 left-6 z-50">
                     <button onClick={() => navigate('/lobby')} className="bg-white border-2 border-[#4A3b32]/10 text-[#4A3b32] px-6 py-2 rounded-full font-bold shadow-md active:scale-95 transition-all">
-                        ← Back to Cafe
+                        ← 돌아가기
                     </button>
                 </div>
 
-                <div className="relative z-10 w-full h-full flex items-center justify-between px-16 py-10">
+                <div className={`relative z-10 w-full h-full flex ${isMobile ? 'flex-col overflow-y-auto' : 'items-center justify-between px-16 py-10'}`}>
 
-                    {/* Left: Mannequin Display (Fixed position relative to container) */}
-                    <div className="w-[45%] h-full flex flex-col items-center justify-center">
-                        <div className="relative z-10 w-full h-[700px] flex items-center justify-center">
+                    {/* Left: Mannequin Display */}
+                    <div className={`${isMobile ? 'w-full min-h-[500px] pt-16' : 'w-[45%] h-full'} flex flex-col items-center justify-center`}>
+                        <div className={`relative z-10 w-full ${isMobile ? 'h-[450px]' : 'h-[700px]'} flex items-center justify-center`}>
                             <DroppableCharacter
                                 equippedItems={equippedImages}
                                 equippedIds={equippedIds}
                                 activeId={activeId}
                                 isFinished={isFinished}
                                 resultImage={resultImage}
+                                scale={characterScale}
                             />
                         </div>
 
-                        <div className="mt-8 flex gap-4">
-                            <button onClick={handleReset} className="bg-white px-8 py-3 rounded-2xl font-bold text-[#4A3b32] border-2 border-[#4A3b32]/10 active:scale-95">다시하기</button>
+                        <div className={`flex gap-4 ${isMobile ? 'mt-2 mb-4' : 'mt-8'}`}>
+                            <button onClick={handleReset} className={`bg-white ${isMobile ? 'px-4 py-2 text-sm' : 'px-8 py-3'} rounded-2xl font-bold text-[#4A3b32] border-2 border-[#4A3b32]/10 active:scale-95`}>다시하기</button>
                             <button onClick={() => { if (!isFinished) { setIsFinished(true); setResultImage(['/assets/codygame/riko_body_smile.png', '/assets/codygame/riko_body_wink.png'][Math.floor(Math.random() * 2)]); } }}
-                                className={`px-10 py-3 rounded-2xl font-bold text-white transition-all ${isFinished ? 'bg-gray-400' : 'bg-[#4A3b32] hover:scale-105'}`}>
-                                {isFinished ? "Perfect! ✨" : "코디 끝!✨"}
+                                className={`${isMobile ? 'px-6 py-2 text-sm' : 'px-10 py-3'} rounded-2xl font-bold text-white transition-all ${isFinished ? 'bg-gray-400' : 'bg-[#4A3b32] hover:scale-105'}`}>
+                                {isFinished ? "공유하기 ✨" : "코디 끝!✨"}
                             </button>
                         </div>
                     </div>
 
-                    {/* Right: Wardrobe (Full height list, no partitions, items appear at their natural scale) */}
-                    <div className="w-[45%] h-full flex flex-col">
-                        <div className={`flex-1 overflow-y-auto custom-scrollbar transition-opacity ${isFinished ? 'opacity-30 pointer-events-none' : ''}`}>
+                    {/* Right: Wardrobe */}
+                    <div className={`${isMobile ? 'w-full px-4' : 'w-[45%] h-full'} flex flex-col`}>
+                        <div className={`flex-1 ${isMobile ? '' : 'overflow-y-auto custom-scrollbar'} transition-opacity ${isFinished ? 'opacity-30 pointer-events-none' : ''}`}>
                             {/* Hair Section */}
                             <div className="mb-8">
-                                <div className="flex gap-4 overflow-x-auto px-4 pb-4">
+                                <div className={`flex ${isMobile ? 'gap-2' : 'gap-4'} overflow-x-auto px-4 pb-4`}>
                                     {availableItems.filter(item => item.category === 'hair').map((item) => {
                                         const isEquipped = Object.values(equippedIds).includes(item.id);
                                         const isDragging = activeId === item.id;
+                                        const handleClick = () => {
+                                            if (isMobile && !isFinished && !isEquipped) {
+                                                setEquippedItems((prev) => ({
+                                                    ...prev,
+                                                    [item.category]: item.id
+                                                }));
+                                            }
+                                        };
+
                                         return (
-                                            <div key={item.id} className="relative w-60 h-64 overflow-hidden border-2 border-dashed border-[#4A3b32]/30 rounded-3xl flex-shrink-0 bg-[#FDFBF7]/50">
+                                            <div
+                                                key={item.id}
+                                                onClick={handleClick}
+                                                className={`relative ${isMobile ? 'w-40 h-48 ml-1' : 'w-60 h-64'} overflow-hidden border-2 border-dashed border-[#4A3b32]/30 rounded-3xl flex-shrink-0 bg-[#FDFBF7]/50 transition-transform active:scale-95`}
+                                            >
                                                 {/* Back Hair Layer for Preview - Hide when equipped or dragging */}
                                                 {!isEquipped && !isDragging && (
-                                                    <div className="absolute w-[384px] h-[700px] -top-[70px] left-1/2 -translate-x-1/2 opacity-100 pointer-events-none">
+                                                    <div className="absolute w-[384px] h-[700px] opacity-100 pointer-events-none" style={{ top: isMobile ? '-120px' : '-70px', left: '50%', transform: `translateX(-50%) scale(${isMobile ? 0.6 : 1})` }}>
                                                         <img src="/assets/codygame/riko_hair_back_long.png" className="w-full h-full object-contain" alt="back-preview" />
                                                     </div>
                                                 )}
 
                                                 {!isEquipped && !isDragging && (
                                                     <motion.div
-                                                        layoutId={item.id}
-                                                        className="absolute w-[384px] h-[700px] -top-[70px] left-1/2 -translate-x-1/2 cursor-grab active:cursor-grabbing"
+                                                        className="absolute w-[384px] h-[700px] cursor-grab active:cursor-grabbing"
+                                                        style={{ top: isMobile ? '-120px' : '-70px', left: '50%', transform: `translateX(-50%) scale(${isMobile ? 0.6 : 1})` }}
                                                     >
                                                         <DraggableItem id={item.id} imageSrc={item.imageSrc} category={item.category} className="w-full h-full p-0" />
                                                     </motion.div>
@@ -151,16 +194,37 @@ const CodyGame: React.FC = () => {
 
                             {/* Clothes Section */}
                             <div className="mb-8">
-                                <div className="flex gap-4 overflow-x-auto px-4 pb-4">
+                                <div className={`flex ${isMobile ? 'gap-2' : 'gap-4'} overflow-x-auto px-4 pb-4`}>
                                     {availableItems.filter(item => ['top', 'bottom', 'onepiece'].includes(item.category)).map((item) => {
                                         const isEquipped = Object.values(equippedIds).includes(item.id);
                                         const isDragging = activeId === item.id;
+                                        const handleClick = () => {
+                                            if (isMobile && !isFinished && !isEquipped) {
+                                                setEquippedItems((prev) => {
+                                                    const newIds = { ...prev };
+                                                    if (item.category === 'onepiece') {
+                                                        newIds['top'] = null;
+                                                        newIds['bottom'] = null;
+                                                        newIds['onepiece'] = item.id;
+                                                    } else if (item.category === 'top' || item.category === 'bottom') {
+                                                        newIds['onepiece'] = null;
+                                                        newIds[item.category] = item.id;
+                                                    }
+                                                    return newIds;
+                                                });
+                                            }
+                                        };
+
                                         return (
-                                            <div key={item.id} className="relative w-60 h-120 overflow-hidden border-2 border-dashed border-[#4A3b32]/30 rounded-3xl flex-shrink-0 bg-[#FDFBF7]/50">
+                                            <div
+                                                key={item.id}
+                                                onClick={handleClick}
+                                                className={`relative ${isMobile ? 'w-40 h-80 ml-1' : 'w-60 h-120'} overflow-hidden border-2 border-dashed border-[#4A3b32]/30 rounded-3xl flex-shrink-0 bg-[#FDFBF7]/50 transition-transform active:scale-95`}
+                                            >
                                                 {!isEquipped && !isDragging && (
                                                     <motion.div
-                                                        layoutId={item.id}
-                                                        className="absolute w-[384px] h-[700px] -top-32 left-1/2 -translate-x-1/2 cursor-grab active:cursor-grabbing"
+                                                        className="absolute w-[384px] h-[700px] cursor-grab active:cursor-grabbing"
+                                                        style={{ top: isMobile ? '-140px' : '-128px', left: '50%', transform: `translateX(-50%) scale(${isMobile ? 0.7 : 1})` }}
                                                     >
                                                         <DraggableItem id={item.id} imageSrc={item.imageSrc} category={item.category} className="w-full h-full p-0" />
                                                     </motion.div>
@@ -180,21 +244,23 @@ const CodyGame: React.FC = () => {
             <DragOverlay>
                 {activeItem ? (
                     <div style={{ zIndex: 99999, pointerEvents: 'none' }}>
-                        <div className="w-[384px] h-[700px] relative">
-                            {/* Hair back layer - only for hair category */}
-                            {activeItem.category === 'hair' && (
+                        <div className="relative" style={{ width: 384 * characterScale, height: 700 * characterScale }}>
+                            <div className="absolute inset-0 origin-top-left" style={{ transform: `scale(${characterScale})` }}>
+                                {/* Hair back layer - only for hair category */}
+                                {activeItem.category === 'hair' && (
+                                    <img
+                                        src="/assets/codygame/riko_hair_back_long.png"
+                                        alt="hair-back"
+                                        className="absolute inset-0 w-[384px] h-[700px] object-contain drop-shadow-2xl z-[-1]"
+                                    />
+                                )}
+                                {/* Front layer (or only layer for non-hair) */}
                                 <img
-                                    src="/assets/codygame/riko_hair_back_long.png"
-                                    alt="hair-back"
-                                    className="absolute inset-0 w-full h-full object-contain drop-shadow-2xl z-[-1]"
+                                    src={activeItem.imageSrc}
+                                    alt="dragging"
+                                    className="absolute inset-0 w-[384px] h-[700px] object-contain drop-shadow-2xl z-[40]"
                                 />
-                            )}
-                            {/* Front layer (or only layer for non-hair) */}
-                            <img
-                                src={activeItem.imageSrc}
-                                alt="dragging"
-                                className="absolute inset-0 w-full h-full object-contain drop-shadow-2xl z-[40]"
-                            />
+                            </div>
                         </div>
                     </div>
                 ) : null}

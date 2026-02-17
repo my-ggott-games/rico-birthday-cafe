@@ -8,12 +8,12 @@ const RicoSlogan: React.FC = () => {
         <motion.div
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="w-full max-w-2xl mx-auto my-2 transform rotate-[-0.5deg] z-20 pointer-events-none"
+            className="w-full max-w-lg mx-auto my-1 transform rotate-[-0.5deg] z-20 pointer-events-none"
         >
-            <div className="relative bg-white border-2 border-gray-100 py-4 px-10 flex flex-col items-center justify-center shadow-lg select-none overflow-hidden rounded-sm">
+            <div className="relative bg-white border-2 border-gray-100 py-3 px-8 flex flex-col items-center justify-center shadow-lg select-none overflow-hidden rounded-sm">
 
                 {/* Left Emblem */}
-                <div className="absolute left-1 top-1/2 -translate-y-1/2 w-28 h-28 flex items-center justify-center">
+                <div className="absolute left-1 top-1/2 -translate-y-1/2 w-20 h-20 flex items-center justify-center">
                     {/* Swirl Pinwheel Decoration */}
                     <PinwheelSVG flipped={false} reverse />
 
@@ -26,7 +26,7 @@ const RicoSlogan: React.FC = () => {
                         }}
                     >
                         <span
-                            className="text-4xl font-black text-[#FDE047] leading-none"
+                            className="text-2xl font-black text-[#FDE047] leading-none"
                             style={{
                                 fontFamily: '"Nanum Myeongjo", serif',
                                 fontWeight: 900,
@@ -42,7 +42,7 @@ const RicoSlogan: React.FC = () => {
                 {/* Main Text Area */}
                 <div className="flex flex-col items-center z-10">
                     <span
-                        className="text-5xl font-black text-[#1c89bf] tracking-[0.35em] leading-none mb-2"
+                        className="text-3xl font-black text-[#1c89bf] tracking-[0.35em] leading-none mb-1"
                         style={{
                             fontFamily: '"Nanum Myeongjo", serif',
                             fontWeight: 900,
@@ -55,18 +55,18 @@ const RicoSlogan: React.FC = () => {
                     </span>
 
                     <h1
-                        className="text-6xl font-black text-[#222222] my-1 leading-none tracking-tight"
+                        className="text-4xl font-black text-[#222222] my-1 leading-none tracking-tight"
                         style={{
-                            fontFamily: '"궁서", "궁서체", "Gungsuh", serif',
+                            fontFamily: '"Noto Serif KR", "궁서", "궁서체", "Gungsuh", "Gowun Batang", "Nanum Myeongjo", serif',
                             fontWeight: 900,
-                            WebkitTextStroke: '2.5px #222222'
+                            WebkitTextStroke: '1.5px #222222'
                         }}
                     >
                         유즈하 리코
                     </h1>
 
                     <span
-                        className="text-xl font-normal text-gray-900 tracking-[0.4em] mt-3 uppercase"
+                        className="text-sm font-normal text-gray-900 tracking-[0.4em] mt-2 uppercase"
                         style={{
                             fontFamily: "'Outfit', sans-serif",
                             fontWeight: 600,
@@ -77,7 +77,7 @@ const RicoSlogan: React.FC = () => {
                 </div>
 
                 {/* Right Emblem */}
-                <div className="absolute right-1 top-1/2 -translate-y-1/2 w-28 h-28 flex items-center justify-center">
+                <div className="absolute right-1 top-1/2 -translate-y-1/2 w-20 h-20 flex items-center justify-center">
                     {/* Swirl Pinwheel Decoration */}
                     <PinwheelSVG />
 
@@ -90,12 +90,12 @@ const RicoSlogan: React.FC = () => {
                         }}
                     >
                         <span
-                            className="text-4xl font-black text-[#FDE047] leading-none"
+                            className="text-2xl font-black text-[#FDE047] leading-none"
                             style={{
                                 fontFamily: '"Nanum Myeongjo", serif',
                                 fontWeight: 900,
                                 textShadow: '-1.0px -1.0px 0 #000, 1.0px -1.0px 0 #000, -1.0px 1.0px 0 #000, 1.0px 1.0px 0 #000',
-                                transform: 'translateY(1.5px)'
+                                transform: 'translateY(1px)'
                             }}
                         >
                             축

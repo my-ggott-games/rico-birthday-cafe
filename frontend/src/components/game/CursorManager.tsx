@@ -59,17 +59,21 @@ export const CursorManager: React.FC = () => {
 
     return (
         <div className="fixed inset-0 pointer-events-none z-[10000]">
-            {/* Custom Cursor: Light Green Clover */}
-            <motion.div
-                className="fixed top-0 left-0 pointer-events-none z-[10001] flex items-center justify-center"
-                animate={{
-                    x: mousePos.x - 20, // Center the cursor (40px / 2 = 20)
-                    y: mousePos.y - 20,
-                }}
-                transition={{ type: 'spring', damping: 40, stiffness: 800, mass: 0.3 }}
-            >
-                <div className="text-3xl filter drop-shadow-[0_0_2px_#bef264] drop-shadow-[0_0_5px_#22c55e]">🍀</div>
-            </motion.div>
+            {/* Custom Cursor: Light Green Clover - Hidden on Mobile */}
+            <AnimatePresence>
+                {window.innerWidth > 768 && (
+                    <motion.div
+                        className="fixed top-0 left-0 pointer-events-none z-[10001] flex items-center justify-center"
+                        animate={{
+                            x: mousePos.x - 20, // Center the cursor (40px / 2 = 20)
+                            y: mousePos.y - 20,
+                        }}
+                        transition={{ type: 'spring', damping: 40, stiffness: 800, mass: 0.3 }}
+                    >
+                        <div className="text-3xl filter drop-shadow-[0_0_2px_#bef264] drop-shadow-[0_0_5px_#22c55e]">🍀</div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Click Burst Effects: Small Clovers */}
             <AnimatePresence>
