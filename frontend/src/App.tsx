@@ -5,10 +5,11 @@ import CodyGame from './pages/CodyGame';
 import PuzzleGame from './pages/PuzzleGame';
 import { CursorManager } from './components/game/CursorManager';
 import GlobalLoading from './components/common/GlobalLoading';
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
-    <div className="cursor-none">
+    <div>
       <CursorManager />
       <Router>
         <GlobalLoading />
@@ -32,6 +33,8 @@ function App() {
             </div>
           } />
           <Route path="/game/puzzle" element={<PuzzleGame />} />
+          {/* 404 Not Found */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
     </div>

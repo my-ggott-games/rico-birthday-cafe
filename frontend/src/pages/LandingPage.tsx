@@ -39,8 +39,8 @@ const LandingPage: React.FC = () => {
                         </p>
                     </div>
                     {/* Hanging chaos strings */}
-                    <div className="absolute -top-12 left-10 w-1 h-12 bg-gray-300 z-[-1]" />
-                    <div className="absolute -top-12 right-10 w-1 h-12 bg-gray-300 z-[-1]" />
+                    <div className="absolute -top-12 left-10 w-1 h-12 bg-[#d1d5db] z-[-1]" />
+                    <div className="absolute -top-12 right-10 w-1 h-12 bg-[#d1d5db] z-[-1]" />
                 </motion.div>
 
                 {/* Door / Entrance */}

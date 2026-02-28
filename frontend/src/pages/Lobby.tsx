@@ -50,7 +50,7 @@ const Lobby: React.FC = () => {
                             whileHover={{ scale: 1.05 }}
                             className="flex flex-col items-center"
                         >
-                            <div className={`relative ${isMobile ? 'w-32 h-44' : 'w-48 h-64'} bg-pink-100 rounded-[20px] border-4 border-[#4A3b32] shadow-xl overflow-hidden flex items-center justify-center rotate-[-2deg] hover:rotate-0 transition-transform`}>
+                            <div className={`relative ${isMobile ? 'w-32 h-44' : 'w-48 h-64'} bg-[#FFE4E6] rounded-[20px] border-4 border-[#4A3b32] shadow-xl overflow-hidden flex items-center justify-center rotate-[-2deg] hover:rotate-0 transition-transform`}>
                                 {/* Paper Texture bg */}
                                 <div className="absolute inset-0 bg-white"
                                     style={{ backgroundImage: 'radial-gradient(#eee 2px, transparent 2px)', backgroundSize: '10px 10px' }}
@@ -79,9 +79,9 @@ const Lobby: React.FC = () => {
                         >
                             <div className={`relative ${isMobile ? 'w-48 h-24' : 'w-64 h-32'} bg-white rounded-xl border-4 border-[#4A3b32] shadow-xl flex items-center justify-center overflow-visible`}>
                                 {/* Tablecloth */}
-                                <div className="absolute top-0 w-full h-4 bg-red-100" />
+                                <div className="absolute top-0 w-full h-4 bg-[#fef2f2]" />
                                 <div className={`${isMobile ? 'text-4xl' : 'text-5xl'} drop-shadow-md`}>🎒</div>
-                                <span className={`absolute -top-4 -right-4 bg-yellow-400 text-white rounded-full ${isMobile ? 'p-1.5 text-[10px]' : 'p-2 text-xs'} border-2 border-white shadow-sm font-bold rotate-12`}>NEW!</span>
+                                <span className={`absolute -top-4 -right-4 bg-[#facc15] text-white rounded-full ${isMobile ? 'p-1.5 text-[10px]' : 'p-2 text-xs'} border-2 border-white shadow-sm font-bold rotate-12`}>NEW!</span>
                             </div>
                             <div className={`mt-2 bg-white ${isMobile ? 'px-3 py-1 text-xs' : 'px-4 py-2'} rounded-xl font-bold text-[#4A3b32] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#F43F5E] group-hover:text-white transition-colors`}>
                                 Decorate Itabag

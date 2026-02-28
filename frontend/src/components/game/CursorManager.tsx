@@ -13,16 +13,12 @@ interface Particle {
 }
 
 export const CursorManager: React.FC = () => {
-    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const [particles, setParticles] = useState<Particle[]>([]);
 
     // Green color variations
     const greenColors = ['#84cc16', '#22c55e', '#10b981', '#06b6d4', '#4ade80', '#059669'];
 
     useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            setMousePos({ x: e.clientX, y: e.clientY });
-        };
 
         const handleClick = (e: MouseEvent) => {
             const clickX = e.clientX;
@@ -47,19 +43,16 @@ export const CursorManager: React.FC = () => {
                 setParticles((prev) => prev.filter(p => !newParticles.find(np => np.id === p.id)));
             }, 1000);
         };
-
-        window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('click', handleClick);
 
         return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('click', handleClick);
         };
     }, []);
 
     return (
         <div className="fixed inset-0 pointer-events-none z-[10000]">
-            {/* Custom Cursor: Light Green Clover - Hidden on Mobile */}
+            {/* Custom Cursor: Light Green Clover - Disabled to fix Naver Whale bug
             <AnimatePresence>
                 {window.innerWidth > 768 && (
                     <motion.div
@@ -74,6 +67,7 @@ export const CursorManager: React.FC = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+            */}
 
             {/* Click Burst Effects: Small Clovers */}
             <AnimatePresence>

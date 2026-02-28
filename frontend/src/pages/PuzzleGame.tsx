@@ -9,9 +9,6 @@ import confetti from 'canvas-confetti';
 const ROWS = 4;
 const COLS = 4;
 const PIECE_SIZE = 100; // Reduced size to fit screen (Total 400x400)
-const TAB_SIZE = 0; // Square tiles
-const TOTAL_WIDTH = COLS * PIECE_SIZE;
-const TOTAL_HEIGHT = ROWS * PIECE_SIZE;
 const IMAGE_URL = '/assets/rico_puzzle.png';
 
 // --- Types ---
@@ -81,15 +78,11 @@ const createOffsetPath = () => {
 
 // --- Components ---
 const PuzzlePieceComponent = ({ piece, className, isOverlay = false }: any) => {
-    const x = piece.correctX * PIECE_SIZE;
-    const y = piece.correctY * PIECE_SIZE;
-    const visualSize = PIECE_SIZE + 2 * TAB_SIZE;
-
     return (
         <div
             style={{
-                width: visualSize,
-                height: visualSize,
+                width: 'var(--piece-size)',
+                height: 'var(--piece-size)',
                 position: 'relative',
                 touchAction: 'none',
             }}
@@ -100,9 +93,8 @@ const PuzzlePieceComponent = ({ piece, className, isOverlay = false }: any) => {
                     width: '100%',
                     height: '100%',
                     backgroundImage: `url(${IMAGE_URL})`,
-                    backgroundSize: `${TOTAL_WIDTH}px ${TOTAL_HEIGHT}px`,
-                    backgroundPosition: `${-x + TAB_SIZE}px ${-y + TAB_SIZE}px`,
-                    clipPath: `path('${piece.shapePath}')`,
+                    backgroundSize: `calc(var(--piece-size) * ${COLS}) calc(var(--piece-size) * ${ROWS})`,
+                    backgroundPosition: `calc(${piece.correctX} * var(--piece-size) * -1) calc(${piece.correctY} * var(--piece-size) * -1)`,
                     boxShadow: isOverlay ? '0 10px 20px rgba(0,0,0,0.5)' : 'none',
                     // Add border to unplaced pieces using drop-shadow
                     filter: piece.isPlaced
@@ -115,27 +107,25 @@ const PuzzlePieceComponent = ({ piece, className, isOverlay = false }: any) => {
 };
 
 // Extracted Subcomponent for cleaner code and to prevent re-creation on render
-const DroppableCell = ({ id, placedPiece, pieceSize, completed }: any) => {
+const DroppableCell = ({ id, placedPiece, completed }: any) => {
     const { setNodeRef, isOver } = useDroppable({ id });
     return (
         <div
             ref={setNodeRef}
-            className={`flex items-center justify-center transition-all duration-500 ${!completed ? 'border-[0.5px] border-gray-300/50' : 'border-transparent'} ${isOver ? 'bg-green-100/50' : ''}`}
-            style={{ width: pieceSize, height: pieceSize }}
+            className={`flex items-center justify-center transition-all duration-500 ${!completed ? 'border-[0.5px] border-[rgba(209,213,219,0.5)]' : 'border-transparent'} ${isOver ? 'bg-[rgba(220,252,231,0.5)]' : ''}`}
+            style={{ width: 'var(--piece-size)', height: 'var(--piece-size)' }}
         >
             {placedPiece && (
                 <div style={{
-                    width: pieceSize + TAB_SIZE * 2,
-                    height: pieceSize + TAB_SIZE * 2,
-                    transform: `translate(-${TAB_SIZE}px, -${TAB_SIZE}px)`,
+                    width: 'var(--piece-size)',
+                    height: 'var(--piece-size)',
                     pointerEvents: 'none'
                 }}>
                     <div style={{
                         width: '100%', height: '100%',
                         backgroundImage: `url(${IMAGE_URL})`,
-                        backgroundSize: `${TOTAL_WIDTH}px ${TOTAL_HEIGHT}px`,
-                        backgroundPosition: `${-placedPiece.correctX * PIECE_SIZE + TAB_SIZE}px ${-placedPiece.correctY * PIECE_SIZE + TAB_SIZE}px`,
-                        clipPath: `path('${placedPiece.shapePath}')`,
+                        backgroundSize: `calc(var(--piece-size) * ${COLS}) calc(var(--piece-size) * ${ROWS})`,
+                        backgroundPosition: `calc(${placedPiece.correctX} * var(--piece-size) * -1) calc(${placedPiece.correctY} * var(--piece-size) * -1)`,
                         filter: 'brightness(1.05) drop-shadow(0 0 1px rgba(0,0,0,0.1))',
                     }} />
                 </div>
@@ -164,10 +154,10 @@ const DraggablePiece = React.memo(({ piece, onRotate }: { piece: PuzzlePiece, on
             ref={setNodeRef}
             style={{
                 position: 'absolute',
-                left: piece.currentX,
-                top: piece.currentY,
-                width: PIECE_SIZE + TAB_SIZE * 2,
-                height: PIECE_SIZE + TAB_SIZE * 2,
+                left: `clamp(10px, ${piece.currentX}px, 100svw - var(--piece-size) - 10px)`,
+                top: `clamp(120px, ${piece.currentY}px, 100svh - var(--piece-size) - 10px)`,
+                width: 'var(--piece-size)',
+                height: 'var(--piece-size)',
                 zIndex: isDragging ? 0 : 10,
                 opacity: isDragging ? 0 : 1,
                 touchAction: 'none'
@@ -383,14 +373,17 @@ const PuzzleGame: React.FC = () => {
 
     return (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-            <div className="w-full h-screen bg-[#FFFDF7] relative overflow-hidden select-none touch-none flex flex-col">
+            <div
+                className="w-full h-screen bg-[#FFFDF7] relative overflow-hidden select-none touch-none flex flex-col"
+                style={{ '--piece-size': 'min(18svw, 100px)' } as React.CSSProperties}
+            >
                 {/* 1. Header Area (Fixed Height) */}
                 <div className="h-[120px] w-full flex items-center px-10 relative z-20 bg-white/30 backdrop-blur-sm">
                     <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => navigate('/lobby')}
-                        className="bg-white px-6 py-3 rounded-2xl shadow-lg font-bold text-[#4A3b32] hover:bg-gray-100 border-2 border-[#bef264] flex items-center gap-2 mr-8"
+                        className="bg-white px-6 py-3 rounded-2xl shadow-lg font-bold text-[#4A3b32] hover:bg-[#f3f4f6] border-2 border-[#bef264] flex items-center gap-2 mr-8"
                     >
                         <span>←</span> Lobby
                     </motion.button>
@@ -403,7 +396,7 @@ const PuzzleGame: React.FC = () => {
                 {/* 2. Main Content Area (Left | Board | Right) */}
                 <div className="flex-1 w-full flex overflow-hidden">
                     {/* Left Scatter Area */}
-                    <div className="flex-1 relative bg-blue-50/10 hidden lg:block" id="area-left">
+                    <div className="flex-1 relative bg-[rgba(239,246,255,0.1)] hidden lg:block" id="area-left">
                         {/* Pieces will be absolutely positioned here by coordinates */}
                     </div>
 
@@ -413,8 +406,8 @@ const PuzzleGame: React.FC = () => {
                             className="relative bg-white/50 backdrop-blur-sm shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-8 border-[#4A3b32] rounded-3xl p-6"
                         >
                             <div
-                                className="relative bg-[#fafafa] rounded-lg overflow-hidden"
-                                style={{ width: TOTAL_WIDTH, height: TOTAL_HEIGHT }}
+                                className="relative bg-[#fafafa] overflow-hidden"
+                                style={{ width: `calc(var(--piece-size) * ${COLS})`, height: `calc(var(--piece-size) * ${ROWS})` }}
                             >
                                 <div className="absolute inset-0 grid grid-cols-4 grid-rows-4 gap-0">
                                     {Array.from({ length: ROWS * COLS }).map((_, i) => {
@@ -428,7 +421,6 @@ const PuzzleGame: React.FC = () => {
                                                 key={i}
                                                 id={cellId}
                                                 placedPiece={placedPiece}
-                                                pieceSize={PIECE_SIZE}
                                                 completed={completed}
                                             />
                                         );
@@ -439,13 +431,13 @@ const PuzzleGame: React.FC = () => {
                     </div>
 
                     {/* Right Scatter Area */}
-                    <div className="flex-1 relative bg-red-50/10 hidden lg:block" id="area-right">
+                    <div className="flex-1 relative bg-[rgba(254,242,242,0.1)] hidden lg:block" id="area-right">
 
                     </div>
                 </div>
 
                 {/* 3. Bottom Scatter Area */}
-                <div className="h-[200px] w-full bg-green-50/10 relative" id="area-bottom">
+                <div className="h-[200px] w-full bg-[rgba(240,253,244,0.1)] relative" id="area-bottom">
 
                 </div>
 
@@ -495,7 +487,7 @@ const PuzzleGame: React.FC = () => {
                                     </button>
                                     <button
                                         onClick={() => setShowPopup(false)}
-                                        className="bg-gray-100 hover:bg-gray-200 text-gray-500 px-6 py-3 rounded-2xl font-bold text-lg transition-all border-b-4 border-black/5"
+                                        className="bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#6b7280] px-6 py-3 rounded-2xl font-bold text-lg transition-all border-b-4 border-black/5"
                                     >
                                         닫기
                                     </button>

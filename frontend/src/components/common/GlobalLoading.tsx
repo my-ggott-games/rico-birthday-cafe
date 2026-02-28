@@ -1,5 +1,5 @@
 import React, { useState, useLayoutEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, matchPath } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LOADING_MESSAGES } from '../../constants/loadingMessages';
 
@@ -20,6 +20,23 @@ const GlobalLoading: React.FC = () => {
 
         if (location.pathname === prevPath) return;
         setPrevPath(location.pathname);
+
+        // Define valid routes to prevent loading screen on 404
+        const validRoutes = [
+            "/",
+            "/lobby",
+            "/game/cody",
+            "/game/itabag",
+            "/game/baseball",
+            "/game/puzzle"
+        ];
+
+        const isValidRoute = validRoutes.some(route => matchPath(route, location.pathname));
+
+        if (!isValidRoute) {
+            setLoading(false);
+            return;
+        }
 
         setLoading(true);
         setPercent(0);

@@ -8,7 +8,7 @@ const RicoSlogan: React.FC = () => {
         <motion.div
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="w-full max-w-lg mx-auto my-1 transform rotate-[-0.5deg] z-20 pointer-events-none"
+            className="w-full max-w-lg mx-auto my-1 z-20 pointer-events-none"
         >
             <style>
                 {`
@@ -20,7 +20,7 @@ const RicoSlogan: React.FC = () => {
                 }
                 `}
             </style>
-            <div className="relative bg-white border-2 border-gray-100 py-3 px-8 flex flex-col items-center justify-center shadow-lg select-none overflow-hidden rounded-sm">
+            <div className="relative bg-white border-2 border-[#f3f4f6] py-3 px-8 flex flex-col items-center justify-center shadow-lg select-none overflow-hidden rounded-sm">
 
                 {/* Left Emblem */}
                 <div className="absolute left-1 top-1/2 -translate-y-1/2 w-20 h-20 flex items-center justify-center">
@@ -69,14 +69,16 @@ const RicoSlogan: React.FC = () => {
                         style={{
                             fontFamily: "'JoseonPalace', 'Noto Serif KR', serif",
                             fontWeight: 900,
-                            WebkitTextStroke: '1.5px #222222'
+                            WebkitTextStroke: '1.5px #222222',
+                            letterSpacing: '0.15em', // Increased spacing between characters
+                            paddingLeft: '0.15em' // Offset to keep it centered
                         }}
                     >
                         유즈하 리코
                     </h1>
 
                     <span
-                        className="text-sm font-normal text-gray-900 tracking-[0.4em] mt-2 uppercase"
+                        className="text-sm font-normal text-[#111827] tracking-[0.4em] mt-2 uppercase"
                         style={{
                             fontFamily: "'Outfit', sans-serif",
                             fontWeight: 600,
