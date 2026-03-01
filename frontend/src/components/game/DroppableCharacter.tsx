@@ -166,15 +166,15 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
             );
           })()}
 
-        {/* [Layer 4.5] Hand_Acc (Sword) (z-18) */}
-        {/* Placed ABOVE hanbok skirt (z-15) and BELOW norigae (z-20) / clothes.main (Jeogori z-25) */}
+        {/* [Layer 4.5] Hand_Acc (Sword) (z-26) */}
+        {/* Placed ABOVE clothes main (z-25) and BELOW clothes front (z-27) */}
         {equippedIds["hand_acc"] &&
           (() => {
             const id = equippedIds["hand_acc"];
             const item = availableItems.find((i) => i.id === id);
             if (!item) return null;
             return (
-              <div className="absolute inset-0 z-[18] pointer-events-none">
+              <div className="absolute inset-0 z-[26] pointer-events-none">
                 {activeId !== id && (
                   <motion.div
                     key={`hand_acc-${isFinished}`}
@@ -196,15 +196,17 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
             );
           })()}
 
-        {/* [Layer 5] Clothes_Acc (Norigae) (z-20) */}
-        {/* Norigae goes OVER hanbok skirt (z-15) & sword (z-18), UNDER jeogori (z-25) */}
+        {/* [Layer 5] Clothes_Acc (Norigae) (dynamic z-index) */}
+        {/* Norigae goes UNDER jeogori (clothes-3) but OVER other clothes like training, peasantdress */}
         {equippedIds["clothes_acc"] &&
           (() => {
             const id = equippedIds["clothes_acc"];
             const item = availableItems.find((i) => i.id === id);
+            const clothesId = equippedIds["clothes"];
+            const zIndexClass = clothesId === "clothes-3" ? "z-[24]" : "z-[29]";
             if (!item) return null;
             return (
-              <div className="absolute inset-0 z-20 pointer-events-none">
+              <div className={`absolute inset-0 ${zIndexClass} pointer-events-none`}>
                 {activeId !== id && (
                   <motion.div
                     key={`clothes_acc-${isFinished}`}

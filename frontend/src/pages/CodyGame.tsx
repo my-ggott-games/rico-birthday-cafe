@@ -16,7 +16,6 @@ import { motion } from "framer-motion";
 import { SpringFestivalBackground, SpringFestivalPetals } from "../components/game/SpringFestivalBackground";
 import { FireflyBackground } from "../components/game/FireflyBackground";
 import { PolaroidFrame } from "../components/game/PolaroidFrame";
-import { OrientalBackground } from "../components/game/OrientalBackground";
 import { domToJpeg } from "modern-screenshot";
 
 const CodyGame: React.FC = () => {
@@ -41,6 +40,8 @@ const CodyGame: React.FC = () => {
   const [isFinished, setIsFinished] = useState(false);
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [activeBackground, setActiveBackground] = useState<string | null>(null);
+  const [orientalBgUrl, setOrientalBgUrl] = useState<string | null>(null);
+  const [springFestivalBgUrl, setSpringFestivalBgUrl] = useState<string | null>(null);
   const [showInventory, setShowInventory] = useState(true);
   const [showButtons, setShowButtons] = useState(true);
   const [contentVisible, setContentVisible] = useState(true);
@@ -48,7 +49,7 @@ const CodyGame: React.FC = () => {
   const [isCapturing, setIsCapturing] = useState(false);
   const polaroidRef = React.useRef<HTMLDivElement>(null);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  const [activeTab, setActiveTab] = useState<"hair" | "clothes" | "accessories">("hair");
+  const [activeTab, setActiveTab] = useState<"hair" | "clothes" | "hair_acc" | "body_acc">("hair");
 
   React.useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -74,6 +75,11 @@ const CodyGame: React.FC = () => {
       "/assets/codygame/riko_ accessories_ hairpin.png",
       "/assets/codygame/riko_ accessories_ norigae.png",
       "/assets/codygame/riko_ accessories_sword.png",
+      "/assets/codygame/riko_ accessories_flowercrown.png",
+      "/assets/codygame/background_1.jpg",
+      "/assets/codygame/background_2.jpg",
+      "/assets/codygame/background_3.jpg",
+      "/assets/codygame/background_4.jpg",
     ];
     imagesToPreload.forEach((src) => {
       const img = new Image();
@@ -156,6 +162,11 @@ const CodyGame: React.FC = () => {
       category: "hand_acc",
       layers: { back: "/assets/codygame/riko_ accessories_sword.png" },
     }, // Sword goes behind
+    {
+      id: "accessories-5",
+      category: "hair_acc",
+      layers: { front: "/assets/codygame/riko_ accessories_flowercrown.png" },
+    },
   ];
 
   // Combination logic for background changes
@@ -174,7 +185,7 @@ const CodyGame: React.FC = () => {
     },
     {
       name: "peasantdress",
-      requiredItems: ["hair-2", "clothes-2", "accessories-1"], // Twintails + Peasant Dress + Flowers
+      requiredItems: ["hair-2", "clothes-2", "accessories-1", "accessories-5"], // Twintails + Peasant Dress + Flowers + Flowercrown
       backgroundClass: "spring-festival",
     },
     {
@@ -254,12 +265,11 @@ const CodyGame: React.FC = () => {
 
           // Conflict Resolution
           if (draggedItem.id === "accessories-1") {
-            // The flowers accessory prevents other accessories
-            nextState.hair_acc = null;
+            // The flowers accessory prevents hand_acc and clothes_acc
             nextState.clothes_acc = null;
             nextState.hand_acc = null;
           } else if (
-            ["hair_acc", "clothes_acc", "hand_acc"].includes(
+            ["clothes_acc", "hand_acc"].includes(
               draggedItem.category,
             )
           ) {
@@ -333,22 +343,36 @@ const CodyGame: React.FC = () => {
                   characterOffset={
                     activeBackground?.startsWith("linear-gradient")
                       ? { x: 0, y: 75 }  // 알맞지 않은 조합 (그라데이션)
-                      : { x: 75, y: 75 }  // 알맞은 조합
+                      : { x: 0, y: 500 }  // 알맞은 조합
                   }
                   polaroidRef={polaroidRef}
                   hideAnimations={isCapturing}
+                  isSquare={true}
+                  hideShadow={!activeBackground?.startsWith("linear-gradient")}
                   backgroundContent={
                     <>
-                      {activeBackground === "spring-festival" && (
-                        <SpringFestivalBackground isFinished={true} />
+                      {/* 그라데이션 배경, 배경색 배경용 로직 유지 */}
+                      {activeBackground?.startsWith("linear-gradient") && (
+                        <div className="absolute inset-0 z-0 bg-transparent" />
                       )}
-                      {activeBackground === "oriental" && (
-                        <OrientalBackground />
-                      )}
-                      {/* Only show background fireflies if not capturing */}
-                      {!isCapturing && activeBackground === "spring-festival" && (
+
+                      {/* 올바른 조합 배경을 이미지로 직접 렌더링 */}
+                      {!activeBackground?.startsWith("linear-gradient") && activeBackground === "spring-festival" && (
                         <div className="absolute inset-0 z-0">
-                          {/* Fireflies are actually in overlayContent now, but checking just in case */}
+                          <img
+                            src={springFestivalBgUrl || "/assets/codygame/background_1.jpg"}
+                            className="w-full h-full object-cover object-[center_30%]"
+                            alt="background-scene"
+                          />
+                        </div>
+                      )}
+                      {!activeBackground?.startsWith("linear-gradient") && activeBackground === "oriental" && (
+                        <div className="absolute inset-0 z-0">
+                          <img
+                            src={orientalBgUrl || "/assets/codygame/background_3.jpg"}
+                            className="w-full h-full object-cover object-[center_10%]"
+                            alt="background-scene"
+                          />
                         </div>
                       )}
                     </>
@@ -370,7 +394,7 @@ const CodyGame: React.FC = () => {
                       activeId={activeId}
                       isFinished={isFinished}
                       resultImage={resultImage}
-                      scale={characterScale * (activeBackground?.startsWith("linear-gradient") ? 0.7 : 0.5)}
+                      scale={characterScale * (activeBackground?.startsWith("linear-gradient") ? 0.7 : 1)}
                       isMobile={isMobile}
                       availableItems={availableItems}
                     />
@@ -431,6 +455,23 @@ const CodyGame: React.FC = () => {
                           matchedCombo.backgroundUrl ||
                           null,
                         );
+
+                        if (matchedCombo.backgroundClass === "oriental") {
+                          setOrientalBgUrl(
+                            [
+                              "/assets/codygame/background_3.jpg",
+                              "/assets/codygame/background_4.jpg",
+                            ][Math.floor(Math.random() * 2)]
+                          );
+                        } else if (matchedCombo.backgroundClass === "spring-festival") {
+                          setSpringFestivalBgUrl(
+                            [
+                              "/assets/codygame/background_1.jpg",
+                              "/assets/codygame/background_2.jpg",
+                            ][Math.floor(Math.random() * 2)]
+                          );
+                        }
+
                         setShowInventory(false);
                         setShowButtons(false);
 
@@ -535,7 +576,8 @@ const CodyGame: React.FC = () => {
                 {[
                   { id: "hair", label: "헤어" },
                   { id: "clothes", label: "의상" },
-                  { id: "accessories", label: "액세서리" }
+                  { id: "hair_acc", label: "헤어 액세서리" },
+                  { id: "body_acc", label: "바디 액세서리" }
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -559,7 +601,8 @@ const CodyGame: React.FC = () => {
               {[
                 { id: "hair", label: "헤어", filter: (i: any) => i.category === "hair" },
                 { id: "clothes", label: "의상", filter: (i: any) => i.category === "clothes" },
-                { id: "accessories", label: "액세서리", filter: (i: any) => ["accessories", "hair_acc", "clothes_acc", "hand_acc"].includes(i.category) },
+                { id: "hair_acc", label: "헤어 액세서리", filter: (i: any) => ["hair_acc"].includes(i.category) },
+                { id: "body_acc", label: "바디 액세서리", filter: (i: any) => ["accessories", "clothes_acc", "hand_acc"].includes(i.category) },
               ]
                 .filter(section => !isMobile || activeTab === section.id)
                 .map((section) => (
@@ -575,15 +618,17 @@ const CodyGame: React.FC = () => {
                           );
                           const isDragging = activeId === item.id;
                           const handleClick = () => {
+                            // 모바일이 아닌 경우(PC 환경) 클릭으로 장착하지 않음
+                            if (!isMobile) return;
+
                             if (!isFinished && !isEquipped) {
-                              if (section.id === "accessories") {
+                              if (["accessories", "clothes_acc", "hand_acc", "hair_acc"].includes(item.category)) {
                                 setEquippedItems((prev) => {
                                   const nextState = { ...prev };
                                   if (item.id === "accessories-1") {
-                                    nextState.hair_acc = null;
                                     nextState.clothes_acc = null;
                                     nextState.hand_acc = null;
-                                  } else if (["hair_acc", "clothes_acc", "hand_acc"].includes(item.category)) {
+                                  } else if (["clothes_acc", "hand_acc"].includes(item.category)) {
                                     nextState.accessories = null;
                                   }
                                   return {

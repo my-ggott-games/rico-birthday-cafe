@@ -18,6 +18,7 @@ const CompareBackgrounds: React.FC = () => {
     const baseHairId = "hair-2";
     const baseClothesId = "clothes-2";
     const baseAccId = "accessories-1";
+    const baseHairAccId = "accessories-5";
 
     const baseAvailableItems = [
         {
@@ -42,6 +43,13 @@ const CompareBackgrounds: React.FC = () => {
                 main: "/assets/codygame/riko_ accessories_flowers.png"
             }
         },
+        {
+            id: baseHairAccId,
+            category: "hair_acc",
+            layers: {
+                front: "/assets/codygame/riko_ accessories_flowercrown.png"
+            }
+        },
     ];
 
     return (
@@ -62,7 +70,7 @@ const CompareBackgrounds: React.FC = () => {
                     const uniqueEquippedIds = {
                         hair: `${bg.id}-${baseHairId}`,
                         clothes: `${bg.id}-${baseClothesId}`,
-                        hair_acc: null,
+                        hair_acc: `${bg.id}-${baseHairAccId}`,
                         clothes_acc: null,
                         hand_acc: null,
                         accessories: `${bg.id}-${baseAccId}`,
@@ -78,14 +86,16 @@ const CompareBackgrounds: React.FC = () => {
                             <span className="text-lg font-bold bg-[#4A3b32] text-white px-4 py-1 rounded-full text-center">
                                 {bg.url.split('/').pop()}
                             </span>
-                            <div className="relative w-full aspect-[3/4] max-w-[400px]">
+                            <div className="relative w-full aspect-square max-w-[400px]">
                                 <PolaroidFrame
                                     activeBackground={bg.url}
-                                    characterOffset={{ x: 75, y: 80 }}
+                                    characterOffset={{ x: 0, y: 600 }}
+                                    isSquare={true}
+                                    hideAnimations={true}
                                     backgroundContent={
                                         <img
                                             src={bg.url}
-                                            className="w-full h-full object-cover"
+                                            className="w-full h-full object-cover object-[center_30%]"
                                             alt="preview-bg"
                                         />
                                     }
@@ -96,7 +106,7 @@ const CompareBackgrounds: React.FC = () => {
                                             activeId={null}
                                             isFinished={true}
                                             resultImage="/assets/codygame/riko_body_smile.png"
-                                            scale={0.55}
+                                            scale={1.45}
                                             isMobile={false}
                                             availableItems={uniqueAvailableItems as any}
                                         />
