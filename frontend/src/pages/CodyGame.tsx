@@ -13,7 +13,10 @@ import type { CodyItem } from "../components/game/DroppableCharacter";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
-import { SpringFestivalBackground } from "../components/game/SpringFestivalBackground";
+import { SpringFestivalBackground, SpringFestivalPetals } from "../components/game/SpringFestivalBackground";
+import { FireflyBackground } from "../components/game/FireflyBackground";
+import { PolaroidFrame } from "../components/game/PolaroidFrame";
+import { OrientalBackground } from "../components/game/OrientalBackground";
 
 const CodyGame: React.FC = () => {
   const navigate = useNavigate();
@@ -39,7 +42,6 @@ const CodyGame: React.FC = () => {
   const [activeBackground, setActiveBackground] = useState<string | null>(null);
   const [showInventory, setShowInventory] = useState(true);
   const [showButtons, setShowButtons] = useState(true);
-  const [showFlash, setShowFlash] = useState(false);
   const [contentVisible, setContentVisible] = useState(true);
   const [isFlyAway, setIsFlyAway] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -180,7 +182,7 @@ const CodyGame: React.FC = () => {
         "accessories-3",
         "accessories-4",
       ], // Short Hair + Hanbok Set + Hairpin + Norigae + Sword
-      backgroundClass: "bg-[#fef2f2]",
+      backgroundClass: "oriental",
     },
   ];
 
@@ -212,7 +214,6 @@ const CodyGame: React.FC = () => {
         setActiveBackground(null);
         setShowInventory(true);
         setShowButtons(true);
-        setShowFlash(false);
         setContentVisible(true);
         setIsFlyAway(false);
       }, 1200);
@@ -230,7 +231,6 @@ const CodyGame: React.FC = () => {
       setActiveBackground(null);
       setShowInventory(true);
       setShowButtons(true);
-      setShowFlash(false);
       setContentVisible(true);
     }
   };
@@ -284,22 +284,12 @@ const CodyGame: React.FC = () => {
       onDragEnd={handleDragEnd}
     >
       <div
-        className={`h-screen w-full flex flex-col overflow-hidden font-sans relative select-none bg-[#FFFDF7] transition-colors duration-500 ${activeBackground?.startsWith("bg-") ? activeBackground : ""}`}
-        style={
-          activeBackground &&
-          !activeBackground.startsWith("bg-") &&
-          activeBackground !== "spring-festival"
-            ? {
-                backgroundImage: `url(${activeBackground})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }
-            : {}
-        }
+        className={`h-screen w-full flex flex-col overflow-hidden font-sans relative select-none bg-[#FFFDF7]`}
       >
         {activeBackground === "spring-festival" && !isFinished && (
-          <div className="absolute inset-0 z-0">
-            <SpringFestivalBackground />
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            <SpringFestivalBackground isFinished={false} />
+            <FireflyBackground isFinished={false} />
           </div>
         )}
 
@@ -329,20 +319,48 @@ const CodyGame: React.FC = () => {
             <div
               className={`relative z-10 w-full ${isMobile ? "h-[550px]" : "h-[700px]"} flex items-center justify-center`}
             >
-              {isFinished && activeBackground === "spring-festival" ? (
-                <SpringFestivalBackground isFinished isFlyAway={isFlyAway}>
+              {isFinished ? (
+                <PolaroidFrame
+                  isFlyAway={isFlyAway}
+                  activeBackground={activeBackground}
+                  characterOffset={
+                    activeBackground?.startsWith("linear-gradient")
+                      ? { x: 0, y: 75 }  // 알맞지 않은 조합 (그라데이션)
+                      : { x: 75, y: 75 }  // 알맞은 조합
+                  }
+                  backgroundContent={
+                    <>
+                      {activeBackground === "spring-festival" && (
+                        <SpringFestivalBackground isFinished={true} />
+                      )}
+                      {activeBackground === "oriental" && (
+                        <OrientalBackground />
+                      )}
+                    </>
+                  }
+                  overlayContent={
+                    <>
+                      {activeBackground === "spring-festival" && (
+                        <FireflyBackground isFinished={true} />
+                      )}
+                      {activeBackground === "oriental" && (
+                        <SpringFestivalPetals isFinished={true} isFlyAway={isFlyAway} />
+                      )}
+                    </>
+                  }
+                >
                   <div className="relative">
                     <DroppableCharacter
                       equippedIds={equippedIds}
                       activeId={activeId}
                       isFinished={isFinished}
                       resultImage={resultImage}
-                      scale={characterScale}
+                      scale={characterScale * (activeBackground?.startsWith("linear-gradient") ? 0.7 : 0.5)}
                       isMobile={isMobile}
                       availableItems={availableItems}
                     />
                   </div>
-                </SpringFestivalBackground>
+                </PolaroidFrame>
               ) : (
                 <div
                   className={`transition-opacity duration-300 ${contentVisible ? "opacity-100" : "opacity-0"}`}
@@ -361,7 +379,7 @@ const CodyGame: React.FC = () => {
             </div>
 
             <div
-              className={`relative z-50 flex gap-4 ${isMobile ? "mt-2 mb-4" : "mt-8"} transition-opacity duration-1000 ${!showButtons ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+              className={`z-[100] flex gap-4 transition-opacity duration-1000 ${!showButtons ? "opacity-0 pointer-events-none" : "opacity-100"} ${isMobile ? "fixed bottom-4 left-0 right-0 justify-center" : "relative mt-8"}`}
             >
               <button onClick={handleReset} className="btn-secondary">
                 다시하기
@@ -370,38 +388,33 @@ const CodyGame: React.FC = () => {
               <button
                 onClick={() => {
                   if (!isFinished) {
-                    // 찰칵! Flash effect sequence
-                    setShowFlash(true);
-                    setContentVisible(false);
-
-                    setTimeout(() => {
-                      setIsFinished(true);
-                      setResultImage(
-                        [
-                          "/assets/codygame/riko_body_smile.png",
-                          "/assets/codygame/riko_body_wink.png",
-                        ][Math.floor(Math.random() * 2)],
+                    // Check for active combinations first
+                    const equippedIdsList = Object.values(equippedIds).filter(
+                      Boolean,
+                    ) as string[];
+                    const matchedCombo = combinations.find((combo) => {
+                      const hasAllRequired = combo.requiredItems.every(
+                        (reqId) => equippedIdsList.includes(reqId),
                       );
+                      const hasNoExtras = equippedIdsList.every((eqId) =>
+                        combo.requiredItems.includes(eqId),
+                      );
+                      return hasAllRequired && hasNoExtras;
+                    });
 
-                      // Check for active combinations
-                      const equippedIdsList = Object.values(equippedIds).filter(
-                        Boolean,
-                      ) as string[];
-                      const matchedCombo = combinations.find((combo) => {
-                        const hasAllRequired = combo.requiredItems.every(
-                          (reqId) => equippedIdsList.includes(reqId),
+                    if (matchedCombo) {
+                      setTimeout(() => {
+                        setIsFinished(true);
+                        setResultImage(
+                          [
+                            "/assets/codygame/riko_body_smile.png",
+                            "/assets/codygame/riko_body_wink.png",
+                          ][Math.floor(Math.random() * 2)],
                         );
-                        const hasNoExtras = equippedIdsList.every((eqId) =>
-                          combo.requiredItems.includes(eqId),
-                        );
-                        return hasAllRequired && hasNoExtras;
-                      });
-
-                      if (matchedCombo) {
                         setActiveBackground(
                           matchedCombo.backgroundClass ||
-                            matchedCombo.backgroundUrl ||
-                            null,
+                          matchedCombo.backgroundUrl ||
+                          null,
                         );
                         setShowInventory(false);
                         setShowButtons(false);
@@ -409,18 +422,27 @@ const CodyGame: React.FC = () => {
                         // Fade in the Polaroid content
                         setTimeout(() => {
                           setContentVisible(true);
-                          setShowFlash(false);
                           setTimeout(() => setShowButtons(true), 1000);
                         }, 800);
-                      } else {
-                        // No combo matched, still show finish state but maybe generic
-                        setShowInventory(false);
-                        setTimeout(() => {
-                          setContentVisible(true);
-                          setShowFlash(false);
-                        }, 800);
-                      }
-                    }, 300);
+                      }, 100);
+                    } else {
+                      // No combo matched, smoothly transition instantly without fade
+                      setIsFinished(true);
+                      setResultImage("/assets/codygame/riko_body_default.png");
+
+                      const gradients = [
+                        "linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)",
+                        "linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)",
+                        "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
+                        "linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)",
+                        "linear-gradient(135deg, #fdcbf1 0%, #e6dee9 100%)",
+                        "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"
+                      ];
+                      setActiveBackground(gradients[Math.floor(Math.random() * gradients.length)]);
+
+                      setShowInventory(false);
+                      setShowButtons(true);
+                    }
                   }
                 }}
                 className={isFinished ? "btn-disabled" : "btn-primary"}
@@ -432,7 +454,7 @@ const CodyGame: React.FC = () => {
 
           {/* Background/Right: Wardrobe */}
           <div
-            className={`${isMobile ? "w-full px-4" : "w-[45%] h-full"} flex flex-col transition-all duration-1000 ${showInventory ? "opacity-100" : "opacity-0 w-[0%] overflow-hidden pointer-events-none"}`}
+            className={`${isMobile ? `w-full ${showInventory ? "px-4" : "h-0 p-0"}` : "w-[45%] h-full"} flex flex-col transition-all duration-1000 ${showInventory ? "opacity-100" : "opacity-0 w-[0%] overflow-hidden pointer-events-none"}`}
           >
             <div
               className={`flex-1 ${isMobile ? "" : "overflow-y-auto custom-scrollbar"} transition-opacity ${isFinished ? "opacity-30 pointer-events-none" : ""}`}
@@ -779,13 +801,6 @@ const CodyGame: React.FC = () => {
           </div>
         ) : null}
       </DragOverlay>
-      {/* Flash Effect Overlay */}
-      <motion.div
-        initial={false}
-        animate={{ opacity: showFlash ? 1 : 0 }}
-        transition={{ duration: 0.2 }}
-        className="fixed inset-0 bg-white z-[1000] pointer-events-none"
-      />
     </DndContext>
   );
 };

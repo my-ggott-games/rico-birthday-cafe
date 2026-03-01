@@ -23,7 +23,6 @@ const GlobalLoading: React.FC = () => {
 
         // Define valid routes to prevent loading screen on 404
         const validRoutes = [
-            "/",
             "/lobby",
             "/game/cody",
             "/game/itabag",

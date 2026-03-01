@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Particle {
@@ -14,6 +14,7 @@ interface Particle {
 
 export const CursorManager: React.FC = () => {
     const [particles, setParticles] = useState<Particle[]>([]);
+    const lastClickTime = useRef(0);
 
     // Green color variations
     const greenColors = ['#84cc16', '#22c55e', '#10b981', '#06b6d4', '#4ade80', '#059669'];
@@ -21,6 +22,10 @@ export const CursorManager: React.FC = () => {
     useEffect(() => {
 
         const handleClick = (e: MouseEvent) => {
+            const now = Date.now();
+            if (now - lastClickTime.current < 1000) return; // 500ms debounce to prevent rendering overload
+            lastClickTime.current = now;
+
             const clickX = e.clientX;
             const clickY = e.clientY;
 

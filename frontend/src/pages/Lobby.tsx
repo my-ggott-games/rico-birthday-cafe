@@ -33,7 +33,7 @@ const Lobby: React.FC = () => {
                         ☕ Main Hall
                     </h2>
                     <div className={`${isMobile ? 'px-3 py-1 text-sm' : 'px-6 py-2'} bg-white rounded-full border-2 border-[#D6C0B0] shadow-sm font-bold text-[#F43F5E]`}>
-                        Stamps: 0 / 5
+                        WHO MADE THIS?!
                     </div>
                 </header>
 

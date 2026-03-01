@@ -6,12 +6,12 @@ import { DraggableItem } from "./DraggableItem";
 export interface CodyItem {
   id: string;
   category:
-    | "hair"
-    | "clothes"
-    | "hair_acc"
-    | "clothes_acc"
-    | "hand_acc"
-    | "accessories"; // Keep 'accessories' for backwards compatibility/migration if needed, but use specific ones going forward.
+  | "hair"
+  | "clothes"
+  | "hair_acc"
+  | "clothes_acc"
+  | "hand_acc"
+  | "accessories"; // Keep 'accessories' for backwards compatibility/migration if needed, but use specific ones going forward.
   label?: string;
   layers: {
     front?: string;
@@ -56,15 +56,15 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
 
   return (
     <div
-      className="relative flex items-center justify-center transition-all duration-300 pointer-events-none"
+      className="relative flex items-center justify-center transition-all duration-300 pointer-events-none overflow-hidden"
       style={{
         width: `${384 * scale}px`,
         height: `${700 * scale}px`,
       }}
     >
       <div
-        className="absolute inset-0 origin-top-left"
-        style={{ transform: `scale(${scale})` }}
+        className="absolute top-0 left-0 origin-top-left"
+        style={{ width: "384px", height: "700px", transform: `scale(${scale})` }}
       >
         {/* [Layer 0.5] Hair_Acc Back Layer (Hairpin) (z-[-5]) */}
         {/* Placed behind Hair Back Layer */}
