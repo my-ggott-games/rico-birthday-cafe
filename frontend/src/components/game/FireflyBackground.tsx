@@ -14,8 +14,18 @@ interface Firefly {
 export const FireflyBackground: React.FC<{ isFinished?: boolean }> = ({ isFinished }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const [showFireflies, setShowFireflies] = React.useState(!isFinished);
+
+    React.useEffect(() => {
+        if (isFinished) {
+            const timer = setTimeout(() => setShowFireflies(true), 7500);
+            return () => clearTimeout(timer);
+        }
+    }, [isFinished]);
 
     useEffect(() => {
+        if (!showFireflies) return;
+
         const canvas = canvasRef.current;
         const container = containerRef.current;
         if (!canvas || !container) return;
@@ -82,14 +92,14 @@ export const FireflyBackground: React.FC<{ isFinished?: boolean }> = ({ isFinish
             window.removeEventListener("resize", resizeCanvas);
             cancelAnimationFrame(animationFrameId);
         };
-    }, []);
+    }, [showFireflies]);
 
     return (
         <div ref={containerRef} className="absolute inset-0 pointer-events-none">
             <motion.canvas
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 2, delay: isFinished ? 1 : 0 }}
+                animate={{ opacity: showFireflies ? 1 : 0 }}
+                transition={{ duration: 2 }}
                 ref={canvasRef}
                 className="w-full h-full"
             />

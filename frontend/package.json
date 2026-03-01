@@ -20,6 +20,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.31.0",
     "html2canvas": "^1.4.1",
+    "modern-screenshot": "^4.6.8",
     "react": "^19.2.0",
     "react-confetti": "^6.4.0",
     "react-dom": "^19.2.0",
@@ -30,6 +31,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@types/canvas-confetti": "^1.9.0",
+    "@types/dom-to-image": "^2.6.7",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",

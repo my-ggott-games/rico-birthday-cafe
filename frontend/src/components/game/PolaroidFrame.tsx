@@ -8,6 +8,8 @@ interface PolaroidFrameProps {
     overlayContent?: React.ReactNode;
     children?: React.ReactNode;
     characterOffset?: { x?: number; y?: number };
+    polaroidRef?: React.RefObject<HTMLDivElement | null>;
+    hideAnimations?: boolean;
 }
 
 export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
@@ -17,6 +19,8 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
     overlayContent,
     children,
     characterOffset,
+    polaroidRef,
+    hideAnimations,
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -30,6 +34,7 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
     return (
         <div className="absolute inset-0 z-40 overflow-y-auto overflow-x-hidden flex p-4 md:p-0">
             <motion.div
+                ref={polaroidRef}
                 initial={{ opacity: 0, scale: 1, y: 0 }}
                 animate={
                     isFlyAway
@@ -121,9 +126,11 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
                     </div>
 
                     {/* This renders using the bounds of containerRef! */}
-                    <div className="absolute inset-0 z-[100] pointer-events-none overflow-hidden">
-                        {overlayContent}
-                    </div>
+                    {!hideAnimations && (
+                        <div className="absolute inset-0 z-[100] pointer-events-none overflow-hidden">
+                            {overlayContent}
+                        </div>
+                    )}
                 </div>
 
                 <div className="absolute bottom-6 left-0 right-0 flex justify-center">

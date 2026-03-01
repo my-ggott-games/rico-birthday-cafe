@@ -17,6 +17,7 @@ import { SpringFestivalBackground, SpringFestivalPetals } from "../components/ga
 import { FireflyBackground } from "../components/game/FireflyBackground";
 import { PolaroidFrame } from "../components/game/PolaroidFrame";
 import { OrientalBackground } from "../components/game/OrientalBackground";
+import { domToJpeg } from "modern-screenshot";
 
 const CodyGame: React.FC = () => {
   const navigate = useNavigate();
@@ -44,6 +45,8 @@ const CodyGame: React.FC = () => {
   const [showButtons, setShowButtons] = useState(true);
   const [contentVisible, setContentVisible] = useState(true);
   const [isFlyAway, setIsFlyAway] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const polaroidRef = React.useRef<HTMLDivElement>(null);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   React.useEffect(() => {
@@ -310,11 +313,14 @@ const CodyGame: React.FC = () => {
         </div>
 
         <div
-          className={`relative z-10 w-full h-full flex ${isMobile ? "flex-col overflow-y-auto" : "flex-row-reverse items-center justify-between px-16 py-10"}`}
+          className={`relative z-10 w-full h-full flex ${isMobile
+              ? `flex-col ${isFinished ? "justify-center" : "overflow-y-auto"}`
+              : `${showInventory ? "flex-row-reverse justify-between" : "flex-col justify-center"} items-center transition-all duration-1000 px-4 md:px-16 py-10`
+            }`}
         >
           {/* Left/Right: Mannequin Display */}
           <div
-            className={`${isMobile ? "w-full min-h-[650px] pt-16" : `${showInventory ? "w-[45%]" : "w-full"} h-full transition-all duration-1000`} flex flex-col items-center justify-center`}
+            className={`${isMobile ? "w-full pt-8" : `${showInventory ? "w-[45%]" : "w-full"} h-full transition-all duration-1000`} flex flex-col items-center justify-center`}
           >
             <div
               className={`relative z-10 w-full ${isMobile ? "h-[550px]" : "h-[700px]"} flex items-center justify-center`}
@@ -328,6 +334,8 @@ const CodyGame: React.FC = () => {
                       ? { x: 0, y: 75 }  // 알맞지 않은 조합 (그라데이션)
                       : { x: 75, y: 75 }  // 알맞은 조합
                   }
+                  polaroidRef={polaroidRef}
+                  hideAnimations={isCapturing}
                   backgroundContent={
                     <>
                       {activeBackground === "spring-festival" && (
@@ -336,14 +344,20 @@ const CodyGame: React.FC = () => {
                       {activeBackground === "oriental" && (
                         <OrientalBackground />
                       )}
+                      {/* Only show background fireflies if not capturing */}
+                      {!isCapturing && activeBackground === "spring-festival" && (
+                        <div className="absolute inset-0 z-0">
+                          {/* Fireflies are actually in overlayContent now, but checking just in case */}
+                        </div>
+                      )}
                     </>
                   }
                   overlayContent={
                     <>
-                      {activeBackground === "spring-festival" && (
+                      {!isCapturing && activeBackground === "spring-festival" && (
                         <FireflyBackground isFinished={true} />
                       )}
-                      {activeBackground === "oriental" && (
+                      {!isCapturing && activeBackground === "oriental" && (
                         <SpringFestivalPetals isFinished={true} isFlyAway={isFlyAway} />
                       )}
                     </>
@@ -419,14 +433,14 @@ const CodyGame: React.FC = () => {
                         setShowInventory(false);
                         setShowButtons(false);
 
-                        // Fade in the Polaroid content
+                        // 슬로우 페이드 인 (총 약 7.5~8초 소요)
                         setTimeout(() => {
                           setContentVisible(true);
-                          setTimeout(() => setShowButtons(true), 1000);
+                          setTimeout(() => setShowButtons(true), 7500); // 애니메이션 끝난 후 버튼 표시
                         }, 800);
                       }, 100);
                     } else {
-                      // No combo matched, smoothly transition instantly without fade
+                      // No combo matched (그라데이션 배경)
                       setIsFinished(true);
                       setResultImage("/assets/codygame/riko_body_default.png");
 
@@ -438,17 +452,75 @@ const CodyGame: React.FC = () => {
                         "linear-gradient(135deg, #fdcbf1 0%, #e6dee9 100%)",
                         "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"
                       ];
-                      setActiveBackground(gradients[Math.floor(Math.random() * gradients.length)]);
+
+                      const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
+                      setActiveBackground(randomGradient);
 
                       setShowInventory(false);
-                      setShowButtons(true);
+                      setShowButtons(false);
+
+                      // 패스트 페이드 인 (총 약 1.7~2초 소요)
+                      setTimeout(() => {
+                        setContentVisible(true);
+                        setTimeout(() => setShowButtons(true), 1500); // 빠른 연출 후 버튼 표시
+                      }, 400);
                     }
+                  } else {
+                    // Handle JPG save
+                    if (!polaroidRef.current) return;
+
+                    setIsCapturing(true);
+
+                    // Small delay to ensure state update settles (hides animations)
+                    setTimeout(() => {
+                      domToJpeg(polaroidRef.current!, {
+                        quality: 1,
+                        backgroundColor: '#ffffff',
+                        scale: 4, // 초고해상도 캡처 (4배 확대)
+                      })
+                        .then((dataUrl) => {
+                          const link = document.createElement('a');
+                          link.download = `riko-cody-${new Date().getTime()}.jpg`;
+                          link.href = dataUrl;
+                          link.click();
+                          setIsCapturing(false);
+                        })
+                        .catch((error) => {
+                          console.error('Error saving image:', error);
+                          setIsCapturing(false);
+                          alert('이미지 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                        });
+                    }, 300); // 렌더링 안정을 위해 지연 시간을 조금 더 확보
                   }
                 }}
-                className={isFinished ? "btn-disabled" : "btn-primary"}
+                className={isCapturing ? "btn-disabled" : "btn-primary"}
               >
-                {isFinished ? "공유하기 ✨" : "코디 끝!✨"}
+                {isCapturing ? "작업 중..." : (isFinished ? "이미지 저장 📸" : "코디 끝!✨")}
               </button>
+
+              {isFinished && (
+                <button
+                  onClick={() => {
+                    const shareData = {
+                      title: '유즈하 리코 생일 기념 코디 게임',
+                      text: '나만의 리코를 코디해봤어요! 여러분도 함께 축하해주세요 🎀',
+                      url: window.location.origin
+                    };
+
+                    if (navigator.share) {
+                      navigator.share(shareData)
+                        .catch((err) => console.log('Error sharing:', err));
+                    } else {
+                      navigator.clipboard.writeText(window.location.origin)
+                        .then(() => alert('공유 링크가 클립보드에 복사되었습니다!'))
+                        .catch(() => alert('공유 링크 복사에 실패했습니다.'));
+                    }
+                  }}
+                  className="btn-secondary"
+                >
+                  공유하기 🔗
+                </button>
+              )}
             </div>
           </div>
 
@@ -801,7 +873,7 @@ const CodyGame: React.FC = () => {
           </div>
         ) : null}
       </DragOverlay>
-    </DndContext>
+    </DndContext >
   );
 };
 
