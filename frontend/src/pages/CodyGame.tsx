@@ -48,6 +48,7 @@ const CodyGame: React.FC = () => {
   const [isCapturing, setIsCapturing] = useState(false);
   const polaroidRef = React.useRef<HTMLDivElement>(null);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [activeTab, setActiveTab] = useState<"hair" | "clothes" | "accessories">("hair");
 
   React.useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -314,13 +315,13 @@ const CodyGame: React.FC = () => {
 
         <div
           className={`relative z-10 w-full h-full flex ${isMobile
-              ? `flex-col ${isFinished ? "justify-center" : "overflow-y-auto"}`
-              : `${showInventory ? "flex-row-reverse justify-between" : "flex-col justify-center"} items-center transition-all duration-1000 px-4 md:px-16 py-10`
+            ? `flex-col ${isFinished ? "justify-center" : "overflow-y-auto"}`
+            : `${showInventory ? "flex-row-reverse justify-between" : "flex-col justify-center"} items-center transition-all duration-1000 px-4 md:px-16 py-10`
             }`}
         >
           {/* Left/Right: Mannequin Display */}
           <div
-            className={`${isMobile ? "w-full pt-8" : `${showInventory ? "w-[45%]" : "w-full"} h-full transition-all duration-1000`} flex flex-col items-center justify-center`}
+            className={`${isMobile ? "w-full pt-8" : `${showInventory ? "w-[35%]" : "w-full"} h-full transition-all duration-1000`} flex flex-col items-center justify-center`}
           >
             <div
               className={`relative z-10 w-full ${isMobile ? "h-[550px]" : "h-[700px]"} flex items-center justify-center`}
@@ -526,303 +527,181 @@ const CodyGame: React.FC = () => {
 
           {/* Background/Right: Wardrobe */}
           <div
-            className={`${isMobile ? `w-full ${showInventory ? "px-4" : "h-0 p-0"}` : "w-[45%] h-full"} flex flex-col transition-all duration-1000 ${showInventory ? "opacity-100" : "opacity-0 w-[0%] overflow-hidden pointer-events-none"}`}
+            className={`${isMobile ? `w-full ${showInventory ? "px-4" : "h-0 p-0"}` : "w-[65%] h-full"} flex flex-col transition-all duration-1000 ${showInventory ? "opacity-100" : "opacity-0 w-[0%] overflow-hidden pointer-events-none"}`}
           >
+            {/* Mobile Tab UI - PC는 탭 없이 통합 뷰 제공 */}
+            {isMobile && !isFinished && (
+              <div className="relative z-50 flex justify-around mb-6 mt-4 bg-white/30 backdrop-blur-md rounded-2xl p-1 border border-white/50 shadow-sm mx-4">
+                {[
+                  { id: "hair", label: "헤어" },
+                  { id: "clothes", label: "의상" },
+                  { id: "accessories", label: "액세서리" }
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`relative z-50 flex-1 py-3 px-2 rounded-xl text-sm font-black transition-all ${activeTab === tab.id
+                      ? "bg-[#4A3b32] text-white shadow-md transform scale-105"
+                      : "text-[#4A3b32]/60 hover:bg-white/50"
+                      }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div
-              className={`flex-1 ${isMobile ? "" : "overflow-y-auto custom-scrollbar"} transition-opacity ${isFinished ? "opacity-30 pointer-events-none" : ""}`}
+              className={`flex-1 ${isMobile ? "" : "overflow-y-auto custom-scrollbar px-6 pb-20"} transition-opacity ${isFinished ? "opacity-30 pointer-events-none" : ""}`}
             >
-              {/* Hair Section */}
-              <div className="mb-8">
-                <div
-                  className={`flex ${isMobile ? "gap-2" : "gap-4"} overflow-x-auto px-4 pb-4`}
-                >
-                  {availableItems
-                    .filter((item) => item.category === "hair")
-                    .map((item) => {
-                      const isEquipped = Object.values(equippedIds).includes(
-                        item.id,
-                      );
-                      const isDragging = activeId === item.id;
-                      const handleClick = () => {
-                        if (isMobile && !isFinished && !isEquipped) {
-                          setEquippedItems((prev) => ({
-                            ...prev,
-                            [item.category]: item.id,
-                          }));
-                        }
-                      };
-
-                      return (
-                        <div
-                          key={item.id}
-                          onClick={handleClick}
-                          className={`relative ${isMobile ? "w-40 h-48 ml-1" : "w-60 h-64"} overflow-hidden border-2 border-dashed border-[#4A3b32]/30 rounded-3xl flex-shrink-0 bg-[#FDFBF7]/50 transition-transform active:scale-95`}
-                        >
-                          {/* Hidden stable target for return animation */}
-                          <div
-                            className="absolute w-[384px] h-[700px] opacity-0 pointer-events-none"
-                            style={{
-                              top: isMobile ? "-120px" : "-70px",
-                              left: "50%",
-                              transform: `translateX(-50%) scale(${characterScale})`,
-                            }}
-                          >
-                            <motion.div
-                              layoutId={item.id}
-                              className="w-full h-full"
-                              transition={{
-                                duration: 0.3,
-                                ease: [0.23, 1, 0.32, 1],
-                              }}
-                            />
-                            {item.layers.back && (
-                              <motion.div
-                                layoutId={`${item.id}-back`}
-                                className="w-full h-full"
-                                transition={{
-                                  duration: 0.3,
-                                  ease: [0.23, 1, 0.32, 1],
-                                }}
-                              />
-                            )}
-                          </div>
-
-                          {/* Back Hair Layer for Preview - Hide when equipped or dragging */}
-                          {!isEquipped && !isDragging && item.layers.back && (
-                            <div
-                              className="absolute w-[384px] h-[700px] opacity-100 pointer-events-none"
-                              style={{
-                                top: isMobile ? "-120px" : "-70px",
-                                left: "50%",
-                                transform: `translateX(-50%) scale(${characterScale})`,
-                              }}
-                            >
-                              <img
-                                src={item.layers.back}
-                                className="w-full h-full object-contain"
-                                alt="back-preview"
-                              />
-                            </div>
-                          )}
-
-                          {!isEquipped && !isDragging && (
-                            <div
-                              className="absolute w-[384px] h-[700px] cursor-grab active:cursor-grabbing"
-                              style={{
-                                top: isMobile ? "-120px" : "-70px",
-                                left: "50%",
-                                transform: `translateX(-50%) scale(${characterScale})`,
-                              }}
-                            >
-                              <DraggableItem
-                                id={item.id}
-                                layers={{
-                                  front: item.layers.front,
-                                  main: item.layers.main,
-                                }}
-                                category={item.category}
-                                className="w-full h-full p-0"
-                              />
-                            </div>
-                          )}
-                          {/* Equipped items are hidden in inventory */}
-                        </div>
-                      );
-                    })}
-                </div>
-              </div>
-
-              {/* Clothes Section */}
-              <div className="mb-8">
-                <div
-                  className={`flex ${isMobile ? "gap-2" : "gap-4"} overflow-x-auto px-4 pb-4`}
-                >
-                  {availableItems
-                    .filter((item) => item.category === "clothes")
-                    .map((item) => {
-                      const isEquipped = Object.values(equippedIds).includes(
-                        item.id,
-                      );
-                      const isDragging = activeId === item.id;
-                      const handleClick = () => {
-                        if (isMobile && !isFinished && !isEquipped) {
-                          setEquippedItems((prev) => ({
-                            ...prev,
-                            [item.category]: item.id,
-                          }));
-                        }
-                      };
-
-                      return (
-                        <div
-                          key={item.id}
-                          onClick={handleClick}
-                          className={`relative ${isMobile ? "w-40 h-60 ml-1" : "w-60 h-120"} overflow-hidden border-2 border-dashed border-[#4A3b32]/30 rounded-3xl flex-shrink-0 bg-[#FDFBF7]/50 transition-transform active:scale-95`}
-                        >
-                          {/* Hidden stable target for return animation */}
-                          <div
-                            className="absolute w-[384px] h-[700px] opacity-0 pointer-events-none"
-                            style={{
-                              top: isMobile ? "-140px" : "-128px",
-                              left: "50%",
-                              transform: `translateX(-50%) scale(${characterScale})`,
-                            }}
-                          >
-                            <motion.div
-                              layoutId={item.id}
-                              className="w-full h-full"
-                              transition={{
-                                duration: 0.3,
-                                ease: [0.23, 1, 0.32, 1],
-                              }}
-                            />
-                          </div>
-
-                          {!isEquipped && !isDragging && (
-                            <div
-                              className="absolute w-[384px] h-[700px] cursor-grab active:cursor-grabbing"
-                              style={{
-                                top: isMobile ? "-140px" : "-128px",
-                                left: "50%",
-                                transform: `translateX(-50%) scale(${characterScale})`,
-                              }}
-                            >
-                              <DraggableItem
-                                id={item.id}
-                                layers={item.layers}
-                                category={item.category}
-                                className="w-full h-full p-0"
-                              />
-                            </div>
-                          )}
-                          {/* Equipped items are hidden in inventory */}
-                        </div>
-                      );
-                    })}
-                </div>
-              </div>
-
-              {/* Accessories Section */}
-              <div className="mb-8">
-                <div
-                  className={`flex ${isMobile ? "gap-2" : "gap-4"} overflow-x-auto px-4 pb-4`}
-                >
-                  {availableItems
-                    .filter((item) =>
-                      [
-                        "accessories",
-                        "hair_acc",
-                        "clothes_acc",
-                        "hand_acc",
-                      ].includes(item.category),
-                    )
-                    .map((item) => {
-                      const isEquipped = Object.values(equippedIds).includes(
-                        item.id,
-                      );
-                      const isDragging = activeId === item.id;
-                      const handleClick = () => {
-                        if (isMobile && !isFinished && !isEquipped) {
-                          setEquippedItems((prev) => {
-                            const nextState = { ...prev };
-                            if (item.id === "accessories-1") {
-                              nextState.hair_acc = null;
-                              nextState.clothes_acc = null;
-                              nextState.hand_acc = null;
-                            } else if (
-                              ["hair_acc", "clothes_acc", "hand_acc"].includes(
-                                item.category,
-                              )
-                            ) {
-                              nextState.accessories = null;
+              {[
+                { id: "hair", label: "헤어", filter: (i: any) => i.category === "hair" },
+                { id: "clothes", label: "의상", filter: (i: any) => i.category === "clothes" },
+                { id: "accessories", label: "액세서리", filter: (i: any) => ["accessories", "hair_acc", "clothes_acc", "hand_acc"].includes(i.category) },
+              ]
+                .filter(section => !isMobile || activeTab === section.id)
+                .map((section) => (
+                  <div key={section.id} className="mb-0">
+                    <div
+                      className={`flex ${isMobile ? "overflow-x-auto" : "flex-wrap justify-start"}`}
+                    >
+                      {availableItems
+                        .filter(section.filter)
+                        .map((item) => {
+                          const isEquipped = Object.values(equippedIds).includes(
+                            item.id,
+                          );
+                          const isDragging = activeId === item.id;
+                          const handleClick = () => {
+                            if (!isFinished && !isEquipped) {
+                              if (section.id === "accessories") {
+                                setEquippedItems((prev) => {
+                                  const nextState = { ...prev };
+                                  if (item.id === "accessories-1") {
+                                    nextState.hair_acc = null;
+                                    nextState.clothes_acc = null;
+                                    nextState.hand_acc = null;
+                                  } else if (["hair_acc", "clothes_acc", "hand_acc"].includes(item.category)) {
+                                    nextState.accessories = null;
+                                  }
+                                  return {
+                                    ...nextState,
+                                    [item.category]: item.id,
+                                  };
+                                });
+                              } else {
+                                setEquippedItems((prev) => ({
+                                  ...prev,
+                                  [item.category]: item.id,
+                                }));
+                              }
                             }
-                            return {
-                              ...nextState,
-                              [item.category]: item.id,
-                            };
-                          });
-                        }
-                      };
+                          };
 
-                      return (
-                        <div
-                          key={item.id}
-                          onClick={handleClick}
-                          className={`relative ${isMobile ? "w-40 h-48 ml-1" : "w-60 h-64"} overflow-hidden border-2 border-dashed border-[#4A3b32]/30 rounded-3xl flex-shrink-0 bg-[#FDFBF7]/50 transition-transform active:scale-95`}
-                        >
-                          {/* Hidden stable target for return animation */}
-                          <div
-                            className="absolute w-[384px] h-[700px] opacity-0 pointer-events-none"
-                            style={{
-                              top: isMobile ? "-120px" : "-70px",
-                              left: "50%",
-                              transform: `translateX(-50%) scale(${characterScale})`,
-                            }}
-                          >
-                            <motion.div
-                              layoutId={item.id}
-                              className="w-full h-full"
-                              transition={{
-                                duration: 0.3,
-                                ease: [0.23, 1, 0.32, 1],
-                              }}
-                            />
-                            {item.layers.back && (
-                              <motion.div
-                                layoutId={`${item.id}-back`}
-                                className="w-full h-full"
-                                transition={{
-                                  duration: 0.3,
-                                  ease: [0.23, 1, 0.32, 1],
-                                }}
-                              />
-                            )}
-                          </div>
+                          // 모바일 인벤토리 전용 스케일 적용
+                          const inventoryScale = isMobile ? characterScale * 0.75 : characterScale;
 
-                          {/* Back Layer for Preview */}
-                          {!isEquipped && !isDragging && item.layers.back && (
+                          // 카테고리별 아이템 카드 크기 및 위치 설정 (PC/모바일 분기)
+                          let cardSize = "";
+                          let previewOffset = "";
+
+                          if (item.category === "clothes") {
+                            cardSize = isMobile ? "w-32 h-48" : "w-72 h-[36rem]"; // PC 의상 높이 대폭 확장 (rem 대신 직관적인 px 사용)
+                            previewOffset = isMobile ? "-200px" : "-120px"; // 모바일 이미지 위치 위로 더 끌어올림
+                          } else {
+                            // hair, accessories
+                            cardSize = isMobile ? "w-28 h-40" : "w-60 h-60";
+                            previewOffset = isMobile ? "-150px" : "-40px"; // 모바일 이미지 위치 위로 더 끌어올림
+                          }
+
+                          return (
                             <div
-                              className="absolute w-[384px] h-[700px] opacity-100 pointer-events-none"
-                              style={{
-                                top: isMobile ? "-120px" : "-70px",
-                                left: "50%",
-                                transform: `translateX(-50%) scale(${characterScale})`,
-                              }}
+                              key={item.id}
+                              onClick={handleClick}
+                              className={`relative ${cardSize} overflow-hidden border-2 border-dashed border-[#4A3b32]/30 rounded-3xl flex-shrink-0 bg-[#FDFBF7]/50 transition-all hover:border-[#D46A6A]/50 hover:bg-white/80 active:scale-95 group shadow-sm`}
                             >
-                              <img
-                                src={item.layers.back}
-                                className="w-full h-full object-contain"
-                                alt="back-preview"
-                              />
-                            </div>
-                          )}
-
-                          {!isEquipped && !isDragging && (
-                            <div
-                              className="absolute w-[384px] h-[700px] cursor-grab active:cursor-grabbing"
-                              style={{
-                                top: isMobile ? "-120px" : "-70px",
-                                left: "50%",
-                                transform: `translateX(-50%) scale(${characterScale})`,
-                              }}
-                            >
-                              <DraggableItem
-                                id={item.id}
-                                layers={{
-                                  front: item.layers.front,
-                                  main: item.layers.main,
+                              <div
+                                className="absolute w-[384px] h-[700px] opacity-0 pointer-events-none"
+                                style={{
+                                  top: previewOffset,
+                                  left: "50%",
+                                  transform: `translateX(-50%) scale(${inventoryScale})`,
                                 }}
-                                category={item.category}
-                                className="w-full h-full p-0"
-                              />
+                              >
+                                <motion.div
+                                  layoutId={item.id}
+                                  className="w-full h-full"
+                                  transition={{
+                                    duration: 0.3,
+                                    ease: [0.23, 1, 0.32, 1],
+                                  }}
+                                />
+                                {item.layers.back && (
+                                  <motion.div
+                                    layoutId={`${item.id}-back`}
+                                    className="w-full h-full"
+                                    transition={{
+                                      duration: 0.3,
+                                      ease: [0.23, 1, 0.32, 1],
+                                    }}
+                                  />
+                                )}
+                              </div>
+
+                              {!isEquipped && !isDragging && (
+                                <>
+                                  {item.layers.back && (
+                                    <div
+                                      className="absolute w-[384px] h-[700px] opacity-100 pointer-events-none"
+                                      style={{
+                                        top: previewOffset,
+                                        left: "50%",
+                                        transform: `translateX(-50%) scale(${inventoryScale})`,
+                                      }}
+                                    >
+                                      <img
+                                        src={item.layers.back}
+                                        className="w-full h-full object-contain"
+                                        alt="back-preview"
+                                      />
+                                    </div>
+                                  )}
+                                  <div
+                                    className="absolute w-[384px] h-[700px] cursor-grab active:cursor-grabbing"
+                                    style={{
+                                      top: previewOffset,
+                                      left: "50%",
+                                      transform: `translateX(-50%) scale(${inventoryScale})`,
+                                    }}
+                                  >
+                                    <DraggableItem
+                                      id={item.id}
+                                      layers={{
+                                        front: item.layers.front,
+                                        main: item.layers.main,
+                                      }}
+                                      category={item.category}
+                                      className="w-full h-full p-0"
+                                    />
+                                  </div>
+                                </>
+                              )}
+
+                              {isEquipped && (
+                                <div className="absolute inset-0 bg-[#4A3b32]/10 backdrop-blur-[2px] flex items-center justify-center">
+                                  <span className="bg-white/90 text-[#4A3b32] px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                                    장착 중 ✨
+                                  </span>
+                                </div>
+                              )}
                             </div>
-                          )}
-                          {/* Equipped items are hidden in inventory */}
-                        </div>
-                      );
-                    })}
-                </div>
-              </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                ))}
             </div>
           </div>
         </div>
