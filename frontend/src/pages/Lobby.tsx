@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import RicoSlogan from '../components/game/RicoSlogan';
+import { KCelebrateSlogan } from 'k-celebrate-slogan';
 
 const Lobby: React.FC = () => {
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -37,8 +37,15 @@ const Lobby: React.FC = () => {
                     </div>
                 </header>
 
-                {/* Rico Slogan Component */}
-                <RicoSlogan />
+                {/* Slogan */}
+                <div className="flex justify-center w-full">
+                    <KCelebrateSlogan
+                        className="slogan-lobby"
+                        text1="축하합니다"
+                        text2="유즈하 리코"
+                        text3="아무 이유 없음"
+                    />
+                </div>
 
                 <div className={`flex-1 relative ${isMobile ? 'mt-0 flex flex-col items-center justify-center gap-4' : 'mt-4'}`}>
                     {/* Hotspot: TPO Cody (Paper Doll Table) */}

@@ -140,3 +140,8 @@ button {
     transform: rotate(360deg);
   }
 }
+
+/* 로비 슬로건 border 오버라이드 */
+.slogan-lobby .k-celebrate-slogan-container>div {
+  border-color: rgba(0, 0, 0, 0.05);
+}
