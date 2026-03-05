@@ -9,7 +9,7 @@ import confetti from 'canvas-confetti';
 const ROWS = 4;
 const COLS = 4;
 const PIECE_SIZE = 100; // Reduced size to fit screen (Total 400x400)
-const IMAGE_URL = '/assets/rico_puzzle.png';
+const IMAGE_URL = '/assets/rico_puzzle_sample.png';
 
 // --- Types ---
 interface PuzzlePiece {
