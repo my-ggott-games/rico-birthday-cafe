@@ -2,9 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { KCelebrateSlogan } from 'k-celebrate-slogan';
+import { AchievementModal } from '../components/common/AchievementModal';
+import { AdminModal } from '../components/auth/AdminModal';
 
 const Lobby: React.FC = () => {
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+    const [isAchievementOpen, setIsAchievementOpen] = useState(false);
+    const [isAdminOpen, setIsAdminOpen] = useState(false);
 
     useEffect(() => {
         const handleResize = () => setWindowWidth(window.innerWidth);
@@ -32,8 +36,20 @@ const Lobby: React.FC = () => {
                     <h2 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-black text-[#4A3b32] drop-shadow-sm rotate-[-1deg]`}>
                         ☕ Main Hall
                     </h2>
-                    <div className={`${isMobile ? 'px-3 py-1 text-sm' : 'px-6 py-2'} bg-white rounded-full border-2 border-[#D6C0B0] shadow-sm font-bold text-[#F43F5E]`}>
-                        WHO MADE THIS?!
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setIsAchievementOpen(true)}
+                            className={`${isMobile ? 'px-3 py-1 text-sm' : 'px-6 py-2'} bg-[#FFE4E6] rounded-full border-2 border-[#F43F5E] shadow-sm font-black text-[#F43F5E] hover:bg-[#F43F5E] hover:text-white transition-colors flex items-center gap-1.5`}
+                        >
+                            <span className="drop-shadow-sm text-base">🏆</span> Badges
+                        </button>
+                        <button
+                            onClick={() => setIsAdminOpen(true)}
+                            className={`${isMobile ? 'px-3 py-1 text-[10px]' : 'px-5 py-2 text-xs'} bg-[#1a1a1a] text-white/40 rounded-full border border-white/10 shadow-lg font-mono tracking-tighter hover:text-white hover:border-[#F43F5E]/50 transition-all group relative overflow-hidden`}
+                        >
+                            <span className="relative z-10 transition-transform group-hover:scale-110 inline-block">who am I?</span>
+                            <div className="absolute inset-0 bg-gradient-to-tr from-[#F43F5E]/0 via-[#F43F5E]/5 to-[#F43F5E]/0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
                     </div>
                 </header>
 
@@ -115,6 +131,16 @@ const Lobby: React.FC = () => {
                     </Link>
                 </div>
             </div>
+
+            <AchievementModal
+                isOpen={isAchievementOpen}
+                onClose={() => setIsAchievementOpen(false)}
+            />
+
+            <AdminModal
+                isOpen={isAdminOpen}
+                onClose={() => setIsAdminOpen(false)}
+            />
         </div>
     );
 };

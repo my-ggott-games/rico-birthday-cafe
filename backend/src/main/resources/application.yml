@@ -18,3 +18,10 @@ logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+app:
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173}
+  admin:
+    # Use environment variable ADMIN_PASSCODE_HASH for production
+    passcode-hash: ${ADMIN_PASSCODE_HASH:$2a$10$64tlOiaOJWsxVOkt5FZFee2xdOdKdukbdNsD36eUiHJLQgr43.uGy}

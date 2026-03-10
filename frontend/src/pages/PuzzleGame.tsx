@@ -388,8 +388,8 @@ const PuzzleGame: React.FC = () => {
                         <span>←</span> Lobby
                     </motion.button>
                     <div className="flex flex-col">
-                        <span className="font-handwriting text-5xl font-black text-[#4A3b32] drop-shadow-sm">Puzzle Challenge!</span>
-                        <span className="text-[#F43F5E] font-bold mt-1 text-sm">✨ 리코의 생일을 축하하는 그림을 맞춰보세요! (조각을 클릭하면 회전합니다)</span>
+                        <span className="font-handwriting text-5xl font-black text-[#4A3b32] drop-shadow-sm">퍼즐 좋아해?</span>
+                        <span className="text-[#F43F5E] font-bold mt-1 text-sm">조각을 누르면 회전</span>
                     </div>
                 </div>
 

@@ -1,12 +1,25 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/useAuthStore';
+import { AuthModal } from '../components/auth/AuthModal';
 
 const LandingPage: React.FC = () => {
     const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const { isAuthenticated } = useAuthStore();
 
     const handleEnter = () => {
+        if (isAuthenticated) {
+            triggerEnterAnimation();
+        } else {
+            setIsAuthModalOpen(true);
+        }
+    };
+
+    const triggerEnterAnimation = () => {
+        setIsAuthModalOpen(false);
         setIsOpen(true);
         setTimeout(() => {
             navigate('/lobby');
@@ -79,6 +92,12 @@ const LandingPage: React.FC = () => {
                     Click the door to enter!
                 </p>
             </div>
+
+            <AuthModal
+                isOpen={isAuthModalOpen}
+                onClose={() => setIsAuthModalOpen(false)}
+                onSuccess={triggerEnterAnimation}
+            />
         </div>
     );
 };
