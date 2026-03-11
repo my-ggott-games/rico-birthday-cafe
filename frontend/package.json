@@ -20,13 +20,13 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.31.0",
     "html2canvas": "^1.4.1",
+    "k-celebrate-slogan": "^1.2.5",
     "modern-screenshot": "^4.6.8",
     "react": "^19.2.0",
     "react-confetti": "^6.4.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.0",
     "tailwind-merge": "^3.4.0",
-    "k-celebrate-slogan": "^1.1.4",
     "zustand": "^5.0.11"
   },
   "devDependencies": {

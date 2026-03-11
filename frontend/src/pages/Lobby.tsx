@@ -60,10 +60,12 @@ const Lobby: React.FC = () => {
                         text1="축하합니다"
                         text2="유즈하 리코"
                         text3="아무 이유 없음"
+                        scale={isMobile ? 0.6 : 0.85}
+                        emblemScale={isMobile ? 0.6 : 0.75}
                     />
                 </div>
 
-                <div className={`flex-1 relative ${isMobile ? 'mt-0 flex flex-col items-center justify-center gap-4' : 'mt-4'}`}>
+                <div className={`flex-1 relative ${isMobile ? 'mt-0 grid grid-cols-2 gap-3 place-items-center align-content-center h-full pb-4' : 'mt-4'}`}>
                     {/* Hotspot: TPO Cody (Paper Doll Table) */}
                     <Link
                         to="/game/cody"
@@ -94,7 +96,7 @@ const Lobby: React.FC = () => {
                     {/* Hotspot: Itabag (Display Table) - Positioned differently for mobile */}
                     <Link
                         to="/game/itabag"
-                        className={isMobile ? "relative scale-90" : "absolute bottom-10 right-1/3 group"}
+                        className={isMobile ? "relative scale-[0.85]" : "absolute bottom-10 right-[20%] group"}
                     >
                         <motion.div
                             whileHover={{ scale: 1.05 }}
@@ -126,6 +128,30 @@ const Lobby: React.FC = () => {
                             </div>
                             <div className={`mt-2 bg-white ${isMobile ? 'px-3 py-1 text-xs' : 'px-4 py-2'} rounded-xl font-bold text-[#4A3b32] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#F43F5E] group-hover:text-white transition-colors`}>
                                 Birthday Puzzle
+                            </div>
+                        </motion.div>
+                    </Link>
+
+                    {/* Hotspot: Asparagus Merge (2048 style) */}
+                    <Link
+                        to="/game/asparagus"
+                        className={isMobile ? "relative scale-[0.85]" : "absolute bottom-8 left-[24%] -translate-x-1/2 group"}
+                    >
+                        <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="flex flex-col items-center"
+                        >
+                            <div className={`relative ${isMobile ? 'w-32 h-24' : 'w-52 h-32'} bg-[#d4edda] rounded-2xl border-4 border-[#4A3b32] shadow-xl flex flex-col items-center justify-center gap-1`}>
+                                {/* Asparagus tile grid preview */}
+                                <div className="grid grid-cols-3 gap-1 p-2">
+                                    {['🌱', '🌿', '🥬', '🌾', '💎', '⚔️'].map((e, i) => (
+                                        <div key={i} className="w-7 h-7 rounded-lg flex items-center justify-center text-sm"
+                                            style={{ background: '#2d6a4f', fontSize: isMobile ? 12 : 14 }}>{e}</div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className={`mt-2 bg-white ${isMobile ? 'px-3 py-1 text-xs' : 'px-4 py-2'} rounded-xl font-bold text-[#4A3b32] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#F43F5E] group-hover:text-white transition-colors`}>
+                                아스파라거스 키우기
                             </div>
                         </motion.div>
                     </Link>

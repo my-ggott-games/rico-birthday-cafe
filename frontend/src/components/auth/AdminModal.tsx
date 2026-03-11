@@ -169,7 +169,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                                 ))}
                             </div>
 
-                            <div className="text-white/10 text-2xl font-black">_</div>
+                            <div className="text-white/10 text-2xl font-black mb-2 flex items-end">_</div>
 
                             <div className="flex gap-2">
                                 {[3, 4, 5, 6].map((i) => (
@@ -201,7 +201,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                                     </motion.span>
                                 ) : (
                                     <motion.span key="p" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-white/10 text-[10px] uppercase font-mono tracking-[0.4em]">
-                                        Awaiting Sequence
+                                        관리자 모드로 전환합니다.
                                     </motion.span>
                                 )}
                             </AnimatePresence>

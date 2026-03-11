@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Noto+Serif+KR:wght@400;700;900&family=Outfit:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Noto+Serif+KR:wght@400;700;900&display=swap');
 
 /* 
  Globally hide the default cursor so only the custom cursor is visible 
@@ -17,7 +17,8 @@
   --color-choco: #4A3b32;
   --color-latte: #D6C0B0;
 
-  font-family: 'Outfit', system-ui, sans-serif;
+  --font-sans: 'OneStoreMobilePop', system-ui, sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.5;
   font-weight: 400;
 
@@ -43,9 +44,6 @@ body {
   background-position: 0 0, 10px 10px;
 }
 
-h1,
-h2,
-h3,
 .font-handwriting {
   font-family: 'Nanum Pen Script', 'Gaegu', cursive;
   font-weight: 700;
@@ -130,6 +128,15 @@ button {
   font-weight: 400 900;
   font-style: normal;
 }
+
+@font-face {
+  font-family: 'OneStoreMobilePop';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-POP.woff') format('woff');
+  font-weight: normal;
+  font-display: swap;
+}
+
+
 
 @keyframes pinwheel-spin {
   from {

@@ -3,6 +3,7 @@ import LandingPage from './pages/LandingPage';
 import Lobby from './pages/Lobby';
 import CodyGame from './pages/CodyGame';
 import PuzzleGame from './pages/PuzzleGame';
+import AsparagusMerge from './pages/AsparagusMerge';
 
 import { CursorManager } from './components/game/CursorManager';
 import GlobalLoading from './components/common/GlobalLoading';
@@ -39,6 +40,7 @@ function App() {
               </div>
             } />
             <Route path="/game/puzzle" element={<PuzzleGame />} />
+            <Route path="/game/asparagus" element={<AsparagusMerge />} />
           </Route>
 
           {/* 404 Not Found */}
