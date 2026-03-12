@@ -196,8 +196,8 @@ const DraggablePiece = React.memo(({ piece, onRotate }: { piece: PuzzlePiece, on
                     return;
                 }
 
-                // Strict Click Rule: No movement AND quick press (< 200ms)
-                if (deltaTime < 200) {
+                // Strict Click Rule: No movement AND deliberate press (< 400ms)
+                if (deltaTime < 400) {
                     onRotate(piece.id);
                 }
 
@@ -257,7 +257,7 @@ const PuzzleGame: React.FC = () => {
 
     // Sensors - added delay to prevent accidental dragging instead of single clicking (rotation)
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { delay: 200, tolerance: 10 } })
+        useSensor(PointerSensor, { activationConstraint: { delay: 600, tolerance: 15 } })
     );
 
     useEffect(() => {
@@ -361,7 +361,7 @@ const PuzzleGame: React.FC = () => {
     const lastRotateTime = React.useRef(0);
     const handleRotate = React.useCallback((id: number) => {
         const now = Date.now();
-        if (now - lastRotateTime.current < 250) return; // 250ms debounce
+        if (now - lastRotateTime.current < 800) return; // 800ms debounce
         lastRotateTime.current = now;
 
         setPieces(prev => prev.map(p =>

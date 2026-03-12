@@ -53,7 +53,7 @@ const CodySample: React.FC = () => {
                 <PolaroidFrame
                   isFlyAway={false}
                   activeBackground={undefined} // Just trick the frame into normal drawing
-                  characterOffset={{ x: 0, y: 350 }}
+                  characterOffset={{ x: 0, y: 500 }}
                   isSquare={true}
                   hideShadow={false}
                   backgroundContent={
@@ -73,7 +73,7 @@ const CodySample: React.FC = () => {
                       activeId={null}
                       isFinished={true}
                       resultImage={"/assets/codygame/riko_body_smile.png"}
-                      scale={1.0}
+                      scale={1.25}
                       isMobile={false}
                       availableItems={sampleAvailableItems as any}
                     />
