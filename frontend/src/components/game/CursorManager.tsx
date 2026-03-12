@@ -56,7 +56,7 @@ export const CursorManager: React.FC = () => {
     }, []);
 
     return (
-        <div className="fixed inset-0 pointer-events-none z-[10000]">
+        <div className="fixed inset-0 pointer-events-none z-[9999999]">
             {/* Custom Cursor: Light Green Clover - Disabled to fix Naver Whale bug
             <AnimatePresence>
                 {window.innerWidth > 768 && (
