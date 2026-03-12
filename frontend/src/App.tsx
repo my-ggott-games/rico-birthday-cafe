@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import Lobby from './pages/Lobby';
 import CodyGame from './pages/CodyGame';
+import CodySample from './pages/CodySample';
 import PuzzleGame from './pages/PuzzleGame';
 import AsparagusMerge from './pages/AsparagusMerge';
 
@@ -25,6 +26,7 @@ function App() {
             <Route path="/lobby" element={<Lobby />} />
             {/* Route placeholders for games */}
             <Route path="/game/cody" element={<CodyGame />} />
+            <Route path="/sample/cody" element={<CodySample />} />
             <Route path="/game/itabag" element={
               <div className="min-h-screen bg-[#FFFFF8] text-[#166D77] flex flex-col items-center justify-center">
                 <div className="text-6xl mb-4">🎒</div>
