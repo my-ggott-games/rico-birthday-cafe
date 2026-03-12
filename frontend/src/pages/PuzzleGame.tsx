@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+
+import { ReturnButton } from '../components/common/ReturnButton';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, useDraggable, useDroppable } from '@dnd-kit/core';
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -219,7 +220,6 @@ const DraggablePiece = React.memo(({ piece, onRotate }: { piece: PuzzlePiece, on
 
 
 const PuzzleGame: React.FC = () => {
-    const navigate = useNavigate();
     const [pieces, setPieces] = useState<PuzzlePiece[]>([]);
     const [activeId, setActiveId] = useState<number | null>(null);
     const [completed, setCompleted] = useState(false);
@@ -255,9 +255,9 @@ const PuzzleGame: React.FC = () => {
     }, [completed]);
 
 
-    // Sensors - increase distance to prevent rotation during drag
+    // Sensors - added delay to prevent accidental dragging instead of single clicking (rotation)
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 10 } })
+        useSensor(PointerSensor, { activationConstraint: { delay: 200, tolerance: 10 } })
     );
 
     useEffect(() => {
@@ -357,7 +357,13 @@ const PuzzleGame: React.FC = () => {
     };
 
     // Rotate handler using useCallback to keep identity stable
+    // Debounce to prevent rapid double-taps causing double rotation glithes
+    const lastRotateTime = React.useRef(0);
     const handleRotate = React.useCallback((id: number) => {
+        const now = Date.now();
+        if (now - lastRotateTime.current < 250) return; // 250ms debounce
+        lastRotateTime.current = now;
+
         setPieces(prev => prev.map(p =>
             p.id === id ? { ...p, rotation: p.rotation + 90 } : p
         ));
@@ -377,16 +383,23 @@ const PuzzleGame: React.FC = () => {
                 className="w-full h-screen bg-[#FFFFF8] relative overflow-hidden select-none touch-none flex flex-col"
                 style={{ '--piece-size': 'min(18svw, 100px)' } as React.CSSProperties}
             >
+                {/* ─── Lobby Button: Fixed Top-Left on Mobile ─── */}
+                <div className="fixed top-4 left-4 z-40 lg:hidden">
+                    <ReturnButton
+                        gameName="퍼즐놀이"
+                        className="px-3 py-2 rounded-2xl font-bold text-sm flex items-center gap-1 border-2 whitespace-nowrap bg-pale-custard text-[#166D77] border-[#bef264] shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
+                    />
+                </div>
+
                 {/* 1. Header Area (Fixed Height) */}
-                <div className="h-[120px] w-full flex items-center px-10 relative z-20 bg-pale-custard/30 backdrop-blur-sm">
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate('/lobby')}
-                        className="bg-pale-custard px-6 py-3 rounded-2xl shadow-lg font-bold text-[#166D77] hover:bg-[#f3f4f6] border-2 border-[#bef264] flex items-center gap-2 mr-8"
-                    >
-                        <span>←</span> Lobby
-                    </motion.button>
+                <div className="h-[120px] w-full flex items-center px-10 relative z-20 bg-pale-custard/30 backdrop-blur-sm pt-8 lg:pt-0">
+                    <div className="hidden lg:block mr-8">
+                        <ReturnButton
+                            gameName="퍼즐놀이"
+                            className="flex px-6 py-3 rounded-2xl shadow-lg font-bold hover:bg-[#f3f4f6]"
+                            style={{ background: '#FFFFF8', color: '#166D77', borderColor: '#bef264' }}
+                        />
+                    </div>
                     <div className="flex flex-col">
                         <span className="font-handwriting text-5xl font-black text-[#166D77] drop-shadow-sm">퍼즐 좋아해?</span>
                         <span className="text-[#5EC7A5] font-bold mt-1 text-sm">조각을 누르면 회전</span>

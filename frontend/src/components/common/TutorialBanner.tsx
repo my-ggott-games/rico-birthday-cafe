@@ -65,7 +65,7 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({ slides, classNam
                         x: { type: "spring", stiffness: 350, damping: 35 },
                         opacity: { duration: 0.2 }
                     }}
-                    className="absolute inset-0 w-full h-full rounded-[24px] p-5 flex flex-col shadow-[0_8px_24px_rgba(74,59,50,0.2)] bg-[#166D77] text-pale-custard"
+                    className="absolute inset-0 w-full h-full rounded-[24px] px-5 pt-4 pb-3 flex flex-col shadow-[0_8px_24px_rgba(74,59,50,0.2)] bg-[#166D77] text-pale-custard"
                 >
                     <div className="font-black text-lg mb-1">{s.title}</div>
 

@@ -4,12 +4,20 @@ import { Tile } from './Tile';
 import { type Grid, type Direction } from './types';
 import { GRID_SIZE } from './constants';
 
+// Tile radius: 16px (rounded-2xl), gap: 18px.
+// Board padding: 20px → Board outer radius = 16 + 20 = 36px
+const TILE_RADIUS = 16;
+const BOARD_PADDING = 20;
+const BOARD_RADIUS = TILE_RADIUS + BOARD_PADDING; // 36
+
 interface BoardProps {
     grid: Grid;
     selection: { r: number; c: number } | null;
     isSwapMode: boolean;
     onTileClick: (r: number, c: number) => void;
     onMove: (dir: Direction) => void;
+    onTouchStart?: (e: React.TouchEvent) => void;
+    onTouchEnd?: (e: React.TouchEvent) => void;
 }
 
 const ArrowButton = ({ dir, onClick }: { dir: Direction; onClick: () => void }) => {
@@ -25,12 +33,19 @@ const ArrowButton = ({ dir, onClick }: { dir: Direction; onClick: () => void }) 
     );
 };
 
-export const Board: React.FC<BoardProps> = ({ grid, selection, isSwapMode, onTileClick, onMove }) => {
+export const Board: React.FC<BoardProps> = ({ grid, selection, isSwapMode, onTileClick, onMove, onTouchStart, onTouchEnd }) => {
     return (
         <div className="flex flex-col items-center justify-center w-full h-full">
             <div
-                className="rounded-[48px] p-6 w-full max-w-[min(800px,90vw)] aspect-square flex items-center justify-center"
-                style={{ background: '#166D77', boxShadow: '0 30px 80px rgba(22, 109, 119, 0.3)' }}
+                className="w-full max-w-[min(800px,90vw)] aspect-square flex items-center justify-center"
+                style={{
+                    background: '#166D77',
+                    borderRadius: BOARD_RADIUS,
+                    padding: BOARD_PADDING,
+                    boxShadow: '0 30px 80px rgba(22, 109, 119, 0.3)',
+                }}
+                onTouchStart={onTouchStart}
+                onTouchEnd={onTouchEnd}
             >
                 <div
                     style={{
@@ -45,7 +60,7 @@ export const Board: React.FC<BoardProps> = ({ grid, selection, isSwapMode, onTil
                     {grid.map((row, r) =>
                         row.map((cell, c) => (
                             <div key={`${r}-${c}`} style={{ position: 'relative' }}>
-                                <div className="absolute inset-0 rounded-3xl" style={{ background: 'rgba(255,255,255,0.08)' }} />
+                                <div className="absolute inset-0 rounded-2xl" style={{ background: 'rgba(255,255,255,0.08)' }} />
                                 <AnimatePresence mode="popLayout">
                                     <div className="absolute inset-0">
                                         <Tile

@@ -10,6 +10,15 @@ import {
     checkWin
 } from '../components/asparagus/Logic';
 
+// Submit best score to server — called only on game over
+const submitBestScore = (uid: string, bestScore: number) => {
+    fetch(`${BASE_URL}/asparagus/score`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid, bestScore })
+    }).catch(err => console.warn('Failed to save score to DB', err));
+};
+
 export const useAsparagusGame = () => {
     // ID for device
     const getUid = () => {
@@ -151,11 +160,7 @@ export const useAsparagusGame = () => {
         if (newScore > best) {
             setBest(newScore);
             localStorage.setItem(bestScoreKey, String(newScore));
-            fetch(`${BASE_URL}/asparagus/score`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ uid, bestScore: newScore })
-            }).catch(err => console.warn('Failed to save score to DB', err));
+            // NOTE: We do NOT submit to server here — submission happens only on Game Over
         }
 
         // 4. Check ending conditions
@@ -165,6 +170,9 @@ export const useAsparagusGame = () => {
             setTimeout(triggerConfetti, 200);
         } else if (checkGameOver(nextGrid)) {
             setGameOver(true);
+            // Submit best score to server only on game over
+            const finalBest = Math.max(best, newScore);
+            submitBestScore(uid, finalBest);
         }
     }, [grid, score, best, gameOver, won, continueAfterWin, isSwapMode, bestScoreKey, uid]);
 

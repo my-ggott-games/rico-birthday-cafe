@@ -10,7 +10,7 @@ import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core";
 import { DraggableItem } from "../components/game/DraggableItem";
 import { DroppableCharacter } from "../components/game/DroppableCharacter";
 import type { CodyItem } from "../components/game/DroppableCharacter";
-import { useNavigate } from "react-router-dom";
+import { ReturnButton } from "../components/common/ReturnButton";
 import { motion } from "framer-motion";
 
 import { SpringFestivalBackground, SpringFestivalPetals } from "../components/game/SpringFestivalBackground";
@@ -19,7 +19,6 @@ import { PolaroidFrame } from "../components/game/PolaroidFrame";
 import { domToJpeg } from "modern-screenshot";
 
 const CodyGame: React.FC = () => {
-  const navigate = useNavigate();
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [equippedIds, setEquippedItems] = useState<{
@@ -315,12 +314,14 @@ const CodyGame: React.FC = () => {
           }}
         />
 
+        {/* ─── Lobby Button: Fixed Top-Left ─── */}
         <div
-          className={`absolute top-6 left-6 z-50 transition-opacity duration-1000 ${!showButtons ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+          className={`fixed top-4 left-4 z-[9999] transition-opacity duration-1000 ${!showButtons ? "opacity-0 pointer-events-none" : "opacity-100"}`}
         >
-          <button onClick={() => navigate("/lobby")} className="btn-secondary">
-            ← 돌아가기
-          </button>
+          <ReturnButton
+            gameName="리코 옷입히기"
+            className="px-3 py-2 rounded-2xl font-bold text-sm lg:text-base lg:px-6 lg:py-3 flex items-center gap-1 border-2 bg-pale-custard text-[#166D77] border-[#bef264] shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
+          />
         </div>
 
         <div
@@ -572,7 +573,7 @@ const CodyGame: React.FC = () => {
           >
             {/* Mobile Tab UI - PC는 탭 없이 통합 뷰 제공 */}
             {isMobile && !isFinished && (
-              <div className="relative z-50 flex justify-around mb-6 mt-4 bg-pale-custard/30 backdrop-blur-md rounded-2xl p-1 border border-pale-custard/50 shadow-sm mx-4">
+              <div className="relative z-50 flex mb-6 mt-4 mx-4 overflow-x-auto gap-2 bg-transparent border-0 scrollbar-hide">
                 {[
                   { id: "hair", label: "헤어" },
                   { id: "clothes", label: "의상" },
@@ -584,7 +585,7 @@ const CodyGame: React.FC = () => {
                     type="button"
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`relative z-50 flex-1 py-3 px-2 rounded-xl text-sm font-black transition-all ${activeTab === tab.id
+                    className={`relative z-50 whitespace-nowrap py-3 px-3 rounded-xl text-sm font-black transition-all ${activeTab === tab.id
                       ? "bg-[#166D77] text-pale-custard shadow-md transform scale-105"
                       : "text-[#166D77]/60 hover:bg-pale-custard/50"
                       }`}

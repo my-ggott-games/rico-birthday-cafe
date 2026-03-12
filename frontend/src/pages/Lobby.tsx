@@ -41,7 +41,7 @@ const Lobby: React.FC = () => {
                             onClick={() => setIsAchievementOpen(true)}
                             className={`${isMobile ? 'px-3 py-1 text-sm' : 'px-6 py-2'} bg-[#FFE4E6] rounded-full border-2 border-[#5EC7A5] shadow-sm font-black text-[#5EC7A5] hover:bg-[#5EC7A5] hover:text-pale-custard transition-colors flex items-center gap-1.5`}
                         >
-                            <span className="drop-shadow-sm text-base">🏆</span> Badges
+                            <span className="drop-shadow-sm text-base">🪪</span> My Info
                         </button>
                         <button
                             onClick={() => setIsAdminOpen(true)}
@@ -60,8 +60,8 @@ const Lobby: React.FC = () => {
                         text1="축하합니다"
                         text2="유즈하 리코"
                         text3="아무 이유 없음"
-                        scale={isMobile ? 0.6 : 0.85}
-                        emblemScale={isMobile ? 0.6 : 0.75}
+                        scale={isMobile ? 0.8 : 0.85}
+                        emblemScale={isMobile ? 0.75 : 0.75}
                     />
                 </div>
 
@@ -87,7 +87,7 @@ const Lobby: React.FC = () => {
                                     </span>
                                 </div>
                             </div>
-                            <div className={`mt-2 bg-pale-custard ${isMobile ? 'px-3 py-1 text-xs' : 'px-4 py-2'} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#5EC7A5] group-hover:text-pale-custard transition-colors`}>
+                            <div className={`mt-2 bg-pale-custard ${isMobile ? 'px-3 py-1 text-sm' : 'px-4 py-2'} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#5EC7A5] group-hover:text-pale-custard transition-colors`}>
                                 리코 옷입히기
                             </div>
                         </motion.div>
@@ -107,7 +107,7 @@ const Lobby: React.FC = () => {
                                 <div className="absolute top-0 w-full h-4 bg-[#fef2f2]" />
                                 <div className={`${isMobile ? 'text-4xl' : 'text-5xl'} drop-shadow-md`}>🎒</div>
                             </div>
-                            <div className={`mt-2 bg-pale-custard ${isMobile ? 'px-3 py-1 text-xs' : 'px-4 py-2'} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#5EC7A5] group-hover:text-pale-custard transition-colors`}>
+                            <div className={`mt-2 bg-pale-custard ${isMobile ? 'px-3 py-1 text-sm' : 'px-4 py-2'} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#5EC7A5] group-hover:text-pale-custard transition-colors`}>
                                 이타백 꾸미기
                             </div>
                         </motion.div>
@@ -125,7 +125,7 @@ const Lobby: React.FC = () => {
                             <div className={`relative ${isMobile ? 'w-24 h-36' : 'w-40 h-56'} bg-[#a3e635] rounded-t-3xl border-4 border-[#166D77] shadow-xl flex flex-col items-center justify-center p-4`}>
                                 <div className={`${isMobile ? 'text-3xl' : 'text-6xl'} drop-shadow-md`}>🧩</div>
                             </div>
-                            <div className={`mt-2 bg-pale-custard ${isMobile ? 'px-3 py-1 text-xs' : 'px-4 py-2'} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#5EC7A5] group-hover:text-pale-custard transition-colors`}>
+                            <div className={`mt-2 bg-pale-custard ${isMobile ? 'px-3 py-1 text-sm' : 'px-4 py-2'} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#5EC7A5] group-hover:text-pale-custard transition-colors`}>
                                 퍼즐놀이
                             </div>
                         </motion.div>
@@ -149,7 +149,7 @@ const Lobby: React.FC = () => {
                                     ))}
                                 </div>
                             </div>
-                            <div className={`mt-2 bg-pale-custard ${isMobile ? 'px-3 py-1 text-xs' : 'px-4 py-2'} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#5EC7A5] group-hover:text-pale-custard transition-colors`}>
+                            <div className={`mt-2 bg-pale-custard ${isMobile ? 'px-3 py-1 text-sm' : 'px-4 py-2'} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#5EC7A5] group-hover:text-pale-custard transition-colors`}>
                                 아스파라거스 키우기
                             </div>
                         </motion.div>

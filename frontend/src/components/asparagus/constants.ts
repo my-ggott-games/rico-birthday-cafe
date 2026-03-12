@@ -25,7 +25,7 @@ export const TUTORIAL_SLIDES: TutorialSlide[] = [
         showArrows: true,
     },
     {
-        title: '🌱 같은 단계의 아스파라거스를 합칠 수 있어',
+        title: '🌱 같은 단계를 합치면 성장해',
         lines: ['무럭무럭 잘 자란다구!'],
         highlight: { a: '새싹 🌿', b: '새싹 🌿', result: '아기 🥬' },
         showArrows: false,
@@ -33,15 +33,14 @@ export const TUTORIAL_SLIDES: TutorialSlide[] = [
     {
         title: '🌱 아스파라거스를 키우기 힘들다면...',
         lines: [
+            '비료를 사용해봐, 얼마 없으니 아껴써야 해!',
             '🔙 되돌리기: 실수를 했을 때 시간을 되돌려요.',
             '🔄 바꾸기: 두 타일의 위치를 서로 바꿔요.',
-            '비료는 한정되어 있으니 신중히 사용해 주세요!'
         ],
-        highlight: { a: '🔙 되돌리기', b: '🔄 바꾸기', result: '아이템!' },
         showArrows: false,
     },
     {
-        title: '🌱 여기 아스파라거스 씨앗이야. 잘 부탁해!',
+        title: '🌱 여기 아스파라거스 씨앗, 잘 부탁해!',
         lines: ['아스파라거스를 끝까지 키우면 좋은 일이 생길지도?'],
         highlight: null,
         showArrows: false,
