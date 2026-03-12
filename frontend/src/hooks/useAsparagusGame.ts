@@ -157,12 +157,6 @@ export const useAsparagusGame = () => {
         const newScore = score + addedScore;
         setScore(newScore);
 
-        if (newScore > best) {
-            setBest(newScore);
-            localStorage.setItem(bestScoreKey, String(newScore));
-            // NOTE: We do NOT submit to server here — submission happens only on Game Over
-        }
-
         // 4. Check ending conditions
         const didWin = !continueAfterWin && checkWin(nextGrid);
         if (didWin) {
@@ -170,8 +164,12 @@ export const useAsparagusGame = () => {
             setTimeout(triggerConfetti, 200);
         } else if (checkGameOver(nextGrid)) {
             setGameOver(true);
-            // Submit best score to server only on game over
+            // Finalize best score locally and submit to server ONLY on game over
             const finalBest = Math.max(best, newScore);
+            if (finalBest > best) {
+                setBest(finalBest);
+                localStorage.setItem(bestScoreKey, String(finalBest));
+            }
             submitBestScore(uid, finalBest);
         }
     }, [grid, score, best, gameOver, won, continueAfterWin, isSwapMode, bestScoreKey, uid]);
