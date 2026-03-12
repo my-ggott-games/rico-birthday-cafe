@@ -21,13 +21,13 @@ const GlobalLoading: React.FC = () => {
         if (location.pathname === prevPath) return;
         setPrevPath(location.pathname);
 
-        // Define valid routes to prevent loading screen on 404
         const validRoutes = [
             "/lobby",
             "/game/cody",
             "/game/itabag",
             "/game/baseball",
-            "/game/puzzle"
+            "/game/puzzle",
+            "/game/asparagus"
         ];
 
         const isValidRoute = validRoutes.some(route => matchPath(route, location.pathname));
