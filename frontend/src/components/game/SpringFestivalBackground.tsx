@@ -103,7 +103,14 @@ class Petal {
 
 // Global cached random BG so it doesn't change on re-renders, but since we are exporting separate components,
 // we just let them accept bgImage or generate it internally if they don't care. We'll generate once here.
-let cachedRandomBg = `/assets/codygame/background_${Math.random() > 0.5 ? '1' : '2'}.jpg`;
+const AVAILABLE_BGS = [
+  "1-1", "1-2", "1-3",
+  "2-1", "2-2", "2-3", "2-4",
+  "3-1", "3-2", "3-3", "3-4",
+  "4-1", "4-2", "4-3", "4-4", "4-5", "4-6", "4-7"
+];
+const randomBgId = AVAILABLE_BGS[Math.floor(Math.random() * AVAILABLE_BGS.length)];
+let cachedRandomBg = `/assets/codygame/background_${randomBgId}.jpg`;
 
 export const SpringFestivalBackground: React.FC<{ isFinished?: boolean }> = ({ isFinished }) => {
   if (!isFinished) {
