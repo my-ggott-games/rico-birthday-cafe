@@ -32,15 +32,14 @@ export const Items: React.FC<ItemsProps> = ({
                     whileTap={undoCount > 0 && historyLength > 0 ? { scale: 0.95 } : {}}
                     onClick={onUndo}
                     disabled={undoCount <= 0 || historyLength === 0}
-                    className={`${BTN_BASE} ${
-                        undoCount > 0 && historyLength > 0
+                    className={`${BTN_BASE} ${undoCount > 0 && historyLength > 0
                             ? 'bg-white text-rico-dark-teal border-[#bef264] shadow-lg'
                             : 'bg-gray-200 text-gray-400 border-gray-300 opacity-50 cursor-not-allowed'
-                    }`}
+                        }`}
                 >
                     <span className="text-2xl mb-0.5">🔙</span>
                     <span className="text-[9px] opacity-50 uppercase tracking-tighter">Undo</span>
-                    <span className="text-xs mt-0.5 leading-tight text-center">되돌리기<br/>({undoCount})</span>
+                    <span className="text-xs mt-0.5 leading-tight text-center">되돌리기<br />({undoCount})</span>
                 </motion.button>
 
                 {/* Swap */}
@@ -49,15 +48,14 @@ export const Items: React.FC<ItemsProps> = ({
                     whileTap={swapCount > 0 ? { scale: 0.95 } : {}}
                     onClick={onToggleSwapMode}
                     disabled={swapCount <= 0}
-                    className={`${BTN_BASE} ${
-                        swapCount > 0
+                    className={`${BTN_BASE} ${swapCount > 0
                             ? (isSwapMode ? 'bg-[#5EC7A5] text-white border-[#166D77] shadow-inner' : 'bg-white text-rico-dark-teal border-[#bef264] shadow-lg')
                             : 'bg-gray-200 text-gray-400 border-gray-300 opacity-50 cursor-not-allowed'
-                    }`}
+                        }`}
                 >
                     <span className="text-2xl mb-0.5">🔄</span>
                     <span className="text-[9px] opacity-50 uppercase tracking-tighter">Swap</span>
-                    <span className="text-xs mt-0.5 leading-tight text-center">바꾸기<br/>({swapCount})</span>
+                    <span className="text-xs mt-0.5 leading-tight text-center">바꾸기<br />({swapCount})</span>
                 </motion.button>
 
                 {/* Restart */}
@@ -69,7 +67,7 @@ export const Items: React.FC<ItemsProps> = ({
                 >
                     <span className="text-2xl mb-0.5">🔁</span>
                     <span className="text-[9px] opacity-50 uppercase tracking-tighter">Restart</span>
-                    <span className="text-xs mt-0.5 leading-tight text-center">다시하기</span>
+                    <span className="text-xs mt-0.5 leading-tight text-center">다시하기<br />(∞)</span>
                 </motion.button>
             </div>
         </div>

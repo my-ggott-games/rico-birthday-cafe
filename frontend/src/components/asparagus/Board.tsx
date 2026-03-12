@@ -43,6 +43,7 @@ export const Board: React.FC<BoardProps> = ({ grid, selection, isSwapMode, onTil
                     borderRadius: BOARD_RADIUS,
                     padding: BOARD_PADDING,
                     boxShadow: '0 30px 80px rgba(22, 109, 119, 0.3)',
+                    touchAction: 'none', // Prevents body scrolling when swiping inside the board
                 }}
                 onTouchStart={onTouchStart}
                 onTouchEnd={onTouchEnd}
@@ -59,7 +60,7 @@ export const Board: React.FC<BoardProps> = ({ grid, selection, isSwapMode, onTil
                 >
                     {grid.map((row, r) =>
                         row.map((cell, c) => (
-                            <div key={`${r}-${c}`} style={{ position: 'relative' }}>
+                            <div key={`${r}-${c}`} style={{ position: 'relative', width: '100%', height: '100%', aspectRatio: '1 / 1' }}>
                                 <div className="absolute inset-0 rounded-2xl" style={{ background: 'rgba(255,255,255,0.08)' }} />
                                 <AnimatePresence mode="popLayout">
                                     <div className="absolute inset-0">
