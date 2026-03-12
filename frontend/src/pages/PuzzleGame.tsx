@@ -196,8 +196,8 @@ const DraggablePiece = React.memo(({ piece, onRotate }: { piece: PuzzlePiece, on
                     return;
                 }
 
-                // Strict Click Rule: No movement AND deliberate press (< 400ms)
-                if (deltaTime < 400) {
+                // Strict Click Rule: No movement AND deliberate press (< 300ms)
+                if (deltaTime < 300) {
                     onRotate(piece.id);
                 }
 
@@ -466,11 +466,17 @@ const PuzzleGame: React.FC = () => {
 
                 {/* Drag Overlay */}
                 <DragOverlay>
-                    {activeId !== null ? (
-                        <div className="pointer-events-none">
-                            <PuzzlePieceComponent piece={pieces.find(p => p.id === activeId)} isOverlay />
-                        </div>
-                    ) : null}
+                    {activeId !== null ? (() => {
+                        const activePiece = pieces.find(p => p.id === activeId);
+                        return activePiece ? (
+                            <div
+                                className="pointer-events-none"
+                                style={{ transform: `rotate(${activePiece.rotation}deg)` }}
+                            >
+                                <PuzzlePieceComponent piece={activePiece} isOverlay />
+                            </div>
+                        ) : null;
+                    })() : null}
                 </DragOverlay>
 
                 {/* Completion Effects (Cute Modal - Smaller and at Bottom) */}

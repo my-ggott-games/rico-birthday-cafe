@@ -9,10 +9,10 @@ interface ReturnButtonProps {
 }
 
 const MESSAGES = [
-    "{Game Name}, quit now?",
-    "Sorry... is it not fun?",
-    "Want to try something else?",
-    "Back to lobby?"
+    "{Game Name}, 그만할까?",
+    "미안... 재미없지?",
+    "이제 다른 거 할까?",
+    "로비로 돌아갈까?"
 ];
 
 export const ReturnButton: React.FC<ReturnButtonProps> = ({ className, style, gameName = "게임" }) => {
@@ -63,13 +63,13 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({ className, style, ga
                                     onClick={() => navigate('/lobby')}
                                     className="flex-1 py-3 rounded-xl font-black text-sm bg-[#ff6b6b] text-white hover:bg-[#fa5252] transition-colors"
                                 >
-                                    Quit
+                                    응
                                 </button>
                                 <button
                                     onClick={() => setIsOpen(false)}
                                     className="flex-1 py-3 rounded-xl font-black text-sm bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
                                 >
-                                    Wait
+                                    아니
                                 </button>
                             </div>
                         </motion.div>
