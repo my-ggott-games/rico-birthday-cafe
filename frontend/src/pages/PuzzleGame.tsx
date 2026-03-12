@@ -99,7 +99,7 @@ const PuzzlePieceComponent = ({ piece, className, isOverlay = false }: any) => {
                     // Add border to unplaced pieces using drop-shadow
                     filter: piece.isPlaced
                         ? 'brightness(1.05)'
-                        : `drop-shadow(0 0 0 2px #4A3b32) drop-shadow(0 4px 6px rgba(0,0,0,0.3))`,
+                        : `drop-shadow(0 0 0 2px #166D77) drop-shadow(0 4px 6px rgba(0,0,0,0.3))`,
                 }}
             />
         </div>
@@ -228,7 +228,7 @@ const PuzzleGame: React.FC = () => {
     const triggerFireworks = () => {
         const duration = 15 * 1000; // Increased duration
         const animationEnd = Date.now() + duration;
-        const defaults = { startVelocity: 45, spread: 360, ticks: 100, zIndex: 0, colors: ['#F43F5E', '#bef264', '#FFD700', '#ffffff'] };
+        const defaults = { startVelocity: 45, spread: 360, ticks: 100, zIndex: 0, colors: ['#5EC7A5', '#bef264', '#FFD700', '#FFFFF8'] };
 
         const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
 
@@ -374,22 +374,22 @@ const PuzzleGame: React.FC = () => {
     return (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <div
-                className="w-full h-screen bg-[#FFFDF7] relative overflow-hidden select-none touch-none flex flex-col"
+                className="w-full h-screen bg-[#FFFFF8] relative overflow-hidden select-none touch-none flex flex-col"
                 style={{ '--piece-size': 'min(18svw, 100px)' } as React.CSSProperties}
             >
                 {/* 1. Header Area (Fixed Height) */}
-                <div className="h-[120px] w-full flex items-center px-10 relative z-20 bg-white/30 backdrop-blur-sm">
+                <div className="h-[120px] w-full flex items-center px-10 relative z-20 bg-pale-custard/30 backdrop-blur-sm">
                     <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => navigate('/lobby')}
-                        className="bg-white px-6 py-3 rounded-2xl shadow-lg font-bold text-[#4A3b32] hover:bg-[#f3f4f6] border-2 border-[#bef264] flex items-center gap-2 mr-8"
+                        className="bg-pale-custard px-6 py-3 rounded-2xl shadow-lg font-bold text-[#166D77] hover:bg-[#f3f4f6] border-2 border-[#bef264] flex items-center gap-2 mr-8"
                     >
                         <span>←</span> Lobby
                     </motion.button>
                     <div className="flex flex-col">
-                        <span className="font-handwriting text-5xl font-black text-[#4A3b32] drop-shadow-sm">퍼즐 좋아해?</span>
-                        <span className="text-[#F43F5E] font-bold mt-1 text-sm">조각을 누르면 회전</span>
+                        <span className="font-handwriting text-5xl font-black text-[#166D77] drop-shadow-sm">퍼즐 좋아해?</span>
+                        <span className="text-[#5EC7A5] font-bold mt-1 text-sm">조각을 누르면 회전</span>
                     </div>
                 </div>
 
@@ -403,7 +403,7 @@ const PuzzleGame: React.FC = () => {
                     {/* Center Board Area */}
                     <div className="flex-none flex items-center justify-center p-4 z-10">
                         <div
-                            className="relative bg-white/50 backdrop-blur-sm shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-8 border-[#4A3b32] rounded-3xl p-6"
+                            className="relative bg-pale-custard/50 backdrop-blur-sm shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-8 border-[#166D77] rounded-3xl p-6"
                         >
                             <div
                                 className="relative bg-[#fafafa] overflow-hidden"
@@ -468,20 +468,20 @@ const PuzzleGame: React.FC = () => {
                                 initial={{ scale: 0.8, opacity: 0, y: 100 }}
                                 animate={{ scale: 1, opacity: 1, y: 0 }}
                                 exit={{ scale: 0.8, opacity: 0, y: 100 }}
-                                className="bg-white/95 backdrop-blur-md p-4 rounded-[30px] text-center shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-8 border-[#FFFDF7] pointer-events-auto relative max-w-lg mx-4"
+                                className="bg-pale-custard/95 backdrop-blur-md p-4 rounded-[30px] text-center shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-8 border-[#FFFFF8] pointer-events-auto relative max-w-lg mx-4"
                             >
                                 {/* Decorative elements */}
                                 <div className="absolute -top-6 -left-6 text-4xl animate-bounce">🎈</div>
                                 <div className="absolute -top-6 -right-6 text-4xl animate-bounce delay-100">🎁</div>
 
-                                <h1 className="font-handwriting text-6xl text-[#F43F5E] mb-3 drop-shadow-sm select-none">
+                                <h1 className="font-handwriting text-6xl text-[#5EC7A5] mb-3 drop-shadow-sm select-none">
                                     Happy Birthday!
                                 </h1>
 
                                 <div className="flex gap-3 justify-center">
                                     <button
                                         onClick={() => window.location.reload()}
-                                        className="bg-[#bef264] hover:bg-[#a8e04b] text-[#4A3b32] px-8 py-3 rounded-2xl font-black text-xl shadow-lg transition-all hover:scale-105 active:scale-95 border-b-4 border-black/10"
+                                        className="bg-[#bef264] hover:bg-[#a8e04b] text-[#166D77] px-8 py-3 rounded-2xl font-black text-xl shadow-lg transition-all hover:scale-105 active:scale-95 border-b-4 border-black/10"
                                     >
                                         다시 하기
                                     </button>
@@ -504,7 +504,7 @@ const PuzzleGame: React.FC = () => {
                             initial={{ y: 50, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             onClick={() => window.location.reload()}
-                            className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[90] bg-[#F43F5E] text-white px-10 py-4 rounded-full font-black text-2xl shadow-[0_10px_30px_rgba(244,63,94,0.3)] hover:scale-110 active:scale-95 transition-all border-b-4 border-black/20"
+                            className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[90] bg-[#5EC7A5] text-pale-custard px-10 py-4 rounded-full font-black text-2xl shadow-[0_10px_30px_rgba(244,63,94,0.3)] hover:scale-110 active:scale-95 transition-all border-b-4 border-black/20"
                         >
                             다시하기
                         </motion.button>

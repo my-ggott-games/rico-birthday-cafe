@@ -84,32 +84,32 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                     exit={{ opacity: 0 }}
                 >
                     <motion.div
-                        className="bg-[#FFFDF7] w-full max-w-sm rounded-[2rem] border-4 border-[#F43F5E] shadow-xl p-8 relative"
+                        className="bg-[#FFFFF8] w-full max-w-sm rounded-[2rem] border-4 border-[#5EC7A5] shadow-xl p-8 relative"
                         initial={{ scale: 0.8, y: 50 }}
                         animate={{ scale: 1, y: 0 }}
                         exit={{ scale: 0.8, y: 50 }}
                     >
                         <button
                             onClick={onClose}
-                            className="absolute top-4 right-4 text-[#4A3b32]/60 hover:text-[#F43F5E] font-bold text-xl"
+                            className="absolute top-4 right-4 text-[#166D77]/60 hover:text-[#5EC7A5] font-bold text-xl"
                         >
                             ✕
                         </button>
 
                         {guestId ? (
                             <div className="text-center py-4">
-                                <h2 className="text-2xl font-black text-[#4A3b32] mb-4 break-keep">
+                                <h2 className="text-2xl font-black text-[#166D77] mb-4 break-keep">
                                     번호표를 발급받았어요!
                                 </h2>
-                                <p className="text-[#4A3b32]/60 text-sm mb-6 break-keep">
+                                <p className="text-[#166D77]/60 text-sm mb-6 break-keep">
                                     잃어버리면 누군지 알 수 없으니까 새로 뽑아야 해요.
                                 </p>
 
-                                <div className="bg-[#FFE4E6] p-4 rounded-2xl border-2 border-[#F43F5E] mb-6 flex flex-col gap-2">
-                                    <span className="text-[#F43F5E] font-black text-xl tracking-wider">{guestId}</span>
+                                <div className="bg-[#FFE4E6] p-4 rounded-2xl border-2 border-[#5EC7A5] mb-6 flex flex-col gap-2">
+                                    <span className="text-[#5EC7A5] font-black text-xl tracking-wider">{guestId}</span>
                                     <button
                                         onClick={() => copyToClipboard(guestId)}
-                                        className="text-xs font-bold text-[#4A3b32]/50 hover:text-[#F43F5E] transition-colors"
+                                        className="text-xs font-bold text-[#166D77]/50 hover:text-[#5EC7A5] transition-colors"
                                     >
                                         클릭하여 복사하기
                                     </button>
@@ -117,14 +117,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
 
                                 <button
                                     onClick={onSuccess}
-                                    className="w-full bg-[#F43F5E] text-white font-black py-4 rounded-xl shadow-[0_4px_0_#be123c] hover:translate-y-1 hover:shadow-[0_0px_0_#be123c] transition-all"
+                                    className="w-full bg-[#5EC7A5] text-pale-custard font-black py-4 rounded-xl shadow-[0_4px_0_#be123c] hover:translate-y-1 hover:shadow-[0_0px_0_#be123c] transition-all"
                                 >
                                     여기요!
                                 </button>
                             </div>
                         ) : (
                             <>
-                                <h2 className="text-3xl font-black text-[#4A3b32] text-center mb-6 break-keep">
+                                <h2 className="text-3xl font-black text-[#166D77] text-center mb-6 break-keep">
                                     번호표 보여주세요!
                                 </h2>
 
@@ -141,26 +141,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                                             placeholder="번호표 입력"
                                             value={uidInput}
                                             onChange={(e) => setUidInput(e.target.value)}
-                                            className="w-full px-4 py-3 rounded-xl border-2 border-[#4A3b32]/10 focus:border-[#F43F5E] outline-none font-bold text-[#4A3b32] text-center tracking-wider"
+                                            className="w-full px-4 py-3 rounded-xl border-2 border-[#166D77]/10 focus:border-[#5EC7A5] outline-none font-bold text-[#166D77] text-center tracking-wider"
                                         />
                                         <button
                                             type="submit"
                                             disabled={loading}
-                                            className="w-full bg-white text-[#4A3b32] border-2 border-[#4A3b32]/20 font-black py-3 rounded-xl hover:bg-[#FFE4E6] hover:border-[#F43F5E] transition-all disabled:opacity-50 text-sm"
+                                            className="w-full bg-pale-custard text-[#166D77] border-2 border-[#166D77]/20 font-black py-3 rounded-xl hover:bg-[#FFE4E6] hover:border-[#5EC7A5] transition-all disabled:opacity-50 text-sm"
                                         >
                                             {loading && uidInput ? '확인 중...' : '여기요!'}
                                         </button>
                                     </form>
 
                                     <div className="relative flex items-center py-4">
-                                        <div className="flex-grow border-t border-[#4A3b32]/10"></div>
-                                        <span className="flex-shrink-0 mx-4 text-[#4A3b32]/20 text-[10px] font-bold uppercase tracking-widest">번호표가 없으신가요?</span>
-                                        <div className="flex-grow border-t border-[#4A3b32]/10"></div>
+                                        <div className="flex-grow border-t border-[#166D77]/10"></div>
+                                        <span className="flex-shrink-0 mx-4 text-[#166D77]/20 text-[10px] font-bold uppercase tracking-widest">번호표가 없으신가요?</span>
+                                        <div className="flex-grow border-t border-[#166D77]/10"></div>
                                     </div>
                                     <button
                                         onClick={handleGuestLogin}
                                         disabled={loading}
-                                        className="w-full bg-[#F43F5E] text-white font-black py-5 rounded-2xl shadow-[0_6px_0_#be123c] hover:translate-y-1 hover:shadow-[0_2px_0_#be123c] active:translate-y-1.5 active:shadow-none transition-all disabled:opacity-50 text-xl"
+                                        className="w-full bg-[#5EC7A5] text-pale-custard font-black py-5 rounded-2xl shadow-[0_6px_0_#be123c] hover:translate-y-1 hover:shadow-[0_2px_0_#be123c] active:translate-y-1.5 active:shadow-none transition-all disabled:opacity-50 text-xl"
                                     >
                                         {loading && !uidInput ? '처리 중...' : '새 번호표 뽑기'}
                                     </button>

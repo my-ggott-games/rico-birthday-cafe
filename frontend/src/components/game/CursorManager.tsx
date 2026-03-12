@@ -23,7 +23,7 @@ export const CursorManager: React.FC = () => {
 
         const handleClick = (e: MouseEvent) => {
             const now = Date.now();
-            if (now - lastClickTime.current < 1000) return; // 500ms debounce to prevent rendering overload
+            if (now - lastClickTime.current < 500) return; // 500ms debounce to prevent rendering overload
             lastClickTime.current = now;
 
             const clickX = e.clientX;

@@ -9,7 +9,7 @@ import { CursorManager } from './components/game/CursorManager';
 import GlobalLoading from './components/common/GlobalLoading';
 import { AchievementToast } from './components/common/AchievementToast';
 import NotFound from './pages/NotFound';
-import { ProtectedRoute } from './components/auth/ProtectedRoute';
+// import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 function App() {
   return (
@@ -21,27 +21,27 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
 
-          <Route element={<ProtectedRoute />}>
+{/* <Route element={<ProtectedRoute />}> */}
             <Route path="/lobby" element={<Lobby />} />
             {/* Route placeholders for games */}
             <Route path="/game/cody" element={<CodyGame />} />
             <Route path="/game/itabag" element={
-              <div className="min-h-screen bg-[#FFFDF7] text-[#4A3b32] flex flex-col items-center justify-center">
+              <div className="min-h-screen bg-[#FFFFF8] text-[#166D77] flex flex-col items-center justify-center">
                 <div className="text-6xl mb-4">🎒</div>
                 <h2 className="text-3xl font-black font-handwriting">Itabag Decoration</h2>
-                <p className="mt-2 text-[#F43F5E] font-bold">Coming Soon!</p>
+                <p className="mt-2 text-[#5EC7A5] font-bold">Coming Soon!</p>
               </div>
             } />
             <Route path="/game/baseball" element={
-              <div className="min-h-screen bg-[#FFFDF7] text-[#4A3b32] flex flex-col items-center justify-center">
+              <div className="min-h-screen bg-[#FFFFF8] text-[#166D77] flex flex-col items-center justify-center">
                 <div className="text-6xl mb-4">⚾</div>
                 <h2 className="text-3xl font-black font-handwriting">Number Baseball</h2>
-                <p className="mt-2 text-[#F43F5E] font-bold">Coming Soon!</p>
+                <p className="mt-2 text-[#5EC7A5] font-bold">Coming Soon!</p>
               </div>
             } />
             <Route path="/game/puzzle" element={<PuzzleGame />} />
             <Route path="/game/asparagus" element={<AsparagusMerge />} />
-          </Route>
+          {/* </Route> */}
 
           {/* 404 Not Found */}
           <Route path="*" element={<NotFound />} />

@@ -65,7 +65,7 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({ slides, classNam
                         x: { type: "spring", stiffness: 350, damping: 35 },
                         opacity: { duration: 0.2 }
                     }}
-                    className="absolute inset-0 w-full h-full rounded-[24px] p-5 flex flex-col shadow-[0_8px_24px_rgba(74,59,50,0.2)] bg-[#4A3b32] text-white"
+                    className="absolute inset-0 w-full h-full rounded-[24px] p-5 flex flex-col shadow-[0_8px_24px_rgba(74,59,50,0.2)] bg-[#166D77] text-pale-custard"
                 >
                     <div className="font-black text-lg mb-1">{s.title}</div>
 
@@ -84,7 +84,7 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({ slides, classNam
                                     const icons: Record<Direction, string> = { left: '←', up: '↑', down: '↓', right: '→' };
                                     return (
                                         <div key={d} className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-base"
-                                            style={{ background: '#1a1a1a', color: '#fff' }}>
+                                            style={{ background: '#1a1a1a', color: '#FFFFF8' }}>
                                             {icons[d]}
                                         </div>
                                     );
@@ -124,7 +124,7 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({ slides, classNam
                                 onClick={() => paginate(-1)}
                                 disabled={slide === 0}
                                 className="px-4 py-2 rounded-xl font-bold text-xs transition-all active:scale-95 disabled:opacity-30 disabled:scale-100"
-                                style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}>
+                                style={{ background: 'rgba(255,255,255,0.15)', color: '#FFFFF8' }}>
                                 이전
                             </button>
                             <button

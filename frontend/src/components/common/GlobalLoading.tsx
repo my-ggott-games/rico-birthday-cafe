@@ -91,7 +91,7 @@ const GlobalLoading: React.FC = () => {
         <AnimatePresence mode="wait">
             {loading && (
                 <motion.div
-                    className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#FFFDF7]"
+                    className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#FFFFF8]"
                     initial={{ opacity: 1 }} // Start fully visible to hide underlying page content immediately
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0, transition: { duration: 0.8, ease: "easeInOut" } }}
@@ -99,7 +99,7 @@ const GlobalLoading: React.FC = () => {
                     {/* Background decoration */}
                     <div className="absolute inset-0 opacity-10"
                         style={{
-                            backgroundImage: 'radial-gradient(#F43F5E 1px, transparent 1px)',
+                            backgroundImage: 'radial-gradient(#5EC7A5 1px, transparent 1px)',
                             backgroundSize: '20px 20px'
                         }}
                     />
@@ -127,19 +127,19 @@ const GlobalLoading: React.FC = () => {
                                 repeat: Infinity,
                                 ease: animationType === 'rotate' ? "linear" : "easeInOut"
                             }}
-                            className="mb-8 p-3 rounded-full bg-white border-[1px] border-white shadow-lg"
+                            className="mb-8 p-3 rounded-full bg-pale-custard border-[1px] border-pale-custard shadow-lg"
                         >
                             <img src="/favicon.png" alt="Loading" className="w-20 h-20 object-contain" />
                         </motion.div>
 
-                        <h2 className="text-xl md:text-2xl font-bold text-[#4A3b32] mb-6 tracking-tight text-center px-4">
+                        <h2 className="text-xl md:text-2xl font-bold text-[#166D77] mb-6 tracking-tight text-center px-4">
                             {message}
                         </h2>
 
-                        <div className="relative w-72 h-8 bg-white rounded-full border-[3px] border-[#4A3b32] overflow-hidden mb-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
+                        <div className="relative w-72 h-8 bg-pale-custard rounded-full border-[3px] border-[#166D77] overflow-hidden mb-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
                             {/* Inner fill with spring animation */}
                             <motion.div
-                                className="h-full bg-[#F43F5E] relative"
+                                className="h-full bg-[#5EC7A5] relative"
                                 animate={{ width: `${percent}%` }}
                                 transition={{
                                     type: "spring",
@@ -156,7 +156,7 @@ const GlobalLoading: React.FC = () => {
                                 />
 
                                 {/* Inner Glossy Detail */}
-                                <div className="absolute top-1 left-0 right-0 h-1 bg-white/20 rounded-full mx-2" />
+                                <div className="absolute top-1 left-0 right-0 h-1 bg-pale-custard/20 rounded-full mx-2" />
                             </motion.div>
                         </div>
 

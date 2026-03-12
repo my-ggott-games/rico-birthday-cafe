@@ -137,47 +137,47 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                     <div className="absolute inset-0 bg-black/80 backdrop-blur-xl" onClick={onClose} />
 
                     <motion.div
-                        className="relative w-full max-w-xl bg-[#0a0a0a] rounded-[3rem] border border-white/5 shadow-2xl p-10 overflow-hidden"
+                        className="relative w-full max-w-xl bg-[#0a0a0a] rounded-[3rem] border border-pale-custard/5 shadow-2xl p-10 overflow-hidden"
                         initial={{ scale: 0.9, y: 30, opacity: 0 }}
                         animate={{ scale: 1, y: 0, opacity: 1 }}
                         exit={{ scale: 0.9, y: 30, opacity: 0 }}
                     >
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1 bg-gradient-to-r from-transparent via-[#F43F5E] to-transparent opacity-50" />
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1 bg-gradient-to-r from-transparent via-[#5EC7A5] to-transparent opacity-50" />
 
                         <div className="text-center mb-10">
-                            <h2 className="text-xl font-bold text-white/40 tracking-[0.3em] uppercase mb-1">
+                            <h2 className="text-xl font-bold text-pale-custard/40 tracking-[0.3em] uppercase mb-1">
                                 Who am I?
                             </h2>
                             <div className="flex items-center justify-center gap-2">
-                                <div className="h-px w-8 bg-white/10" />
-                                <div className="w-1.5 h-1.5 rounded-full bg-[#F43F5E] animate-pulse" />
-                                <div className="h-px w-8 bg-white/10" />
+                                <div className="h-px w-8 bg-pale-custard/10" />
+                                <div className="w-1.5 h-1.5 rounded-full bg-[#5EC7A5] animate-pulse" />
+                                <div className="h-px w-8 bg-pale-custard/10" />
                             </div>
                         </div>
 
                         <div className={`flex items-center justify-center gap-3 mb-12 ${error ? 'animate-[shake_0.5s_ease-in-out]' : ''}`}>
                             <div className="flex gap-2">
                                 {[0, 1, 2].map((i) => (
-                                    <div key={i} className={`w-12 h-16 bg-white/5 border-2 rounded-xl flex items-center justify-center text-2xl transition-all
+                                    <div key={i} className={`w-12 h-16 bg-pale-custard/5 border-2 rounded-xl flex items-center justify-center text-2xl transition-all
                                     ${isSuccess ? 'border-green-500 bg-green-500/10' :
                                             error ? 'border-red-500' :
-                                                inputs[i] ? 'border-[#F43F5E] bg-white/10' : 'border-white/5'}`}>
-                                        <span className="text-white mt-1">
+                                                inputs[i] ? 'border-[#5EC7A5] bg-pale-custard/10' : 'border-pale-custard/5'}`}>
+                                        <span className="text-pale-custard mt-1">
                                             {inputs[i] ? '*' : ''}
                                         </span>
                                     </div>
                                 ))}
                             </div>
 
-                            <div className="text-white/10 text-2xl font-black mb-2 flex items-end">_</div>
+                            <div className="text-pale-custard/10 text-2xl font-black mb-2 flex items-end">_</div>
 
                             <div className="flex gap-2">
                                 {[3, 4, 5, 6].map((i) => (
-                                    <div key={i} className={`w-12 h-16 bg-white/5 border-2 rounded-xl flex items-center justify-center text-2xl transition-all
+                                    <div key={i} className={`w-12 h-16 bg-pale-custard/5 border-2 rounded-xl flex items-center justify-center text-2xl transition-all
                                     ${isSuccess ? 'border-green-500 bg-green-500/10' :
                                             error ? 'border-red-500' :
-                                                inputs[i] ? 'border-[#F43F5E] bg-white/10' : 'border-white/5'}`}>
-                                        <span className="text-white mt-1">
+                                                inputs[i] ? 'border-[#5EC7A5] bg-pale-custard/10' : 'border-pale-custard/5'}`}>
+                                        <span className="text-pale-custard mt-1">
                                             {inputs[i] ? '*' : ''}
                                         </span>
                                     </div>
@@ -193,14 +193,14 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                                     </motion.span>
                                 ) : loading ? (
                                     <motion.div key="l" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-center gap-1">
-                                        {[0, 1, 2].map(i => <div key={i} className="w-1 h-1 bg-[#F43F5E] rounded-full animate-bounce" style={{ animationDelay: `${i * 0.1}s` }} />)}
+                                        {[0, 1, 2].map(i => <div key={i} className="w-1 h-1 bg-[#5EC7A5] rounded-full animate-bounce" style={{ animationDelay: `${i * 0.1}s` }} />)}
                                     </motion.div>
                                 ) : error ? (
                                     <motion.span key="e" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-500 font-bold text-xs tracking-widest">
                                         VERIFICATION FAILED
                                     </motion.span>
                                 ) : (
-                                    <motion.span key="p" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-white/10 text-[10px] uppercase font-mono tracking-[0.4em]">
+                                    <motion.span key="p" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-pale-custard/10 text-[10px] uppercase font-mono tracking-[0.4em]">
                                         관리자 모드로 전환합니다.
                                     </motion.span>
                                 )}

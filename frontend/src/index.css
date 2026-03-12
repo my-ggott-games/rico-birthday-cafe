@@ -1,6 +1,19 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Noto+Serif+KR:wght@400;700;900&display=swap');
 
+@theme {
+  --color-pale-custard: #FFFFF8;
+  --color-rico-sage: #A8CDA4;
+  --color-rico-mint: #5EC7A5;
+  --color-rico-teal: #1D8E8E;
+  --color-rico-dark-teal: #166D77;
+  --color-polar-haze: #F5F7FD;
+  --color-soft-winter: #FCFCF5;
+  --color-arctic-veil: #FAFDFE;
+  --color-egg-shell: #FAFFFF;
+  --color-blanc-de-blanc: #F6F6F6;
+}
+
 /* 
  Globally hide the default cursor so only the custom cursor is visible 
 * {
@@ -10,11 +23,11 @@
 
 :root {
   /* Cafe Theme Palette */
-  --color-cream: #FFFDF7;
-  --color-pink-100: #FFE4E6;
-  --color-pink-300: #FDA4AF;
-  --color-pink-500: #F43F5E;
-  --color-choco: #4A3b32;
+  --color-cream: #FFFFF8;
+  --color-winter: #FCFCF5;
+  --color-sage: #A8CDA4;
+  --color-mint: #5EC7A5;
+  --color-dark-teal: #166D77;
   --color-latte: #D6C0B0;
 
   --font-sans: 'OneStoreMobilePop', system-ui, sans-serif;
@@ -23,7 +36,7 @@
   font-weight: 400;
 
   color-scheme: light;
-  color: var(--color-choco);
+  color: var(--color-dark-teal);
   background-color: var(--color-cream);
 
   font-synthesis: none;
@@ -38,8 +51,8 @@ body {
   min-height: 100vh;
   background-color: var(--color-cream);
   background-image:
-    radial-gradient(var(--color-pink-100) 1px, transparent 1px),
-    radial-gradient(var(--color-pink-100) 1px, transparent 1px);
+    radial-gradient(var(--color-winter) 1px, transparent 1px),
+    radial-gradient(var(--color-winter) 1px, transparent 1px);
   background-size: 20px 20px;
   background-position: 0 0, 10px 10px;
 }
@@ -53,13 +66,13 @@ body {
 
 a {
   font-weight: 700;
-  color: var(--color-pink-500);
+  color: var(--color-mint);
   text-decoration: inherit;
   transition: all 0.2s;
 }
 
 a:hover {
-  color: var(--color-pink-300);
+  color: var(--color-sage);
   transform: translateY(-2px);
 }
 
@@ -85,15 +98,15 @@ a:hover {
 
 /* Variants */
 .btn-primary {
-  @apply bg-[#4A3b32] text-white border-[#4A3b32] hover:scale-105 shadow-xl;
+  @apply bg-[#166D77] text-pale-custard border-[#166D77] hover:scale-105 shadow-xl;
 }
 
 .btn-secondary {
-  @apply bg-white text-[#4A3b32] border-[#4A3b32]/10;
+  @apply bg-pale-custard text-[#166D77] border-[#166D77]/10;
 }
 
 .btn-disabled {
-  @apply bg-[#9ca3af] text-white cursor-not-allowed opacity-70;
+  @apply bg-[#9ca3af] text-pale-custard cursor-not-allowed opacity-70;
 }
 
 
@@ -114,12 +127,12 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-pink-300);
+  background: var(--color-sage);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-pink-500);
+  background: var(--color-mint);
 }
 
 @font-face {

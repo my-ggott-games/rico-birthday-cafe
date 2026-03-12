@@ -62,7 +62,7 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
                 }}
                 className="relative p-4 pb-16 md:pb-20 max-w-full m-auto md:my-auto shrink-0"
                 style={{
-                    backgroundColor: "#ffffff",
+                    backgroundColor: "#FFFFF8",
                     borderRadius: "2px",
                     boxShadow: "0 10px 30px rgba(0, 0, 0, 0.1)",
                 }}

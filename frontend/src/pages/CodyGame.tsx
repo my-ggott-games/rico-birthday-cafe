@@ -298,7 +298,7 @@ const CodyGame: React.FC = () => {
       onDragEnd={handleDragEnd}
     >
       <div
-        className={`h-screen w-full flex flex-col overflow-hidden font-sans relative select-none bg-[#FFFDF7]`}
+        className={`h-screen w-full flex flex-col overflow-hidden font-sans relative select-none bg-[#FFFFF8]`}
       >
         {activeBackground === "spring-festival" && !isFinished && (
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -310,7 +310,7 @@ const CodyGame: React.FC = () => {
         <div
           className="absolute inset-0 z-0 opacity-[0.03]"
           style={{
-            backgroundImage: `radial-gradient(#4A3b32 1px, transparent 1px)`,
+            backgroundImage: `radial-gradient(#166D77 1px, transparent 1px)`,
             backgroundSize: "32px 32px",
           }}
         />
@@ -517,7 +517,7 @@ const CodyGame: React.FC = () => {
                     setTimeout(() => {
                       domToJpeg(polaroidRef.current!, {
                         quality: 1,
-                        backgroundColor: '#ffffff',
+                        backgroundColor: '#FFFFF8',
                         scale: 4, // 초고해상도 캡처 (4배 확대)
                       })
                         .then((dataUrl) => {
@@ -572,7 +572,7 @@ const CodyGame: React.FC = () => {
           >
             {/* Mobile Tab UI - PC는 탭 없이 통합 뷰 제공 */}
             {isMobile && !isFinished && (
-              <div className="relative z-50 flex justify-around mb-6 mt-4 bg-white/30 backdrop-blur-md rounded-2xl p-1 border border-white/50 shadow-sm mx-4">
+              <div className="relative z-50 flex justify-around mb-6 mt-4 bg-pale-custard/30 backdrop-blur-md rounded-2xl p-1 border border-pale-custard/50 shadow-sm mx-4">
                 {[
                   { id: "hair", label: "헤어" },
                   { id: "clothes", label: "의상" },
@@ -585,8 +585,8 @@ const CodyGame: React.FC = () => {
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={() => setActiveTab(tab.id as any)}
                     className={`relative z-50 flex-1 py-3 px-2 rounded-xl text-sm font-black transition-all ${activeTab === tab.id
-                      ? "bg-[#4A3b32] text-white shadow-md transform scale-105"
-                      : "text-[#4A3b32]/60 hover:bg-white/50"
+                      ? "bg-[#166D77] text-pale-custard shadow-md transform scale-105"
+                      : "text-[#166D77]/60 hover:bg-pale-custard/50"
                       }`}
                   >
                     {tab.label}
@@ -665,7 +665,7 @@ const CodyGame: React.FC = () => {
                             <div
                               key={item.id}
                               onClick={handleClick}
-                              className={`relative ${cardSize} overflow-hidden border-2 border-dashed border-[#4A3b32]/30 rounded-3xl flex-shrink-0 bg-[#FDFBF7]/50 transition-all hover:border-[#D46A6A]/50 hover:bg-white/80 active:scale-95 group shadow-sm`}
+                              className={`relative ${cardSize} overflow-hidden border-2 border-dashed border-[#166D77]/30 rounded-3xl flex-shrink-0 bg-[#FDFBF7]/50 transition-all hover:border-[#D46A6A]/50 hover:bg-pale-custard/80 active:scale-95 group shadow-sm`}
                             >
                               <div
                                 className="absolute w-[384px] h-[700px] opacity-0 pointer-events-none"
@@ -735,8 +735,8 @@ const CodyGame: React.FC = () => {
                               )}
 
                               {isEquipped && (
-                                <div className="absolute inset-0 bg-[#4A3b32]/10 backdrop-blur-[2px] flex items-center justify-center">
-                                  <span className="bg-white/90 text-[#4A3b32] px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                                <div className="absolute inset-0 bg-[#166D77]/10 backdrop-blur-[2px] flex items-center justify-center">
+                                  <span className="bg-pale-custard/90 text-[#166D77] px-3 py-1 rounded-full text-xs font-bold shadow-sm">
                                     장착 중 ✨
                                   </span>
                                 </div>
