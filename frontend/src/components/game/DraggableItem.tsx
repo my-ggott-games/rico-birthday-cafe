@@ -3,7 +3,7 @@ import { useDraggable } from '@dnd-kit/core';
 
 interface DraggableItemProps {
     id: string;
-    category: 'hair' | 'clothes' | 'hair_acc' | 'clothes_acc' | 'hand_acc' | 'accessories';
+    category: 'hair_front' | 'hair_back' | 'clothes' | 'clothes_back' | 'hair_acc' | 'clothes_acc' | 'hand_acc' | 'shoes' | 'accessories';
     layers: {
         front?: string;
         back?: string;

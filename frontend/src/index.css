@@ -12,6 +12,7 @@
   --color-arctic-veil: #FAFDFE;
   --color-egg-shell: #FAFFFF;
   --color-blanc-de-blanc: #F6F6F6;
+  --color-cream: var(--color-cream);
 }
 
 /* 

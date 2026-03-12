@@ -22,25 +22,31 @@ const CodyGame: React.FC = () => {
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [equippedIds, setEquippedItems] = useState<{
-    hair: string | null;
+    hair_front: string | null;
+    hair_back: string | null;
     clothes: string | null;
+    clothes_back: string | null;
     hair_acc: string | null;
     clothes_acc: string | null;
     hand_acc: string | null;
+    shoes: string | null;
     accessories: string | null;
   }>({
-    hair: null,
+    hair_front: null,
+    hair_back: null,
     clothes: null,
+    clothes_back: null,
     hair_acc: null,
     clothes_acc: null,
     hand_acc: null,
+    shoes: null,
     accessories: null,
   });
   const [isFinished, setIsFinished] = useState(false);
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [activeBackground, setActiveBackground] = useState<string | null>(null);
   const [orientalBgUrl, setOrientalBgUrl] = useState<string | null>(null);
-  const [springFestivalBgUrl, setSpringFestivalBgUrl] = useState<string | null>(null);
+  const [springBgUrl, setSpringFestivalBgUrl] = useState<string | null>(null);
   const [showInventory, setShowInventory] = useState(true);
   const [showButtons, setShowButtons] = useState(true);
   const [contentVisible, setContentVisible] = useState(true);
@@ -59,27 +65,11 @@ const CodyGame: React.FC = () => {
       "/assets/codygame/riko_body_smile.png",
       "/assets/codygame/riko_body_wink.png",
       "/assets/codygame/riko_body_default.png",
-      "/assets/codygame/rico_hair_front_long.png",
-      "/assets/codygame/riko_hair_back_long.png",
-      "/assets/codygame/rico_hair_front_twintail.png",
-      "/assets/codygame/riko_hair_back_twintail.png",
-      "/assets/codygame/rico_hair_front_short.png",
-      "/assets/codygame/riko_hair_back_short.png",
-      "/assets/codygame/riko_clothes_training.png",
-      "/assets/codygame/riko_clothes_peasantdress.png",
-      "/assets/codygame/riko_clothes_hanbok.png",
-      "/assets/codygame/riko_clothes_ ribbons.png",
-      "/assets/codygame/riko_clothes_ jeogori.png",
-      "/assets/codygame/riko_ accessories_flowers.png",
-      "/assets/codygame/riko_ accessories_ hairpin.png",
-      "/assets/codygame/riko_ accessories_ norigae.png",
-      "/assets/codygame/riko_ accessories_sword.png",
-      "/assets/codygame/riko_ accessories_flowercrown.png",
-      "/assets/codygame/background_1.jpg",
-      "/assets/codygame/background_2.jpg",
-      "/assets/codygame/background_3.jpg",
-      "/assets/codygame/background_4.jpg",
+      "/assets/codygame/background_1-1.jpg",
+      "/assets/codygame/background_2-1.jpg",
+      "/assets/codygame/background_3-1.jpg",
     ];
+    // Add all category items to preload if needed, but keeping it small for now.
     imagesToPreload.forEach((src) => {
       const img = new Image();
       img.src = src;
@@ -92,80 +82,40 @@ const CodyGame: React.FC = () => {
   const characterScale = isMobile ? 1.1 : windowWidth > 1440 ? 1.3 : 1.1;
 
   const availableItems: CodyItem[] = [
-    // Hair
-    {
-      id: "hair-1",
-      category: "hair",
-      layers: {
-        front: "/assets/codygame/rico_hair_front_long.png",
-        back: "/assets/codygame/riko_hair_back_long.png",
-      },
-    },
-    {
-      id: "hair-2",
-      category: "hair",
-      layers: {
-        front: "/assets/codygame/rico_hair_front_twintail.png",
-        back: "/assets/codygame/riko_hair_back_twintail.png",
-      },
-    },
-    {
-      id: "hair-3",
-      category: "hair",
-      layers: {
-        front: "/assets/codygame/rico_hair_front_short.png",
-        back: "/assets/codygame/riko_hair_back_short.png",
-      },
-    },
-    // Clothes
-    {
-      id: "clothes-1",
-      category: "clothes",
-      layers: { main: "/assets/codygame/riko_clothes_training.png" },
-    },
-    {
-      id: "clothes-2",
-      category: "clothes",
-      layers: { main: "/assets/codygame/riko_clothes_peasantdress.png" },
-    },
-    {
-      id: "clothes-3",
-      category: "clothes",
-      layers: {
-        back: "/assets/codygame/riko_clothes_hanbok.png",
-        main: "/assets/codygame/riko_clothes_ jeogori.png",
-        front: "/assets/codygame/riko_clothes_ ribbons.png",
-      },
-    }, // Combined Hanbok
-    // Accessories (Specific Slots)
-    // Leaving flowers as a full "accessories" composite, or migrating it? The user said: "flowers 는 헤어+옷+손 액세서리가 합쳐져 있어. 다른 액세서리를 추가로 장착할 수 없지."
-    // We will just keep flowers under a generic 'accessories' for logic checks if needed, but since it takes up ALL slots ideally we clear others or map it to a specific slot that conflicts.
-    // Actually, let's treat it as a master `accessories` and we'll handle conflicts on drop.
-    {
-      id: "accessories-1",
-      category: "accessories",
-      layers: { main: "/assets/codygame/riko_ accessories_flowers.png" },
-    },
-    {
-      id: "accessories-2",
-      category: "hair_acc",
-      layers: { back: "/assets/codygame/riko_ accessories_ hairpin.png" },
-    }, // Changed to back layer to go behind short hair
-    {
-      id: "accessories-3",
-      category: "clothes_acc",
-      layers: { main: "/assets/codygame/riko_ accessories_ norigae.png" },
-    },
-    {
-      id: "accessories-4",
-      category: "hand_acc",
-      layers: { back: "/assets/codygame/riko_ accessories_sword.png" },
-    }, // Sword goes behind
-    {
-      id: "accessories-5",
-      category: "hair_acc",
-      layers: { front: "/assets/codygame/riko_ accessories_flowercrown.png" },
-    },
+    // --- Training (1) ---
+    { id: "1-1", category: "hair_front", layers: { front: "/assets/codygame/training_1-1.png" } },
+    { id: "1-2", category: "hair_back", layers: { back: "/assets/codygame/training_1-2.png" } },
+    { id: "1-3", category: "clothes", layers: { main: "/assets/codygame/training_1-3.png" } },
+    { id: "1-4", category: "shoes", layers: { main: "/assets/codygame/training_1-4.png" } },
+
+    // --- Peasant Dress (2) ---
+    { id: "2-1", category: "hair_front", layers: { front: "/assets/codygame/peasantdress_2-1.png" } },
+    { id: "2-2", category: "hair_back", layers: { back: "/assets/codygame/peasantdress_2-2.png" } },
+    { id: "2-3", category: "clothes", layers: { main: "/assets/codygame/peasantdress_2-3.png" } },
+    { id: "2-4", category: "shoes", layers: { main: "/assets/codygame/peasantdress_2-4.png" } },
+    { id: "2-5", category: "hair_acc", layers: { front: "/assets/codygame/peasantdress_2-5.png" } },
+    { id: "2-6", category: "accessories", layers: { main: "/assets/codygame/peasantdress_2-6.png" } },
+
+    // --- Hanbok / Rain (3) ---
+    { id: "3-1", category: "hair_front", layers: { front: "/assets/codygame/hanbok_3-1.png" } },
+    { id: "3-2", category: "hair_back", layers: { back: "/assets/codygame/hanbok_3-2.png" } },
+    { id: "3-3", category: "clothes", layers: { main: "/assets/codygame/hanbok_3-3.png" } },
+    { id: "3-4", category: "clothes_back", layers: { back: "/assets/codygame/hanbok_3-4.png" } },
+    { id: "3-5", category: "hair_acc", layers: { back: "/assets/codygame/hanbok_3-5.png" } },
+    { id: "3-6", category: "clothes_acc", layers: { main: "/assets/codygame/hanbok_3-6.png" } },
+    { id: "3-7", category: "hand_acc", layers: { back: "/assets/codygame/hanbok_3-7.png" } },
+
+    // --- Beer / Knight (4) ---
+    { id: "4-1", category: "hair_front", layers: { front: "/assets/codygame/beer_4-1.png" } },
+    { id: "4-2", category: "hair_back", layers: { back: "/assets/codygame/beer_4-2.png" } },
+    { id: "4-3", category: "clothes", layers: { main: "/assets/codygame/beer_4-3.png" } },
+    { id: "4-4", category: "hair_acc", layers: { back: "/assets/codygame/beer_4-4.png" } },
+    { id: "4-5", category: "clothes_acc", layers: { main: "/assets/codygame/beer_4-5.png" } },
+    { id: "4-6", category: "hand_acc", layers: { back: "/assets/codygame/beer_4-6.png" } },
+    { id: "4-7", category: "accessories", layers: { main: "/assets/codygame/beer_4-7.png" } },
+
+    // --- Others ---
+    { id: "0-1", category: "accessories", layers: { main: "/assets/codygame/others_0-1.png" } },
   ];
 
   // Combination logic for background changes
@@ -179,24 +129,33 @@ const CodyGame: React.FC = () => {
   const combinations: Combination[] = [
     {
       name: "training",
-      requiredItems: ["hair-1", "clothes-1"], // Long Hair + Training Clothes
-      backgroundClass: "bg-[#f0fdf4]", // Standard hex instead of Tailwind v4 oklch
+      requiredItems: ["1-1", "1-2", "1-3", "1-4"],
+      backgroundClass: "bg-[#f0fdf4]",
     },
     {
       name: "peasantdress",
-      requiredItems: ["hair-2", "clothes-2", "accessories-1", "accessories-5"], // Twintails + Peasant Dress + Flowers + Flowercrown
-      backgroundClass: "spring-festival",
+      requiredItems: ["2-1", "2-2", "2-3", "2-4", "2-5", "2-6"],
+      backgroundClass: "spring",
     },
     {
       name: "hanbok",
-      requiredItems: [
-        "hair-3",
-        "clothes-3",
-        "accessories-2",
-        "accessories-3",
-        "accessories-4",
-      ], // Short Hair + Hanbok Set + Hairpin + Norigae + Sword
+      requiredItems: ["3-1", "3-2", "3-3", "3-4", "3-5", "3-6", "3-7"],
       backgroundClass: "oriental",
+    },
+    {
+      name: "rain",
+      requiredItems: ["3-1", "3-2", "3-3"],
+      backgroundClass: "rain",
+    },
+    {
+      name: "beer",
+      requiredItems: ["4-1", "4-2", "4-3", "4-4", "4-5", "4-6", "4-7"],
+      backgroundClass: "beer",
+    },
+    {
+      name: "knight",
+      requiredItems: ["4-1", "4-2", "4-3"],
+      backgroundClass: "knight",
     },
   ];
 
@@ -209,20 +168,25 @@ const CodyGame: React.FC = () => {
   );
 
   const handleReset = () => {
+    const emptyState = {
+      hair_front: null,
+      hair_back: null,
+      clothes: null,
+      clothes_back: null,
+      hair_acc: null,
+      clothes_acc: null,
+      hand_acc: null,
+      shoes: null,
+      accessories: null,
+    };
+
     if (isFinished) {
       // "Fly away" animation first
       setIsFlyAway(true);
       setShowButtons(false);
 
       setTimeout(() => {
-        setEquippedItems({
-          hair: null,
-          clothes: null,
-          hair_acc: null,
-          clothes_acc: null,
-          hand_acc: null,
-          accessories: null,
-        });
+        setEquippedItems(emptyState);
         setIsFinished(false);
         setResultImage(null);
         setActiveBackground(null);
@@ -232,14 +196,7 @@ const CodyGame: React.FC = () => {
         setIsFlyAway(false);
       }, 1200);
     } else {
-      setEquippedItems({
-        hair: null,
-        clothes: null,
-        hair_acc: null,
-        clothes_acc: null,
-        hand_acc: null,
-        accessories: null,
-      });
+      setEquippedItems(emptyState);
       setIsFinished(false);
       setResultImage(null);
       setActiveBackground(null);
@@ -263,7 +220,7 @@ const CodyGame: React.FC = () => {
           const nextState = { ...prev };
 
           // Conflict Resolution
-          if (draggedItem.id === "accessories-1") {
+          if (draggedItem.id === "2-6") { // Flowers
             // The flowers accessory prevents hand_acc and clothes_acc
             nextState.clothes_acc = null;
             nextState.hand_acc = null;
@@ -299,7 +256,7 @@ const CodyGame: React.FC = () => {
       <div
         className={`h-screen w-full flex flex-col overflow-hidden font-sans relative select-none bg-[#FFFFF8]`}
       >
-        {activeBackground === "spring-festival" && !isFinished && (
+        {activeBackground === "spring" && !isFinished && (
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <SpringFestivalBackground isFinished={false} />
             <FireflyBackground isFinished={false} />
@@ -358,10 +315,10 @@ const CodyGame: React.FC = () => {
                       )}
 
                       {/* 올바른 조합 배경을 이미지로 직접 렌더링 */}
-                      {!activeBackground?.startsWith("linear-gradient") && activeBackground === "spring-festival" && (
+                      {!activeBackground?.startsWith("linear-gradient") && activeBackground === "spring" && (
                         <div className="absolute inset-0 z-0">
                           <img
-                            src={springFestivalBgUrl || "/assets/codygame/background_1.jpg"}
+                            src={springBgUrl || "/assets/codygame/background_1-1.jpg"}
                             className="w-full h-full object-cover object-[center_30%]"
                             alt="background-scene"
                           />
@@ -370,7 +327,7 @@ const CodyGame: React.FC = () => {
                       {!activeBackground?.startsWith("linear-gradient") && activeBackground === "oriental" && (
                         <div className="absolute inset-0 z-0">
                           <img
-                            src={orientalBgUrl || "/assets/codygame/background_3.jpg"}
+                            src={orientalBgUrl || "/assets/codygame/background_3-1.jpg"}
                             className="w-full h-full object-cover object-[center_10%]"
                             alt="background-scene"
                           />
@@ -380,7 +337,7 @@ const CodyGame: React.FC = () => {
                   }
                   overlayContent={
                     <>
-                      {!isCapturing && activeBackground === "spring-festival" && (
+                      {!isCapturing && activeBackground === "spring" && (
                         <FireflyBackground isFinished={true} />
                       )}
                       {!isCapturing && activeBackground === "oriental" && (
@@ -460,16 +417,42 @@ const CodyGame: React.FC = () => {
                         if (matchedCombo.backgroundClass === "oriental") {
                           setOrientalBgUrl(
                             [
-                              "/assets/codygame/background_3.jpg",
-                              "/assets/codygame/background_4.jpg",
-                            ][Math.floor(Math.random() * 2)]
+                              "/assets/codygame/background_2-1.jpg",
+                              "/assets/codygame/background_2-2.jpg",
+                              "/assets/codygame/background_2-3.jpg",
+                            ][Math.floor(Math.random() * 3)]
                           );
-                        } else if (matchedCombo.backgroundClass === "spring-festival") {
+                        } else if (matchedCombo.backgroundClass === "spring") {
                           setSpringFestivalBgUrl(
                             [
-                              "/assets/codygame/background_1.jpg",
-                              "/assets/codygame/background_2.jpg",
-                            ][Math.floor(Math.random() * 2)]
+                              "/assets/codygame/background_1-1.jpg",
+                              "/assets/codygame/background_1-2.jpg",
+                              "/assets/codygame/background_1-3.jpg",
+                            ][Math.floor(Math.random() * 3)]
+                          );
+                        } else if (matchedCombo.backgroundClass === "rain") {
+                          setOrientalBgUrl(
+                            [
+                              "/assets/codygame/background_3-1.jpg",
+                              "/assets/codygame/background_3-2.jpg",
+                              "/assets/codygame/background_3-3.jpg",
+                            ][Math.floor(Math.random() * 3)]
+                          );
+                        } else if (matchedCombo.backgroundClass === "beer") {
+                          setOrientalBgUrl(
+                            [
+                              "/assets/codygame/background_4-1.jpg",
+                              "/assets/codygame/background_4-2.jpg",
+                              "/assets/codygame/background_4-3.jpg",
+                            ][Math.floor(Math.random() * 3)]
+                          );
+                        } else if (matchedCombo.backgroundClass === "knight") {
+                          setOrientalBgUrl(
+                            [
+                              "/assets/codygame/background_4-1.jpg",
+                              "/assets/codygame/background_4-2.jpg",
+                              "/assets/codygame/background_4-3.jpg",
+                            ][Math.floor(Math.random() * 3)]
                           );
                         }
 
@@ -578,7 +561,7 @@ const CodyGame: React.FC = () => {
                   { id: "hair", label: "헤어" },
                   { id: "clothes", label: "의상" },
                   { id: "hair_acc", label: "헤어 액세서리" },
-                  { id: "body_acc", label: "바디 액세서리" }
+                  { id: "body_acc", label: "액세서리" }
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -600,10 +583,10 @@ const CodyGame: React.FC = () => {
               className={`flex-1 ${isMobile ? "" : "overflow-y-auto custom-scrollbar px-6 pb-20"} transition-opacity ${isFinished ? "opacity-30 pointer-events-none" : ""}`}
             >
               {[
-                { id: "hair", label: "헤어", filter: (i: any) => i.category === "hair" },
-                { id: "clothes", label: "의상", filter: (i: any) => i.category === "clothes" },
+                { id: "hair", label: "헤어", filter: (i: any) => ["hair_front", "hair_back"].includes(i.category) },
+                { id: "clothes", label: "의상", filter: (i: any) => ["clothes", "clothes_back", "shoes"].includes(i.category) },
                 { id: "hair_acc", label: "헤어 액세서리", filter: (i: any) => ["hair_acc"].includes(i.category) },
-                { id: "body_acc", label: "바디 액세서리", filter: (i: any) => ["accessories", "clothes_acc", "hand_acc"].includes(i.category) },
+                { id: "body_acc", label: "액세서리", filter: (i: any) => ["accessories", "clothes_acc", "hand_acc"].includes(i.category) },
               ]
                 .filter(section => !isMobile || activeTab === section.id)
                 .map((section) => (
@@ -623,10 +606,10 @@ const CodyGame: React.FC = () => {
                             if (!isMobile) return;
 
                             if (!isFinished && !isEquipped) {
-                              if (["accessories", "clothes_acc", "hand_acc", "hair_acc"].includes(item.category)) {
+                              if (["accessories", "clothes_acc", "hand_acc", "hair_acc", "hair_back", "clothes_back", "shoes"].includes(item.category)) {
                                 setEquippedItems((prev) => {
                                   const nextState = { ...prev };
-                                  if (item.id === "accessories-1") {
+                                  if (item.id === "2-6") { // Flowers
                                     nextState.clothes_acc = null;
                                     nextState.hand_acc = null;
                                   } else if (["clothes_acc", "hand_acc"].includes(item.category)) {

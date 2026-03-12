@@ -105,9 +105,9 @@ class Petal {
 // we just let them accept bgImage or generate it internally if they don't care. We'll generate once here.
 const AVAILABLE_BGS = [
   "1-1", "1-2", "1-3",
-  "2-1", "2-2", "2-3", "2-4",
-  "3-1", "3-2", "3-3", "3-4",
-  "4-1", "4-2", "4-3", "4-4", "4-5", "4-6", "4-7"
+  "2-1", "2-2", "2-3",
+  "3-1", "3-2", "3-3",
+  "4-1", "4-2", "4-3",
 ];
 const randomBgId = AVAILABLE_BGS[Math.floor(Math.random() * AVAILABLE_BGS.length)];
 let cachedRandomBg = `/assets/codygame/background_${randomBgId}.jpg`;
