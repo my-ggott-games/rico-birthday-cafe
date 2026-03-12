@@ -153,7 +153,7 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
                         className="font-marker font-bold text-[24px] md:text-[24px] tracking-wider select-none"
                         style={{
                             color: "#111827",
-                            fontFamily: "'Nanum Pen Script', 'Permanent Marker', cursive",
+                            fontFamily: "'OneStoreMobilePop', 'Permanent Marker', cursive",
                             fontWeight: 800,
                             transform: "rotate(-2deg)",
                         }}

@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Noto+Serif+KR:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@400;700;900&display=swap');
 
 @theme {
   --color-pale-custard: #FFFFF8;
@@ -58,10 +58,9 @@ body {
 }
 
 .font-handwriting {
-  font-family: 'Nanum Pen Script', 'Gaegu', cursive;
-  font-weight: 700;
+  font-family: 'OneStoreMobilePop', 'Gaegu', cursive;
+  font-weight: 400;
   letter-spacing: 0.02em;
-  /* Nanum Pen Script is much more legible for Korean notes */
 }
 
 a {

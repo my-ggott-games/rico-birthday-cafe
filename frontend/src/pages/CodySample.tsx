@@ -20,19 +20,19 @@ const sampleEquippedIds = {
 };
 
 const sampleAvailableItems = [
-    {
-      id: "hair-1",
-      category: "hair",
-      layers: {
-        front: "/assets/codygame/rico_hair_front_long.png",
-        back: "/assets/codygame/riko_hair_back_long.png",
-      },
+  {
+    id: "hair-1",
+    category: "hair",
+    layers: {
+      front: "/assets/codygame/rico_hair_front_long.png",
+      back: "/assets/codygame/riko_hair_back_long.png",
     },
-    {
-      id: "clothes-1",
-      category: "clothes",
-      layers: { main: "/assets/codygame/riko_clothes_training.png" },
-    },
+  },
+  {
+    id: "clothes-1",
+    category: "clothes",
+    layers: { main: "/assets/codygame/riko_clothes_training.png" },
+  },
 ];
 
 const CodySample: React.FC = () => {
@@ -53,7 +53,7 @@ const CodySample: React.FC = () => {
                 <PolaroidFrame
                   isFlyAway={false}
                   activeBackground={undefined} // Just trick the frame into normal drawing
-                  characterOffset={{ x: 0, y: 500 }}
+                  characterOffset={{ x: 0, y: 350 }}
                   isSquare={true}
                   hideShadow={false}
                   backgroundContent={
