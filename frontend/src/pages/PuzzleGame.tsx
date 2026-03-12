@@ -196,8 +196,8 @@ const DraggablePiece = React.memo(({ piece, onRotate }: { piece: PuzzlePiece, on
                     return;
                 }
 
-                // Strict Click Rule: No movement AND deliberate press (< 300ms)
-                if (deltaTime < 300) {
+                // Strict Click Rule: No movement AND deliberate press (< 200ms)
+                if (deltaTime < 200) {
                     onRotate(piece.id);
                 }
 

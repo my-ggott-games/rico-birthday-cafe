@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -39,13 +40,13 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({ className, style, ga
             </motion.button>
 
             <AnimatePresence>
-                {isOpen && (
-                    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+                {isOpen && createPortal(
+                    <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4">
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
                             onClick={() => setIsOpen(false)}
                         />
                         <motion.div
@@ -73,7 +74,8 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({ className, style, ga
                                 </button>
                             </div>
                         </motion.div>
-                    </div>
+                    </div>,
+                    document.body
                 )}
             </AnimatePresence>
         </>
