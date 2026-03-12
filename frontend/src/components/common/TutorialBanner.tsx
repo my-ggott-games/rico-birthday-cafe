@@ -67,23 +67,23 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({ slides, classNam
                     }}
                     className="absolute inset-0 w-full h-full rounded-[24px] px-5 pt-4 pb-3 flex flex-col shadow-[0_8px_24px_rgba(74,59,50,0.2)] bg-[#166D77] text-pale-custard"
                 >
-                    <div className="font-black text-lg mb-1">{s.title}</div>
+                    <div className="font-black text-xl md:text-2xl mb-2 text-center leading-tight">{s.title}</div>
 
-                    <div className="flex-1 flex flex-col justify-center">
-                        <div>
+                    <div className="flex-1 flex flex-col justify-center items-center gap-4 text-center">
+                        <div className="flex flex-col gap-1 w-full">
                             {s.lines.map((line, i) => (
-                                <p key={i} className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                                <p key={i} className="text-base md:text-lg leading-relaxed font-medium" style={{ color: 'rgba(255,255,255,0.95)' }}>
                                     {line}
                                 </p>
                             ))}
                         </div>
 
                         {s.showArrows && (
-                            <div className="flex gap-2 mt-2">
+                            <div className="flex gap-3 mt-1 justify-center">
                                 {(['left', 'up', 'down', 'right'] as Direction[]).map(d => {
                                     const icons: Record<Direction, string> = { left: '←', up: '↑', down: '↓', right: '→' };
                                     return (
-                                        <div key={d} className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-base"
+                                        <div key={d} className="w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl shadow-md"
                                             style={{ background: '#1a1a1a', color: '#FFFFF8' }}>
                                             {icons[d]}
                                         </div>
@@ -93,16 +93,16 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({ slides, classNam
                         )}
 
                         {s.highlight && (
-                            <div className="flex items-center gap-1.5 flex-wrap mt-2 justify-center">
-                                <span className="px-2.5 py-1 rounded-xl font-bold text-xs" style={{ background: '#b7e4c7', color: '#1b4332' }}>
+                            <div className="flex items-center justify-center gap-2 flex-wrap mt-1">
+                                <span className="px-3 py-1.5 rounded-xl font-bold text-sm md:text-base shadow-sm" style={{ background: '#b7e4c7', color: '#1b4332' }}>
                                     {s.highlight.a}
                                 </span>
-                                <span className="font-bold text-xs">+</span>
-                                <span className="px-2.5 py-1 rounded-xl font-bold text-xs" style={{ background: '#b7e4c7', color: '#1b4332' }}>
+                                <span className="font-bold text-sm md:text-base text-pale-custard">+</span>
+                                <span className="px-3 py-1.5 rounded-xl font-bold text-sm md:text-base shadow-sm" style={{ background: '#b7e4c7', color: '#1b4332' }}>
                                     {s.highlight.b}
                                 </span>
-                                <span className="font-bold text-xs">→</span>
-                                <span className="px-2.5 py-1 rounded-xl font-bold text-xs" style={{ background: '#95d5b2', color: '#1b4332' }}>
+                                <span className="font-bold text-sm md:text-base text-pale-custard">→</span>
+                                <span className="px-3 py-1.5 rounded-xl font-bold text-sm md:text-base shadow-sm" style={{ background: '#95d5b2', color: '#1b4332' }}>
                                     {s.highlight.result}
                                 </span>
                             </div>

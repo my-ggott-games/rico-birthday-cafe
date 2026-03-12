@@ -57,7 +57,7 @@ export const TutorialModal: React.FC = () => {
                             </div>
                             <TutorialBanner
                                 slides={TUTORIAL_SLIDES}
-                                className="h-[260px] shadow-2xl rounded-3xl"
+                                className="min-h-[300px] shadow-2xl rounded-3xl"
                             />
                         </motion.div>
                     </motion.div>
@@ -72,7 +72,7 @@ export const Tutorial: React.FC = () => {
     return (
         <div className="flex flex-col items-center justify-center w-full h-full">
             <div className="w-full max-w-[400px]">
-                <TutorialBanner slides={TUTORIAL_SLIDES} className="h-[250px] shadow-xl rounded-3xl" />
+                <TutorialBanner slides={TUTORIAL_SLIDES} className="min-h-[300px] shadow-xl rounded-3xl" />
             </div>
         </div>
     );
