@@ -11,6 +11,8 @@ const Lobby: React.FC = () => {
     const [isAdminOpen, setIsAdminOpen] = useState(false);
 
     useEffect(() => {
+        console.log("519_2024"); // Easter Egg
+
         const handleResize = () => setWindowWidth(window.innerWidth);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
@@ -157,6 +159,28 @@ const Lobby: React.FC = () => {
                             </div>
                             <div className={`mt-2 bg-pale-custard ${isMobile ? 'px-3 py-1 text-sm' : 'px-4 py-2'} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#5EC7A5] group-hover:text-pale-custard transition-colors`}>
                                 아스파라거스 키우기
+                            </div>
+                        </motion.div>
+                    </Link>
+
+                    {/* Hotspot: Rico's Fortune (Omikuji) */}
+                    <Link
+                        to="/game/fortune"
+                        className={isMobile ? "relative scale-[0.85] col-span-2 mt-4" : "absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 group"}
+                    >
+                        <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="flex flex-col items-center"
+                        >
+                            <div className={`relative ${isMobile ? 'w-24 h-32' : 'w-32 h-44'} bg-[#D6C0B0] rounded-b-[2rem] rounded-t-lg border-4 border-[#8B5A2B] shadow-xl flex flex-col items-center justify-center`}>
+                                <div className={`absolute top-0 w-3/4 h-2 bg-[#8B5A2B]`} />
+                                <div className={`${isMobile ? 'text-4xl' : 'text-5xl'} drop-shadow-md`}>🥠</div>
+                                <div className="absolute inset-x-0 bottom-4 flex justify-center">
+                                    <div className="w-4/5 h-1 bg-[#8B5A2B] opacity-30" />
+                                </div>
+                            </div>
+                            <div className={`mt-2 bg-pale-custard ${isMobile ? 'px-3 py-1 text-sm' : 'px-4 py-2'} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#5EC7A5] group-hover:text-pale-custard transition-colors`}>
+                                오늘의 운세
                             </div>
                         </motion.div>
                     </Link>

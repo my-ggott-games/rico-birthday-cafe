@@ -72,6 +72,17 @@ public class AchievementService {
      */
     @Transactional(readOnly = true)
     public List<AchievementDto> getAllAchievementsWithStatus(User user) {
+        if ("chiko_03240324".equals(user.getUsername())) {
+            // Admin gets all achievements unlocked instantly
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            return achievementRepository.findAll()
+                    .stream()
+                    .map(ach -> new AchievementDto(
+                            ach.getCode(), ach.getTitle(), ach.getDescription(), ach.getIconUrl(), now, true
+                    ))
+                    .collect(Collectors.toList());
+        }
+
         // Build a fast lookup map: achievementCode -> unlockedAt
         Map<String, UserAchievement> earnedMap = userAchievementRepository
                 .findByUserOrderByUnlockedAtDesc(user)
@@ -85,8 +96,12 @@ public class AchievementService {
                 .stream()
                 .map(achievement -> {
                     UserAchievement ua = earnedMap.get(achievement.getCode());
+                    // Provide a default fallback to avoid NPE warning entirely
                     boolean earned = ua != null;
-                    java.time.LocalDateTime unlockedAt = earned ? ua.getUnlockedAt() : null;
+                    java.time.LocalDateTime unlockedAt = null;
+                    if (ua != null && ua.getUnlockedAt() != null) {
+                        unlockedAt = ua.getUnlockedAt();
+                    }
                     return new AchievementDto(
                             achievement.getCode(),
                             achievement.getTitle(),

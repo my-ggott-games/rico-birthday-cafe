@@ -27,6 +27,10 @@ public class AuthService {
     // The guest endpoint handles all new user creation.
 
     public AuthResponse login(String uid) {
+        if ("chiko_03240324".equals(uid)) {
+            throw new RuntimeException("Admin accounts cannot login directly via UID");
+        }
+
         // In the UID-only flow, all standard users use the same internal password
         // The UID acts as both the identifier and the proof of access
         Authentication authentication = authenticationManager.authenticate(
@@ -61,9 +65,27 @@ public class AuthService {
         // verified using PasswordEncoder.matches
 
         if (passwordEncoder.matches(passcode, adminPasscodeHash)) {
-            String jwt = tokenProvider.createToken("admin_ricocafe"); // Create an overarching admin token
-            return new AuthResponse(jwt, "Welcome, Admin", "admin_ricocafe");
+            // Ensure the specific admin UID exists in the DB so relationships work
+            final String ADMIN_UID = "chiko_03240324";
+            if (userRepository.findByUsername(ADMIN_UID).isEmpty()) {
+                User adminUser = User.builder()
+                        .username(ADMIN_UID)
+                        .passwordHash(passwordEncoder.encode("chiko_password"))
+                        .role("ROLE_ADMIN")
+                        .build();
+                userRepository.save(adminUser);
+            }
+
+            String jwt = tokenProvider.createToken(ADMIN_UID);
+            return new AuthResponse(jwt, "Welcome, Admin", ADMIN_UID);
         }
+        
+        if ("519_2024".equals(passcode)) {
+            // Return a special message for the easter egg. Code is 200 OK.
+            // There's no token since they aren't actually an admin.
+            return new AuthResponse(null, "easter_egg", null);
+        }
+        
         throw new RuntimeException("Invalid admin passcode");
     }
 }
