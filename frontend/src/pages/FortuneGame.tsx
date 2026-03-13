@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CommonTitle } from '../components/common/CommonTitle';
 import { ReturnButton } from '../components/common/ReturnButton';

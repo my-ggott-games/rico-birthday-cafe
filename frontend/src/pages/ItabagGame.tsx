@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../store/useAuthStore';
 import { BASE_URL } from '../utils/api';
@@ -196,7 +196,7 @@ export default function ItabagGame() {
                                     drag
                                     dragMomentum={false}
                                     dragConstraints={canvasRef}
-                                    onDragEnd={(e, info) => handleDragEnd(badge.id, info)}
+                                    onDragEnd={(_e, info) => handleDragEnd(badge.id, info)}
                                     initial={{ x: badge.x, y: badge.y, rotate: badge.rotation, scale: 0 }}
                                     animate={{ x: badge.x, y: badge.y, rotate: badge.rotation, scale: 1 }}
                                     onClick={() => handleRotate(badge.id)}
