@@ -84,8 +84,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
             key = KOREAN_TO_ENGLISH_MAP[key];
         }
 
-        // We only allow ascii letters to trigger our manual insert logic
-        if (/^[a-zA-Z]$/.test(key)) {
+        // We only allow ascii letters and numbers to trigger our manual insert logic
+        if (/^[a-zA-Z0-9]$/.test(key)) {
             handleKeyClick(key);
         }
     };
@@ -102,7 +102,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                 // If it's a Backspace or letter, let onChange/onKeyDown of input handle it, 
                 // OR we just use this handler. Actually, if we use handleInputChange, 
                 // it's better to prevent global listener from duplicating letters.
-                if (e.key === 'Backspace' || /^[a-zA-Z]$/.test(e.key) || KOREAN_TO_ENGLISH_MAP[e.key]) {
+                if (e.key === 'Backspace' || /^[a-zA-Z0-9]$/.test(e.key) || KOREAN_TO_ENGLISH_MAP[e.key]) {
                     return;
                 }
             }
@@ -120,7 +120,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                 return;
             }
 
-            if (/^[a-zA-Z]$/.test(key)) {
+            if (/^[a-zA-Z0-9]$/.test(key)) {
                 e.preventDefault();
                 handleKeyClick(key);
             }
