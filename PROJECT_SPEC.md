@@ -34,6 +34,7 @@
 | `AchievementModal` | `components/common/AchievementModal.tsx` | 프로필 모달 — 업적 달성(전체 색상) / 미달성(`???` 마스킹) 표시 |
 | `AchievementToast` | `components/common/AchievementToast.tsx` | 업적 획득 시 팝업 알림 |
 | `ReturnButton` | `components/common/ReturnButton.tsx` | 로비 복귀 버튼 |
+| `GameContainer` | `components/common/GameContainer.tsx` | 모든 게임 페이지 공통 레이아웃: 타이틀, 튜토리얼, 로비 복귀 버튼, 모바일/데스크탑 도움말 슬롯과 섹션별 `mainClassName`/`showDesktopHelp` 제어 |
 | `GlobalLoading` | `components/common/GlobalLoading.tsx` | 전역 로딩 인디케이터 |
 
 ---
@@ -55,6 +56,9 @@
 - 세트 조합 감지 → 전용 배경(봄 축제, 동양풍, 비, 맥주, 기사) 자동 적용
 - 완성 후 Polaroid 프레임으로 결과물 표시 + JPG 저장 / SNS 공유
 - `GameHelp` 공통 컴포넌트로 튜토리얼 제공 (모바일: 모달, 데스크탑: 인라인 준비)
+- `GameContainer` 기반 레이아웃으로 타이틀, 리코로드 버튼, 데스크탑 도움말/모바일 튜토리얼을 일관되게 렌더링
+- `hair_front` 아이템을 장착하면 자동으로 `hair_back` 레이어를 함께 세트화, 머리 뒷단 레이어는 `layoutId`/motion 애니메이션으로 분리 구현
+- 세트 조합 검사는 `hair_front`만 대상으로 간소화되어 뒷머리 레이어가 선택 순서에 영향을 주지 않음
 
 ### 3.4. [Game 2] 이타백 꾸미기 (`/game/itabag`)
 - Canvas UI: 화면 중앙에 4:3 비율의 직사각형 배치.
@@ -62,6 +66,7 @@
 - Pattern: 사각형 내부에는 실제 이타백의 질감을 표현하는 와이어 메시(Wire + Mesh) 패턴의 배경 레이어 포함.
 - 장식 오브젝트: 유저가 획득한 업적 아이콘들이 실제 '뱃지' 아이템으로 리스트업됨. 드래그 앤 드롭을 통해 메시 망 위에 자유롭게 배치 가능.
 뱃지 외에 추가적인 리본, 장식 스티커 선택 가능.
+- `GameContainer` 공통 헤더에 `ITABAG_TUTORIAL_SLIDES`를 넣어 모바일/데스크탑 도움말을 일원화
 
 ### 3.5. [Game 3] 퍼즐놀이 (`/game/puzzle`)
 - 4×4(16피스) 이미지 퍼즐
@@ -69,6 +74,7 @@
 - 드래그로 정확한 칸에 배치 시 자동 고정
 - 완성 시 `canvas-confetti` 폭죽 효과 + 팝업
 - `GameHelp` 공통 컴포넌트로 튜토리얼 제공
+- `GameContainer`을 활용해 타이틀/튜토리얼/로비 복귀 버튼을 고정하고, 트레이드오프 없이 데스크탑 도움말을 유지
 
 ### 3.6. [Game 4] 아스파라거스 키우기 — 2048 (`/game/asparagus`)
 - 4×4 그리드, 타일 병합 게임 (목표 값: 2048)
@@ -79,6 +85,8 @@
 - 2048 달성 시 업적 `ASPARAGUS_EXCALIBUR` 자동 부여
 - **모바일 수정:** 보드 최대 너비 `min(500px, 100vw - 3rem)`, 타일 gap `clamp()` 적용
 - `GameHelp` 공통 컴포넌트로 튜토리얼 제공 (모바일: 모달 토글, 데스크탑: 왼쪽 사이드 패널)
+- `GameContainer`을 통해 타이틀/튜토리얼/리턴 버튼/데스크탑 도움말을 공유하며, 헤더 우측에 점수/베스트 블록을 고정
+- 보드 컨테이너는 `clamp()` 기반 `padding`, `borderRadius`, `gap`으로 모바일에서 폭 500px를 넘기지 않고 자연스럽게 축소되는 반응형 설정
 
 ### 3.7. [Special] Who made this?! (/credits)
 - 기능: 제작진 목록 송출 및 엔딩 감상 업적 부여.
@@ -102,6 +110,7 @@
     - PC: 클릭 / 모바일: 기기 흔들기(DeviceMotion API) 또는 터치.
 - 업적 연동:
     - LUCKY_RICO_MOMENT: '대길'을 뽑았을 때 부여.
+- `GameContainer` + `FORTUNE_TUTORIAL_SLIDES`로 타이틀, 튜토리얼, 도움말을 통합하고, `GameHelp`의 데스크탑판을 자동으로 허용
 
 ---
 
