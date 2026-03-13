@@ -1,12 +1,14 @@
 import React, { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import { Tutorial, TutorialModal } from '../components/asparagus/Tutorial';
 import { Board } from '../components/asparagus/Board';
 import { Items } from '../components/asparagus/Items';
 import { ReturnButton } from '../components/common/ReturnButton';
+import { CommonTitle } from '../components/common/CommonTitle';
+import { GameHelp } from '../components/common/GameHelp';
 import { useAsparagusGame } from '../hooks/useAsparagusGame';
 import { type Direction } from '../components/asparagus/types';
+import { TUTORIAL_SLIDES } from '../components/asparagus/constants';
 
 const AsparagusMerge: React.FC = () => {
     const {
@@ -94,14 +96,11 @@ const AsparagusMerge: React.FC = () => {
 
                 {/* Title */}
                 <div className="flex flex-col items-center text-center order-1 lg:order-2 pt-8 lg:pt-0">
-                    <div className="flex items-center gap-2">
-                        <span className="font-black text-3xl lg:text-4xl" style={{ color: '#166D77' }}>아스파라거스 키우기</span>
-                        {/* Tutorial toggle: only shown on mobile */}
-                        <span className="lg:hidden">
-                            <TutorialModal />
-                        </span>
-                    </div>
-                    <span className="text-xs lg:text-sm font-bold" style={{ color: '#5EC7A5' }}>아스파라거스도 리코도 건강만 해다오</span>
+                    <CommonTitle
+                        title="아스파라거스 키우기"
+                        subtitle="아스파라거스도 리코도 건강만 해다오"
+                        helpSlot={<GameHelp slides={TUTORIAL_SLIDES} mobileOnly />}
+                    />
                 </div>
 
                 {/* Score / Best */}
@@ -123,7 +122,7 @@ const AsparagusMerge: React.FC = () => {
                 {/* [Left] Tutorial: Desktop only (hidden on mobile — modal replaces it) */}
                 <div className="hidden lg:flex flex-col items-center justify-start lg:pt-10">
                     <div className="w-full max-w-[420px] flex flex-col items-center">
-                        <Tutorial />
+                        <GameHelp slides={TUTORIAL_SLIDES} desktopOnly />
                     </div>
                 </div>
 

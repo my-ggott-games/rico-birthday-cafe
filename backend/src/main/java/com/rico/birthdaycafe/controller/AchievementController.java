@@ -22,6 +22,7 @@ public class AchievementController {
 
     private final AchievementService achievementService;
 
+    /** Returns only the achievements the current user has already earned. */
     @GetMapping("/mine")
     public ResponseEntity<List<AchievementDto>> getMyAchievements(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -34,8 +35,35 @@ public class AchievementController {
                 ua.getAchievement().getTitle(),
                 ua.getAchievement().getDescription(),
                 ua.getAchievement().getIconUrl(),
-                ua.getUnlockedAt())).collect(Collectors.toList());
+                ua.getUnlockedAt(),
+                true  // earned = true for /mine items
+        )).collect(Collectors.toList());
 
         return ResponseEntity.ok(dtos);
     }
+
+    /**
+     * Returns ALL achievements in the system with an `earned` flag for the
+     * current user. Used by the Profile modal to show earned (full colour) and
+     * unearned (greyed-out, masked) achievements side-by-side.
+     */
+    @GetMapping("/all")
+    public ResponseEntity<List<AchievementDto>> getAllAchievements(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        User user = userDetails.getUser();
+        return ResponseEntity.ok(achievementService.getAllAchievementsWithStatus(user));
+    }
+
+    /**
+     * Explicitly awards an achievement by code to the current user.
+     * Service layer handles idempotency (ignores if already earned).
+     */
+    @org.springframework.web.bind.annotation.PostMapping("/award/{code}")
+    public ResponseEntity<Void> awardAchievement(
+            @org.springframework.web.bind.annotation.PathVariable String code,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        achievementService.awardAchievement(userDetails.getUser(), code);
+        return ResponseEntity.ok().build();
+    }
 }
+

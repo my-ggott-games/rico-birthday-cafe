@@ -8,7 +8,8 @@ interface Achievement {
     title: string;
     description: string;
     iconUrl: string;
-    unlockedAt: string;
+    unlockedAt: string | null;
+    earned: boolean;
 }
 
 interface AchievementModalProps {
@@ -42,7 +43,7 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({ isOpen, onCl
     const fetchAchievements = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${BASE_URL}/achievements/mine`, {
+            const res = await fetch(`${BASE_URL}/achievements/all`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -78,6 +79,8 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({ isOpen, onCl
 
     if (!isOpen) return null;
 
+    const earnedCount = achievements.filter(a => a.earned).length;
+
     return (
         <AnimatePresence>
             <motion.div
@@ -104,7 +107,7 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({ isOpen, onCl
                     <div className="text-center mb-5 shrink-0">
                         <span className="text-5xl drop-shadow-md mb-2 inline-block">🪪</span>
                         <h2 className="text-4xl font-black text-[#166D77] uppercase tracking-wider">
-                            My Info
+                            프로필
                         </h2>
                     </div>
 
@@ -130,12 +133,12 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({ isOpen, onCl
                         </div>
                     </div>
 
-                    {/* Achievements Section */}
+                    {/* Achievements Section Header */}
                     <div className="shrink-0 mb-3">
                         <div className="flex items-center justify-between">
                             <h3 className="font-black text-lg text-[#166D77]">🏆 업적</h3>
                             <span className="text-sm font-bold text-[#5EC7A5]">
-                                {achievements.length}개 달성
+                                {earnedCount} / {achievements.length} 달성
                             </span>
                         </div>
                     </div>
@@ -159,23 +162,42 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({ isOpen, onCl
                             </div>
                         ) : (
                             <div className="flex flex-col gap-3">
-                                {achievements.map((ach) => (
-                                    <div
-                                        key={ach.code}
-                                        className="bg-pale-custard p-4 rounded-2xl border-2 border-[#5EC7A5]/20 shadow-sm flex items-center gap-4 hover:border-[#5EC7A5] hover:-translate-y-0.5 transition-all"
-                                    >
-                                        <div className="w-14 h-14 bg-[#FFE4E6] rounded-full flex items-center justify-center text-2xl shrink-0 border-2 border-[#5EC7A5]">
-                                            {ach.iconUrl || '⭐'}
+                                {achievements.map((ach) =>
+                                    ach.earned ? (
+                                        /* ── EARNED: full colour card ── */
+                                        <div
+                                            key={ach.code}
+                                            className="bg-pale-custard p-4 rounded-2xl border-2 border-[#5EC7A5]/20 shadow-sm flex items-center gap-4 hover:border-[#5EC7A5] hover:-translate-y-0.5 transition-all"
+                                        >
+                                            <div className="w-14 h-14 bg-[#FFE4E6] rounded-full flex items-center justify-center text-2xl shrink-0 border-2 border-[#5EC7A5]">
+                                                {ach.iconUrl || '⭐'}
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <h4 className="font-black text-[#166D77] text-base truncate">{ach.title}</h4>
+                                                <p className="text-sm font-medium text-[#166D77]/70 leading-tight mt-0.5">{ach.description}</p>
+                                                {ach.unlockedAt && (
+                                                    <p className="text-[10px] text-[#166D77]/40 mt-1.5 font-bold uppercase tracking-wider">
+                                                        Unlocked: {new Date(ach.unlockedAt).toLocaleDateString()}
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="min-w-0 flex-1">
-                                            <h4 className="font-black text-[#166D77] text-base truncate">{ach.title}</h4>
-                                            <p className="text-sm font-medium text-[#166D77]/70 leading-tight mt-0.5">{ach.description}</p>
-                                            <p className="text-[10px] text-[#166D77]/40 mt-1.5 font-bold uppercase tracking-wider">
-                                                Unlocked: {new Date(ach.unlockedAt).toLocaleDateString()}
-                                            </p>
+                                    ) : (
+                                        /* ── UNEARNED: greyed-out, masked ── */
+                                        <div
+                                            key={ach.code}
+                                            className="bg-[#f3f4f6] p-4 rounded-2xl border-2 border-[#D6C0B0]/40 shadow-sm flex items-center gap-4 opacity-60 select-none"
+                                        >
+                                            <div className="w-14 h-14 bg-[#e5e7eb] rounded-full flex items-center justify-center text-2xl shrink-0 border-2 border-[#D6C0B0] grayscale">
+                                                🔒
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <h4 className="font-black text-[#9ca3af] text-base">???</h4>
+                                                <p className="text-sm font-medium text-[#9ca3af] leading-tight mt-0.5">아직 잠겨 있어요.</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    )
+                                )}
                             </div>
                         )}
                     </div>

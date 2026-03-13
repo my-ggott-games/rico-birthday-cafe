@@ -37,11 +37,17 @@ const Lobby: React.FC = () => {
                         ☕ Main Hall
                     </h2>
                     <div className="flex gap-2">
+                        <Link
+                            to="/credits"
+                            className={`${isMobile ? 'px-3 py-1 text-sm' : 'px-6 py-2'} bg-black rounded-full border-2 border-gray-700 shadow-sm font-black text-gray-300 hover:bg-gray-800 hover:text-white transition-colors flex items-center gap-1.5`}
+                        >
+                            <span className="drop-shadow-sm text-base">🎬</span> 엔딩 크레딧
+                        </Link>
                         <button
                             onClick={() => setIsAchievementOpen(true)}
                             className={`${isMobile ? 'px-3 py-1 text-sm' : 'px-6 py-2'} bg-cream rounded-full border-2 border-[#5EC7A5] shadow-sm font-black text-[#5EC7A5] hover:bg-[#5EC7A5] hover:text-pale-custard transition-colors flex items-center gap-1.5`}
                         >
-                            <span className="drop-shadow-sm text-base">🪪</span> My Info
+                            <span className="drop-shadow-sm text-base">🪪</span> 프로필
                         </button>
                         <button
                             onClick={() => setIsAdminOpen(true)}

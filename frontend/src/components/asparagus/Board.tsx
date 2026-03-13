@@ -37,8 +37,9 @@ export const Board: React.FC<BoardProps> = ({ grid, selection, isSwapMode, onTil
     return (
         <div className="flex flex-col items-center justify-center w-full h-full">
             <div
-                className="w-full max-w-[min(800px,90vw)] aspect-square flex items-center justify-center"
+                className="w-full aspect-square flex items-center justify-center"
                 style={{
+                    maxWidth: 'min(500px, calc(100vw - 3rem))',
                     background: '#166D77',
                     borderRadius: BOARD_RADIUS,
                     padding: BOARD_PADDING,
@@ -53,7 +54,7 @@ export const Board: React.FC<BoardProps> = ({ grid, selection, isSwapMode, onTil
                         display: 'grid',
                         gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
                         gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`,
-                        gap: 18,
+                        gap: 'clamp(8px, 2vw, 18px)',
                         width: '100%',
                         height: '100%',
                     }}

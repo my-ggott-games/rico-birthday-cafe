@@ -1,139 +1,185 @@
-버추얼 유튜버 **유즈하 리코(Yuzuha Rico)**의 온라인 생일 카페 프로젝트를 위한 최종 기술 명세서입니다. 이 내용을 `SPECIFICATION.md` 또는 `README.md`로 저장하여 프로젝트의 가이드라인으로 활용하시기 바랍니다.
+# 🎂 Project: Rico's Online Birthday Cafe
+
+버추얼 유튜버 **유즈하 리코(Yuzuha Rico)**의 온라인 생일 카페 프로젝트.
+팬들이 온라인에서 미니게임을 즐기고 업적을 달성하며 생일을 함께 축하하는 인터랙티브 플랫폼.
 
 ---
 
-# 🎂 Project: Rico's Online Birthday Cafe (Project Antigravity)
+## 1. 기술 스택 (Tech Stack)
 
-본 프로젝트는 팬들이 온라인상에서 유즈하 리코의 생일을 축하할 수 있는 '온라인 생일 카페' 플랫폼입니다. 단순 전시를 넘어 미니게임을 통해 상호작용하고, 나만의 굿즈 배치를 즐길 수 있는 환경을 제공합니다.
+### Frontend
+- **Framework:** React 18 (TypeScript) + Vite
+- **Routing:** React Router v6
+- **State Management:** Zustand (`useAuthStore`)
+- **Styling:** Tailwind CSS, Framer Motion
+- **Libraries:** `dnd-kit` (드래그 앤 드롭), `modern-screenshot` (이미지 캡처), `canvas-confetti`, `k-celebrate-slogan`
 
----
-
-## 1. 프로젝트 개요 (Overview)
-- **대상:** 버추얼 유튜버 유즈하 리코와 그녀의 팬덤.
-- **컨셉:** 오프라인 생일 카페의 경험을 온라인으로 이식.
-- **핵심 가치:** 몰입형 인터페이스, 치팅 방지 기반 미니게임, 데이터 기반의 개인화된 코디 보관.
-- **보안 원칙:** 텍스트 입력(Varchar) 배제를 통한 인젝션 및 비하 발언 차단, 백엔드 중심의 게임 로직 검증.
-
----
-
-## 2. 기술 스택 (Tech Stack)
-
-### 2.1. Frontend
-- **Framework:** React 18 (TypeScript)
-- **State Management:** Zustand
-- **Styling:** Tailwind CSS, Framer Motion (애니메이션 효과)
-- **Library:** 
-  - `dnd-kit` (드래그 앤 드롭 로직)
-  - `html2canvas` (결과물 이미지 저장 기능)
-  - `TanStack Query` (서버 상태 관리)
-
-### 2.2. Backend
+### Backend
 - **Framework:** Spring Boot 3.x (Java 17)
-- **Database:** PostgreSQL (JSONB 타입을 활용한 레이아웃 저장)
-- **Security:** Spring Security (CORS 및 API 보호)
+- **Database:** PostgreSQL
+- **Security:** Spring Security + JWT (`JwtTokenProvider`, `JwtAuthenticationFilter`)
 - **Persistence:** Spring Data JPA
+- **Deploy:** Docker (`Dockerfile`, `docker-compose.yml`)
 
 ---
 
-## 3. 사용자 경험 및 기능 (UX & Features)
+## 2. 공통 컴포넌트 (Common Components)
 
-### 3.1. 진입 흐름 (Entry Flow)
-1.  **랜딩 페이지 (Entrance):** 카페 외경 이미지 노출. 중앙의 '문' 오브젝트를 클릭하면 문이 열리는 애니메이션과 함께 내부로 진입.
-2.  **메인 로비 (Cafe Interior):** 카페 내부의 정적인 배경 이미지 위에 클릭 가능한 **Hotspot 오브젝트** 배치.
-    - **옷장/마네킹:** TPO 코디 게임 진입.
-    - **테이블 위 가방:** 이타백 꾸미기 게임 진입.
-    - **벽면 포스터:** 숫자야구 게임 진입.
-
-### 3.2. 미니게임 상세
-
-#### [Game 1] 리코의 코디 게임 (Rico's Birthday Look)
-- **특징:** 정해진 정답 없이 자유롭게 꾸미는 힐링 게임.
-- **로직:**
-  1. 유저가 원하는 대로 의상(상의, 하의, 신발 등)을 자유롭게 조합.
-  2. 별도의 정답 검증 과정 없음.
-  3. '완성하기' 버튼 클릭 시, "쨔쟌~ 완성되었어요!" 하는 축하 메시지와 함께 결과물 저장/공유 기능 제공.
-
-#### [Game 2] 리코의 이타백(Itabag) 꾸미기
-- **특징:** 자유로운 좌표 기반 굿즈 배치.
-- **로직:**
-  1. 직사각형 가방 캔버스 안에 굿즈(뱃지, 인형 등) 아이템을 드래그 앤 드롭.
-  2. 아이템별 **X, Y 좌표 및 회전 값**을 실시간으로 추적.
-  3. '저장' 시 해당 레이아웃 데이터(JSON)를 서버에 전송하여 저장.
-
-#### [Game 3] 리코의 생일 퍼즐 (Jigsaw Puzzle)
-- **특징:** 36피스 조각을 맞춰 하나의 일러스트를 완성하는 인터랙티브 퍼즐.
-- **로직:**
-  1. **조각 생성:** 생일 축하 일러스트를 6x6(36피스)로 분할. 단순 사각형이 아닌 퍼즐 특유의 요철(패턴)이 있는 형태로 컷팅.
-  2. **무작위 섞기:** 조각들을 캔버스 위에 무작위 위치와 무작위 회전(0, 90, 180, 270도) 상태로 배치.
-  3. **회전 기능:** 조각을 클릭할 때마다 오른쪽으로 90도씩 회전.
-  4. **맞추기:** 드래그 앤 드롭을 통해 퍼즐판의 올바른 위치에 조각을 배치. 올바른 위치와 각도로 놓였을 때 "착!" 하고 고정되는 피드백 제공.
-  5. **승리 조건:** 36개의 조각이 모두 제자리, 제 각도를 찾으면 완성 애니메이션 출력.
+| Component | 위치 | 설명 |
+| :--- | :--- | :--- |
+| `CommonTitle` | `components/common/CommonTitle.tsx` | 모든 게임 페이지의 공통 타이틀 블록 (`title`, `subtitle`, `helpSlot`) |
+| `GameHelp` | `components/common/GameHelp.tsx` | 반응형 튜토리얼 — 모바일: `?` 토글 모달 / 데스크탑: 인라인 정적 배너. `mobileOnly` / `desktopOnly` prop 지원 |
+| `TutorialBanner` | `components/common/TutorialBanner.tsx` | 슬라이드형 튜토리얼 배너 (슬라이딩 애니메이션) |
+| `AchievementModal` | `components/common/AchievementModal.tsx` | 프로필 모달 — 업적 달성(전체 색상) / 미달성(`???` 마스킹) 표시 |
+| `AchievementToast` | `components/common/AchievementToast.tsx` | 업적 획득 시 팝업 알림 |
+| `ReturnButton` | `components/common/ReturnButton.tsx` | 로비 복귀 버튼 |
+| `GlobalLoading` | `components/common/GlobalLoading.tsx` | 전역 로딩 인디케이터 |
 
 ---
 
-## 4. 시스템 아키텍처 및 보안 (Security)
+## 3. 페이지 및 게임 상세
 
-### 4.1. 익명 세션 관리
-- 유저 닉네임을 입력받지 않고, 첫 접속 시 서버에서 고유 **UUID**를 발급받아 `localStorage`에 저장하여 유저를 식별함.
+### 3.1. 랜딩 페이지 (`/`)
+- 카페 외경 컨셉의 입장 화면
+- '문' 오브젝트 클릭 → 로비로 진입 애니메이션
 
-### 4.2. 치팅 방지 (Anti-Cheat)
-- **No Client-side Logic:** 코디 게임의 정답 정보는 프론트엔드 코드에 포함되지 않음.
-- **Server-side Verification:** 모든 결과 판정은 서버의 `Cody_Solutions` 테이블을 참조하여 수행.
-- **Input Whitelisting:** 모든 API는 사전에 정의된 ID(Long)와 좌표(Double) 값만 수신하며, 문자열 데이터는 서버에서 처리하지 않음.
+### 3.2. 메인 로비 (`/lobby`)
+- 카페 인테리어 배경 위 4개의 Hotspot 오브젝트
+- 상단 우측: **프로필** 버튼(업적 모달), **who am I?** 버튼(관리자 로그인)
+
+### 3.3. [Game 1] 리코 옷입히기 — Cody Game (`/game/cody`)
+- **PC:** 드래그 앤 드롭으로 의상 장착
+- **Mobile:** 탭으로 장착
+- 의상 카테고리: `hair_front`, `hair_back`, `clothes`, `clothes_back`, `hair_acc`, `clothes_acc`, `hand_acc`, `shoes`, `accessories`
+- 세트 조합 감지 → 전용 배경(봄 축제, 동양풍, 비, 맥주, 기사) 자동 적용
+- 완성 후 Polaroid 프레임으로 결과물 표시 + JPG 저장 / SNS 공유
+- `GameHelp` 공통 컴포넌트로 튜토리얼 제공 (모바일: 모달, 데스크탑: 인라인 준비)
+
+### 3.4. [Game 2] 이타백 꾸미기 (`/game/itabag`)
+- Canvas UI: 화면 중앙에 4:3 비율의 직사각형 배치.
+- Style: 약 12px~20px의 border-radius가 적용된 둥근 모서리.
+- Pattern: 사각형 내부에는 실제 이타백의 질감을 표현하는 와이어 메시(Wire + Mesh) 패턴의 배경 레이어 포함.
+- 장식 오브젝트: 유저가 획득한 업적 아이콘들이 실제 '뱃지' 아이템으로 리스트업됨. 드래그 앤 드롭을 통해 메시 망 위에 자유롭게 배치 가능.
+뱃지 외에 추가적인 리본, 장식 스티커 선택 가능.
+
+### 3.5. [Game 3] 퍼즐놀이 (`/game/puzzle`)
+- 4×4(16피스) 이미지 퍼즐
+- 조각 클릭: 90° 회전 (800ms 디바운스, 이동 감지로 오작동 방지)
+- 드래그로 정확한 칸에 배치 시 자동 고정
+- 완성 시 `canvas-confetti` 폭죽 효과 + 팝업
+- `GameHelp` 공통 컴포넌트로 튜토리얼 제공
+
+### 3.6. [Game 4] 아스파라거스 키우기 — 2048 (`/game/asparagus`)
+- 4×4 그리드, 타일 병합 게임 (목표 값: 2048)
+- 조작: 키보드 방향키 / 화살표 버튼 / 모바일 스와이프
+- 아이템(비료): **되돌리기** 3회, **타일 바꾸기** 3회
+- 타일 테마: 씨앗 → 새싹 → ... → 성검(2048)
+- 고득점 백엔드 동기화 (`/api/asparagus/score`)
+- 2048 달성 시 업적 `ASPARAGUS_EXCALIBUR` 자동 부여
+- **모바일 수정:** 보드 최대 너비 `min(500px, 100vw - 3rem)`, 타일 gap `clamp()` 적용
+- `GameHelp` 공통 컴포넌트로 튜토리얼 제공 (모바일: 모달 토글, 데스크탑: 왼쪽 사이드 패널)
+
+### 3.7. [Special] Who made this?! (/credits)
+- 기능: 제작진 목록 송출 및 엔딩 감상 업적 부여.
+- 연출: PC/모바일 공통 자동 상향 스크롤(Rolling Credits).
+- 업적 부여: 스크롤 끝부분에 노출되는 [감사합니다!] 버튼(업적 아이콘 형태) 클릭 시 /api/achievements/earn 호출.
+- 추가된 업적 리스트:
+| 코드 | 이름 | 설명 | 비고 |
+| :--- | :--- | :--- | :--- |
+| THANK_YOU_ALL | 감사합니다! | 엔딩크레딧을 끝까지 봤다. | /credits 페이지 버튼 클릭 |
+| (기존 업적들) | ... | ... | 이타백 게임에서 뱃지로 사용 가능 |
+
 
 ---
 
-## 5. 데이터베이스 스키마 (Database Schema)
+## 4. 데이터베이스 스키마 (Database Schema)
 
-### `Users`
+### `users`
 | Column | Type | Description |
 | :--- | :--- | :--- |
-| user_uuid | UUID (PK) | 유저 고유 식별자 |
-| created_at | Timestamp | 생성 일자 |
+| `user_uuid` | UUID (PK) | 유저 고유 식별자 (`@GeneratedValue(UUID)`) |
+| `username` | VARCHAR(50) UNIQUE | 관리자용 로그인 ID |
+| `password_hash` | VARCHAR | BCrypt 해시 |
+| `role` | VARCHAR | 권한 (`ADMIN`, `USER` 등) |
+| `created_at` | Timestamp | 생성 일자 |
 
-### `Cody_Solutions` (정답지)
+### `achievements`
 | Column | Type | Description |
 | :--- | :--- | :--- |
-| tpo_id | BigInt (PK) | TPO 고유 ID |
-| hint_text | Varchar | 리코의 대사 힌트 |
-| required_items | Int[] | 정답 아이템 ID 리스트 |
+| `id` | BIGINT (PK) | 업적 ID |
+| `code` | VARCHAR(50) UNIQUE | 업적 코드 (e.g. `ASPARAGUS_EXCALIBUR`) |
+| `title` | VARCHAR(100) | 업적 이름 |
+| `description` | VARCHAR | 업적 설명 |
+| `icon_url` | VARCHAR | 이모지 또는 URL |
 
-### `Game_Sessions` (검증용)
+> achievements 테이블의 icon_url은 단순히 시각적 요소가 아니라, 이타백 게임 내에서 사용 가능한 고해상도 뱃지 이미지 에셋으로 활용됨.
+
+
+### `user_achievements` _(Many-to-Many 조인 테이블)_
 | Column | Type | Description |
 | :--- | :--- | :--- |
-| session_id | BigInt (PK) | 세션 고유 ID |
-| user_uuid | UUID (FK) | 유저 참조 |
-| tpo_id | BigInt (FK) | 진행 중인 문제 ID |
-| is_completed | Boolean | 완료 여부 |
+| `id` | BIGINT (PK) | 레코드 ID |
+| `user_uuid` | UUID (FK → users) | 유저 참조 |
+| `achievement_id` | BIGINT (FK → achievements) | 업적 참조 |
+| `unlocked_at` | Timestamp | 달성 일자 (`@CreationTimestamp`) |
 
-### `Itabags` (이타백 저장)
+> **관계:** `User` ↔ `Achievement` = Many-to-Many, `UserAchievement` 조인 엔티티를 통해 구현.
+> `User.achievements` = `@OneToMany(mappedBy="user")`
+
+### `asparagus_scores`
 | Column | Type | Description |
 | :--- | :--- | :--- |
-| id | BigInt (PK) | 저장 ID |
-| user_uuid | UUID (FK) | 유저 참조 |
-| layout_data | JSONB | 아이템 ID, X, Y, R 값을 포함한 배열 |
+| `id` | BIGINT (PK) | 레코드 ID |
+| `user_uuid` | UUID (FK) | 유저 참조 |
+| `score` | INT | 최고 점수 |
+| `recorded_at` | Timestamp | 기록 일자 |
 
 ---
 
-## 6. API 명세 요약 (API Endpoints)
+## 5. API 명세 (API Endpoints)
 
-- `POST /api/users/register`: 유저 UUID 발급
-- `GET /api/game/cody/start`: 랜덤 힌트 발급 및 게임 세션 생성
-- `POST /api/game/cody/verify`: 유저 조합 검증 (치팅 방지)
-- `POST /api/game/itabag/save`: 이타백 레이아웃 저장
-- `GET /api/game/itabag/{uuid}`: 유저의 기존 이타백 불러오기
+### Auth
+| Method | Path | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/auth/login` | JWT 토큰 발급 (관리자 로그인) |
+
+### Achievements
+| Method | Path | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/achievements/mine` | JWT | 현재 유저의 달성 업적 목록 |
+| `GET` | `/api/achievements/all` | JWT | **전체 업적 + 달성 여부(`earned`)** 반환 |
+
+### Asparagus Score
+| Method | Path | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/asparagus/score` | JWT | 최고 점수 등록/갱신 |
+| `GET` | `/api/asparagus/score/best` | JWT | 현재 유저 최고 점수 조회 |
 
 ---
 
-## 7. 개발 로드맵 (Roadmap)
+## 6. 보안 (Security)
 
-1.  **Step 1:** React 프로젝트 초기화 및 입구(Landing) <-> 내부(Interior) 화면 전환 구현.
-2.  **Step 2:** Spring Boot 초기 설정 및 UUID 발급 API 구현.
-3.  **Step 3:** 코디 게임용 의상 레이어(Character Overlay) 시스템 및 드래그 앤 드롭 구현.
-4.  **Step 4:** 백엔드 정답 검증 로직 및 DB 연동.
-5.  **Step 5:** 이타백 JSONB 저장 로직 구현.
-6.  **Step 6:** 최종 에셋(리코 일러스트) 적용 및 폴리싱.
+- **JWT 인증:** 모든 `/api/**` 엔드포인트는 Bearer 토큰 필수 (Spring Security Filter Chain)
+- **CORS:** 프론트엔드 도메인만 허용
+- **Rate Limiting:** `RateLimiterService`로 남용 방지
+- **텍스트 입력 배제:** 모든 사용자 인터랙션은 클릭/드래그 기반, 자유 텍스트 없음
 
 ---
 
-**Antigravity Note:** 텍스트 소통은 제한되지만, 유저들이 만든 '이타백'과 '코디' 결과물은 숫자로 기록되어 전체 통계(예: "지금까지 총 1,200개의 이타백이 만들어졌어요!")로 노출함으로써 공동체감을 형성할 수 있습니다.
+## 7. 현재 구현 상태 (Implementation Status)
+
+| 기능 | 상태 |
+| :--- | :--- |
+| 랜딩 페이지 | ✅ 완료 |
+| 메인 로비 (Hotspot) | ✅ 완료 |
+| Cody 옷입히기 게임 | ✅ 완료 |
+| 이타백 게임 | 🚧 Coming Soon |
+| 퍼즐 게임 | ✅ 완료 |
+| 아스파라거스 2048 | ✅ 완료 |
+| JWT 인증 / 관리자 로그인 | ✅ 완료 |
+| 업적 시스템 (DB + 부여 로직) | ✅ 완료 |
+| 업적 프로필 UI (달성/미달성 분리) | ✅ 완료 |
+| 아스파라거스 고득점 백엔드 동기화 | ✅ 완료 |
+| `CommonTitle` 공통 컴포넌트 | ✅ 완료 |
+| `GameHelp` 반응형 튜토리얼 컴포넌트 | ✅ 완료 |
+| 모바일 2048 보드 오버플로 수정 | ✅ 완료 |

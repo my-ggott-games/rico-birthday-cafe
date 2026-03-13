@@ -1,5 +1,6 @@
 package com.rico.birthdaycafe.service;
 
+import com.rico.birthdaycafe.dto.AchievementDto;
 import com.rico.birthdaycafe.entity.Achievement;
 import com.rico.birthdaycafe.entity.User;
 import com.rico.birthdaycafe.entity.UserAchievement;
@@ -12,7 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -54,9 +57,6 @@ public class AchievementService {
                         .achievement(achievement)
                         .build();
                 userAchievementRepository.save(userAchievement);
-
-                // TODO: Possibly publish a notification event to the user (e.g. WebSocket or
-                // polling)
             }
         }
     }
@@ -65,4 +65,38 @@ public class AchievementService {
     public List<UserAchievement> getUserAchievements(User user) {
         return userAchievementRepository.findByUserOrderByUnlockedAtDesc(user);
     }
+
+    /**
+     * Returns ALL achievements in the system, each annotated with whether
+     * the given user has earned it. Earned achievements include the unlock date.
+     */
+    @Transactional(readOnly = true)
+    public List<AchievementDto> getAllAchievementsWithStatus(User user) {
+        // Build a fast lookup map: achievementCode -> unlockedAt
+        Map<String, UserAchievement> earnedMap = userAchievementRepository
+                .findByUserOrderByUnlockedAtDesc(user)
+                .stream()
+                .collect(Collectors.toMap(
+                        ua -> ua.getAchievement().getCode(),
+                        ua -> ua
+                ));
+
+        return achievementRepository.findAll()
+                .stream()
+                .map(achievement -> {
+                    UserAchievement ua = earnedMap.get(achievement.getCode());
+                    boolean earned = ua != null;
+                    java.time.LocalDateTime unlockedAt = earned ? ua.getUnlockedAt() : null;
+                    return new AchievementDto(
+                            achievement.getCode(),
+                            achievement.getTitle(),
+                            achievement.getDescription(),
+                            achievement.getIconUrl(),
+                            unlockedAt,
+                            earned
+                    );
+                })
+                .collect(Collectors.toList());
+    }
 }
+

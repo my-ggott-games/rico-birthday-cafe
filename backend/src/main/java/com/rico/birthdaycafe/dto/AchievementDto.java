@@ -14,5 +14,9 @@ public class AchievementDto {
     private String title;
     private String description;
     private String iconUrl;
+    /** When this achievement was unlocked; null if not yet earned. */
     private LocalDateTime unlockedAt;
+    /** True if the authenticated user has earned this achievement. */
+    private boolean earned;
 }
+

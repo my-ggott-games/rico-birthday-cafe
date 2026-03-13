@@ -18,6 +18,7 @@ public class AchievementSeeder implements CommandLineRunner {
     public void run(String... args) {
         seedAchievement("ASPARAGUS_EXCALIBUR", "Excalibur Asparagus", "Grew an Excalibur Asparagus.", "🌱");
         seedAchievement("ASPARAGUS_SPECIAL", "Special Asparagus", "Grew an Excalibur Asparagus without using any items.", "✨");
+        seedAchievement("THANK_YOU_ALL", "감사합니다!", "엔딩크레딧을 끝까지 봤다.", "🎬");
     }
 
     private void seedAchievement(String code, String title, String description, String iconUrl) {

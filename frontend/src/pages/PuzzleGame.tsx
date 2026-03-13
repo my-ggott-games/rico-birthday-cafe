@@ -1,10 +1,36 @@
 import React, { useEffect, useState } from 'react';
 
 import { ReturnButton } from '../components/common/ReturnButton';
+import { CommonTitle } from '../components/common/CommonTitle';
+import { GameHelp } from '../components/common/GameHelp';
+import type { TutorialSlide } from '../components/common/TutorialBanner';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, useDraggable, useDroppable } from '@dnd-kit/core';
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
+
+const PUZZLE_TUTORIAL_SLIDES: TutorialSlide[] = [
+    {
+        title: '🧩 퍼즘 조각 윈기',
+        lines: ['조각을 드래그하여 퍼즘판에 들어맞외줘!'],
+        showArrows: false,
+    },
+    {
+        title: '🔄 탭하면 회전',
+        lines: ['조각을 짧게 탭하면 90° 회전해요.', '드래그하려면 조금 더 길게 누르세요!'],
+        showArrows: false,
+    },
+    {
+        title: '⏳ 좀 으시는 시간',
+        lines: ['드래그 후 정확한 칸에 놓으면', '자동으로 고정돼요!'],
+        showArrows: false,
+    },
+    {
+        title: '🎉 퍼즘 완성!',
+        lines: ['모든 조각을 맞추면', '리코의 사진이 완성돼요!'],
+        showArrows: false,
+    },
+];
 
 // --- Constants ---
 const ROWS = 4;
@@ -400,10 +426,11 @@ const PuzzleGame: React.FC = () => {
                             style={{ background: '#FFFFF8', color: '#166D77', borderColor: '#bef264' }}
                         />
                     </div>
-                    <div className="flex flex-col">
-                        <span className="font-handwriting text-5xl font-black text-[#166D77] drop-shadow-sm">퍼즐 좋아해?</span>
-                        <span className="text-[#5EC7A5] font-bold mt-1 text-sm">조각을 누르면 회전</span>
-                    </div>
+                    <CommonTitle
+                        title="퍼즐 좋아해?"
+                        subtitle="조각을 누르면 회전"
+                        helpSlot={<GameHelp slides={PUZZLE_TUTORIAL_SLIDES} mobileOnly />}
+                    />
                 </div>
 
                 {/* 2. Main Content Area (Left | Board | Right) */}

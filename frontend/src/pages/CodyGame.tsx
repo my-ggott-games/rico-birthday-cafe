@@ -11,12 +11,39 @@ import { DraggableItem } from "../components/game/DraggableItem";
 import { DroppableCharacter } from "../components/game/DroppableCharacter";
 import type { CodyItem } from "../components/game/DroppableCharacter";
 import { ReturnButton } from "../components/common/ReturnButton";
+import { CommonTitle } from "../components/common/CommonTitle";
+import { GameHelp } from "../components/common/GameHelp";
+import type { TutorialSlide } from "../components/common/TutorialBanner";
 import { motion } from "framer-motion";
 
 import { SpringFestivalBackground, SpringFestivalPetals } from "../components/game/SpringFestivalBackground";
 import { FireflyBackground } from "../components/game/FireflyBackground";
 import { PolaroidFrame } from "../components/game/PolaroidFrame";
 import { domToJpeg } from "modern-screenshot";
+
+const CODY_TUTORIAL_SLIDES: TutorialSlide[] = [
+    {
+        title: '👗 리코를 코디해줘!',
+        lines: ['PC: 아이템을 드래그해서 올려놓아줘', '모바일: 아이템을 탭하면 입혀줘!'],
+        showArrows: false,
+    },
+    {
+        title: '✂️ 탭행 종료!',
+        lines: ['마음에 드는 코디를 완성했다면', '"코디 끝!" 버튼을 눌러줘.'],
+        showArrows: false,
+    },
+    {
+        title: '✨ 비밀 콤비네이션!',
+        lines: ['특정 세트를 완성하면 리코가 열광해!', '아이템들을 조합해서 콤비를 찾아줘 햤'],
+        showArrows: false,
+    },
+    {
+        title: '📸 사진을 저장하자!',
+        lines: ['코디가 끝나면 이미지 저장 버튼으로', '추억을 남겼봇 만들어 줘!'],
+        showArrows: false,
+    },
+];
+
 
 const CodyGame: React.FC = () => {
 
@@ -278,6 +305,17 @@ const CodyGame: React.FC = () => {
           <ReturnButton
             gameName="리코 옷입히기"
             className="px-3 py-2 rounded-2xl font-bold text-sm lg:text-base lg:px-6 lg:py-3 flex items-center gap-1 border-2 bg-pale-custard text-[#166D77] border-[#bef264] shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
+          />
+        </div>
+
+        {/* ─── Title: Fixed Top-Center ─── */}
+        <div
+          className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9998] transition-opacity duration-1000 ${!showButtons ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+        >
+          <CommonTitle
+            title="리코 옷입히기"
+            subtitle="어떤 코디를 해줄까?"
+            helpSlot={<GameHelp slides={CODY_TUTORIAL_SLIDES} mobileOnly />}
           />
         </div>
 
