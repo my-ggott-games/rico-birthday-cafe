@@ -19,7 +19,8 @@
 - **Database:** PostgreSQL
 - **Security:** Spring Security + JWT (`JwtTokenProvider`, `JwtAuthenticationFilter`)
 - **Persistence:** Spring Data JPA
-- **Deploy:** Docker (`Dockerfile`, `docker-compose.yml`)
+- **Deploy:** Render (Docker Runtime) — Optimized multi-stage build, Port 8080, Actuator Health Checks.
+- **Monitoring:** Spring Boot Actuator (`/actuator/health`)
 
 ---
 

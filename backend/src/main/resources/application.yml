@@ -2,9 +2,13 @@ spring:
   application:
     name: birthday-cafe
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/birthday_cafe}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:password}
+    # Render provides DATABASE_URL (postgres:// format). 
+    # For JDBC, we usually need SPRING_DATASOURCE_URL or manual conversion.
+    # However, we will allow setting it via DATABASE_URL if it's already in JDBC format,
+    # or fallback to common Render/Railway patterns.
+    url: ${SPRING_DATASOURCE_URL:${DATABASE_URL:jdbc:postgresql://localhost:5432/birthday_cafe}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DATABASE_USERNAME:postgres}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DATABASE_PASSWORD:password}}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -25,3 +29,15 @@ app:
   admin:
     # Use environment variable ADMIN_PASSCODE_HASH for production
     passcode-hash: ${ADMIN_PASSCODE_HASH:$2a$10$64tlOiaOJWsxVOkt5FZFee2xdOdKdukbdNsD36eUiHJLQgr43.uGy}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: when_authorized
+  health:
+    db:
+      enabled: true
