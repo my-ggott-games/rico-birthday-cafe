@@ -10,9 +10,7 @@ import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core";
 import { DraggableItem } from "../components/game/DraggableItem";
 import { DroppableCharacter } from "../components/game/DroppableCharacter";
 import type { CodyItem } from "../components/game/DroppableCharacter";
-import { ReturnButton } from "../components/common/ReturnButton";
-import { CommonTitle } from "../components/common/CommonTitle";
-import { GameHelp } from "../components/common/GameHelp";
+import { GameContainer } from "../components/common/GameContainer";
 import type { TutorialSlide } from "../components/common/TutorialBanner";
 import { motion } from "framer-motion";
 
@@ -110,22 +108,19 @@ const CodyGame: React.FC = () => {
 
   const availableItems: CodyItem[] = [
     // --- Training (1) ---
-    { id: "1-1", category: "hair_front", layers: { front: "/assets/codygame/training_1-1.png" } },
-    { id: "1-2", category: "hair_back", layers: { back: "/assets/codygame/training_1-2.png" } },
+    { id: "1-1", category: "hair_front", layers: { front: "/assets/codygame/training_1-1.png", back: "/assets/codygame/training_1-2.png" } },
     { id: "1-3", category: "clothes", layers: { main: "/assets/codygame/training_1-3.png" } },
     { id: "1-4", category: "shoes", layers: { main: "/assets/codygame/training_1-4.png" } },
 
     // --- Peasant Dress (2) ---
-    { id: "2-1", category: "hair_front", layers: { front: "/assets/codygame/peasantdress_2-1.png" } },
-    { id: "2-2", category: "hair_back", layers: { back: "/assets/codygame/peasantdress_2-2.png" } },
+    { id: "2-1", category: "hair_front", layers: { front: "/assets/codygame/peasantdress_2-1.png", back: "/assets/codygame/peasantdress_2-2.png" } },
     { id: "2-3", category: "clothes", layers: { main: "/assets/codygame/peasantdress_2-3.png" } },
     { id: "2-4", category: "shoes", layers: { main: "/assets/codygame/peasantdress_2-4.png" } },
     { id: "2-5", category: "hair_acc", layers: { front: "/assets/codygame/peasantdress_2-5.png" } },
     { id: "2-6", category: "accessories", layers: { main: "/assets/codygame/peasantdress_2-6.png" } },
 
     // --- Hanbok / Rain (3) ---
-    { id: "3-1", category: "hair_front", layers: { front: "/assets/codygame/hanbok_3-1.png" } },
-    { id: "3-2", category: "hair_back", layers: { back: "/assets/codygame/hanbok_3-2.png" } },
+    { id: "3-1", category: "hair_front", layers: { front: "/assets/codygame/hanbok_3-1.png", back: "/assets/codygame/hanbok_3-2.png" } },
     { id: "3-3", category: "clothes", layers: { main: "/assets/codygame/hanbok_3-3.png" } },
     { id: "3-4", category: "clothes_back", layers: { back: "/assets/codygame/hanbok_3-4.png" } },
     { id: "3-5", category: "hair_acc", layers: { back: "/assets/codygame/hanbok_3-5.png" } },
@@ -133,8 +128,7 @@ const CodyGame: React.FC = () => {
     { id: "3-7", category: "hand_acc", layers: { back: "/assets/codygame/hanbok_3-7.png" } },
 
     // --- Beer / Knight (4) ---
-    { id: "4-1", category: "hair_front", layers: { front: "/assets/codygame/beer_4-1.png" } },
-    { id: "4-2", category: "hair_back", layers: { back: "/assets/codygame/beer_4-2.png" } },
+    { id: "4-1", category: "hair_front", layers: { front: "/assets/codygame/beer_4-1.png", back: "/assets/codygame/beer_4-2.png" } },
     { id: "4-3", category: "clothes", layers: { main: "/assets/codygame/beer_4-3.png" } },
     { id: "4-4", category: "hair_acc", layers: { back: "/assets/codygame/beer_4-4.png" } },
     { id: "4-5", category: "clothes_acc", layers: { main: "/assets/codygame/beer_4-5.png" } },
@@ -156,32 +150,32 @@ const CodyGame: React.FC = () => {
   const combinations: Combination[] = [
     {
       name: "training",
-      requiredItems: ["1-1", "1-2", "1-3", "1-4"],
+      requiredItems: ["1-1", "1-3", "1-4"],
       backgroundClass: "bg-[#f0fdf4]",
     },
     {
       name: "peasantdress",
-      requiredItems: ["2-1", "2-2", "2-3", "2-4", "2-5", "2-6"],
+      requiredItems: ["2-1", "2-3", "2-4", "2-5", "2-6"],
       backgroundClass: "spring",
     },
     {
       name: "hanbok",
-      requiredItems: ["3-1", "3-2", "3-3", "3-4", "3-5", "3-6", "3-7"],
+      requiredItems: ["3-1", "3-3", "3-4", "3-5", "3-6", "3-7"],
       backgroundClass: "oriental",
     },
     {
       name: "rain",
-      requiredItems: ["3-1", "3-2", "3-3"],
+      requiredItems: ["3-1", "3-3"],
       backgroundClass: "rain",
     },
     {
       name: "beer",
-      requiredItems: ["4-1", "4-2", "4-3", "4-4", "4-5", "4-6", "4-7"],
+      requiredItems: ["4-1", "4-3", "4-4", "4-5", "4-6", "4-7"],
       backgroundClass: "beer",
     },
     {
       name: "knight",
-      requiredItems: ["4-1", "4-2", "4-3"],
+      requiredItems: ["4-1", "4-3"],
       backgroundClass: "knight",
     },
   ];
@@ -260,10 +254,13 @@ const CodyGame: React.FC = () => {
             nextState.accessories = null;
           }
 
-          return {
-            ...nextState,
-            [draggedItem.category]: draggedItem.id,
-          };
+          if (draggedItem.category === "hair_front") {
+            nextState.hair_front = draggedItem.id;
+            nextState.hair_back = draggedItem.id;
+            return nextState;
+          }
+
+          return { ...nextState, [draggedItem.category]: draggedItem.id };
         });
       }
     }
@@ -280,8 +277,14 @@ const CodyGame: React.FC = () => {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div
-        className={`h-screen w-full flex flex-col overflow-hidden font-sans relative select-none bg-[#FFFFF8]`}
+      <GameContainer
+        title="리코 옷입히기"
+        desc="어떤 코디를 해줄까?"
+        gameName="리코 옷입히기"
+        helpSlides={CODY_TUTORIAL_SLIDES}
+        className="h-screen font-sans relative select-none bg-[#FFFFF8]"
+        headerHidden={!showButtons}
+        mainClassName="relative overflow-hidden"
       >
         {activeBackground === "spring" && !isFinished && (
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -297,27 +300,6 @@ const CodyGame: React.FC = () => {
             backgroundSize: "32px 32px",
           }}
         />
-
-        {/* ─── Lobby Button: Fixed Top-Left ─── */}
-        <div
-          className={`fixed top-4 left-4 z-[9999] transition-opacity duration-1000 ${!showButtons ? "opacity-0 pointer-events-none" : "opacity-100"}`}
-        >
-          <ReturnButton
-            gameName="리코 옷입히기"
-            className="px-3 py-2 rounded-2xl font-bold text-sm lg:text-base lg:px-6 lg:py-3 flex items-center gap-1 border-2 bg-pale-custard text-[#166D77] border-[#bef264] shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
-          />
-        </div>
-
-        {/* ─── Title: Fixed Top-Center ─── */}
-        <div
-          className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9998] transition-opacity duration-1000 ${!showButtons ? "opacity-0 pointer-events-none" : "opacity-100"}`}
-        >
-          <CommonTitle
-            title="리코 옷입히기"
-            subtitle="어떤 코디를 해줄까?"
-            helpSlot={<GameHelp slides={CODY_TUTORIAL_SLIDES} mobileOnly />}
-          />
-        </div>
 
         <div
           className={`relative z-10 w-full h-full flex ${isMobile
@@ -653,16 +635,20 @@ const CodyGame: React.FC = () => {
                                   } else if (["clothes_acc", "hand_acc"].includes(item.category)) {
                                     nextState.accessories = null;
                                   }
-                                  return {
-                                    ...nextState,
-                                    [item.category]: item.id,
-                                  };
+                                  if (item.category === "hair_front") {
+                                    nextState.hair_front = item.id;
+                                    nextState.hair_back = item.id;
+                                    return nextState;
+                                  }
+                                  return { ...nextState, [item.category]: item.id };
                                 });
                               } else {
-                                setEquippedItems((prev) => ({
-                                  ...prev,
-                                  [item.category]: item.id,
-                                }));
+                                setEquippedItems((prev) => {
+                                  if (item.category === "hair_front") {
+                                    return { ...prev, hair_front: item.id, hair_back: item.id };
+                                  }
+                                  return { ...prev, [item.category]: item.id };
+                                });
                               }
                             }
                           };
@@ -719,22 +705,6 @@ const CodyGame: React.FC = () => {
 
                               {!isEquipped && !isDragging && (
                                 <>
-                                  {item.layers.back && (
-                                    <div
-                                      className="absolute w-[384px] h-[700px] opacity-100 pointer-events-none"
-                                      style={{
-                                        top: previewOffset,
-                                        left: "50%",
-                                        transform: `translateX(-50%) scale(${inventoryScale})`,
-                                      }}
-                                    >
-                                      <img
-                                        src={item.layers.back}
-                                        className="w-full h-full object-contain"
-                                        alt="back-preview"
-                                      />
-                                    </div>
-                                  )}
                                   <div
                                     className="absolute w-[384px] h-[700px] cursor-grab active:cursor-grabbing"
                                     style={{
@@ -745,10 +715,7 @@ const CodyGame: React.FC = () => {
                                   >
                                     <DraggableItem
                                       id={item.id}
-                                      layers={{
-                                        front: item.layers.front,
-                                        main: item.layers.main,
-                                      }}
+                                      layers={item.layers}
                                       category={item.category}
                                       className="w-full h-full p-0"
                                     />
@@ -772,7 +739,7 @@ const CodyGame: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </GameContainer>
 
       <DragOverlay>
         {activeItem ? (

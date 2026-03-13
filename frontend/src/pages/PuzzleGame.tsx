@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { ReturnButton } from '../components/common/ReturnButton';
-import { CommonTitle } from '../components/common/CommonTitle';
-import { GameHelp } from '../components/common/GameHelp';
+import { GameContainer } from '../components/common/GameContainer';
 import type { TutorialSlide } from '../components/common/TutorialBanner';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, useDraggable, useDroppable } from '@dnd-kit/core';
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
@@ -291,11 +289,8 @@ const PuzzleGame: React.FC = () => {
         const newPieces = createPieces();
 
         // Calculate grid areas for scattering
-        // Header height: 120px
-        // Bottom height: 200px
-        // Middle area height: window.innerHeight - 120 - 200
-
-        const headerHeight = 120;
+        // Account for global game header above this play area.
+        const headerHeight = 20;
         const bottomHeight = 200;
         const middleHeight = window.innerHeight - headerHeight - bottomHeight;
 
@@ -405,33 +400,18 @@ const PuzzleGame: React.FC = () => {
 
     return (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-            <div
-                className="w-full h-screen bg-[#FFFFF8] relative overflow-hidden select-none touch-none flex flex-col"
-                style={{ '--piece-size': 'min(18svw, 100px)' } as React.CSSProperties}
+            <GameContainer
+                title="퍼즐 좋아해?"
+                desc="조각을 누르면 회전"
+                gameName="퍼즐놀이"
+                helpSlides={PUZZLE_TUTORIAL_SLIDES}
+                className="bg-[#FFFFF8]"
+                mainClassName="relative overflow-hidden"
             >
-                {/* ─── Lobby Button: Fixed Top-Left on Mobile ─── */}
-                <div className="fixed top-4 left-4 z-40 lg:hidden">
-                    <ReturnButton
-                        gameName="퍼즐놀이"
-                        className="px-3 py-2 rounded-2xl font-bold text-sm flex items-center gap-1 border-2 whitespace-nowrap bg-pale-custard text-[#166D77] border-[#bef264] shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
-                    />
-                </div>
-
-                {/* 1. Header Area (Fixed Height) */}
-                <div className="h-[120px] w-full flex items-center px-10 relative z-20 bg-pale-custard/30 backdrop-blur-sm pt-8 lg:pt-0">
-                    <div className="hidden lg:block mr-8">
-                        <ReturnButton
-                            gameName="퍼즐놀이"
-                            className="flex px-6 py-3 rounded-2xl shadow-lg font-bold hover:bg-[#f3f4f6]"
-                            style={{ background: '#FFFFF8', color: '#166D77', borderColor: '#bef264' }}
-                        />
-                    </div>
-                    <CommonTitle
-                        title="퍼즐 좋아해?"
-                        subtitle="조각을 누르면 회전"
-                        helpSlot={<GameHelp slides={PUZZLE_TUTORIAL_SLIDES} mobileOnly />}
-                    />
-                </div>
+                <div
+                    className="w-full h-full bg-[#FFFFF8] relative overflow-hidden select-none touch-none flex flex-col"
+                    style={{ '--piece-size': 'min(18svw, 100px)' } as React.CSSProperties}
+                >
 
                 {/* 2. Main Content Area (Left | Board | Right) */}
                 <div className="flex-1 w-full flex overflow-hidden">
@@ -556,7 +536,8 @@ const PuzzleGame: React.FC = () => {
                         </motion.button>
                     )}
                 </AnimatePresence>
-            </div>
+                </div>
+            </GameContainer>
         </DndContext>
     );
 };

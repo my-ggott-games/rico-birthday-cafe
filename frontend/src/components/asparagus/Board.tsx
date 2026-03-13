@@ -4,11 +4,7 @@ import { Tile } from './Tile';
 import { type Grid, type Direction } from './types';
 import { GRID_SIZE } from './constants';
 
-// Tile radius: 16px (rounded-2xl), gap: 18px.
-// Board padding: 20px → Board outer radius = 16 + 20 = 36px
-const TILE_RADIUS = 16;
-const BOARD_PADDING = 20;
-const BOARD_RADIUS = TILE_RADIUS + BOARD_PADDING; // 36
+// Responsive board geometry for mobile-safe fit.
 
 interface BoardProps {
     grid: Grid;
@@ -34,17 +30,21 @@ const ArrowButton = ({ dir, onClick }: { dir: Direction; onClick: () => void }) 
 };
 
 export const Board: React.FC<BoardProps> = ({ grid, selection, isSwapMode, onTileClick, onMove, onTouchStart, onTouchEnd }) => {
+    const boardPadding = 'clamp(10px, 2.4vw, 20px)';
+    const boardRadius = 'clamp(24px, 4.8vw, 36px)';
+
     return (
         <div className="flex flex-col items-center justify-center w-full h-full">
             <div
                 className="w-full aspect-square flex items-center justify-center"
                 style={{
-                    maxWidth: 'min(500px, calc(100vw - 3rem))',
+                    maxWidth: 'min(500px, 100%)',
                     background: '#166D77',
-                    borderRadius: BOARD_RADIUS,
-                    padding: BOARD_PADDING,
+                    borderRadius: boardRadius,
+                    padding: boardPadding,
                     boxShadow: '0 30px 80px rgba(22, 109, 119, 0.3)',
                     touchAction: 'none', // Prevents body scrolling when swiping inside the board
+                    marginInline: 'auto',
                 }}
                 onTouchStart={onTouchStart}
                 onTouchEnd={onTouchEnd}
@@ -54,7 +54,7 @@ export const Board: React.FC<BoardProps> = ({ grid, selection, isSwapMode, onTil
                         display: 'grid',
                         gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
                         gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`,
-                        gap: 'clamp(8px, 2vw, 18px)',
+                        gap: 'clamp(6px, 1.8vw, 18px)',
                         width: '100%',
                         height: '100%',
                     }}

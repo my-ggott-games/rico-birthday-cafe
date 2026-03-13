@@ -7,6 +7,7 @@ interface ReturnButtonProps {
     className?: string;
     style?: React.CSSProperties;
     gameName?: string;
+    label?: string;
 }
 
 const MESSAGES = [
@@ -16,7 +17,7 @@ const MESSAGES = [
     "로비로 돌아갈까?"
 ];
 
-export const ReturnButton: React.FC<ReturnButtonProps> = ({ className, style, gameName = "게임" }) => {
+export const ReturnButton: React.FC<ReturnButtonProps> = ({ className, style, gameName = "게임", label = "← 돌아가기" }) => {
     const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const [message, setMessage] = useState("");
@@ -36,7 +37,7 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({ className, style, ga
                 className={className}
                 style={style}
             >
-                ← 돌아가기
+                {label}
             </motion.button>
 
             {createPortal(

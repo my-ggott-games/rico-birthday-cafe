@@ -3,9 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 import { Board } from '../components/asparagus/Board';
 import { Items } from '../components/asparagus/Items';
-import { ReturnButton } from '../components/common/ReturnButton';
-import { CommonTitle } from '../components/common/CommonTitle';
 import { GameHelp } from '../components/common/GameHelp';
+import { GameContainer } from '../components/common/GameContainer';
 import { useAsparagusGame } from '../hooks/useAsparagusGame';
 import { type Direction } from '../components/asparagus/types';
 import { TUTORIAL_SLIDES } from '../components/asparagus/constants';
@@ -70,41 +69,15 @@ const AsparagusMerge: React.FC = () => {
     };
 
     return (
-        <div
-            className="w-full min-h-screen flex flex-col overflow-x-hidden select-none"
-            style={{ background: '#FFFFF8', fontFamily: 'inherit' }}
-            // NOTE: Touch events are now ONLY on the Board, not on the whole page
-        >
-            {/* ─── Lobby Button: Fixed Top-Left on Mobile ─── */}
-            <div className="fixed top-4 left-4 z-40 lg:hidden">
-                <ReturnButton
-                    gameName="아스파라거스 키우기"
-                    className="px-3 py-2 rounded-2xl font-bold text-sm flex items-center gap-1 border-2 whitespace-nowrap bg-pale-custard text-[#166D77] border-[#bef264] shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
-                />
-            </div>
-
-            {/* ─── Header ─── */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 items-center px-8 pt-10 pb-6 gap-4">
-                {/* Desktop Lobby Button (left) */}
-                <div className="hidden lg:flex justify-start order-1">
-                    <ReturnButton
-                        gameName="아스파라거스 키우기"
-                        className="px-4 py-2 rounded-2xl font-bold text-sm flex items-center gap-1.5 border-2 whitespace-nowrap"
-                        style={{ background: '#FFFFF8', color: '#166D77', borderColor: '#bef264', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
-                    />
-                </div>
-
-                {/* Title */}
-                <div className="flex flex-col items-center text-center order-1 lg:order-2 pt-8 lg:pt-0">
-                    <CommonTitle
-                        title="아스파라거스 키우기"
-                        subtitle="아스파라거스도 리코도 건강만 해다오"
-                        helpSlot={<GameHelp slides={TUTORIAL_SLIDES} mobileOnly />}
-                    />
-                </div>
-
-                {/* Score / Best */}
-                <div className="flex justify-center lg:justify-end gap-3 order-2 lg:order-3">
+        <GameContainer
+            title="아스파라거스 키우기"
+            desc="아스파라거스도 리코도 건강만 해다오"
+            gameName="아스파라거스 키우기"
+            helpSlides={TUTORIAL_SLIDES}
+            className="select-none"
+            showDesktopHelp={false}
+            headerRight={
+                <>
                     <div className="flex flex-col items-center px-4 py-2 rounded-2xl" style={{ background: '#166D77', color: '#FFFFF8', minWidth: '85px' }}>
                         <span className="text-[10px] font-bold opacity-70 uppercase tracking-tighter">Score</span>
                         <span className="font-black text-xl leading-tight">{score}</span>
@@ -113,9 +86,9 @@ const AsparagusMerge: React.FC = () => {
                         <span className="text-[10px] font-bold opacity-70 uppercase tracking-tighter">Best</span>
                         <span className="font-black text-xl leading-tight">{best}</span>
                     </div>
-                </div>
-            </div>
-
+                </>
+            }
+        >
             {/* ─── Main Content: Horizontal 3 DIV ─── */}
             <div className="flex-1 w-full grid grid-cols-1 lg:grid-cols-3 px-10 pb-12 gap-8">
 
@@ -203,7 +176,7 @@ const AsparagusMerge: React.FC = () => {
                     </div>
                 )}
             </AnimatePresence>
-        </div>
+        </GameContainer>
     );
 };
 

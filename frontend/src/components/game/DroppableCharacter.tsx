@@ -57,7 +57,38 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
 
   const overlayStyle = "absolute inset-0 w-full h-full object-contain pointer-events-none select-none";
 
+  const getItem = (category: keyof DroppableCharacterProps["equippedIds"]) => {
+    const id = equippedIds[category];
+    if (!id) return null;
+    return availableItems.find((i) => i.id === id) ?? null;
+  };
+
+  const renderHairBackLayer = () => {
+    const item = getItem("hair_front");
+    if (!item?.layers.back || activeId === item.id) return null;
+    return (
+      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <motion.div layoutId={`${item.id}-back`} className="w-full h-full pointer-events-none">
+          <img src={item.layers.back} className={overlayStyle} alt={`${item.id} hair-back`} />
+        </motion.div>
+      </div>
+    );
+  };
+
+  const renderHairFrontLayer = () => {
+    const item = getItem("hair_front");
+    if (!item?.layers.front || activeId === item.id) return null;
+    return (
+      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 30 }}>
+        <motion.div layoutId={item.id} className="w-full h-full pointer-events-none">
+          <img src={item.layers.front} className={overlayStyle} alt={`${item.id} hair-front`} />
+        </motion.div>
+      </div>
+    );
+  };
+
   const renderItemLayer = (category: keyof DroppableCharacterProps["equippedIds"], zIndex: number) => {
+    if (category === "hair_front" || category === "hair_back") return null;
     const id = equippedIds[category];
     if (!id) return null;
     const item = availableItems.find((i) => i.id === id);
@@ -116,7 +147,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
         style={{ width: "384px", height: "700px", transform: `scale(${scale})` }}
       >
         {/* Layer order */}
-        {renderItemLayer("hair_back", 0)}
+        {renderHairBackLayer()}
         
         {/* Body */}
         <motion.img
@@ -156,7 +187,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
         {renderItemLayer("clothes", 25)}
         {renderItemLayer("hand_acc", 26)}
         {renderItemLayer("clothes_acc", 27)}
-        {renderItemLayer("hair_front", 30)}
+        {renderHairFrontLayer()}
         {renderItemLayer("hair_acc", 40)}
         {renderItemLayer("accessories", 50)}
       </div>

@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CommonTitle } from '../components/common/CommonTitle';
-import { ReturnButton } from '../components/common/ReturnButton';
-import { GameHelp } from '../components/common/GameHelp';
+import { GameContainer } from '../components/common/GameContainer';
+import type { TutorialSlide } from '../components/common/TutorialBanner';
 import { useAuthStore } from '../store/useAuthStore';
 import { BASE_URL } from '../utils/api';
 import { useToastStore } from '../store/useToastStore';
@@ -26,6 +25,19 @@ const FORTUNE_DATA: FortuneResult[] = [
     { rank: "소길 (Small Luck)", message: "작은 미소가 지어지는 일이 생길지도? 😊", bgColor: "bg-gradient-to-br from-blue-300 to-blue-500", textColor: "text-blue-900", isGreatLuck: false },
     { rank: "흉 (Bad Luck)", message: "조금 아쉬운 하루? 하지만 리코가 응원할게! 파이팅! 💪", bgColor: "bg-gradient-to-br from-purple-300 to-purple-500", textColor: "text-purple-900", isGreatLuck: false },
     { rank: "대흉 (Great Bad Luck)", message: "앗... 오늘은 조금 조심하는 게 좋겠어. 💦", bgColor: "bg-gradient-to-br from-gray-300 to-gray-500", textColor: "text-gray-900", isGreatLuck: false },
+];
+
+const FORTUNE_TUTORIAL_SLIDES: TutorialSlide[] = [
+    {
+        title: '🎋 오늘의 운세',
+        lines: ['통을 클릭하거나 모바일에서 흔들어 운세를 뽑아보세요.'],
+        showArrows: false,
+    },
+    {
+        title: '🥠 대길 업적',
+        lines: ['대길을 뽑으면 업적이 지급돼요.', '원할 때 다시 뽑아서 오늘의 기분을 확인해요.'],
+        showArrows: false,
+    },
 ];
 
 // Weighted random selection: Give more weight to better outcomes, but keep Great Luck kind of rare.
@@ -123,21 +135,16 @@ export default function FortuneGame() {
     };
 
     return (
-        <div className="min-h-[100dvh] bg-cream flex flex-col font-pretendard relative overflow-hidden">
-            {/* Achievement Toast renders globally via App.tsx, so we don't need it here anymore */}
-
-            {/* Header */}
-            <header className="w-full flex justify-between items-center p-4 z-10">
-                <ReturnButton gameName="로비" />
-                <CommonTitle 
-                    title="Rico's Fortune" 
-                    subtitle="오늘의 리코 운세" 
-                    helpSlot={<GameHelp slides={[]} mobileOnly />} 
-                />
-            </header>
+        <GameContainer
+            title="Rico's Fortune"
+            desc="오늘의 리코 운세"
+            gameName="로비"
+            helpSlides={FORTUNE_TUTORIAL_SLIDES}
+            className="bg-cream font-pretendard relative overflow-hidden"
+        >
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col items-center justify-center p-4 z-10">
+            <div className="flex-1 flex flex-col items-center justify-center p-4 z-10">
                 
                 <AnimatePresence mode="wait">
                     
@@ -241,13 +248,8 @@ export default function FortuneGame() {
                     )}
                 </AnimatePresence>
 
-            </main>
-
-            {/* Hidden Desktop Help */}
-            <div className="hidden">
-                 <GameHelp slides={[]} desktopOnly />
             </div>
-            
-        </div>
+
+        </GameContainer>
     );
 }
