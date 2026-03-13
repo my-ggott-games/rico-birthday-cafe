@@ -184,6 +184,26 @@ const Lobby: React.FC = () => {
                             </div>
                         </motion.div>
                     </Link>
+
+                    <Link
+                        to="/game/adventure"
+                        className={isMobile ? "relative scale-[0.9] col-span-2" : "absolute bottom-[18%] right-[42%] group"}
+                    >
+                        <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="flex flex-col items-center"
+                        >
+                            <div className={`relative ${isMobile ? 'w-44 h-24' : 'w-56 h-28'} overflow-hidden rounded-[1.75rem] border-4 border-[#102542] bg-[linear-gradient(135deg,#102542_0%,#365486_55%,#f5e6ca_100%)] shadow-xl`}>
+                                <div className="absolute inset-x-0 bottom-0 h-10 bg-[#345b48]" />
+                                <div className="absolute left-5 bottom-6 text-2xl drop-shadow-md">🦸‍♀️</div>
+                                <div className="absolute right-5 top-4 text-3xl drop-shadow-md">👑</div>
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.35),transparent_30%)]" />
+                            </div>
+                            <div className={`mt-2 bg-pale-custard ${isMobile ? 'px-3 py-1 text-sm' : 'px-4 py-2'} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#102542] group-hover:text-white transition-colors`}>
+                                위대한 여정
+                            </div>
+                        </motion.div>
+                    </Link>
                 </div>
             </div>
 

@@ -20,6 +20,8 @@ public class AchievementSeeder implements CommandLineRunner {
         seedAchievement("ASPARAGUS_SPECIAL", "Special Asparagus", "Grew an Excalibur Asparagus without using any items.", "✨");
         seedAchievement("THANK_YOU_ALL", "감사합니다!", "엔딩크레딧을 끝까지 봤다.", "🎬");
         seedAchievement("LUCKY_RICO_MOMENT", "대길 (Great Luck)", "오늘의 리코 운세에서 대길을 뽑았다!", "🥠");
+        seedAchievement("LEGEND-HERO", "레전드 용사", "마왕을 물리치고 긴 여정을 끝마쳤다.", "⚔️");
+        seedAchievement("R-GEND-HERO", "R전드 용사", "레전드보다 R전드가 좋은거죠?", "👑");
         seedAchievement("RICO_DEBUT_DATE", "관리자 권한에 접근한 자", "정답은 리코 데뷔 날짜였습니다~", "👀");
     }
 
