@@ -2,13 +2,13 @@ spring:
   application:
     name: birthday-cafe
   datasource:
-    # Render provides DATABASE_URL (postgres:// format). 
-    # For JDBC, we usually need SPRING_DATASOURCE_URL or manual conversion.
-    # However, we will allow setting it via DATABASE_URL if it's already in JDBC format,
-    # or fallback to common Render/Railway patterns.
-    url: ${SPRING_DATASOURCE_URL:${DATABASE_URL:jdbc:postgresql://localhost:5432/birthday_cafe}}
-    username: ${SPRING_DATASOURCE_USERNAME:${DATABASE_USERNAME:postgres}}
-    password: ${SPRING_DATASOURCE_PASSWORD:${DATABASE_PASSWORD:password}}
+    # Priority:
+    # 1) SPRING_DATASOURCE_*
+    # 2) SUPABASE_DB_* (recommended for Supabase)
+    # 3) Generic DATABASE_* fallbacks
+    url: ${SPRING_DATASOURCE_URL:${SUPABASE_DB_JDBC_URL:${DATABASE_URL:jdbc:postgresql://localhost:5432/birthday_cafe}}}
+    username: ${SPRING_DATASOURCE_USERNAME:${SUPABASE_DB_USER:${DATABASE_USERNAME:postgres}}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${SUPABASE_DB_PASSWORD:${DATABASE_PASSWORD:password}}}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

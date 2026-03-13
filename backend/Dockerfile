@@ -14,9 +14,7 @@ FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 COPY --from=build /app/build/libs/*.jar app.jar
 
-# Render default port is 8080 or 10000. 
-# We standardize on 8080 as per requirements.
+# Render/Fly/Railway may inject PORT; default to 8080 locally.
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-Xmx512m", "-Dserver.port=8080", "-jar", "app.jar"]
-
+ENTRYPOINT ["sh", "-c", "java -Xmx512m -Dserver.port=${PORT:-8080} -jar app.jar"]
