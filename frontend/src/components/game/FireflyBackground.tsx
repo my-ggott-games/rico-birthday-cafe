@@ -2,107 +2,116 @@ import React, { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 
 interface Firefly {
-    x: number;
-    y: number;
-    size: number;
-    speedX: number;
-    speedY: number;
-    opacity: number;
-    opacitySpeed: number;
+  x: number;
+  y: number;
+  size: number;
+  speedX: number;
+  speedY: number;
+  opacity: number;
+  opacitySpeed: number;
 }
 
-export const FireflyBackground: React.FC<{ isFinished?: boolean }> = ({ isFinished }) => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [showFireflies, setShowFireflies] = React.useState(!isFinished);
+export const FireflyBackground: React.FC<{ isFinished?: boolean }> = ({
+  isFinished,
+}) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [showFireflies, setShowFireflies] = React.useState(!isFinished);
 
-    React.useEffect(() => {
-        if (isFinished) {
-            const timer = setTimeout(() => setShowFireflies(true), 7500);
-            return () => clearTimeout(timer);
-        }
-    }, [isFinished]);
+  React.useEffect(() => {
+    if (isFinished) {
+      const timer = setTimeout(() => setShowFireflies(true), 7500);
+      return () => clearTimeout(timer);
+    }
+  }, [isFinished]);
 
-    useEffect(() => {
-        if (!showFireflies) return;
+  useEffect(() => {
+    if (!showFireflies) return;
 
-        const canvas = canvasRef.current;
-        const container = containerRef.current;
-        if (!canvas || !container) return;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-        let animationFrameId: number;
-        const fireflies: Firefly[] = [];
-        const count = 10;
+    let animationFrameId: number;
+    const fireflies: Firefly[] = [];
+    const count = 10;
 
-        const resizeCanvas = () => {
-            const rect = container.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = rect.height;
-        };
+    const resizeCanvas = () => {
+      const rect = container.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+    };
 
-        resizeCanvas();
-        window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
 
-        for (let i = 0; i < count; i++) {
-            fireflies.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                size: Math.random() * 3 + 1,
-                speedX: (Math.random() - 0.5) * 0.5,
-                speedY: (Math.random() - 0.5) * 0.5,
-                opacity: Math.random(),
-                opacitySpeed: 0.01 + Math.random() * 0.02,
-            });
-        }
+    for (let i = 0; i < count; i++) {
+      fireflies.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 3 + 1,
+        speedX: (Math.random() - 0.5) * 0.5,
+        speedY: (Math.random() - 0.5) * 0.5,
+        opacity: Math.random(),
+        opacitySpeed: 0.01 + Math.random() * 0.02,
+      });
+    }
 
-        const draw = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            fireflies.forEach((f) => {
-                f.x += f.speedX;
-                f.y += f.speedY;
-                f.opacity += f.opacitySpeed;
+      fireflies.forEach((f) => {
+        f.x += f.speedX;
+        f.y += f.speedY;
+        f.opacity += f.opacitySpeed;
 
-                if (f.opacity > 1 || f.opacity < 0.2) f.opacitySpeed *= -1;
-                if (f.x < 0 || f.x > canvas.width) f.speedX *= -1;
-                if (f.y < 0 || f.y > canvas.height) f.speedY *= -1;
+        if (f.opacity > 1 || f.opacity < 0.2) f.opacitySpeed *= -1;
+        if (f.x < 0 || f.x > canvas.width) f.speedX *= -1;
+        if (f.y < 0 || f.y > canvas.height) f.speedY *= -1;
 
-                ctx.beginPath();
-                const gradient = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.size * 4);
-                gradient.addColorStop(0, `rgba(255, 255, 245, ${f.opacity})`);
-                gradient.addColorStop(1, "rgba(255, 255, 245, 0)");
+        ctx.beginPath();
+        const gradient = ctx.createRadialGradient(
+          f.x,
+          f.y,
+          0,
+          f.x,
+          f.y,
+          f.size * 4,
+        );
+        gradient.addColorStop(0, `rgba(255, 255, 245, ${f.opacity})`);
+        gradient.addColorStop(1, "rgba(255, 255, 245, 0)");
 
-                ctx.fillStyle = gradient;
-                ctx.arc(f.x, f.y, f.size * 4, 0, Math.PI * 2);
-                ctx.fill();
+        ctx.fillStyle = gradient;
+        ctx.arc(f.x, f.y, f.size * 4, 0, Math.PI * 2);
+        ctx.fill();
 
-                ctx.beginPath();
-                ctx.fillStyle = `rgba(255, 255, 255, ${f.opacity * 0.8})`;
-                ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
-                ctx.fill();
-            });
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(255, 255, 255, ${f.opacity * 0.8})`;
+        ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
 
-            animationFrameId = requestAnimationFrame(draw);
-        };
+      animationFrameId = requestAnimationFrame(draw);
+    };
 
-        draw();
-        return () => {
-            window.removeEventListener("resize", resizeCanvas);
-            cancelAnimationFrame(animationFrameId);
-        };
-    }, [showFireflies]);
+    draw();
+    return () => {
+      window.removeEventListener("resize", resizeCanvas);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [showFireflies]);
 
-    return (
-        <div ref={containerRef} className="absolute inset-0 pointer-events-none">
-            <motion.canvas
-                initial={{ opacity: 0 }}
-                animate={{ opacity: showFireflies ? 1 : 0 }}
-                transition={{ duration: 2 }}
-                ref={canvasRef}
-                className="w-full h-full"
-            />
-        </div>
-    );
+  return (
+    <div ref={containerRef} className="absolute inset-0 pointer-events-none">
+      <motion.canvas
+        initial={{ opacity: 0 }}
+        animate={{ opacity: showFireflies ? 1 : 0 }}
+        transition={{ duration: 2 }}
+        ref={canvasRef}
+        className="w-full h-full"
+      />
+    </div>
+  );
 };

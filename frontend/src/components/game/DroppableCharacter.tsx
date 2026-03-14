@@ -5,16 +5,18 @@ import { motion } from "framer-motion";
 export interface CodyItem {
   id: string;
   category:
-  | "hair_front"
-  | "hair_back"
-  | "clothes"
-  | "clothes_back"
-  | "hair_acc"
-  | "clothes_acc"
-  | "hand_acc"
-  | "shoes"
-  | "accessories";
+    | "hair_front"
+    | "hair_back"
+    | "clothes"
+    | "clothes_back"
+    | "hair_acc"
+    | "clothes_acc"
+    | "hand_acc"
+    | "shoes"
+    | "accessories";
   label?: string;
+  layerPriority?: number;
+  isOnePiece?: boolean;
   layers: {
     front?: string;
     back?: string;
@@ -55,7 +57,17 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
     id: "character-zone",
   });
 
-  const overlayStyle = "absolute inset-0 w-full h-full object-contain pointer-events-none select-none";
+  const overlayStyle =
+    "absolute inset-0 w-full h-full object-contain pointer-events-none select-none";
+  const zIndexMap: Partial<Record<CodyItem["category"], number>> = {
+    clothes_back: 15,
+    shoes: 20,
+    clothes: 25,
+    hand_acc: 26,
+    clothes_acc: 27,
+    hair_acc: 28,
+    accessories: 50,
+  };
 
   const getItem = (category: keyof DroppableCharacterProps["equippedIds"]) => {
     const id = equippedIds[category];
@@ -67,10 +79,17 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
     const item = getItem("hair_front");
     if (!item?.layers.back || activeId === item.id) return null;
     return (
-      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-        <motion.div layoutId={`${item.id}-back`} className="w-full h-full pointer-events-none">
-          <img src={item.layers.back} className={overlayStyle} alt={`${item.id} hair-back`} />
-        </motion.div>
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ zIndex: 0 }}
+      >
+        <div className="w-full h-full pointer-events-none">
+          <img
+            src={item.layers.back}
+            className={overlayStyle}
+            alt={`${item.id} hair-back`}
+          />
+        </div>
       </div>
     );
   };
@@ -79,31 +98,41 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
     const item = getItem("hair_front");
     if (!item?.layers.front || activeId === item.id) return null;
     return (
-      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 30 }}>
-        <motion.div layoutId={item.id} className="w-full h-full pointer-events-none">
-          <img src={item.layers.front} className={overlayStyle} alt={`${item.id} hair-front`} />
-        </motion.div>
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ zIndex: 30 }}
+      >
+        <div className="w-full h-full pointer-events-none">
+          <img
+            src={item.layers.front}
+            className={overlayStyle}
+            alt={`${item.id} hair-front`}
+          />
+        </div>
       </div>
     );
   };
 
-  const renderItemLayer = (category: keyof DroppableCharacterProps["equippedIds"], zIndex: number) => {
+  const renderItemLayer = (
+    category: keyof DroppableCharacterProps["equippedIds"],
+    zIndex?: number,
+  ) => {
     if (category === "hair_front" || category === "hair_back") return null;
     const id = equippedIds[category];
     if (!id) return null;
     const item = availableItems.find((i) => i.id === id);
     if (!item) return null;
+    const itemZIndex =
+      zIndex ?? item.layerPriority ?? zIndexMap[item.category] ?? 30;
 
     return (
-      <div key={category} className="absolute inset-0 pointer-events-none" style={{ zIndex }}>
+      <div
+        key={category}
+        className="absolute inset-0 pointer-events-none"
+        style={{ zIndex: itemZIndex }}
+      >
         {activeId !== id && (
-          <motion.div
-            layoutId={id}
-            className="w-full h-full pointer-events-none"
-            initial={isFinished ? { opacity: 0 } : { opacity: 1 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0 }}
-          >
+          <div className="w-full h-full pointer-events-none">
             {item.layers.back && (
               <img
                 src={item.layers.back}
@@ -128,7 +157,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
                 alt={`${id} front`}
               />
             )}
-          </motion.div>
+          </div>
         )}
       </div>
     );
@@ -144,11 +173,15 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
     >
       <div
         className="absolute top-0 left-0 origin-top-left"
-        style={{ width: "384px", height: "700px", transform: `scale(${scale})` }}
+        style={{
+          width: "384px",
+          height: "700px",
+          transform: `scale(${scale})`,
+        }}
       >
         {/* Layer order */}
         {renderHairBackLayer()}
-        
+
         {/* Body */}
         <motion.img
           src="/assets/codygame/riko_body_default.png"
@@ -182,13 +215,13 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
           }}
         />
 
-        {renderItemLayer("clothes_back", 15)}
-        {renderItemLayer("shoes", 20)}
-        {renderItemLayer("clothes", 25)}
-        {renderItemLayer("hand_acc", 26)}
-        {renderItemLayer("clothes_acc", 27)}
+        {renderItemLayer("clothes_back")}
+        {renderItemLayer("shoes")}
+        {renderItemLayer("clothes")}
+        {renderItemLayer("hand_acc")}
+        {renderItemLayer("clothes_acc")}
+        {renderItemLayer("hair_acc")}
         {renderHairFrontLayer()}
-        {renderItemLayer("hair_acc", 40)}
         {renderItemLayer("accessories", 50)}
       </div>
     </div>

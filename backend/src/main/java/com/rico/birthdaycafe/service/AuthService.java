@@ -61,10 +61,12 @@ public class AuthService {
     private String adminPasscodeHash;
 
     public AuthResponse loginAdmin(String passcode) {
+        String normalizedPasscode = passcode == null ? "" : passcode.trim();
+
         // Simple secure check against Bcrypt Hash from configuration
         // verified using PasswordEncoder.matches
 
-        if (passwordEncoder.matches(passcode, adminPasscodeHash)) {
+        if (passwordEncoder.matches(normalizedPasscode, adminPasscodeHash)) {
             // Ensure the specific admin UID exists in the DB so relationships work
             final String ADMIN_UID = "chiko_03240324";
             if (userRepository.findByUsername(ADMIN_UID).isEmpty()) {
@@ -80,7 +82,7 @@ public class AuthService {
             return new AuthResponse(jwt, "Welcome, Admin", ADMIN_UID);
         }
         
-        if ("519_2024".equals(passcode)) {
+        if ("519_2024".equals(normalizedPasscode)) {
             // Return a special message for the easter egg. Code is 200 OK.
             // There's no token since they aren't actually an admin.
             return new AuthResponse(null, "easter_egg", null);

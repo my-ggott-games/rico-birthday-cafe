@@ -104,15 +104,26 @@ class Petal {
 // Global cached random BG so it doesn't change on re-renders, but since we are exporting separate components,
 // we just let them accept bgImage or generate it internally if they don't care. We'll generate once here.
 const AVAILABLE_BGS = [
-  "1-1", "1-2", "1-3",
-  "2-1", "2-2", "2-3",
-  "3-1", "3-2", "3-3",
-  "4-1", "4-2", "4-3",
+  "1-1",
+  "1-2",
+  "1-3",
+  "2-1",
+  "2-2",
+  "2-3",
+  "3-1",
+  "3-2",
+  "3-3",
+  "4-1",
+  "4-2",
+  "4-3",
 ];
-const randomBgId = AVAILABLE_BGS[Math.floor(Math.random() * AVAILABLE_BGS.length)];
-let cachedRandomBg = `/assets/codygame/background_${randomBgId}.jpg`;
+const randomBgId =
+  AVAILABLE_BGS[Math.floor(Math.random() * AVAILABLE_BGS.length)];
+const cachedRandomBg = `/assets/codygame/background_${randomBgId}.jpg`;
 
-export const SpringFestivalBackground: React.FC<{ isFinished?: boolean }> = ({ isFinished }) => {
+export const SpringFestivalBackground: React.FC<{ isFinished?: boolean }> = ({
+  isFinished,
+}) => {
   if (!isFinished) {
     return (
       <div
@@ -139,10 +150,10 @@ export const SpringFestivalBackground: React.FC<{ isFinished?: boolean }> = ({ i
   );
 };
 
-export const SpringFestivalPetals: React.FC<{ isFinished?: boolean, isFlyAway?: boolean }> = ({
-  isFinished,
-  isFlyAway
-}) => {
+export const SpringFestivalPetals: React.FC<{
+  isFinished?: boolean;
+  isFlyAway?: boolean;
+}> = ({ isFinished, isFlyAway }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [showPetals, setShowPetals] = useState(!isFinished);
@@ -211,7 +222,10 @@ export const SpringFestivalPetals: React.FC<{ isFinished?: boolean, isFlyAway?: 
   }, [showPetals]);
 
   return (
-    <div ref={containerRef} className="absolute inset-0 w-full h-full pointer-events-none z-[100]">
+    <div
+      ref={containerRef}
+      className="absolute inset-0 w-full h-full pointer-events-none z-[100]"
+    >
       <motion.canvas
         data-html2canvas-ignore
         ref={canvasRef}

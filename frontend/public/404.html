@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rico Birthday Cafe</title>
+  <script>
+    const { pathname, search, hash } = window.location;
+    const redirectTarget = pathname + search + hash;
+    window.location.replace('/?redirect=' + encodeURIComponent(redirectTarget));
+  </script>
+</head>
+<body></body>
+</html>

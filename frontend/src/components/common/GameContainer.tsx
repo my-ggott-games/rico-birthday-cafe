@@ -1,8 +1,8 @@
-import React from 'react';
-import { ReturnButton } from './ReturnButton';
-import { CommonTitle } from './CommonTitle';
-import { GameHelp } from './GameHelp';
-import type { TutorialSlide } from './TutorialBanner';
+import React from "react";
+import { ReturnButton } from "./ReturnButton";
+import { CommonTitle } from "./CommonTitle";
+import { GameHelp } from "./GameHelp";
+import type { TutorialSlide } from "./TutorialBanner";
 
 interface GameContainerProps {
   title: string;
@@ -21,43 +21,58 @@ interface GameContainerProps {
 export const GameContainer: React.FC<GameContainerProps> = ({
   title,
   desc,
-  gameName = '로비',
+  gameName = "로비",
   helpSlides,
   children,
   headerRight,
-  className = '',
-  mainClassName = '',
-  desktopHelpClassName = '',
-  showDesktopHelp = true,
+  className = "",
+  mainClassName = "",
+  desktopHelpClassName: _desktopHelpClassName = "",
+  showDesktopHelp: _showDesktopHelp = true,
   headerHidden = false,
 }) => {
-  const hiddenClass = headerHidden ? 'opacity-0 pointer-events-none' : 'opacity-100';
+  const hiddenClass = headerHidden
+    ? "opacity-0 pointer-events-none"
+    : "opacity-100";
 
   return (
-    <div className={`w-full min-h-[100dvh] flex flex-col overflow-x-hidden ${className}`}>
-      <div className={`fixed top-4 left-4 z-40 lg:hidden transition-opacity duration-500 ${hiddenClass}`}>
+    <div
+      className={`w-full min-h-[100dvh] flex flex-col overflow-x-hidden ${className}`}
+    >
+      <div
+        className={`fixed top-4 left-4 z-40 lg:hidden transition-opacity duration-500 ${hiddenClass}`}
+      >
         <ReturnButton
           gameName={gameName}
-          label="Go to Lobby"
+          label="돌아가기"
           className="px-3 py-2 rounded-2xl font-bold text-sm flex items-center gap-1 border-2 whitespace-nowrap bg-pale-custard text-[#166D77] border-[#bef264] shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 items-center px-4 sm:px-8 pt-10 pb-6 gap-4">
-        <div className={`hidden lg:flex justify-start order-1 transition-opacity duration-500 ${hiddenClass}`}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 items-center px-4 sm:px-8 pt-8 sm:pt-10 pb-4 sm:pb-6 gap-3 sm:gap-4">
+        <div
+          className={`hidden lg:flex justify-start order-1 transition-opacity duration-500 ${hiddenClass}`}
+        >
           <ReturnButton
             gameName={gameName}
-            label="Go to Lobby"
+            label="돌아가기"
             className="px-4 py-2 rounded-2xl font-bold text-sm flex items-center gap-1.5 border-2 whitespace-nowrap"
-            style={{ background: '#FFFFF8', color: '#166D77', borderColor: '#bef264', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+            style={{
+              background: "#FFFFF8",
+              color: "#166D77",
+              borderColor: "#bef264",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+            }}
           />
         </div>
 
-        <div className={`flex flex-col items-center text-center order-1 lg:order-2 pt-8 lg:pt-0 transition-opacity duration-500 ${hiddenClass}`}>
+        <div
+          className={`flex flex-col items-center text-center order-1 lg:order-2 pt-4 sm:pt-6 lg:pt-0 transition-opacity duration-500 ${hiddenClass}`}
+        >
           <CommonTitle
             title={title}
             subtitle={desc}
-            helpSlot={<GameHelp slides={helpSlides} mobileOnly />}
+            helpSlot={<GameHelp slides={helpSlides} />}
           />
         </div>
 
@@ -66,17 +81,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         </div>
       </div>
 
-      {showDesktopHelp && (
-        <div className={`hidden lg:flex w-full justify-center px-8 pb-4 ${desktopHelpClassName}`}>
-          <div className="w-full max-w-[420px]">
-            <GameHelp slides={helpSlides} desktopOnly />
-          </div>
-        </div>
-      )}
-
-      <main className={`flex-1 ${mainClassName}`}>
-        {children}
-      </main>
+      <main className={`flex-1 ${mainClassName}`}>{children}</main>
     </div>
   );
 };

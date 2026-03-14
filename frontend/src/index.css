@@ -1,17 +1,17 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@400;700;900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@400;700;900&display=swap");
 
 @theme {
-  --color-pale-custard: #FFFFF8;
-  --color-rico-sage: #A8CDA4;
-  --color-rico-mint: #5EC7A5;
-  --color-rico-teal: #1D8E8E;
-  --color-rico-dark-teal: #166D77;
-  --color-polar-haze: #F5F7FD;
-  --color-soft-winter: #FCFCF5;
-  --color-arctic-veil: #FAFDFE;
-  --color-egg-shell: #FAFFFF;
-  --color-blanc-de-blanc: #F6F6F6;
+  --color-pale-custard: #fffff8;
+  --color-rico-sage: #a8cda4;
+  --color-rico-mint: #5ec7a5;
+  --color-rico-teal: #1d8e8e;
+  --color-rico-dark-teal: #166d77;
+  --color-polar-haze: #f5f7fd;
+  --color-soft-winter: #fcfcf5;
+  --color-arctic-veil: #fafdfe;
+  --color-egg-shell: #faffff;
+  --color-blanc-de-blanc: #f6f6f6;
   --color-cream: var(--color-cream);
 }
 
@@ -24,14 +24,14 @@
 
 :root {
   /* Cafe Theme Palette */
-  --color-cream: #FFFFF8;
-  --color-winter: #FCFCF5;
-  --color-sage: #A8CDA4;
-  --color-mint: #5EC7A5;
-  --color-dark-teal: #166D77;
-  --color-latte: #D6C0B0;
+  --color-cream: #fffff8;
+  --color-winter: #fcfcf5;
+  --color-sage: #a8cda4;
+  --color-mint: #5ec7a5;
+  --color-dark-teal: #166d77;
+  --color-latte: #d6c0b0;
 
-  --font-sans: 'OneStoreMobilePop', system-ui, sans-serif;
+  --font-sans: "OneStoreMobilePop", system-ui, sans-serif;
   font-family: var(--font-sans);
   line-height: 1.5;
   font-weight: 400;
@@ -55,11 +55,13 @@ body {
     radial-gradient(var(--color-winter) 1px, transparent 1px),
     radial-gradient(var(--color-winter) 1px, transparent 1px);
   background-size: 20px 20px;
-  background-position: 0 0, 10px 10px;
+  background-position:
+    0 0,
+    10px 10px;
 }
 
 .font-handwriting {
-  font-family: 'OneStoreMobilePop', 'Gaegu', cursive;
+  font-family: "OneStoreMobilePop", "Gaegu", cursive;
   font-weight: 400;
   letter-spacing: 0.02em;
 }
@@ -87,7 +89,6 @@ a:hover {
 }
 
 @media (min-width: 768px) {
-
   .btn-primary,
   .btn-secondary,
   .btn-disabled {
@@ -109,13 +110,11 @@ a:hover {
   @apply bg-[#9ca3af] text-pale-custard cursor-not-allowed opacity-70;
 }
 
-
 /* Original tag styling simplified or removed to prevent conflicts */
 button {
   cursor: pointer;
   font-family: inherit;
 }
-
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
@@ -136,20 +135,12 @@ button {
 }
 
 @font-face {
-  font-family: "PuradakGentleGothic";
-  src: url("/fonts/PuradakGentleGothic.otf") format("opentype");
-  font-weight: 400 900;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'OneStoreMobilePop';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-POP.woff') format('woff');
+  font-family: "OneStoreMobilePop";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-POP.woff")
+    format("woff");
   font-weight: normal;
   font-display: swap;
 }
-
-
 
 @keyframes pinwheel-spin {
   from {
@@ -162,6 +153,6 @@ button {
 }
 
 /* 로비 슬로건 border 오버라이드 */
-.slogan-lobby .k-celebrate-slogan-container>div {
+.slogan-lobby .k-celebrate-slogan-container > div {
   border-color: rgba(0, 0, 0, 0.05);
 }
