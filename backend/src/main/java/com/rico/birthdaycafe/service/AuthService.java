@@ -61,7 +61,9 @@ public class AuthService {
     private String adminPasscodeHash;
 
     public AuthResponse loginAdmin(String passcode) {
-        String normalizedPasscode = passcode == null ? "" : passcode.trim();
+        String normalizedPasscode = passcode == null
+                ? ""
+                : passcode.trim().toLowerCase().replace('-', '_');
 
         // Simple secure check against Bcrypt Hash from configuration
         // verified using PasswordEncoder.matches

@@ -38,7 +38,7 @@ export const GameHelp: React.FC<GameHelpProps> = ({
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+            className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-6"
             style={{
               background: "rgba(0,0,0,0.5)",
               backdropFilter: "blur(4px)",

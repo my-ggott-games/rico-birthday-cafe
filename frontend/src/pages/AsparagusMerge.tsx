@@ -113,9 +113,9 @@ const AsparagusMerge: React.FC = () => {
       }
     >
       {/* ─── Main Content: Horizontal 3 DIV ─── */}
-      <div className="flex-1 w-full grid grid-cols-1 lg:grid-cols-[1fr_0.8fr] px-10 pb-12 gap-8">
+      <div className="flex-1 w-full grid grid-cols-1 gap-6 px-4 pb-12 sm:px-6 lg:grid-cols-[1fr_0.8fr] lg:gap-8 lg:px-10">
         {/* [Center] Board: swipe only on the board element */}
-        <div className="flex flex-col items-center justify-center lg:min-h-[calc(100dvh-260px)]">
+        <div className="flex min-h-0 flex-col items-center justify-center lg:min-h-[calc(100dvh-260px)]">
           <Board
             grid={grid}
             selection={selection}
@@ -128,8 +128,8 @@ const AsparagusMerge: React.FC = () => {
         </div>
 
         {/* [Right] Items */}
-        <div className="flex flex-col items-center justify-center lg:min-h-[calc(100dvh-260px)]">
-          <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
+        <div className="flex min-h-0 flex-col items-center justify-center lg:min-h-[calc(100dvh-260px)]">
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2">
             <Items
               undoCount={undoCount}
               swapCount={swapCount}

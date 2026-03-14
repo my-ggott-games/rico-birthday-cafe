@@ -37,6 +37,8 @@ const PUZZLE_TUTORIAL_SLIDES: TutorialSlide[] = [
 const ROWS = 4;
 const COLS = 4;
 const PIECE_SIZE = 100; // Reduced size to fit screen (Total 400x400)
+const PIECE_BLEED = 18;
+const PIECE_RENDER_SIZE = PIECE_SIZE + PIECE_BLEED * 2;
 const IMAGE_URL = "/assets/rico_puzzle_sample.png";
 
 // --- Types ---
@@ -55,35 +57,37 @@ interface PuzzlePiece {
 // --- Helper to Generate Jigsaw Shapes ---
 const createInterlockingPath = (edges: PuzzlePiece["edgeTypes"]) => {
   const s = PIECE_SIZE;
-  const mid = s / 2;
+  const o = PIECE_BLEED;
+  const end = PIECE_BLEED + s;
+  const mid = o + s / 2;
   const neck = 18;
   const tab = 16;
 
   const top =
     edges.top === 0
-      ? `L ${s} 0`
-      : `L ${mid - neck} 0 C ${mid - 10} ${edges.top * -4}, ${mid - 8} ${edges.top * -tab}, ${mid} ${edges.top * -tab}
-           C ${mid + 8} ${edges.top * -tab}, ${mid + 10} ${edges.top * -4}, ${mid + neck} 0 L ${s} 0`;
+      ? `L ${end} ${o}`
+      : `L ${mid - neck} ${o} C ${mid - 10} ${o + edges.top * -4}, ${mid - 8} ${o + edges.top * -tab}, ${mid} ${o + edges.top * -tab}
+           C ${mid + 8} ${o + edges.top * -tab}, ${mid + 10} ${o + edges.top * -4}, ${mid + neck} ${o} L ${end} ${o}`;
 
   const right =
     edges.right === 0
-      ? `L ${s} ${s}`
-      : `L ${s} ${mid - neck} C ${s + edges.right * 4} ${mid - 10}, ${s + edges.right * tab} ${mid - 8}, ${s + edges.right * tab} ${mid}
-           C ${s + edges.right * tab} ${mid + 8}, ${s + edges.right * 4} ${mid + 10}, ${s} ${mid + neck} L ${s} ${s}`;
+      ? `L ${end} ${end}`
+      : `L ${end} ${mid - neck} C ${end + edges.right * 4} ${mid - 10}, ${end + edges.right * tab} ${mid - 8}, ${end + edges.right * tab} ${mid}
+           C ${end + edges.right * tab} ${mid + 8}, ${end + edges.right * 4} ${mid + 10}, ${end} ${mid + neck} L ${end} ${end}`;
 
   const bottom =
     edges.bottom === 0
-      ? `L 0 ${s}`
-      : `L ${mid + neck} ${s} C ${mid + 10} ${s + edges.bottom * 4}, ${mid + 8} ${s + edges.bottom * tab}, ${mid} ${s + edges.bottom * tab}
-           C ${mid - 8} ${s + edges.bottom * tab}, ${mid - 10} ${s + edges.bottom * 4}, ${mid - neck} ${s} L 0 ${s}`;
+      ? `L ${o} ${end}`
+      : `L ${mid + neck} ${end} C ${mid + 10} ${end + edges.bottom * 4}, ${mid + 8} ${end + edges.bottom * tab}, ${mid} ${end + edges.bottom * tab}
+           C ${mid - 8} ${end + edges.bottom * tab}, ${mid - 10} ${end + edges.bottom * 4}, ${mid - neck} ${end} L ${o} ${end}`;
 
   const left =
     edges.left === 0
-      ? "L 0 0"
-      : `L 0 ${mid + neck} C ${edges.left * -4} ${mid + 10}, ${edges.left * -tab} ${mid + 8}, ${edges.left * -tab} ${mid}
-           C ${edges.left * -tab} ${mid - 8}, ${edges.left * -4} ${mid - 10}, 0 ${mid - neck} L 0 0`;
+      ? `L ${o} ${o}`
+      : `L ${o} ${mid + neck} C ${o + edges.left * -4} ${mid + 10}, ${o + edges.left * -tab} ${mid + 8}, ${o + edges.left * -tab} ${mid}
+           C ${o + edges.left * -tab} ${mid - 8}, ${o + edges.left * -4} ${mid - 10}, ${o} ${mid - neck} L ${o} ${o}`;
 
-  return `M 0 0 ${top} ${right} ${bottom} ${left} Z`
+  return `M ${o} ${o} ${top} ${right} ${bottom} ${left} Z`
     .replace(/\s+/g, " ")
     .trim();
 };
@@ -149,20 +153,22 @@ const PuzzlePieceComponent = ({
         height: "var(--piece-size)",
         position: "relative",
         touchAction: "none",
+        overflow: "visible",
       }}
       className={`flex items-center justify-center ${className || ""}`}
     >
       <div
         style={{
-          width: "100%",
-          height: "100%",
+          width: "var(--piece-render-size)",
+          height: "var(--piece-render-size)",
+          transform: "translate(calc(var(--piece-bleed) * -1), calc(var(--piece-bleed) * -1))",
           backgroundImage: `url(${IMAGE_URL})`,
           backgroundSize: `calc(var(--piece-size) * ${COLS}) calc(var(--piece-size) * ${ROWS})`,
-          backgroundPosition: `calc(${piece.correctX} * var(--piece-size) * -1) calc(${piece.correctY} * var(--piece-size) * -1)`,
+          backgroundPosition: `calc(${piece.correctX} * var(--piece-size) * -1 + var(--piece-bleed)) calc(${piece.correctY} * var(--piece-size) * -1 + var(--piece-bleed))`,
           boxShadow: isOverlay ? "0 10px 20px rgba(0,0,0,0.5)" : "none",
           filter: piece.isPlaced
             ? "brightness(1.05)"
-            : `drop-shadow(0 0 0 2px #166D77) drop-shadow(0 4px 6px rgba(0,0,0,0.3))`,
+            : "drop-shadow(0 8px 18px rgba(15,23,42,0.18)) drop-shadow(0 2px 5px rgba(15,23,42,0.12))",
           clipPath: `path('${piece.shapePath}')`,
           WebkitClipPath: `path('${piece.shapePath}')`,
         }}
@@ -184,7 +190,7 @@ const DroppableCell = ({ id, placedPiece, completed }: DroppableCellProps) => {
     <div
       ref={setNodeRef}
       className={`flex items-center justify-center transition-all duration-500 ${!completed ? "border-[0.5px] border-[rgba(209,213,219,0.5)]" : "border-transparent"} ${isOver ? "bg-[rgba(220,252,231,0.5)]" : ""}`}
-      style={{ width: "var(--piece-size)", height: "var(--piece-size)" }}
+      style={{ width: "var(--piece-size)", height: "var(--piece-size)", overflow: "visible" }}
     >
       {placedPiece && <PuzzlePieceComponent piece={placedPiece} />}
     </div>
@@ -223,11 +229,11 @@ const DraggablePiece = React.memo(
         ref={setNodeRef}
         style={{
           position: "absolute",
-          left: piece.currentX,
-          top: piece.currentY,
-          width: "var(--piece-size)",
-          height: "var(--piece-size)",
-          zIndex: isDragging ? 0 : 10,
+          left: piece.currentX - PIECE_BLEED,
+          top: piece.currentY - PIECE_BLEED,
+          width: "var(--piece-render-size)",
+          height: "var(--piece-render-size)",
+          zIndex: isDragging ? 0 : 20,
           opacity: isDragging ? 0 : 1,
           touchAction: "none",
         }}
@@ -358,7 +364,7 @@ const PuzzleGame: React.FC = () => {
 
     // Puzzle board width ~ (TOTAL_WIDTH + padding) ~ 500-600px
     // Let's assume board takes up center.
-    const boardWidth = 600;
+    const boardWidth = window.innerWidth < 768 ? window.innerWidth * 0.8 : 600;
     const remainingWidth = window.innerWidth - boardWidth;
     const sideWidth = remainingWidth / 2;
 
@@ -382,7 +388,7 @@ const PuzzleGame: React.FC = () => {
     ];
 
     const placedRects: { x: number; y: number }[] = [];
-    const PIECE_BOUND = PIECE_SIZE + 40; // Approximate bounding box including tabs
+    const PIECE_BOUND = PIECE_RENDER_SIZE + 12;
 
     newPieces.forEach((p) => {
       // Try 50 times to find a non-overlapping spot
@@ -413,8 +419,20 @@ const PuzzleGame: React.FC = () => {
 
       // Fallback if full
       if (!found) {
-        p.currentX = Math.random() * (window.innerWidth - 100);
-        p.currentY = Math.random() * (window.innerHeight - 100);
+        p.currentX = Math.max(
+          24,
+          Math.min(
+            window.innerWidth - PIECE_RENDER_SIZE - 24,
+            Math.random() * Math.max(window.innerWidth - PIECE_RENDER_SIZE, 1),
+          ),
+        );
+        p.currentY = Math.max(
+          120,
+          Math.min(
+            window.innerHeight - PIECE_RENDER_SIZE - 40,
+            Math.random() * Math.max(window.innerHeight - PIECE_RENDER_SIZE, 1),
+          ),
+        );
       }
     });
     setPieces(newPieces);
@@ -493,10 +511,10 @@ const PuzzleGame: React.FC = () => {
       >
         <div
           className="w-full h-full bg-[#FFFFF8] relative overflow-hidden select-none touch-none flex flex-col"
-          style={{ "--piece-size": "min(18svw, 100px)" } as React.CSSProperties}
+          style={{ "--piece-size": "min(18svw, 100px)", "--piece-bleed": `${PIECE_BLEED}px`, "--piece-render-size": `${PIECE_RENDER_SIZE}px` } as React.CSSProperties}
         >
           {/* 2. Main Content Area (Left | Board | Right) */}
-          <div className="flex-1 w-full flex overflow-hidden">
+          <div className="flex w-full flex-1 overflow-hidden">
             {/* Left Scatter Area */}
             <div
               className="flex-1 relative bg-[rgba(239,246,255,0.1)] hidden lg:block"
@@ -506,7 +524,7 @@ const PuzzleGame: React.FC = () => {
             </div>
 
             {/* Center Board Area */}
-            <div className="flex-none flex items-center justify-center p-4 z-10">
+            <div className="z-10 flex flex-1 items-center justify-center p-3 sm:p-4">
               <div className="relative bg-pale-custard/50 backdrop-blur-sm shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-8 border-[#166D77] rounded-3xl p-6">
                 <div
                   className="relative bg-[#fafafa] overflow-hidden"
@@ -548,12 +566,12 @@ const PuzzleGame: React.FC = () => {
 
           {/* 3. Bottom Scatter Area */}
           <div
-            className="h-[200px] w-full bg-[rgba(240,253,244,0.1)] relative"
+            className="relative h-[180px] w-full bg-[rgba(240,253,244,0.1)] sm:h-[200px]"
             id="area-bottom"
           ></div>
 
           {/* Absolute Layer for Pieces (Positioned relative to Screen 0,0) */}
-          <div className="absolute inset-0 pointer-events-none z-[50]">
+          <div className="absolute inset-0 pointer-events-none z-[30]">
             <div className="pointer-events-auto">
               {pieces.map((p) => (
                 <DraggablePiece key={p.id} piece={p} onRotate={handleRotate} />

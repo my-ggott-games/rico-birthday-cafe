@@ -81,8 +81,8 @@ const Lobby: React.FC = () => {
             text1="축하합니다"
             text2="유즈하 리코"
             text3="아무 이유 없음"
-            scale={isMobile ? 0.68 : 0.85}
-            emblemScale={isMobile ? 0.62 : 0.75}
+            scale={isMobile ? 0.82 : 0.85}
+            emblemScale={isMobile ? 0.72 : 0.75}
           />
         </div>
 

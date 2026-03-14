@@ -147,7 +147,7 @@ export default function Credits() {
 
   return (
     <div
-      className="min-h-screen bg-black text-white overflow-hidden relative flex flex-col select-none"
+      className="relative flex min-h-screen flex-col overflow-hidden bg-[linear-gradient(180deg,#fffdf4_0%,#f4fff6_52%,#eefafc_100%)] text-[#102542] select-none"
       onCopy={(e) => e.preventDefault()}
       onCut={(e) => e.preventDefault()}
       onContextMenu={(e) => e.preventDefault()}
@@ -155,16 +155,16 @@ export default function Credits() {
       <audio ref={audioRef} src={BGM_SRC} loop preload="auto" />
 
       {/* Fixed header buttons */}
-      <div className="absolute top-4 left-4 z-50">
+      <div className="absolute left-4 top-4 z-50">
         <ReturnButton
           gameName="엔딩 크레딧"
-          className="px-4 py-2 rounded-xl text-sm font-bold bg-[#166D77] text-white border-2 border-[#bef264]"
+          className="rounded-xl border-2 border-[#5EC7A5] bg-white/90 px-4 py-2 text-sm font-bold text-[#166D77] shadow-[0_10px_30px_rgba(22,109,119,0.14)]"
         />
       </div>
 
       <div className="flex-1 flex flex-col md:flex-row h-screen">
         {/* Visual Pane (PC only) */}
-        <div className="hidden md:flex w-1/2 h-full items-center justify-center p-10 relative bg-gray-900 border-r border-gray-800">
+        <div className="relative hidden h-full w-1/2 items-center justify-center border-r border-[#166D77]/10 bg-[linear-gradient(180deg,#fff7db_0%,#e5fff5_100%)] p-10 md:flex">
           {/* Placeholder image cycling */}
           <motion.div
             key={currentImageIndex}
@@ -175,10 +175,10 @@ export default function Credits() {
             className="w-full h-full bg-contain bg-center bg-no-repeat"
             style={{
               // Just a visual placeholder until actual assets are provided
-              backgroundImage: `linear-gradient(to bottom right, #166D77, #5EC7A5)`,
+              backgroundImage: `linear-gradient(to bottom right, #fef3c7, #cffafe)`,
             }}
           >
-            <div className="w-full h-full flex items-center justify-center font-bold text-4xl opacity-20">
+            <div className="flex h-full w-full items-center justify-center text-4xl font-bold text-[#166D77]/30">
               Illustration {currentImageIndex + 1}
             </div>
           </motion.div>
@@ -186,9 +186,9 @@ export default function Credits() {
 
         {/* Credits Scroll Pane */}
         {/* Container masks the scroll. */}
-        <div className="w-full md:w-1/2 h-full relative overflow-hidden flex justify-center">
+        <div className="relative flex h-full w-full justify-center overflow-hidden md:w-1/2">
           {/* Mobile background (dimmed) */}
-          <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#166D77]/20 to-black md:hidden" />
+          <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#fef3c7]/60 via-[#f0fdf4] to-[#e0f2fe] md:hidden" />
 
           <motion.div
             className="w-full max-w-lg px-8 relative z-10 flex flex-col items-center text-center pb-32"
@@ -202,10 +202,10 @@ export default function Credits() {
           >
             {/* Title Space */}
             <div className="pt-32 pb-40">
-              <h1 className="text-4xl md:text-5xl font-black mb-4 text-[#bef264]">
+              <h1 className="mb-4 text-4xl font-black text-[#166D77] md:text-5xl">
                 THANK YOU
               </h1>
-              <p className="text-[#5EC7A5] font-bold tracking-widest">
+              <p className="font-bold tracking-widest text-[#2a9d8f]">
                 FOR COMING TO RICO'S BIRTHDAY CAFE
               </p>
             </div>
@@ -213,14 +213,14 @@ export default function Credits() {
             {/* Sections */}
             {CREDITS_SECTIONS.map((section, idx) => (
               <div key={idx} className="mb-24 w-full">
-                <h2 className="text-xl md:text-2xl font-bold text-[#5EC7A5] mb-6 tracking-wider uppercase">
+                <h2 className="mb-6 text-xl font-bold uppercase tracking-wider text-[#2a9d8f] md:text-2xl">
                   {section.title}
                 </h2>
                 <div className="flex flex-col gap-4">
                   {section.names.map((name, i) => (
                     <p
                       key={i}
-                      className="text-lg md:text-xl font-medium text-gray-200"
+                      className="text-lg font-medium text-[#365486] md:text-xl"
                     >
                       {name}
                     </p>
@@ -231,7 +231,7 @@ export default function Credits() {
 
             {/* Final message & Achievement Button */}
             <div className="pt-32 pb-[50vh] flex flex-col items-center">
-              <h2 className="text-3xl font-black text-white mb-10">And You</h2>
+              <h2 className="mb-10 text-3xl font-black text-[#102542]">And You</h2>
 
               {!claimed ? (
                 <motion.button
@@ -252,8 +252,8 @@ export default function Credits() {
                   disabled={loading}
                   className="flex items-center gap-3 px-8 py-4 rounded-full font-black text-lg shadow-[0_0_30px_rgba(94,199,165,0.4)] border-2 transition-all hover:bg-[#5EC7A5] hover:text-[#166D77]"
                   style={{
-                    background: "transparent",
-                    color: "#5EC7A5",
+                    background: "rgba(255,255,255,0.9)",
+                    color: "#166D77",
                     borderColor: "#5EC7A5",
                   }}
                 >
@@ -276,12 +276,12 @@ export default function Credits() {
       </div>
 
       {needsManualStart && !hasStarted && (
-        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm px-6">
-          <div className="rounded-[2rem] border border-[#5EC7A5]/40 bg-black/70 px-8 py-10 text-center shadow-2xl">
-            <p className="text-sm md:text-base font-bold text-[#5EC7A5] mb-6 tracking-[0.2em] uppercase">
+        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-[#fffdf4]/85 px-6 backdrop-blur-sm">
+          <div className="rounded-[2rem] border border-[#5EC7A5]/30 bg-white/90 px-8 py-10 text-center shadow-[0_30px_80px_rgba(22,109,119,0.18)]">
+            <p className="mb-6 text-sm font-bold uppercase tracking-[0.2em] text-[#166D77] md:text-base">
               Start Credits
             </p>
-            <p className="mb-6 text-sm text-white/80">
+            <p className="mb-6 text-sm text-[#365486]">
               iOS 포함 모든 환경에서 시작 버튼을 눌러야 음악과 스크롤이 함께
               재생됩니다.
             </p>

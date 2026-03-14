@@ -64,6 +64,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const sanitizePasscode = (raw: string) =>
     raw
       .toLowerCase()
+      .replace(/-/g, "_")
       .replace(/[^a-z0-9_]/g, "")
       .replace(/_+/g, "_");
 

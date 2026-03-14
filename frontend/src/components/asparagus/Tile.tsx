@@ -33,7 +33,11 @@ export const Tile: React.FC<TileProps> = ({ value, isSelected, onClick }) => {
     text: "#FFFFF8",
   };
   const isGradient = stage.bg.includes("gradient");
-  const lines = stage.name.split(/\s+/);
+  const words = stage.name.split(/\s+/);
+  const lines =
+    words.length <= 2
+      ? words
+      : [words.slice(0, 2).join(" "), words.slice(2).join(" ")];
   return (
     <motion.div
       key={value}

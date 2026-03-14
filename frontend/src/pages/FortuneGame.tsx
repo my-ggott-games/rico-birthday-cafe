@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GameContainer } from "../components/common/GameContainer";
 import type { TutorialSlide } from "../components/common/TutorialBanner";
@@ -66,7 +66,7 @@ const FORTUNE_DATA: FortuneResult[] = [
 const FORTUNE_TUTORIAL_SLIDES: TutorialSlide[] = [
   {
     title: "🎋 오늘의 운세",
-    lines: ["통을 클릭하거나 모바일에서 흔들어 운세를 뽑아보세요."],
+    lines: ["통을 클릭하거나 버튼을 눌러 운세를 뽑아보세요."],
     showArrows: false,
   },
   {
@@ -140,38 +140,6 @@ export default function FortuneGame() {
     }, 2000);
   };
 
-  // Hardware shake detection for mobile
-  useEffect(() => {
-    if (gameState !== "idle") return;
-
-    let lastX = 0,
-      lastY = 0,
-      lastZ = 0;
-    const threshold = 15; // Tuning needed based on testing
-
-    const handleMotion = (event: DeviceMotionEvent) => {
-      const acc = event.accelerationIncludingGravity;
-      if (!acc || acc.x === null || acc.y === null || acc.z === null) return;
-
-      const deltaX = Math.abs(lastX - acc.x);
-      const deltaY = Math.abs(lastY - acc.y);
-      const deltaZ = Math.abs(lastZ - acc.z);
-
-      if (deltaX + deltaY + deltaZ > threshold) {
-        handleShakeStart();
-      }
-
-      lastX = acc.x;
-      lastY = acc.y;
-      lastZ = acc.z;
-    };
-
-    // request JS access to DeviceMotion if needed (iOS 13+)
-    // Not adding the prompt here for simplicity, but attaching event listener
-    window.addEventListener("devicemotion", handleMotion);
-    return () => window.removeEventListener("devicemotion", handleMotion);
-  }, [gameState]);
-
   const handleReset = () => {
     setGameState("idle");
     setFortune(null);
@@ -199,7 +167,7 @@ export default function FortuneGame() {
             >
               <p className="font-bold text-[#166D77] text-xl text-center">
                 {gameState === "idle"
-                  ? "통을 클릭하거나 기기를 흔들어봐!"
+                  ? "통을 클릭하거나 버튼을 눌러봐!"
                   : "운세 뽑는 중... 🎋"}
               </p>
 

@@ -60,7 +60,7 @@ type Obstacle = {
   size: string;
 };
 
-type RunState = "ready" | "running" | "gameover" | "completed";
+type RunState = "ready" | "running" | "paused" | "gameover" | "completed";
 
 const BEST_SCORE_KEY = "rico-adventure-best-score";
 const YOUTUBE_VIDEO_ID = "J3B0k47f0Fs";
@@ -72,7 +72,7 @@ const DOUBLE_JUMP_VELOCITY = 980;
 const GRAVITY = 2800;
 const GROUND_SAFE_HEIGHT = 82;
 const FLARE_COLLISION_HEIGHT = 124;
-const DOUBLE_TAP_WINDOW_MS = 260;
+const DOUBLE_TAP_WINDOW_MS = 380;
 
 const ADVENTURE_TUTORIAL_SLIDES: TutorialSlide[] = [
   {
@@ -266,9 +266,9 @@ export default function AdventureGame() {
   const attemptStartPhaseIdRef = useRef(1);
   const runStateRef = useRef<RunState>("ready");
   const timelineTimeRef = useRef(0);
-  const timelineTickPrevTsRef = useRef<number | null>(null);
   const remainingAirJumpRef = useRef(1);
   const lastJumpInputTsRef = useRef(0);
+  const runClockOriginRef = useRef(0);
 
   const [apiReady, setApiReady] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
@@ -378,27 +378,20 @@ export default function AdventureGame() {
 
   useEffect(() => {
     const tick = (ts: number) => {
-      const previousTs = timelineTickPrevTsRef.current ?? ts;
-      const delta = Math.min((ts - previousTs) / 1000, 0.05);
-      timelineTickPrevTsRef.current = ts;
       const player = playerRef.current;
       let nextTime = timelineTimeRef.current;
 
       if (player) {
-        const playerTime = player.getCurrentTime() || 0;
-        const playerAdvanced = playerTime > timelineTimeRef.current + 0.03;
-        const trustPlayerClock =
-          runStateRef.current !== "running" || playerAdvanced;
-        nextTime = trustPlayerClock
-          ? playerTime
-          : timelineTimeRef.current + delta;
         setDuration(Math.max(player.getDuration() || 0, 433));
-      } else if (runStateRef.current === "running") {
-        nextTime = timelineTimeRef.current + delta;
       }
 
       if (runStateRef.current === "running") {
-        nextTime = Math.min(nextTime, PHASES[PHASES.length - 1].end);
+        nextTime = Math.min(
+          Math.max(0, (ts - runClockOriginRef.current) / 1000),
+          PHASES[PHASES.length - 1].end,
+        );
+      } else if (player && runStateRef.current === "ready") {
+        nextTime = player.getCurrentTime() || 0;
       }
 
       if (Math.abs(nextTime - timelineTimeRef.current) > 0.0001) {
@@ -624,12 +617,11 @@ export default function AdventureGame() {
     remainingAirJumpRef.current = 1;
     lastJumpInputTsRef.current = 0;
     lastPhysicsTsRef.current = null;
-    timelineTickPrevTsRef.current = null;
-
     setSelectedRetryPhaseId(phaseId);
     setAttemptStartTime(targetPhase.start);
     timelineTimeRef.current = targetPhase.start;
     setTimelineTime(targetPhase.start);
+    runClockOriginRef.current = performance.now() - targetPhase.start * 1000;
     setJumpHeight(0);
     setCurrentScore(0);
     setSuccessfulJumps(0);
@@ -642,6 +634,24 @@ export default function AdventureGame() {
 
   const handleStart = () => {
     startAttempt(selectedRetryPhaseId);
+  };
+
+  const handlePauseToggle = () => {
+    if (runState === "running") {
+      intentionalPauseRef.current = true;
+      playerRef.current?.pauseVideo();
+      setRunState("paused");
+      return;
+    }
+
+    if (runState === "paused") {
+      intentionalPauseRef.current = false;
+      runClockOriginRef.current =
+        performance.now() - timelineTimeRef.current * 1000;
+      playerRef.current?.seekTo(timelineTimeRef.current, true);
+      playerRef.current?.playVideo();
+      setRunState("running");
+    }
   };
 
   const performJump = (isDoubleJump: boolean) => {
@@ -669,6 +679,11 @@ export default function AdventureGame() {
     performJump(isDoubleJump);
   };
 
+  const handleDoubleJumpButton = () => {
+    lastJumpInputTsRef.current = performance.now();
+    performJump(true);
+  };
+
   const handleRetry = () => {
     startAttempt(selectedRetryPhaseId);
   };
@@ -680,6 +695,8 @@ export default function AdventureGame() {
         : "Live Run"
       : runState === "gameover"
         ? "Game Over"
+        : runState === "paused"
+          ? "Paused"
         : runState === "completed"
           ? "Completed"
           : "Ready";
@@ -738,9 +755,9 @@ export default function AdventureGame() {
             </div>
 
             <div className="mt-4 grid gap-3">
-              {runState === "running" && (
+              {(runState === "running" || runState === "paused") && (
                 <div className="rounded-[1.2rem] bg-[#102542] px-5 py-4 text-center text-sm font-black text-white">
-                  Playback Locked
+                  {runState === "paused" ? "Paused" : "Playback Locked"}
                 </div>
               )}
 
@@ -754,14 +771,9 @@ export default function AdventureGame() {
                 </button>
               )}
 
-              <button
-                type="button"
-                onClick={handleJumpInput}
-                disabled={!isRunning}
-                className="w-full rounded-[1.2rem] border-2 border-[#102542] bg-[#fffaf2] px-5 py-3 text-sm font-black text-[#102542] transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Jump / Double Jump
-              </button>
+              <div className="rounded-[1.2rem] border border-[#102542]/10 bg-[#fffaf2] px-4 py-3 text-sm font-bold text-[#365486]">
+                러닝 중에는 음악 시계와 코스가 같은 속도로 계속 이동합니다.
+              </div>
             </div>
           </section>
 
@@ -849,7 +861,7 @@ export default function AdventureGame() {
                 transition={{ duration: 0 }}
               >
                 <div className="relative flex h-16 w-16 items-center justify-center rounded-full border-4 border-white/80 bg-[#fff7db] text-4xl shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
-                  🦸‍♀️
+                  {jumpHeight > 4 ? "🤸‍♀️" : "🦸‍♀️"}
                   <div className="absolute -bottom-4 h-3 w-14 rounded-full bg-black/15 blur-md" />
                 </div>
               </motion.div>
@@ -877,6 +889,31 @@ export default function AdventureGame() {
               <div className="rounded-[1.2rem] bg-white/70 px-4 py-3 text-sm font-black text-[#102542]">
                 Live Run
               </div>
+              <button
+                type="button"
+                onClick={handleJumpInput}
+                disabled={!isRunning}
+                className="rounded-[1.2rem] border-2 border-[#102542] bg-[#fffaf2] px-5 py-3 text-sm font-black text-[#102542] transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Jump
+              </button>
+              <button
+                type="button"
+                onClick={handleDoubleJumpButton}
+                disabled={!isRunning || jumpHeight <= 4}
+                className="rounded-[1.2rem] border-2 border-[#2a9d8f] bg-[#dff6f3] px-5 py-3 text-sm font-black text-[#166D77] transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Double Jump
+              </button>
+              {(runState === "running" || runState === "paused") && (
+                <button
+                  type="button"
+                  onClick={handlePauseToggle}
+                  className="rounded-[1.2rem] bg-[#102542] px-5 py-3 text-sm font-black text-white transition-transform hover:scale-[1.01]"
+                >
+                  {runState === "paused" ? "Resume" : "Pause"}
+                </button>
+              )}
             </div>
           </div>
 
