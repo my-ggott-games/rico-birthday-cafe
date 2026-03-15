@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 
 interface PolaroidFrameProps {
@@ -10,8 +10,6 @@ interface PolaroidFrameProps {
   characterOffset?: { x?: number; y?: number };
   polaroidRef?: React.RefObject<HTMLDivElement | null>;
   hideAnimations?: boolean;
-  isSquare?: boolean;
-  hideShadow?: boolean;
 }
 
 export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
@@ -23,15 +21,13 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
   characterOffset,
   polaroidRef,
   hideAnimations,
-  isSquare,
-  hideShadow,
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-
   const isFastReveal = !!activeBackground?.startsWith("linear-gradient");
   const revealDuration = isFastReveal ? 0 : 7.0;
   const revealDelay = isFastReveal ? 0 : 0.5;
-  const mobileOffsetY = isSquare ? "14px" : "8px";
+  const characterStageHeightClass = isFastReveal
+    ? "h-[420px] md:h-[470px]"
+    : "h-[600px] md:h-[640px]";
 
   const today = new Date();
   const formattedDate = `${today.getFullYear()}. ${String(today.getMonth() + 1).padStart(2, "0")}. ${String(today.getDate()).padStart(2, "0")}. Yuzuha Riko`;
@@ -69,8 +65,7 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
         }}
       >
         <div
-          ref={containerRef}
-          className={`relative w-[300px] md:w-[340px] overflow-hidden ${isSquare ? "h-[300px] md:h-[340px]" : "h-[450px] md:h-[510px]"} ${
+          className={`relative h-[300px] w-[300px] overflow-hidden md:h-[340px] md:w-[340px] ${
             activeBackground?.startsWith("bg-") ? activeBackground : ""
           }`}
           style={{
@@ -101,45 +96,27 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
 
           {/* Character and Shadow */}
           <div
-            className="absolute z-10 pointer-events-none left-0 right-0 flex justify-center"
-            style={{
-              height: "600px",
-              bottom: isSquare ? mobileOffsetY : "2%",
-              transform: `translate(${characterOffset?.x || 0}px, ${characterOffset?.y || 0}px)`,
-            }}
+            className="absolute bottom-[14px] left-1/2 z-10 flex w-full -translate-x-1/2 justify-center pointer-events-none"
           >
-            {!hideShadow && (
-              <motion.img
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.5 }}
+            <div
+              className={`relative w-full ${characterStageHeightClass}`}
+              style={{
+                transform: `translate(${characterOffset?.x || 0}px, ${characterOffset?.y || 0}px)`,
+              }}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 1, x: 0, y: 0 }}
+                animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
                 transition={{
                   duration: revealDuration,
                   delay: revealDelay,
                   ease: [0.42, 0, 1, 1],
                 }}
-                src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%22%20height%3D%2240%22%20viewBox%3D%220%200%20100%2040%22%3E%3Cdefs%3E%3CradialGradient%20id%3D%22shadowG%22%20cx%3D%2250%25%22%20cy%3D%2250%25%22%20r%3D%2250%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22rgba(0%2C0%2C0%2C0.6)%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22rgba(0%2C0%2C0%2C0)%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Cellipse%20cx%3D%2250%22%20cy%3D%2220%22%20rx%3D%2250%22%20ry%3D%2220%22%20fill%3D%22url(%23shadowG)%22%2F%3E%3C%2Fsvg%3E"
-                alt="shadow"
-                className="absolute left-1/2 -translate-x-1/2 object-contain mix-blend-multiply"
-                style={{
-                  width: isFastReveal ? "75px" : "64px",
-                  height: isFastReveal ? "50px" : "32px",
-                  bottom: isFastReveal ? "100px" : "80px",
-                }}
-              />
-            )}
-
-            <motion.div
-              initial={{ opacity: 0, scale: 1, x: 0, y: 0 }}
-              animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-              transition={{
-                duration: revealDuration,
-                delay: revealDelay,
-                ease: [0.42, 0, 1, 1],
-              }}
-              className="absolute bottom-0 pointer-events-auto"
-            >
-              {children}
-            </motion.div>
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 pointer-events-auto"
+              >
+                {children}
+              </motion.div>
+            </div>
           </div>
 
           {/* This renders using the bounds of containerRef! */}

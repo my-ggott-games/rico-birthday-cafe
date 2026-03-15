@@ -51,6 +51,73 @@ const EMPTY_EQUIPMENT: EquippedState = {
 
 const ONE_PIECE_IDS = new Set(["1-3", "2-3", "4-3"]);
 const RIBBON_ACCESSORY_IDS = new Set(["3-10", "4-5"]);
+const INVALID_POLAROID_SCALE = 0.5;
+const VALID_POLAROID_SCALE = 1;
+
+const INVENTORY_PREVIEW_LAYOUT: Record<
+  CodyItem["category"],
+  {
+    mobileCard: string;
+    desktopCard: string;
+    mobileOffset: string;
+    desktopOffset: string;
+  }
+> = {
+  hair_front: {
+    mobileCard: "w-28 h-40",
+    desktopCard: "w-60 h-60",
+    mobileOffset: "-150px",
+    desktopOffset: "-40px",
+  },
+  hair_back: {
+    mobileCard: "w-28 h-40",
+    desktopCard: "w-60 h-60",
+    mobileOffset: "-150px",
+    desktopOffset: "-40px",
+  },
+  clothes: {
+    mobileCard: "w-32 h-48",
+    desktopCard: "w-72 h-[36rem]",
+    mobileOffset: "-200px",
+    desktopOffset: "-120px",
+  },
+  clothes_back: {
+    mobileCard: "w-32 h-48",
+    desktopCard: "w-72 h-[36rem]",
+    mobileOffset: "-220px",
+    desktopOffset: "-132px",
+  },
+  hair_acc: {
+    mobileCard: "w-28 h-40",
+    desktopCard: "w-60 h-60",
+    mobileOffset: "-138px",
+    desktopOffset: "-34px",
+  },
+  clothes_acc: {
+    mobileCard: "w-28 h-40",
+    desktopCard: "w-60 h-60",
+    mobileOffset: "-160px",
+    desktopOffset: "-48px",
+  },
+  hand_acc: {
+    mobileCard: "w-28 h-40",
+    desktopCard: "w-60 h-60",
+    mobileOffset: "-168px",
+    desktopOffset: "-56px",
+  },
+  shoes: {
+    mobileCard: "w-28 h-28",
+    desktopCard: "w-52 h-52",
+    mobileOffset: "-288px",
+    desktopOffset: "-148px",
+  },
+  accessories: {
+    mobileCard: "w-28 h-40",
+    desktopCard: "w-60 h-60",
+    mobileOffset: "-160px",
+    desktopOffset: "-48px",
+  },
+};
 
 const CODY_TUTORIAL_SLIDES: TutorialSlide[] = [
   {
@@ -267,9 +334,6 @@ const CodyGame: React.FC = () => {
     },
   ];
 
-  const isOnePieceActive =
-    !!equippedIds.clothes && ONE_PIECE_IDS.has(equippedIds.clothes);
-
   const applyItemToEquipment = (
     prev: EquippedState,
     item: CodyItem,
@@ -296,7 +360,7 @@ const CodyGame: React.FC = () => {
       nextState.clothes &&
       ONE_PIECE_IDS.has(nextState.clothes)
     ) {
-      return nextState;
+      nextState.clothes = null;
     }
 
     if (item.category === "hair_front") {
@@ -308,9 +372,9 @@ const CodyGame: React.FC = () => {
     return { ...nextState, [item.category]: item.id };
   };
 
-  const isItemDisabled = (item: CodyItem) => {
+  const isItemDisabled = (_item: CodyItem) => {
     if (isFinished) return true;
-    return item.category === "clothes_back" && isOnePieceActive;
+    return false;
   };
 
   // Combination logic for background changes
@@ -529,8 +593,6 @@ const CodyGame: React.FC = () => {
                   characterOffset={getPolaroidCharacterOffset()}
                   polaroidRef={polaroidRef}
                   hideAnimations={isCapturing}
-                  isSquare={true}
-                  hideShadow={!activeBackground?.startsWith("linear-gradient")}
                   backgroundContent={
                     <>
                       {/* 그라데이션 배경, 배경색 배경용 로직 유지 */}
@@ -592,8 +654,8 @@ const CodyGame: React.FC = () => {
                       scale={
                         characterScale *
                         (activeBackground?.startsWith("linear-gradient")
-                          ? 0.7
-                          : 1)
+                          ? INVALID_POLAROID_SCALE
+                          : VALID_POLAROID_SCALE)
                       }
                       isMobile={isMobile}
                       availableItems={availableItems}
@@ -871,21 +933,13 @@ const CodyGame: React.FC = () => {
                           ? characterScale * 0.75
                           : characterScale;
 
-                        // 카테고리별 아이템 카드 크기 및 위치 설정 (PC/모바일 분기)
-                        let cardSize = "";
-                        let previewOffset = "";
-
-                        if (item.category === "clothes") {
-                          cardSize = isMobile ? "w-32 h-48" : "w-72 h-[36rem]"; // PC 의상 높이 대폭 확장 (rem 대신 직관적인 px 사용)
-                          previewOffset = isMobile ? "-200px" : "-120px"; // 모바일 이미지 위치 위로 더 끌어올림
-                        } else if (item.category === "shoes") {
-                          cardSize = isMobile ? "w-28 h-28" : "w-52 h-52";
-                          previewOffset = isMobile ? "-310px" : "-165px";
-                        } else {
-                          // hair, accessories
-                          cardSize = isMobile ? "w-28 h-40" : "w-60 h-60";
-                          previewOffset = isMobile ? "-150px" : "-40px"; // 모바일 이미지 위치 위로 더 끌어올림
-                        }
+                        const layout = INVENTORY_PREVIEW_LAYOUT[item.category];
+                        const cardSize = isMobile
+                          ? layout.mobileCard
+                          : layout.desktopCard;
+                        const previewOffset = isMobile
+                          ? layout.mobileOffset
+                          : layout.desktopOffset;
 
                         return (
                           <div
@@ -922,12 +976,6 @@ const CodyGame: React.FC = () => {
                                 <span className="bg-pale-custard/90 text-[#166D77] px-3 py-1 rounded-full text-xs font-bold shadow-sm">
                                   장착 중 ✨
                                 </span>
-                              </div>
-                            )}
-
-                            {isDisabled && !isEquipped && (
-                              <div className="absolute inset-x-3 bottom-3 rounded-full bg-black/60 px-3 py-1 text-center text-[10px] font-bold text-white">
-                                원피스 착용 중
                               </div>
                             )}
                           </div>

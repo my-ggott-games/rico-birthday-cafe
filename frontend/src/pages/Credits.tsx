@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import type { CSSProperties } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { BASE_URL } from "../utils/api";
 import { ReturnButton } from "../components/common/ReturnButton";
@@ -57,19 +59,30 @@ const ILLUSTRATION_IMAGES = [
   "/assets/illustration2.png",
 ];
 
-const BGM_SRC = "/꽃하나.m4a";
+const BGM_SRC = encodeURI("/꽃하나.m4a");
 const CLAIM_ALERT_THRESHOLD = 0.33;
+const CREDITS_BOTTOM_PADDING = 140;
+const CREDITS_SCROLL_SPEED_PX = 22;
 
 export default function Credits() {
+  const navigate = useNavigate();
   const { token } = useAuthStore();
   const [claimed, setClaimed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
   const [needsManualStart, setNeedsManualStart] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const [highlightClaim, setHighlightClaim] = useState(false);
+  const [creditsMotion, setCreditsMotion] = useState({
+    startY: window.innerHeight,
+    endY: -window.innerHeight,
+    duration: 120,
+  });
   const audioRef = useRef<HTMLAudioElement>(null);
   const claimButtonRef = useRef<HTMLButtonElement>(null);
+  const creditsViewportRef = useRef<HTMLDivElement>(null);
+  const creditsTrackRef = useRef<HTMLDivElement>(null);
 
   // Swap illustration every 8 seconds (slowed down for gentler pacing)
   useEffect(() => {
@@ -84,6 +97,41 @@ export default function Credits() {
   useEffect(() => {
     setNeedsManualStart(true);
   }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    audio.preload = "auto";
+    audio.load();
+  }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    audio.muted = isMuted;
+  }, [isMuted]);
+
+  useEffect(() => {
+    const updateCreditsMotion = () => {
+      const viewportHeight =
+        creditsViewportRef.current?.clientHeight ?? window.innerHeight;
+      const trackHeight =
+        creditsTrackRef.current?.scrollHeight ?? viewportHeight;
+      const travelDistance = viewportHeight + trackHeight + CREDITS_BOTTOM_PADDING;
+
+      setCreditsMotion({
+        startY: viewportHeight,
+        endY: -trackHeight - CREDITS_BOTTOM_PADDING,
+        duration: Math.max(travelDistance / CREDITS_SCROLL_SPEED_PX, 45),
+      });
+    };
+
+    updateCreditsMotion();
+    window.addEventListener("resize", updateCreditsMotion);
+    return () => window.removeEventListener("resize", updateCreditsMotion);
+  }, [claimed, hasStarted]);
 
   useEffect(() => {
     const button = claimButtonRef.current;
@@ -113,11 +161,58 @@ export default function Credits() {
     if (!audio) return;
 
     try {
+      audio.pause();
       audio.currentTime = 0;
+      audio.volume = 1;
+      audio.muted = false;
+      setIsMuted(false);
+
+      if (audio.readyState < 2) {
+        await new Promise<void>((resolve) => {
+          const onReady = () => resolve();
+          audio.addEventListener("loadeddata", onReady, { once: true });
+          audio.addEventListener("canplaythrough", onReady, { once: true });
+          window.setTimeout(resolve, 1200);
+          audio.load();
+        });
+      }
+
       await audio.play();
     } catch (error) {
       console.error("Failed to start credits BGM", error);
     }
+  };
+
+  const handleMuteToggle = async () => {
+    const audio = audioRef.current;
+    const nextMuted = !isMuted;
+
+    if (!audio) {
+      setIsMuted(nextMuted);
+      return;
+    }
+
+    audio.muted = nextMuted;
+    setIsMuted(nextMuted);
+
+    if (!nextMuted && hasStarted) {
+      try {
+        await audio.play();
+      } catch (error) {
+        console.error("Failed to resume credits BGM", error);
+      }
+    }
+  };
+
+  const handleDecline = () => {
+    const audio = audioRef.current;
+
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+
+    navigate("/lobby");
   };
 
   const awardAchievement = async () => {
@@ -152,7 +247,17 @@ export default function Credits() {
       onCut={(e) => e.preventDefault()}
       onContextMenu={(e) => e.preventDefault()}
     >
-      <audio ref={audioRef} src={BGM_SRC} loop preload="auto" />
+      <style>{`
+        @keyframes credits-roll {
+          from {
+            transform: translate3d(-50%, var(--credits-start-y), 0);
+          }
+          to {
+            transform: translate3d(-50%, var(--credits-end-y), 0);
+          }
+        }
+      `}</style>
+      <audio ref={audioRef} src={BGM_SRC} loop preload="auto" playsInline />
 
       {/* Fixed header buttons */}
       <div className="absolute left-4 top-4 z-50">
@@ -161,6 +266,17 @@ export default function Credits() {
           className="rounded-xl border-2 border-[#5EC7A5] bg-white/90 px-4 py-2 text-sm font-bold text-[#166D77] shadow-[0_10px_30px_rgba(22,109,119,0.14)]"
         />
       </div>
+      {hasStarted && (
+        <button
+          type="button"
+          onClick={() => void handleMuteToggle()}
+          className="absolute right-4 top-4 z-50 flex items-center gap-2 rounded-xl border-2 border-[#5EC7A5] bg-white/90 px-4 py-2 text-sm font-bold text-[#166D77] shadow-[0_10px_30px_rgba(22,109,119,0.14)]"
+          aria-label={isMuted ? "Unmute credits music" : "Mute credits music"}
+        >
+          <span className="text-base">{isMuted ? "🔇" : "🔊"}</span>
+          <span>{isMuted ? "Unmute" : "Mute"}</span>
+        </button>
+      )}
 
       <div className="flex-1 flex flex-col md:flex-row h-screen">
         {/* Visual Pane (PC only) */}
@@ -186,19 +302,28 @@ export default function Credits() {
 
         {/* Credits Scroll Pane */}
         {/* Container masks the scroll. */}
-        <div className="relative flex h-full w-full justify-center overflow-hidden md:w-1/2">
+        <div
+          ref={creditsViewportRef}
+          className="relative flex h-full w-full justify-center overflow-hidden md:w-1/2"
+        >
           {/* Mobile background (dimmed) */}
           <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#fef3c7]/60 via-[#f0fdf4] to-[#e0f2fe] md:hidden" />
 
-          <motion.div
-            className="w-full max-w-lg px-8 relative z-10 flex flex-col items-center text-center pb-32"
-            initial={false}
-            animate={hasStarted ? { y: ["72vh", "-260%"] } : { y: "100vh" }}
-            transition={{
-              duration: 155,
-              ease: "linear",
-              repeat: 0,
-            }}
+          <div
+            ref={creditsTrackRef}
+            key={`${hasStarted}-${creditsMotion.startY}-${creditsMotion.endY}-${creditsMotion.duration}`}
+            className="absolute left-1/2 top-0 z-10 flex w-full max-w-lg -translate-x-1/2 flex-col items-center px-8 text-center"
+            style={
+              {
+                "--credits-start-y": `${creditsMotion.startY}px`,
+                "--credits-end-y": `${creditsMotion.endY}px`,
+                transform: `translate3d(-50%, ${creditsMotion.startY}px, 0)`,
+                animation: hasStarted
+                  ? `credits-roll ${creditsMotion.duration}s linear forwards`
+                  : "none",
+                willChange: "transform",
+              } as CSSProperties
+            }
           >
             {/* Title Space */}
             <div className="pt-32 pb-40">
@@ -271,27 +396,35 @@ export default function Credits() {
                 </motion.div>
               )}
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
 
       {needsManualStart && !hasStarted && (
         <div className="absolute inset-0 z-[60] flex items-center justify-center bg-[#fffdf4]/85 px-6 backdrop-blur-sm">
           <div className="rounded-[2rem] border border-[#5EC7A5]/30 bg-white/90 px-8 py-10 text-center shadow-[0_30px_80px_rgba(22,109,119,0.18)]">
-            <p className="mb-6 text-sm font-bold uppercase tracking-[0.2em] text-[#166D77] md:text-base">
-              Start Credits
+            <p className="mb-6 text-2xl font-bold uppercase tracking-[0.2em] text-[#166D77]">
+              다들 와줘서 고마워!
             </p>
-            <p className="mb-6 text-sm text-[#365486]">
-              iOS 포함 모든 환경에서 시작 버튼을 눌러야 음악과 스크롤이 함께
-              재생됩니다.
+            <p className="mb-6 text-xl text-[#365486]">
+              생일 카페 제작에 도움을 준 사람들을 소개할게
             </p>
-            <button
-              type="button"
-              onClick={() => void handleStart()}
-              className="px-8 py-3 rounded-full border-2 border-[#bef264] bg-[#166D77] text-[#FFFFF8] font-black text-lg shadow-[0_0_30px_rgba(94,199,165,0.3)]"
-            >
-              Start
-            </button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <button
+                type="button"
+                onClick={() => void handleStart()}
+                className="rounded-full border-2 border-[#bef264] bg-[#166D77] px-8 py-3 text-lg font-black text-[#FFFFF8] shadow-[0_0_30px_rgba(94,199,165,0.3)]"
+              >
+                좋아!
+              </button>
+              <button
+                type="button"
+                onClick={handleDecline}
+                className="rounded-full border-2 border-[#166D77]/15 bg-white px-8 py-3 text-lg font-black text-[#166D77]"
+              >
+                됐어
+              </button>
+            </div>
           </div>
         </div>
       )}

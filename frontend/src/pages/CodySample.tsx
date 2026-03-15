@@ -68,8 +68,6 @@ const CodySample: React.FC = () => {
                   isFlyAway={false}
                   activeBackground={undefined} // Just trick the frame into normal drawing
                   characterOffset={{ x: 0, y: 500 }}
-                  isSquare={true}
-                  hideShadow={false}
                   backgroundContent={
                     <div className="absolute inset-0 z-0">
                       <img

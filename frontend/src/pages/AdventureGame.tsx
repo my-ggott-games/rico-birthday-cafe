@@ -6,41 +6,6 @@ import { BASE_URL } from "../utils/api";
 import { useAuthStore } from "../store/useAuthStore";
 import { useToastStore } from "../store/useToastStore";
 
-declare global {
-  interface Window {
-    YT?: YouTubeNamespace;
-    onYouTubeIframeAPIReady?: () => void;
-  }
-}
-
-type PlayerInstance = {
-  destroy: () => void;
-  getCurrentTime: () => number;
-  getDuration: () => number;
-  playVideo: () => void;
-  pauseVideo: () => void;
-  seekTo: (seconds: number, allowSeekAhead?: boolean) => void;
-};
-
-type PlayerStateValue = -1 | 0 | 1 | 2 | 3 | 5;
-
-type YouTubeNamespace = {
-  Player: new (
-    elementId: string,
-    config: {
-      videoId: string;
-      playerVars?: Record<string, number | string>;
-      events?: {
-        onReady?: (event: { target: PlayerInstance }) => void;
-        onStateChange?: (event: {
-          data: PlayerStateValue;
-          target: PlayerInstance;
-        }) => void;
-      };
-    },
-  ) => PlayerInstance;
-};
-
 type Phase = {
   id: number;
   title: string;
@@ -63,39 +28,37 @@ type Obstacle = {
 type RunState = "ready" | "running" | "paused" | "gameover" | "completed";
 
 const BEST_SCORE_KEY = "rico-adventure-best-score";
-const YOUTUBE_VIDEO_ID = "J3B0k47f0Fs";
 const COURSE_LENGTH = 440;
 const PLAYER_X = 72;
-const PIXELS_PER_SECOND = 92;
+const PIXELS_PER_SECOND = 160;
 const JUMP_VELOCITY = 1080;
 const DOUBLE_JUMP_VELOCITY = 980;
 const GRAVITY = 2800;
 const GROUND_SAFE_HEIGHT = 82;
 const FLARE_COLLISION_HEIGHT = 124;
-const DOUBLE_TAP_WINDOW_MS = 380;
 
 const ADVENTURE_TUTORIAL_SLIDES: TutorialSlide[] = [
   {
-    title: "🎼 스타트 규칙",
+    title: "🏃 테스트 빌드",
     lines: [
-      "Play를 누르면 음악이 시작되고 재생 잠금이 켜집니다.",
-      "도전 중에는 일시정지, 시크, 스테이지 스킵을 할 수 없어요.",
+      "영상 연동은 잠시 빼고 러너 코어만 남겼어요.",
+      "캐릭터는 고정, 배경과 장애물이 왼쪽으로 움직입니다.",
     ],
     showArrows: false,
   },
   {
     title: "🦘 점프 조작",
     lines: [
-      "코스 화면을 클릭하거나 터치하면 점프합니다.",
-      "공중에서 빠르게 한 번 더 누르면 더블 점프가 발동합니다.",
+      "코스를 터치하거나 버튼을 누르면 점프합니다.",
+      "첫 점프 뒤에는 착지 전까지 언제든 한 번 더 점프할 수 있습니다.",
     ],
     showArrows: false,
   },
   {
-    title: "💾 세이브 포인트",
+    title: "⚔️ 목표",
     lines: [
-      "각 Phase를 끝까지 살아남으면 다음 Phase 체크포인트가 열립니다.",
-      "게임 오버 후 열린 체크포인트에서 재도전할 수 있습니다.",
+      "Chrome Dino처럼 최소 루프만 확인하는 버전입니다.",
+      "움직임과 충돌이 안정화되면 세부 연출을 다시 얹으면 됩니다.",
     ],
     showArrows: false,
   },
@@ -140,7 +103,7 @@ const PHASES: Phase[] = [
     theme: "던전",
     sky: "from-[#283046] via-[#3d405b] to-[#111827]",
     accent: "#e07a5f",
-    description: "마왕의 성 내부로 들어가며 분위기가 급격히 어두워집니다.",
+    description: "마왕의 성 내부로 들어가며 분위기가 어두워집니다.",
   },
   {
     id: 5,
@@ -150,7 +113,7 @@ const PHASES: Phase[] = [
     theme: "결투",
     sky: "from-[#4a1010] via-[#9d0208] to-[#ffba08]",
     accent: "#ffd166",
-    description: "짧고 거대한 결전. 모든 에너지가 한곳에 몰립니다.",
+    description: "짧고 거대한 결전 구간입니다.",
   },
   {
     id: 6,
@@ -160,7 +123,7 @@ const PHASES: Phase[] = [
     theme: "승리",
     sky: "from-[#6ec6ff] via-[#bde0fe] to-[#d8f3dc]",
     accent: "#2a9d8f",
-    description: "전투가 끝나고 평화로운 풍경이 다시 펼쳐집니다.",
+    description: "전투가 끝나고 평화로운 풍경이 펼쳐집니다.",
   },
   {
     id: 7,
@@ -170,7 +133,7 @@ const PHASES: Phase[] = [
     theme: "엔딩",
     sky: "from-[#1d3557] via-[#457b9d] to-[#f1faee]",
     accent: "#f1fa8c",
-    description: "옛날이야기의 마지막 페이지가 닫힙니다.",
+    description: "옛날이야기의 마지막 페이지입니다.",
   },
 ];
 
@@ -178,60 +141,59 @@ const getCurrentPhase = (time: number): Phase =>
   PHASES.find((phase) => time >= phase.start && time < phase.end) ??
   PHASES[PHASES.length - 1];
 
-const getVisibleObstacles = (time: number): Obstacle[] => {
-  const visible: Obstacle[] = [];
-  const aheadWindow = 6;
-  const behindWindow = 1.2;
+const getObstacleEmoji = (
+  phaseId: number,
+  type: Obstacle["type"],
+  variant: number,
+) => {
+  if (phaseId <= 2) {
+    return type === "flare" ? "✨" : ["📜", "🪵", "🥁"][variant % 3];
+  }
+
+  if (phaseId === 3) {
+    return type === "flare" ? "🦋" : ["🌲", "🍃", "🌿"][variant % 3];
+  }
+
+  if (phaseId === 4) {
+    return type === "flare" ? "🔥" : ["🪨", "🕸️", "🦴"][variant % 3];
+  }
+
+  if (phaseId === 5) {
+    return type === "flare" ? "💥" : ["⚔️", "👑", "🛡️"][variant % 3];
+  }
+
+  return type === "flare" ? "⭐" : ["🌼", "🎖️", "🕊️"][variant % 3];
+};
+
+const buildObstacleCourse = (): Obstacle[] => {
+  const obstacles: Obstacle[] = [];
+  const safeStart = 3;
 
   PHASES.forEach((phase) => {
-    const begin = Math.max(phase.start, time - behindWindow);
-    const finish = Math.min(phase.end, time + aheadWindow);
-    const step = phase.id >= 4 ? 1.35 : 2.05;
-    const offset = phase.id * 0.41;
+    let marker = Math.max(
+      phase.start + 0.8,
+      phase.id === 1 ? safeStart + 0.35 : phase.start + 0.8,
+    );
 
-    for (
-      let marker = phase.start + offset;
-      marker < phase.end;
-      marker += step
-    ) {
-      if (marker < begin || marker > finish) {
-        continue;
-      }
+    while (marker < phase.end - 1.1) {
+      const gapMin = phase.id >= 5 ? 1.05 : phase.id >= 3 ? 1.3 : 1.6;
+      const gapMax = phase.id >= 5 ? 1.85 : phase.id >= 3 ? 2.3 : 2.9;
+      const type: Obstacle["type"] = Math.random() < 0.26 ? "flare" : "ground";
+      const variant = Math.floor(Math.random() * 6);
 
-      const variant = Math.round(marker * 10) % 4;
-      const type = variant === 3 ? "flare" : "ground";
-      const emoji =
-        phase.id <= 2
-          ? type === "flare"
-            ? "✨"
-            : ["📜", "🪵", "🥁"][variant % 3]
-          : phase.id === 3
-            ? type === "flare"
-              ? "🦋"
-              : ["🌲", "🍃", "🌿"][variant % 3]
-            : phase.id === 4
-              ? type === "flare"
-                ? "🔥"
-                : ["🪨", "🕸️", "🦴"][variant % 3]
-              : phase.id === 5
-                ? type === "flare"
-                  ? "💥"
-                  : ["⚔️", "👑", "🛡️"][variant % 3]
-                : type === "flare"
-                  ? "⭐"
-                  : ["🌼", "🎖️", "🕊️"][variant % 3];
-
-      visible.push({
-        key: `${phase.id}-${marker.toFixed(2)}`,
-        emoji,
+      obstacles.push({
+        key: `${phase.id}-${marker.toFixed(3)}`,
+        emoji: getObstacleEmoji(phase.id, type, variant),
         time: marker,
         type,
         size: phase.id >= 5 ? "text-4xl" : "text-3xl",
       });
+
+      marker += gapMin + Math.random() * (gapMax - gapMin);
     }
   });
 
-  return visible;
+  return obstacles;
 };
 
 const formatTime = (seconds: number): string => {
@@ -253,46 +215,38 @@ const getSavedBestScore = (): number => {
 export default function AdventureGame() {
   const { token } = useAuthStore();
   const { addToast } = useToastStore();
-  const playerRef = useRef<PlayerInstance | null>(null);
-  const timelineRafRef = useRef<number | null>(null);
-  const physicsRafRef = useRef<number | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const lastFrameTsRef = useRef<number | null>(null);
   const jumpYRef = useRef(0);
   const jumpVelocityRef = useRef(0);
-  const lastPhysicsTsRef = useRef<number | null>(null);
-  const passedObstacleKeysRef = useRef<Set<string>>(new Set());
-  const phaseUnlocksRef = useRef<Set<number>>(new Set([1]));
-  const intentionalPauseRef = useRef(false);
-  const awardedCodesRef = useRef<Set<string>>(new Set());
-  const attemptStartPhaseIdRef = useRef(1);
-  const runStateRef = useRef<RunState>("ready");
-  const timelineTimeRef = useRef(0);
   const remainingAirJumpRef = useRef(1);
-  const lastJumpInputTsRef = useRef(0);
-  const runClockOriginRef = useRef(0);
+  const passedObstacleKeysRef = useRef<Set<string>>(new Set());
+  const awardedCodesRef = useRef<Set<string>>(new Set());
+  const runStateRef = useRef<RunState>("ready");
+  const courseTimeRef = useRef(0);
 
-  const [apiReady, setApiReady] = useState(false);
-  const [playerReady, setPlayerReady] = useState(false);
-  const [playerState, setPlayerState] = useState<PlayerStateValue>(-1);
   const [runState, setRunState] = useState<RunState>("ready");
-  const [timelineTime, setTimelineTime] = useState(0);
-  const [duration, setDuration] = useState(433);
+  const [courseTime, setCourseTime] = useState(0);
   const [jumpHeight, setJumpHeight] = useState(0);
   const [currentScore, setCurrentScore] = useState(0);
   const [bestScore, setBestScore] = useState(() => getSavedBestScore());
-  const [successfulJumps, setSuccessfulJumps] = useState(0);
-  const [unlockedPhaseIds, setUnlockedPhaseIds] = useState<number[]>([1]);
-  const [selectedRetryPhaseId, setSelectedRetryPhaseId] = useState(1);
-  const [attemptStartTime, setAttemptStartTime] = useState(0);
+  const [obstacles, setObstacles] = useState<Obstacle[]>(() =>
+    buildObstacleCourse(),
+  );
   const [deathMessage, setDeathMessage] = useState(
     "장애물에 부딪혀 여정이 중단되었습니다.",
   );
 
-  const phase = useMemo(() => getCurrentPhase(timelineTime), [timelineTime]);
+  const phase = useMemo(() => getCurrentPhase(courseTime), [courseTime]);
   const visibleObstacles = useMemo(
-    () => getVisibleObstacles(timelineTime),
-    [timelineTime],
+    () =>
+      obstacles.filter(
+        (obstacle) =>
+          obstacle.time >= courseTime - 1.2 && obstacle.time <= courseTime + 6,
+      ),
+    [courseTime, obstacles],
   );
-  const progress = Math.min(timelineTime / duration, 1);
+  const progress = Math.min(courseTime / PHASES[PHASES.length - 1].end, 1);
   const isRunning = runState === "running";
 
   useEffect(() => {
@@ -300,257 +254,102 @@ export default function AdventureGame() {
   }, [runState]);
 
   useEffect(() => {
-    timelineTimeRef.current = timelineTime;
-  }, [timelineTime]);
+    courseTimeRef.current = courseTime;
+  }, [courseTime]);
 
   useEffect(() => {
-    if (window.YT?.Player) {
-      setApiReady(true);
+    if (runState !== "running") {
+      lastFrameTsRef.current = null;
       return;
     }
 
-    const script = document.createElement("script");
-    script.src = "https://www.youtube.com/iframe_api";
-    script.async = true;
-
-    const previousHandler = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => {
-      previousHandler?.();
-      setApiReady(true);
-    };
-
-    document.body.appendChild(script);
-
-    return () => {
-      window.onYouTubeIframeAPIReady = previousHandler;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!apiReady || playerRef.current || !window.YT?.Player) {
-      return;
-    }
-
-    playerRef.current = new window.YT.Player("rico-adventure-player", {
-      videoId: YOUTUBE_VIDEO_ID,
-      playerVars: {
-        autoplay: 0,
-        controls: 0,
-        disablekb: 1,
-        fs: 0,
-        iv_load_policy: 3,
-        rel: 0,
-        modestbranding: 1,
-        playsinline: 1,
-        enablejsapi: 1,
-        origin: window.location.origin,
-      },
-      events: {
-        onReady: (event) => {
-          setPlayerReady(true);
-          setDuration(Math.max(event.target.getDuration() || 0, 433));
-        },
-        onStateChange: (event) => {
-          setPlayerState(event.data);
-
-          if (
-            event.data === 2 &&
-            runStateRef.current === "running" &&
-            !intentionalPauseRef.current
-          ) {
-            event.target.playVideo();
-            return;
-          }
-
-          if (event.data === 0 && runStateRef.current === "running") {
-            intentionalPauseRef.current = true;
-            setRunState("completed");
-          }
-        },
-      },
-    });
-
-    return () => {
-      playerRef.current?.destroy();
-      playerRef.current = null;
-    };
-  }, [apiReady]);
-
-  useEffect(() => {
     const tick = (ts: number) => {
-      const player = playerRef.current;
-      let nextTime = timelineTimeRef.current;
-
-      if (player) {
-        setDuration(Math.max(player.getDuration() || 0, 433));
-      }
-
-      if (runStateRef.current === "running") {
-        nextTime = Math.min(
-          Math.max(0, (ts - runClockOriginRef.current) / 1000),
-          PHASES[PHASES.length - 1].end,
-        );
-      } else if (player && runStateRef.current === "ready") {
-        nextTime = player.getCurrentTime() || 0;
-      }
-
-      if (Math.abs(nextTime - timelineTimeRef.current) > 0.0001) {
-        timelineTimeRef.current = nextTime;
-        setTimelineTime(nextTime);
-      }
-
-      if (
-        runStateRef.current === "running" &&
-        nextTime >= PHASES[PHASES.length - 1].end
-      ) {
-        intentionalPauseRef.current = true;
-        playerRef.current?.pauseVideo();
-        setRunState("completed");
-      }
-
-      timelineRafRef.current = requestAnimationFrame(tick);
-    };
-
-    timelineRafRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (timelineRafRef.current !== null) {
-        cancelAnimationFrame(timelineRafRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    const tick = (ts: number) => {
-      const previousTs = lastPhysicsTsRef.current ?? ts;
+      const previousTs = lastFrameTsRef.current ?? ts;
       const delta = Math.min((ts - previousTs) / 1000, 0.04);
-      lastPhysicsTsRef.current = ts;
+      lastFrameTsRef.current = ts;
 
-      if (runState === "running") {
-        jumpVelocityRef.current -= GRAVITY * delta;
-        jumpYRef.current = Math.max(
-          0,
-          jumpYRef.current + jumpVelocityRef.current * delta,
-        );
+      jumpVelocityRef.current -= GRAVITY * delta;
+      jumpYRef.current = Math.max(
+        0,
+        jumpYRef.current + jumpVelocityRef.current * delta,
+      );
 
-        if (jumpYRef.current === 0 && jumpVelocityRef.current < 0) {
-          jumpVelocityRef.current = 0;
-          remainingAirJumpRef.current = 1;
-        }
-
-        setJumpHeight(jumpYRef.current);
-      } else if (jumpYRef.current !== 0 || jumpVelocityRef.current !== 0) {
-        jumpYRef.current = 0;
+      if (jumpYRef.current === 0 && jumpVelocityRef.current < 0) {
         jumpVelocityRef.current = 0;
         remainingAirJumpRef.current = 1;
-        setJumpHeight(0);
       }
 
-      physicsRafRef.current = requestAnimationFrame(tick);
+      const nextTime = Math.min(
+        courseTimeRef.current + delta,
+        PHASES[PHASES.length - 1].end,
+      );
+
+      for (const obstacle of obstacles) {
+        if (passedObstacleKeysRef.current.has(obstacle.key)) {
+          continue;
+        }
+
+        const x = PLAYER_X + (obstacle.time - nextTime) * PIXELS_PER_SECOND;
+        const overlapsPlayer = Math.abs(x - PLAYER_X) < 18;
+
+        if (overlapsPlayer) {
+          const hitGroundObstacle =
+            obstacle.type === "ground" && jumpYRef.current < GROUND_SAFE_HEIGHT;
+          const hitFlareObstacle =
+            obstacle.type === "flare" &&
+            jumpYRef.current > FLARE_COLLISION_HEIGHT;
+
+          if (hitGroundObstacle || hitFlareObstacle) {
+            setDeathMessage(
+              obstacle.type === "ground"
+                ? "타이밍을 놓쳐 장애물을 뛰어넘지 못했습니다."
+                : "점프가 너무 높아 불꽃 이펙트에 닿았습니다.",
+            );
+            setRunState("gameover");
+            setJumpHeight(jumpYRef.current);
+            setCourseTime(nextTime);
+            courseTimeRef.current = nextTime;
+            return;
+          }
+        }
+
+        if (x < PLAYER_X - 22) {
+          passedObstacleKeysRef.current.add(obstacle.key);
+        }
+      }
+
+      const nextScore =
+        Math.floor(nextTime * 100) + passedObstacleKeysRef.current.size * 20;
+
+      if (nextScore > bestScore) {
+        setBestScore(nextScore);
+        window.localStorage.setItem(BEST_SCORE_KEY, String(nextScore));
+      }
+
+      setJumpHeight(jumpYRef.current);
+      setCourseTime(nextTime);
+      setCurrentScore(nextScore);
+      courseTimeRef.current = nextTime;
+
+      if (nextTime >= PHASES[PHASES.length - 1].end) {
+        setRunState("completed");
+        return;
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
     };
 
-    physicsRafRef.current = requestAnimationFrame(tick);
+    rafRef.current = requestAnimationFrame(tick);
+
     return () => {
-      if (physicsRafRef.current !== null) {
-        cancelAnimationFrame(physicsRafRef.current);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [runState]);
+  }, [bestScore, obstacles, runState]);
 
   useEffect(() => {
-    if (runState !== "running") {
-      return;
-    }
-
-    PHASES.forEach((item) => {
-      if (timelineTime >= item.end) {
-        const nextPhase = PHASES.find(
-          (candidate) => candidate.id === item.id + 1,
-        );
-        if (nextPhase && !phaseUnlocksRef.current.has(nextPhase.id)) {
-          const nextUnlocks = new Set(phaseUnlocksRef.current);
-          nextUnlocks.add(nextPhase.id);
-          phaseUnlocksRef.current = nextUnlocks;
-          setUnlockedPhaseIds(Array.from(nextUnlocks).sort((a, b) => a - b));
-          addToast({
-            title: `${nextPhase.title} Open`,
-            description: `${nextPhase.theme} 체크포인트가 열렸습니다.`,
-            icon: "💾",
-          });
-        }
-      }
-    });
-  }, [addToast, runState, timelineTime]);
-
-  useEffect(() => {
-    if (runState !== "running") {
-      return;
-    }
-
-    const elapsed = Math.max(0, timelineTime - attemptStartTime);
-    const score = Math.floor(elapsed * 10) + successfulJumps * 50;
-    setCurrentScore(score);
-
-    if (score > bestScore) {
-      setBestScore(score);
-      window.localStorage.setItem(BEST_SCORE_KEY, String(score));
-    }
-  }, [attemptStartTime, bestScore, runState, successfulJumps, timelineTime]);
-
-  useEffect(() => {
-    if (runState !== "running") {
-      return;
-    }
-
-    for (const obstacle of visibleObstacles) {
-      if (passedObstacleKeysRef.current.has(obstacle.key)) {
-        continue;
-      }
-
-      const x = PLAYER_X + (obstacle.time - timelineTime) * PIXELS_PER_SECOND;
-      const overlapsPlayer = Math.abs(x - PLAYER_X) < 18;
-
-      if (overlapsPlayer) {
-        const hitGroundObstacle =
-          obstacle.type === "ground" && jumpYRef.current < GROUND_SAFE_HEIGHT;
-        const hitFlareObstacle =
-          obstacle.type === "flare" &&
-          jumpYRef.current > FLARE_COLLISION_HEIGHT;
-
-        if (hitGroundObstacle || hitFlareObstacle) {
-          setDeathMessage(
-            obstacle.type === "ground"
-              ? "타이밍을 놓쳐 장애물을 뛰어넘지 못했습니다."
-              : "점프가 너무 높아 불꽃 이펙트에 닿았습니다.",
-          );
-          intentionalPauseRef.current = true;
-          playerRef.current?.pauseVideo();
-          playerRef.current?.seekTo(attemptStartTime, true);
-          timelineTimeRef.current = attemptStartTime;
-          setTimelineTime(attemptStartTime);
-          setRunState("gameover");
-          return;
-        }
-      }
-
-      if (x < PLAYER_X - 22) {
-        passedObstacleKeysRef.current.add(obstacle.key);
-        if (
-          obstacle.type === "ground" &&
-          jumpYRef.current >= GROUND_SAFE_HEIGHT
-        ) {
-          setSuccessfulJumps((prev) => prev + 1);
-        }
-      }
-    }
-  }, [attemptStartTime, runState, timelineTime, visibleObstacles]);
-
-  useEffect(() => {
-    if (runState !== "completed") {
-      return;
-    }
-
-    const crossedEnding = timelineTime >= PHASES[PHASES.length - 1].end - 1;
-    if (!crossedEnding || !token) {
+    if (runState !== "completed" || !token) {
       return;
     }
 
@@ -578,7 +377,10 @@ export default function AdventureGame() {
           return;
         }
 
-        addToast({ title, description, icon });
+        const newlyAwarded = (await response.json()) === true;
+        if (newlyAwarded) {
+          addToast({ title, description, icon });
+        }
       } catch (error) {
         console.error(`Failed to award ${code}`, error);
       }
@@ -590,72 +392,57 @@ export default function AdventureGame() {
       "마왕을 물리치고 긴 여정을 끝마쳤다.",
       "⚔️",
     );
+    void award(
+      "R-GEND-HERO",
+      "R전드 용사",
+      "첫 구간부터 끝까지 한 번에 여정을 완주했다.",
+      "👑",
+    );
+  }, [addToast, runState, token]);
 
-    if (attemptStartPhaseIdRef.current === 1) {
-      void award(
-        "R-GEND-HERO",
-        "R전드 용사",
-        "1단계부터 끝까지 한 번에 여정을 완주했다.",
-        "👑",
-      );
-    }
-  }, [addToast, runState, timelineTime, token]);
-
-  const startAttempt = (phaseId: number) => {
-    const targetPhase = PHASES.find((item) => item.id === phaseId);
-    const player = playerRef.current;
-
-    if (!targetPhase || !player) {
-      return;
+  const resetRun = () => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
     }
 
-    intentionalPauseRef.current = false;
-    attemptStartPhaseIdRef.current = phaseId;
-    passedObstacleKeysRef.current = new Set();
+    lastFrameTsRef.current = null;
     jumpYRef.current = 0;
     jumpVelocityRef.current = 0;
     remainingAirJumpRef.current = 1;
-    lastJumpInputTsRef.current = 0;
-    lastPhysicsTsRef.current = null;
-    setSelectedRetryPhaseId(phaseId);
-    setAttemptStartTime(targetPhase.start);
-    timelineTimeRef.current = targetPhase.start;
-    setTimelineTime(targetPhase.start);
-    runClockOriginRef.current = performance.now() - targetPhase.start * 1000;
+    passedObstacleKeysRef.current = new Set();
+    setObstacles(buildObstacleCourse());
     setJumpHeight(0);
+    setCourseTime(0);
     setCurrentScore(0);
-    setSuccessfulJumps(0);
     setDeathMessage("장애물에 부딪혀 여정이 중단되었습니다.");
-    setRunState("running");
-
-    player.seekTo(targetPhase.start, true);
-    player.playVideo();
+    courseTimeRef.current = 0;
   };
 
   const handleStart = () => {
-    startAttempt(selectedRetryPhaseId);
+    resetRun();
+    setRunState("running");
+  };
+
+  const handleRetry = () => {
+    resetRun();
+    setRunState("running");
   };
 
   const handlePauseToggle = () => {
     if (runState === "running") {
-      intentionalPauseRef.current = true;
-      playerRef.current?.pauseVideo();
       setRunState("paused");
       return;
     }
 
     if (runState === "paused") {
-      intentionalPauseRef.current = false;
-      runClockOriginRef.current =
-        performance.now() - timelineTimeRef.current * 1000;
-      playerRef.current?.seekTo(timelineTimeRef.current, true);
-      playerRef.current?.playVideo();
+      lastFrameTsRef.current = null;
       setRunState("running");
     }
   };
 
-  const performJump = (isDoubleJump: boolean) => {
-    if (runState !== "running") {
+  const performJump = () => {
+    if (runStateRef.current !== "running") {
       return;
     }
 
@@ -665,46 +452,31 @@ export default function AdventureGame() {
       return;
     }
 
-    if (isDoubleJump && remainingAirJumpRef.current > 0) {
+    if (remainingAirJumpRef.current > 0) {
       jumpVelocityRef.current = DOUBLE_JUMP_VELOCITY;
       remainingAirJumpRef.current -= 1;
     }
   };
 
   const handleJumpInput = () => {
-    const now = performance.now();
-    const isDoubleJump =
-      now - lastJumpInputTsRef.current <= DOUBLE_TAP_WINDOW_MS;
-    lastJumpInputTsRef.current = now;
-    performJump(isDoubleJump);
-  };
-
-  const handleDoubleJumpButton = () => {
-    lastJumpInputTsRef.current = performance.now();
-    performJump(true);
-  };
-
-  const handleRetry = () => {
-    startAttempt(selectedRetryPhaseId);
+    performJump();
   };
 
   const statusLabel =
     runState === "running"
-      ? playerState === 3
-        ? "Buffering"
-        : "Live Run"
-      : runState === "gameover"
-        ? "Game Over"
-        : runState === "paused"
-          ? "Paused"
-        : runState === "completed"
-          ? "Completed"
-          : "Ready";
+      ? "Live Run"
+      : runState === "paused"
+        ? "Paused"
+        : runState === "gameover"
+          ? "Game Over"
+          : runState === "completed"
+            ? "Completed"
+            : "Ready";
 
   return (
     <GameContainer
       title="위대한 모험"
-      desc="라떼는 말이야 마왕을 검 하나로 때려잡았다고"
+      desc="러너 코어만 남긴 디버그 버전"
       gameName="위대한 모험"
       helpSlides={ADVENTURE_TUTORIAL_SLIDES}
       className="relative overflow-hidden bg-[#f7f2e8] text-[#1d3557] select-none"
@@ -738,47 +510,29 @@ export default function AdventureGame() {
       }
     >
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <section className="grid gap-5 lg:grid-cols-[0.72fr_1.45fr_0.83fr]">
-          <section className="order-3 rounded-[2rem] border-4 border-[#102542]/10 bg-white/80 p-5 shadow-[0_18px_40px_rgba(17,24,39,0.08)] lg:order-1">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-black text-[#102542]">Music Sync</h3>
-              <span className="rounded-full bg-[#102542] px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-white">
-                {formatTime(timelineTime)} / {formatTime(duration)}
-              </span>
-            </div>
-
-            <div className="overflow-hidden rounded-[1.4rem] border border-[#102542]/10 bg-[#102542]">
-              <div
-                id="rico-adventure-player"
-                className="aspect-video w-full pointer-events-none"
-              />
-            </div>
-
-            <div className="mt-4 grid gap-3">
-              {(runState === "running" || runState === "paused") && (
-                <div className="rounded-[1.2rem] bg-[#102542] px-5 py-4 text-center text-sm font-black text-white">
-                  {runState === "paused" ? "Paused" : "Playback Locked"}
-                </div>
-              )}
-
-              {runState === "completed" && (
-                <button
-                  type="button"
-                  onClick={() => startAttempt(1)}
-                  className="w-full rounded-[1.2rem] bg-[#102542] px-5 py-4 text-base font-black text-white transition-transform hover:scale-[1.01]"
-                >
-                  처음부터 다시 도전
-                </button>
-              )}
-
+        <section className="grid gap-5 lg:grid-cols-[0.8fr_1.5fr_0.7fr]">
+          <section className="rounded-[2rem] border-4 border-[#102542]/10 bg-white/80 p-5 shadow-[0_18px_40px_rgba(17,24,39,0.08)]">
+            <div className="space-y-3">
+              <h3 className="text-lg font-black text-[#102542]">Runner Status</h3>
+              <div className="rounded-[1.2rem] bg-[#102542] px-4 py-3 text-sm font-black text-white">
+                {statusLabel}
+              </div>
               <div className="rounded-[1.2rem] border border-[#102542]/10 bg-[#fffaf2] px-4 py-3 text-sm font-bold text-[#365486]">
-                러닝 중에는 음악 시계와 코스가 같은 속도로 계속 이동합니다.
+                비디오/싱크 관련 코드는 잠시 제거했고, 배경 이동과 장애물 이동만
+                남긴 최소 러너 루프입니다.
+              </div>
+              <div className="rounded-[1.2rem] border border-[#102542]/10 bg-[#fffaf2] px-4 py-3 text-sm font-bold text-[#365486]">
+                코스가 오른쪽에서 왼쪽으로 흐르고, 캐릭터는 항상 같은 위치를
+                지킵니다.
+              </div>
+              <div className="rounded-[1.2rem] border border-[#102542]/10 bg-[#fffaf2] px-4 py-3 text-sm font-bold text-[#365486]">
+                {formatTime(courseTime)} / {formatTime(PHASES[PHASES.length - 1].end)}
               </div>
             </div>
           </section>
 
           <div
-            className={`order-1 relative overflow-hidden rounded-[2rem] border-4 border-white/70 bg-gradient-to-br ${phase.sky} p-4 shadow-[0_25px_80px_rgba(17,24,39,0.16)] lg:order-2`}
+            className={`relative overflow-hidden rounded-[2rem] border-4 border-white/70 bg-gradient-to-br ${phase.sky} p-4 shadow-[0_25px_80px_rgba(17,24,39,0.16)]`}
           >
             <div
               className="absolute inset-0 opacity-30"
@@ -810,14 +564,47 @@ export default function AdventureGame() {
               onPointerDown={handleJumpInput}
               className="relative h-[360px] w-full overflow-hidden rounded-[1.6rem] border border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0.04))] text-left sm:h-[420px]"
             >
-              <div className="absolute inset-x-0 bottom-0 h-[34%] bg-[linear-gradient(180deg,rgba(98,122,80,0.15),rgba(71,93,64,0.9))]" />
-              <div className="absolute inset-x-0 bottom-[28%] h-3 bg-white/30" />
+              <div className="absolute inset-0 bg-gradient-to-b from-white/25 via-transparent to-transparent" />
+
               <div
-                className="absolute inset-y-[55%] w-[140%] opacity-40"
+                className="absolute inset-y-[18%] left-[-140%] w-[280%] opacity-40"
                 style={{
                   backgroundImage:
-                    "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.8) 30%, transparent 60%)",
-                  transform: `translateX(${((timelineTime * 28) % 120) - 60}%)`,
+                    "radial-gradient(circle, rgba(255,255,255,0.9) 0 16%, transparent 17%)",
+                  backgroundSize: "160px 44px",
+                  transform: `translateX(-${(courseTime * 18) % 160}px)`,
+                }}
+              />
+
+              <div
+                className="absolute bottom-[30%] left-[-120%] h-16 w-[260%] opacity-30"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(90deg, transparent 0, rgba(255,255,255,0.55) 10%, transparent 20%)",
+                  backgroundSize: "220px 100%",
+                  transform: `translateX(-${(courseTime * 80) % 220}px)`,
+                }}
+              />
+
+              <div className="absolute inset-x-0 bottom-0 h-[34%] bg-[linear-gradient(180deg,rgba(98,122,80,0.12),rgba(71,93,64,0.95))]" />
+
+              <div
+                className="absolute inset-x-[-20%] bottom-[21%] h-7 opacity-70"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(90deg, rgba(66,99,63,0.25) 0 14%, transparent 14% 22%, rgba(66,99,63,0.2) 22% 34%, transparent 34% 44%)",
+                  backgroundSize: "180px 100%",
+                  transform: `translateX(-${(courseTime * 140) % 180}px)`,
+                }}
+              />
+
+              <div
+                className="absolute inset-x-[-25%] bottom-[17%] h-10"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(90deg, #7c5c3b 0 18%, transparent 18% 24%, #6b4f34 24% 42%, transparent 42% 48%)",
+                  backgroundSize: "210px 100%",
+                  transform: `translateX(-${(courseTime * 210) % 210}px)`,
                 }}
               />
 
@@ -829,12 +616,12 @@ export default function AdventureGame() {
               </div>
 
               <div className="absolute bottom-6 right-6 rounded-full bg-white/75 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#102542] shadow-lg">
-                Tap to Jump · Double Tap to Double Jump
+                Tap to Jump · One Extra Air Jump
               </div>
 
               {visibleObstacles.map((obstacle) => {
                 const x =
-                  PLAYER_X + (obstacle.time - timelineTime) * PIXELS_PER_SECOND;
+                  PLAYER_X + (obstacle.time - courseTime) * PIXELS_PER_SECOND;
                 const isPast = x < PLAYER_X - 18;
                 const isFlare = obstacle.type === "flare";
 
@@ -875,20 +662,18 @@ export default function AdventureGame() {
             </button>
 
             <div className="relative z-10 mt-4 flex flex-wrap gap-3">
-              {runState === "ready" && (
+              {(runState === "ready" ||
+                runState === "gameover" ||
+                runState === "completed") && (
                 <button
                   type="button"
-                  onClick={handleStart}
-                  disabled={!playerReady}
-                  className="rounded-[1.2rem] bg-[#102542] px-5 py-4 text-base font-black text-white transition-transform hover:scale-[1.01] disabled:cursor-wait disabled:opacity-60"
+                  onClick={runState === "ready" ? handleStart : handleRetry}
+                  className="rounded-[1.2rem] bg-[#102542] px-5 py-4 text-base font-black text-white transition-transform hover:scale-[1.01]"
                 >
-                  {playerReady ? "Play Stage" : "플레이어 준비 중..."}
+                  {runState === "ready" ? "Run Start" : "다시 도전"}
                 </button>
               )}
 
-              <div className="rounded-[1.2rem] bg-white/70 px-4 py-3 text-sm font-black text-[#102542]">
-                Live Run
-              </div>
               <button
                 type="button"
                 onClick={handleJumpInput}
@@ -896,14 +681,6 @@ export default function AdventureGame() {
                 className="rounded-[1.2rem] border-2 border-[#102542] bg-[#fffaf2] px-5 py-3 text-sm font-black text-[#102542] transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Jump
-              </button>
-              <button
-                type="button"
-                onClick={handleDoubleJumpButton}
-                disabled={!isRunning || jumpHeight <= 4}
-                className="rounded-[1.2rem] border-2 border-[#2a9d8f] bg-[#dff6f3] px-5 py-3 text-sm font-black text-[#166D77] transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Double Jump
               </button>
               {(runState === "running" || runState === "paused") && (
                 <button
@@ -917,56 +694,38 @@ export default function AdventureGame() {
             </div>
           </div>
 
-          <div className="order-2 flex flex-col gap-5 lg:order-3">
-            <section className="rounded-[2rem] border-4 border-[#102542]/10 bg-white/80 p-5 shadow-[0_18px_40px_rgba(17,24,39,0.08)]">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <h3 className="text-lg font-black text-[#102542]">
-                  Phase Save Points
-                </h3>
-                <span className="rounded-full bg-[#2a9d8f] px-3 py-1 text-xs font-black uppercase tracking-[0.2em] text-white">
-                  {successfulJumps} Jumps
-                </span>
-              </div>
-              <div className="space-y-2">
-                {PHASES.map((item) => {
-                  const active = item.id === phase.id;
-                  const unlocked = unlockedPhaseIds.includes(item.id);
-                  const selected = selectedRetryPhaseId === item.id;
+          <section className="rounded-[2rem] border-4 border-[#102542]/10 bg-white/80 p-5 shadow-[0_18px_40px_rgba(17,24,39,0.08)]">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h3 className="text-lg font-black text-[#102542]">Phase Preview</h3>
+              <span className="rounded-full bg-[#2a9d8f] px-3 py-1 text-xs font-black uppercase tracking-[0.2em] text-white">
+                {Math.round(progress * 100)}%
+              </span>
+            </div>
+            <div className="space-y-2">
+              {PHASES.map((item) => {
+                const active = item.id === phase.id;
 
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      disabled={!unlocked || isRunning}
-                      onClick={() => setSelectedRetryPhaseId(item.id)}
-                      className={`w-full rounded-[1.2rem] border px-4 py-3 text-left transition-colors ${active ? "border-[#102542] bg-[#102542] text-white" : selected ? "border-[#2a9d8f] bg-[#dff6f3] text-[#102542]" : "border-[#102542]/10 bg-[#fffaf2] text-[#102542]"} ${!unlocked || isRunning ? "cursor-not-allowed opacity-45" : ""}`}
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="text-xs font-black uppercase tracking-[0.22em] opacity-70">
-                            {item.title}
-                          </p>
-                          <p className="text-base font-black">{item.theme}</p>
-                        </div>
-                        <p className="text-sm font-bold">
-                          {formatTime(item.start)} - {formatTime(item.end)}
+                return (
+                  <div
+                    key={item.id}
+                    className={`w-full rounded-[1.2rem] border px-4 py-3 ${active ? "border-[#102542] bg-[#102542] text-white" : "border-[#102542]/10 bg-[#fffaf2] text-[#102542]"}`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-black uppercase tracking-[0.22em] opacity-70">
+                          {item.title}
                         </p>
+                        <p className="text-base font-black">{item.theme}</p>
                       </div>
-                    </button>
-                  );
-                })}
-              </div>
-              {(runState === "gameover" || runState === "completed") && (
-                <button
-                  type="button"
-                  onClick={handleRetry}
-                  className="mt-4 w-full rounded-[1.2rem] bg-[#2a9d8f] px-5 py-4 text-base font-black text-white transition-transform hover:scale-[1.01]"
-                >
-                  선택한 체크포인트에서 재시작
-                </button>
-              )}
-            </section>
-          </div>
+                      <p className="text-sm font-bold">
+                        {formatTime(item.start)} - {formatTime(item.end)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         </section>
       </div>
 
@@ -978,34 +737,16 @@ export default function AdventureGame() {
             className="w-full max-w-md rounded-[2rem] border-4 border-[#102542]/10 bg-[#fffaf2] p-6 text-center shadow-[0_30px_60px_rgba(0,0,0,0.22)]"
           >
             <div className="text-5xl">💥</div>
-            <h2 className="mt-3 text-2xl font-black text-[#102542]">
+            <h3 className="mt-3 text-2xl font-black text-[#102542]">
               Game Over
-            </h2>
-            <p className="mt-2 text-sm font-bold text-[#5c677d]">
+            </h3>
+            <p className="mt-3 text-base font-bold text-[#365486]">
               {deathMessage}
-            </p>
-            <div className="mt-4 grid grid-cols-2 gap-3 text-sm font-black">
-              <div className="rounded-2xl bg-[#102542] px-4 py-3 text-white">
-                <div className="text-[10px] uppercase tracking-[0.22em] opacity-70">
-                  Score
-                </div>
-                <div className="text-xl">{currentScore}</div>
-              </div>
-              <div className="rounded-2xl bg-[#2a9d8f] px-4 py-3 text-white">
-                <div className="text-[10px] uppercase tracking-[0.22em] opacity-80">
-                  Best
-                </div>
-                <div className="text-xl">{bestScore}</div>
-              </div>
-            </div>
-            <p className="mt-4 text-xs font-bold uppercase tracking-[0.22em] text-[#102542]">
-              Retry from{" "}
-              {PHASES.find((item) => item.id === selectedRetryPhaseId)?.title}
             </p>
             <button
               type="button"
               onClick={handleRetry}
-              className="mt-4 w-full rounded-[1.2rem] bg-[#102542] px-5 py-4 text-base font-black text-white transition-transform hover:scale-[1.01]"
+              className="mt-6 rounded-[1.2rem] bg-[#102542] px-6 py-4 text-base font-black text-white transition-transform hover:scale-[1.01]"
             >
               다시 도전
             </button>
