@@ -1,24 +1,25 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { GameContainer } from "../components/common/GameContainer";
 import type { TutorialSlide } from "../components/common/TutorialBanner";
 import {
   DndContext,
   DragOverlay,
-  useSensor,
-  useSensors,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useDraggable,
   useDroppable,
+  useSensor,
+  useSensors,
 } from "@dnd-kit/core";
-import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core";
-import { motion, AnimatePresence } from "framer-motion";
+import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import { AnimatePresence, motion } from "framer-motion";
 import confetti from "canvas-confetti";
 
 const PUZZLE_TUTORIAL_SLIDES: TutorialSlide[] = [
   {
     title: "🧩 퍼즐 맞추기",
-    lines: ["조각을 꾸욱 눌러 퍼즐을 맞추자", "알맞은 위치에 놓아줘!"],
+    lines: ["조각을 꾸~욱 눌러 퍼즐을 맞추자", "알맞은 위치에 놓아줘!"],
     showArrows: false,
   },
   {
@@ -36,58 +37,113 @@ const PUZZLE_TUTORIAL_SLIDES: TutorialSlide[] = [
 // --- Constants ---
 const ROWS = 4;
 const COLS = 4;
-const PIECE_SIZE = 100; // Reduced size to fit screen (Total 400x400)
-const PIECE_BLEED = 18;
-const PIECE_RENDER_SIZE = PIECE_SIZE + PIECE_BLEED * 2;
+const PIECE_SIZE = 100;
+const CONNECTOR_NECK = 18;
+const CONNECTOR_DEPTH = 16;
+const BOARD_SIZE = {
+  width: COLS * PIECE_SIZE,
+  height: ROWS * PIECE_SIZE,
+};
+const MIN_DISPLAY_PIECE_SIZE = 64;
+const MOUSE_DRAG_DISTANCE_PX = 4;
+const TOUCH_DRAG_ACTIVATION_DELAY_MS = 90;
+const TOUCH_DRAG_TOLERANCE_PX = 10;
+const TAP_ROTATE_MAX_MS = 180;
 const IMAGE_URL = "/assets/rico_puzzle_sample.png";
 
 // --- Types ---
+type EdgeValue = -1 | 0 | 1;
+
+type EdgeTypes = {
+  top: EdgeValue;
+  right: EdgeValue;
+  bottom: EdgeValue;
+  left: EdgeValue;
+};
+
+type Bounds = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+type PiecePadding = {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+};
+
 interface PuzzlePiece {
   id: number;
-  correctX: number; // grid column index
-  correctY: number; // grid row index
-  currentX: number; // pixel x position (scattered)
-  currentY: number; // pixel y position (scattered)
-  rotation: number; // 0, 90, 180, 270
-  isPlaced: boolean; // locked in correct position
-  shapePath: string; // SVG path for clip-path
-  edgeTypes: { top: number; right: number; bottom: number; left: number }; // 0=flat, 1=out, -1=in
+  correctX: number;
+  correctY: number;
+  currentX: number;
+  currentY: number;
+  rotation: number;
+  isPlaced: boolean;
+  shapePath: string;
+  edgeTypes: EdgeTypes;
+  padding: PiecePadding;
+  expandedBounds: Bounds;
+  cropArea: Bounds;
 }
 
-// --- Helper to Generate Jigsaw Shapes ---
-const createInterlockingPath = (edges: PuzzlePiece["edgeTypes"]) => {
-  const s = PIECE_SIZE;
-  const o = PIECE_BLEED;
-  const end = PIECE_BLEED + s;
-  const mid = o + s / 2;
-  const neck = 18;
-  const tab = 16;
+// --- Helpers ---
+const getDisplayPieceSize = (viewportWidth: number) =>
+  Math.max(
+    MIN_DISPLAY_PIECE_SIZE,
+    Math.min(PIECE_SIZE, Math.floor(viewportWidth * 0.18)),
+  );
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(Math.max(value, min), max);
+
+const createInterlockingPath = (
+  edges: PuzzlePiece["edgeTypes"],
+  padding: PiecePadding,
+) => {
+  const x0 = padding.left;
+  const y0 = padding.top;
+  const x1 = x0 + PIECE_SIZE;
+  const y1 = y0 + PIECE_SIZE;
+  const midX = x0 + PIECE_SIZE / 2;
+  const midY = y0 + PIECE_SIZE / 2;
 
   const top =
     edges.top === 0
-      ? `L ${end} ${o}`
-      : `L ${mid - neck} ${o} C ${mid - 10} ${o + edges.top * -4}, ${mid - 8} ${o + edges.top * -tab}, ${mid} ${o + edges.top * -tab}
-           C ${mid + 8} ${o + edges.top * -tab}, ${mid + 10} ${o + edges.top * -4}, ${mid + neck} ${o} L ${end} ${o}`;
+      ? `L ${x1} ${y0}`
+      : `L ${midX - CONNECTOR_NECK} ${y0}
+         C ${midX - 10} ${y0 + edges.top * -4}, ${midX - 8} ${y0 + edges.top * -CONNECTOR_DEPTH}, ${midX} ${y0 + edges.top * -CONNECTOR_DEPTH}
+         C ${midX + 8} ${y0 + edges.top * -CONNECTOR_DEPTH}, ${midX + 10} ${y0 + edges.top * -4}, ${midX + CONNECTOR_NECK} ${y0}
+         L ${x1} ${y0}`;
 
   const right =
     edges.right === 0
-      ? `L ${end} ${end}`
-      : `L ${end} ${mid - neck} C ${end + edges.right * 4} ${mid - 10}, ${end + edges.right * tab} ${mid - 8}, ${end + edges.right * tab} ${mid}
-           C ${end + edges.right * tab} ${mid + 8}, ${end + edges.right * 4} ${mid + 10}, ${end} ${mid + neck} L ${end} ${end}`;
+      ? `L ${x1} ${y1}`
+      : `L ${x1} ${midY - CONNECTOR_NECK}
+         C ${x1 + edges.right * 4} ${midY - 10}, ${x1 + edges.right * CONNECTOR_DEPTH} ${midY - 8}, ${x1 + edges.right * CONNECTOR_DEPTH} ${midY}
+         C ${x1 + edges.right * CONNECTOR_DEPTH} ${midY + 8}, ${x1 + edges.right * 4} ${midY + 10}, ${x1} ${midY + CONNECTOR_NECK}
+         L ${x1} ${y1}`;
 
   const bottom =
     edges.bottom === 0
-      ? `L ${o} ${end}`
-      : `L ${mid + neck} ${end} C ${mid + 10} ${end + edges.bottom * 4}, ${mid + 8} ${end + edges.bottom * tab}, ${mid} ${end + edges.bottom * tab}
-           C ${mid - 8} ${end + edges.bottom * tab}, ${mid - 10} ${end + edges.bottom * 4}, ${mid - neck} ${end} L ${o} ${end}`;
+      ? `L ${x0} ${y1}`
+      : `L ${midX + CONNECTOR_NECK} ${y1}
+         C ${midX + 10} ${y1 + edges.bottom * 4}, ${midX + 8} ${y1 + edges.bottom * CONNECTOR_DEPTH}, ${midX} ${y1 + edges.bottom * CONNECTOR_DEPTH}
+         C ${midX - 8} ${y1 + edges.bottom * CONNECTOR_DEPTH}, ${midX - 10} ${y1 + edges.bottom * 4}, ${midX - CONNECTOR_NECK} ${y1}
+         L ${x0} ${y1}`;
 
   const left =
     edges.left === 0
-      ? `L ${o} ${o}`
-      : `L ${o} ${mid + neck} C ${o + edges.left * -4} ${mid + 10}, ${o + edges.left * -tab} ${mid + 8}, ${o + edges.left * -tab} ${mid}
-           C ${o + edges.left * -tab} ${mid - 8}, ${o + edges.left * -4} ${mid - 10}, ${o} ${mid - neck} L ${o} ${o}`;
+      ? `L ${x0} ${y0}`
+      : `L ${x0} ${midY + CONNECTOR_NECK}
+         C ${x0 + edges.left * -4} ${midY + 10}, ${x0 + edges.left * -CONNECTOR_DEPTH} ${midY + 8}, ${x0 + edges.left * -CONNECTOR_DEPTH} ${midY}
+         C ${x0 + edges.left * -CONNECTOR_DEPTH} ${midY - 8}, ${x0 + edges.left * -4} ${midY - 10}, ${x0} ${midY - CONNECTOR_NECK}
+         L ${x0} ${y0}`;
 
-  return `M ${o} ${o} ${top} ${right} ${bottom} ${left} Z`
+  return `M ${x0} ${y0} ${top} ${right} ${bottom} ${left} Z`
     .replace(/\s+/g, " ")
     .trim();
 };
@@ -101,98 +157,345 @@ const createPieces = () => {
   );
 
   const pieces: PuzzlePiece[] = [];
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      // 1 = Out, -1 = In, 0 = Flat
-      const top = r === 0 ? 0 : internalHorizontal[r - 1][c] === 1 ? -1 : 1;
-      const myBottom = r === ROWS - 1 ? 0 : internalHorizontal[r][c];
-      const myRight = c === COLS - 1 ? 0 : internalVertical[r][c];
+
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      const top = row === 0 ? 0 : internalHorizontal[row - 1][col] === 1 ? -1 : 1;
+      const right = col === COLS - 1 ? 0 : internalVertical[row][col];
+      const bottom = row === ROWS - 1 ? 0 : internalHorizontal[row][col];
+      const left = col === 0 ? 0 : internalVertical[row][col - 1] === 1 ? -1 : 1;
+      const padding = {
+        top: top === 1 ? CONNECTOR_DEPTH : 0,
+        right: right === 1 ? CONNECTOR_DEPTH : 0,
+        bottom: bottom === 1 ? CONNECTOR_DEPTH : 0,
+        left: left === 1 ? CONNECTOR_DEPTH : 0,
+      } satisfies PiecePadding;
+      const baseX = col * PIECE_SIZE;
+      const baseY = row * PIECE_SIZE;
+      const expandedBounds = {
+        x: baseX - padding.left,
+        y: baseY - padding.top,
+        width: PIECE_SIZE + padding.left + padding.right,
+        height: PIECE_SIZE + padding.top + padding.bottom,
+      };
+      const edgeTypes = { top, right, bottom, left } satisfies EdgeTypes;
 
       pieces.push({
-        id: r * COLS + c,
-        correctX: c,
-        correctY: r,
+        id: row * COLS + col,
+        correctX: col,
+        correctY: row,
         currentX: 0,
         currentY: 0,
         rotation: Math.floor(Math.random() * 4) * 90,
         isPlaced: false,
-        edgeTypes: {
-          top: top,
-          right: myRight,
-          bottom: myBottom,
-          left: c === 0 ? 0 : internalVertical[r][c - 1] === 1 ? -1 : 1,
-        },
-        shapePath: "", // Will calculate
+        shapePath: createInterlockingPath(edgeTypes, padding),
+        edgeTypes,
+        padding,
+        expandedBounds,
+        cropArea: { ...expandedBounds },
       });
     }
   }
 
-  pieces.forEach((p) => {
-    p.shapePath = createInterlockingPath(p.edgeTypes);
-  });
-
   return pieces;
+};
+
+type SpawnZone = Bounds;
+
+const getLocalBounds = (childRect: DOMRect, parentRect: DOMRect): Bounds => ({
+  x: childRect.left - parentRect.left,
+  y: childRect.top - parentRect.top,
+  width: childRect.width,
+  height: childRect.height,
+});
+
+const getScaledBounds = (piece: PuzzlePiece, scale: number) => ({
+  renderWidth: piece.expandedBounds.width * scale,
+  renderHeight: piece.expandedBounds.height * scale,
+  offsetX: piece.padding.left * scale,
+  offsetY: piece.padding.top * scale,
+});
+
+const clampPiecePosition = (
+  piece: PuzzlePiece,
+  nextBaseX: number,
+  nextBaseY: number,
+  containerWidth: number,
+  containerHeight: number,
+  scale: number,
+) => {
+  const { renderWidth, renderHeight, offsetX, offsetY } = getScaledBounds(
+    piece,
+    scale,
+  );
+  const margin = 12;
+  const expandedLeft = clamp(
+    nextBaseX - offsetX,
+    margin,
+    Math.max(margin, containerWidth - renderWidth - margin),
+  );
+  const expandedTop = clamp(
+    nextBaseY - offsetY,
+    margin,
+    Math.max(margin, containerHeight - renderHeight - margin),
+  );
+
+  return {
+    currentX: expandedLeft + offsetX,
+    currentY: expandedTop + offsetY,
+  };
+};
+
+const buildSpawnZones = (
+  containerBounds: Bounds,
+  boardBounds: Bounds,
+): SpawnZone[] => {
+  const margin = 16;
+
+  return [
+    {
+      x: margin,
+      y: margin,
+      width: boardBounds.x - margin * 2,
+      height: containerBounds.height - margin * 2,
+    },
+    {
+      x: boardBounds.x + boardBounds.width + margin,
+      y: margin,
+      width:
+        containerBounds.width - (boardBounds.x + boardBounds.width) - margin * 2,
+      height: containerBounds.height - margin * 2,
+    },
+    {
+      x: margin,
+      y: margin,
+      width: containerBounds.width - margin * 2,
+      height: boardBounds.y - margin * 2,
+    },
+    {
+      x: margin,
+      y: boardBounds.y + boardBounds.height + margin,
+      width: containerBounds.width - margin * 2,
+      height:
+        containerBounds.height - (boardBounds.y + boardBounds.height) - margin * 2,
+    },
+  ].filter((zone) => zone.width > 24 && zone.height > 24);
+};
+
+const overlapsTooMuch = (a: Bounds, b: Bounds) => {
+  const inset = 0.28;
+  const ax1 = a.x + a.width * inset;
+  const ay1 = a.y + a.height * inset;
+  const ax2 = a.x + a.width * (1 - inset);
+  const ay2 = a.y + a.height * (1 - inset);
+  const bx1 = b.x + b.width * inset;
+  const by1 = b.y + b.height * inset;
+  const bx2 = b.x + b.width * (1 - inset);
+  const by2 = b.y + b.height * (1 - inset);
+
+  return ax1 < bx2 && ax2 > bx1 && ay1 < by2 && ay2 > by1;
+};
+
+const assignSpawnPositions = (
+  basePieces: PuzzlePiece[],
+  containerEl: HTMLDivElement,
+  boardEl: HTMLDivElement,
+  scale: number,
+) => {
+  const containerRect = containerEl.getBoundingClientRect();
+  const boardRect = getLocalBounds(
+    boardEl.getBoundingClientRect(),
+    containerRect,
+  );
+  const zones = buildSpawnZones(
+    {
+      x: 0,
+      y: 0,
+      width: containerRect.width,
+      height: containerRect.height,
+    },
+    boardRect,
+  );
+  const placedRects: Bounds[] = [];
+  const fallbackZone =
+    zones.reduce<SpawnZone | null>((largest, zone) => {
+      if (!largest) return zone;
+      return zone.width * zone.height > largest.width * largest.height
+        ? zone
+        : largest;
+    }, null) ?? {
+      x: 16,
+      y: 16,
+      width: Math.max(containerRect.width - 32, 1),
+      height: Math.max(containerRect.height - 32, 1),
+    };
+
+  return basePieces.map((piece) => {
+    const { renderWidth, renderHeight, offsetX, offsetY } = getScaledBounds(
+      piece,
+      scale,
+    );
+
+    let position: { currentX: number; currentY: number } | null = null;
+
+    for (let i = 0; i < 100; i++) {
+      const zone = zones[Math.floor(Math.random() * zones.length)] ?? fallbackZone;
+      const maxLeft = Math.max(zone.x, zone.x + zone.width - renderWidth);
+      const maxTop = Math.max(zone.y, zone.y + zone.height - renderHeight);
+      const expandedLeft =
+        zone.width <= renderWidth
+          ? zone.x
+          : zone.x + Math.random() * (maxLeft - zone.x);
+      const expandedTop =
+        zone.height <= renderHeight
+          ? zone.y
+          : zone.y + Math.random() * (maxTop - zone.y);
+      const candidate = {
+        x: expandedLeft,
+        y: expandedTop,
+        width: renderWidth,
+        height: renderHeight,
+      };
+
+      if (!placedRects.some((rect) => overlapsTooMuch(candidate, rect))) {
+        placedRects.push(candidate);
+        position = {
+          currentX: expandedLeft + offsetX,
+          currentY: expandedTop + offsetY,
+        };
+        break;
+      }
+    }
+
+    if (!position) {
+      const expandedLeft = clamp(
+        fallbackZone.x +
+          Math.random() * Math.max(fallbackZone.width - renderWidth, 1),
+        12,
+        Math.max(12, containerRect.width - renderWidth - 12),
+      );
+      const expandedTop = clamp(
+        fallbackZone.y +
+          Math.random() * Math.max(fallbackZone.height - renderHeight, 1),
+        12,
+        Math.max(12, containerRect.height - renderHeight - 12),
+      );
+      position = {
+        currentX: expandedLeft + offsetX,
+        currentY: expandedTop + offsetY,
+      };
+      placedRects.push({
+        x: expandedLeft,
+        y: expandedTop,
+        width: renderWidth,
+        height: renderHeight,
+      });
+    }
+
+    return {
+      ...piece,
+      ...position,
+    };
+  });
 };
 
 // --- Components ---
 type PuzzlePieceComponentProps = {
   piece: PuzzlePiece;
+  displayPieceSize: number;
   className?: string;
   isOverlay?: boolean;
 };
 
 const PuzzlePieceComponent = ({
   piece,
+  displayPieceSize,
   className,
   isOverlay = false,
 }: PuzzlePieceComponentProps) => {
+  const scale = displayPieceSize / PIECE_SIZE;
+  const clipId = React.useId().replace(/:/g, "");
+  const renderWidth = piece.expandedBounds.width * scale;
+  const renderHeight = piece.expandedBounds.height * scale;
+  const offsetX = piece.padding.left * scale;
+  const offsetY = piece.padding.top * scale;
+
   return (
     <div
       style={{
-        width: "var(--piece-size)",
-        height: "var(--piece-size)",
+        width: `${displayPieceSize}px`,
+        height: `${displayPieceSize}px`,
         position: "relative",
         touchAction: "none",
         overflow: "visible",
       }}
       className={`flex items-center justify-center ${className || ""}`}
     >
-      <div
+      <svg
+        viewBox={`0 0 ${piece.expandedBounds.width} ${piece.expandedBounds.height}`}
         style={{
-          width: "var(--piece-render-size)",
-          height: "var(--piece-render-size)",
-          transform: "translate(calc(var(--piece-bleed) * -1), calc(var(--piece-bleed) * -1))",
-          backgroundImage: `url(${IMAGE_URL})`,
-          backgroundSize: `calc(var(--piece-size) * ${COLS}) calc(var(--piece-size) * ${ROWS})`,
-          backgroundPosition: `calc(${piece.correctX} * var(--piece-size) * -1 + var(--piece-bleed)) calc(${piece.correctY} * var(--piece-size) * -1 + var(--piece-bleed))`,
-          boxShadow: isOverlay ? "0 10px 20px rgba(0,0,0,0.5)" : "none",
+          position: "absolute",
+          left: `${-offsetX}px`,
+          top: `${-offsetY}px`,
+          width: `${renderWidth}px`,
+          height: `${renderHeight}px`,
           filter: piece.isPlaced
             ? "brightness(1.05)"
-            : "drop-shadow(0 8px 18px rgba(15,23,42,0.18)) drop-shadow(0 2px 5px rgba(15,23,42,0.12))",
-          clipPath: `path('${piece.shapePath}')`,
-          WebkitClipPath: `path('${piece.shapePath}')`,
+            : isOverlay
+              ? "drop-shadow(0 10px 20px rgba(0,0,0,0.5))"
+              : "drop-shadow(0 8px 18px rgba(15,23,42,0.18)) drop-shadow(0 2px 5px rgba(15,23,42,0.12))",
         }}
-      />
+      >
+        <defs>
+          <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
+            <path d={piece.shapePath} />
+          </clipPath>
+        </defs>
+        <image
+          href={IMAGE_URL}
+          x={-piece.expandedBounds.x}
+          y={-piece.expandedBounds.y}
+          width={BOARD_SIZE.width}
+          height={BOARD_SIZE.height}
+          preserveAspectRatio="none"
+          clipPath={`url(#${clipId})`}
+        />
+      </svg>
     </div>
   );
 };
 
-// Extracted Subcomponent for cleaner code and to prevent re-creation on render
 type DroppableCellProps = {
   id: string;
   placedPiece?: PuzzlePiece | null;
   completed: boolean;
+  displayPieceSize: number;
 };
 
-const DroppableCell = ({ id, placedPiece, completed }: DroppableCellProps) => {
+const DroppableCell = ({
+  id,
+  placedPiece,
+  completed,
+  displayPieceSize,
+}: DroppableCellProps) => {
   const { setNodeRef, isOver } = useDroppable({ id });
+
   return (
     <div
       ref={setNodeRef}
       className={`flex items-center justify-center transition-all duration-500 ${!completed ? "border-[0.5px] border-[rgba(209,213,219,0.5)]" : "border-transparent"} ${isOver ? "bg-[rgba(220,252,231,0.5)]" : ""}`}
-      style={{ width: "var(--piece-size)", height: "var(--piece-size)", overflow: "visible" }}
+      style={{
+        width: `${displayPieceSize}px`,
+        height: `${displayPieceSize}px`,
+        overflow: "visible",
+      }}
     >
-      {placedPiece && <PuzzlePieceComponent piece={placedPiece} />}
+      {placedPiece && (
+        <PuzzlePieceComponent
+          piece={placedPiece}
+          displayPieceSize={displayPieceSize}
+        />
+      )}
     </div>
   );
 };
@@ -201,9 +504,11 @@ const DraggablePiece = React.memo(
   ({
     piece,
     onRotate,
+    displayPieceSize,
   }: {
     piece: PuzzlePiece;
     onRotate: (id: number) => void;
+    displayPieceSize: number;
   }) => {
     const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
       id: piece.id,
@@ -217,22 +522,25 @@ const DraggablePiece = React.memo(
     } | null>(null);
     const movedRef = React.useRef(false);
 
-    // If placed, don't render here (rendered in grid)
     if (piece.isPlaced) return null;
 
-    // Extract onPointerDown to wrap it, spread user listeners safely
     const { onPointerDown: dndOnPointerDown, ...otherListeners } =
       listeners || {};
+    const scale = displayPieceSize / PIECE_SIZE;
+    const { renderWidth, renderHeight, offsetX, offsetY } = getScaledBounds(
+      piece,
+      scale,
+    );
 
     return (
       <div
         ref={setNodeRef}
         style={{
           position: "absolute",
-          left: piece.currentX - PIECE_BLEED,
-          top: piece.currentY - PIECE_BLEED,
-          width: "var(--piece-render-size)",
-          height: "var(--piece-render-size)",
+          left: `${piece.currentX - offsetX}px`,
+          top: `${piece.currentY - offsetY}px`,
+          width: `${renderWidth}px`,
+          height: `${renderHeight}px`,
           zIndex: isDragging ? 0 : 20,
           opacity: isDragging ? 0 : 1,
           touchAction: "none",
@@ -240,21 +548,17 @@ const DraggablePiece = React.memo(
         {...attributes}
         {...otherListeners}
         onPointerDown={(e) => {
-          // 1. Record start condition for Click detection
           startRef.current = { x: e.clientX, y: e.clientY, time: Date.now() };
-          movedRef.current = false; // Reset movement flag
+          movedRef.current = false;
 
-          // 2. Trigger dnd-kit drag start
           if (dndOnPointerDown) dndOnPointerDown(e);
         }}
         onPointerMove={(e) => {
-          // Track movement during pointer down
           if (!startRef.current) return;
 
           const deltaX = Math.abs(e.clientX - startRef.current.x);
           const deltaY = Math.abs(e.clientY - startRef.current.y);
 
-          // If moved more than 3px, mark as dragged
           if (deltaX > 3 || deltaY > 3) {
             movedRef.current = true;
           }
@@ -264,32 +568,39 @@ const DraggablePiece = React.memo(
 
           const deltaTime = Date.now() - startRef.current.time;
 
-          // If dragging or moved, DO NOT rotate
           if (isDragging || movedRef.current) {
             startRef.current = null;
             return;
           }
 
-          // Strict Click Rule: No movement AND deliberate press (< 200ms)
-          if (deltaTime < 200) {
+          if (deltaTime <= TAP_ROTATE_MAX_MS) {
             onRotate(piece.id);
           }
 
           startRef.current = null;
         }}
+        onPointerCancel={() => {
+          startRef.current = null;
+          movedRef.current = false;
+        }}
         className="cursor-pointer"
       >
         <motion.div
-          initial={false} // Disable initial animation
+          initial={false}
           animate={{ rotate: piece.rotation }}
           transition={{ type: "spring", stiffness: 200, damping: 20 }}
         >
-          <PuzzlePieceComponent piece={piece} isOverlay={false} />
+          <PuzzlePieceComponent
+            piece={piece}
+            displayPieceSize={displayPieceSize}
+          />
         </motion.div>
       </div>
     );
   },
-  (prev, next) => prev.piece === next.piece,
+  (prev, next) =>
+    prev.piece === next.piece &&
+    prev.displayPieceSize === next.displayPieceSize,
 );
 
 const PuzzleGame: React.FC = () => {
@@ -297,9 +608,17 @@ const PuzzleGame: React.FC = () => {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [completed, setCompleted] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [layoutVersion, setLayoutVersion] = useState(0);
+  const [displayPieceSize, setDisplayPieceSize] = useState(() =>
+    typeof window === "undefined"
+      ? PIECE_SIZE
+      : getDisplayPieceSize(window.innerWidth),
+  );
+  const playAreaRef = useRef<HTMLDivElement>(null);
+  const boardRef = useRef<HTMLDivElement>(null);
 
   const triggerFireworks = () => {
-    const duration = 15 * 1000; // Increased duration
+    const duration = 15 * 1000;
     const animationEnd = Date.now() + duration;
     const defaults = {
       startVelocity: 45,
@@ -312,32 +631,29 @@ const PuzzleGame: React.FC = () => {
     const randomInRange = (min: number, max: number) =>
       Math.random() * (max - min) + min;
 
-    const interval: ReturnType<typeof setInterval> = window.setInterval(
-      function () {
-        const timeLeft = animationEnd - Date.now();
+    const interval: ReturnType<typeof setInterval> = window.setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
 
-        if (timeLeft <= 0) {
-          return clearInterval(interval);
-        }
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        return;
+      }
 
-        const particleCount = 70 * (timeLeft / duration); // Increased density
-        // since particles fall down, start a bit higher than random
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: { x: randomInRange(0.1, 0.4), y: Math.random() - 0.2 },
-        });
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: { x: randomInRange(0.6, 0.9), y: Math.random() - 0.2 },
-        });
-      },
-      300,
-    );
+      const particleCount = 70 * (timeLeft / duration);
+
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.4), y: Math.random() - 0.2 },
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.6, 0.9), y: Math.random() - 0.2 },
+      });
+    }, 300);
   };
 
-  // Trigger fireworks and popup on completion
   useEffect(() => {
     if (completed) {
       triggerFireworks();
@@ -345,129 +661,125 @@ const PuzzleGame: React.FC = () => {
     }
   }, [completed]);
 
-  // Sensors - added delay to prevent accidental dragging instead of single clicking (rotation)
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { delay: 600, tolerance: 15 },
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: MOUSE_DRAG_DISTANCE_PX,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: TOUCH_DRAG_ACTIVATION_DELAY_MS,
+        tolerance: TOUCH_DRAG_TOLERANCE_PX,
+      },
     }),
   );
 
   useEffect(() => {
-    // Init pieces
-    const newPieces = createPieces();
+    const updateDisplaySize = () =>
+      setDisplayPieceSize(getDisplayPieceSize(window.innerWidth));
 
-    // Calculate grid areas for scattering
-    // Account for global game header above this play area.
-    const headerHeight = 20;
-    const bottomHeight = 200;
-    const middleHeight = window.innerHeight - headerHeight - bottomHeight;
+    updateDisplaySize();
+    window.addEventListener("resize", updateDisplaySize);
 
-    // Puzzle board width ~ (TOTAL_WIDTH + padding) ~ 500-600px
-    // Let's assume board takes up center.
-    const boardWidth = window.innerWidth < 768 ? window.innerWidth * 0.8 : 600;
-    const remainingWidth = window.innerWidth - boardWidth;
-    const sideWidth = remainingWidth / 2;
-
-    const zones = [
-      // Left Zone
-      { x: 20, y: headerHeight + 20, w: sideWidth - 40, h: middleHeight - 40 },
-      // Right Zone
-      {
-        x: window.innerWidth - sideWidth + 20,
-        y: headerHeight + 20,
-        w: sideWidth - 40,
-        h: middleHeight - 40,
-      },
-      // Bottom Zone
-      {
-        x: 50,
-        y: window.innerHeight - bottomHeight + 20,
-        w: window.innerWidth - 100,
-        h: bottomHeight - 40,
-      },
-    ];
-
-    const placedRects: { x: number; y: number }[] = [];
-    const PIECE_BOUND = PIECE_RENDER_SIZE + 12;
-
-    newPieces.forEach((p) => {
-      // Try 50 times to find a non-overlapping spot
-      let found = false;
-      for (let i = 0; i < 50; i++) {
-        // Pick a random zone
-        const zone = zones[Math.floor(Math.random() * zones.length)];
-        if (zone.w <= PIECE_BOUND || zone.h <= PIECE_BOUND) continue;
-
-        const tx = zone.x + Math.random() * (zone.w - PIECE_BOUND);
-        const ty = zone.y + Math.random() * (zone.h - PIECE_BOUND);
-
-        // Check overlap
-        const overlap = placedRects.some(
-          (r) =>
-            Math.abs(r.x - tx) < PIECE_BOUND * 0.8 &&
-            Math.abs(r.y - ty) < PIECE_BOUND * 0.8,
-        );
-
-        if (!overlap) {
-          p.currentX = tx;
-          p.currentY = ty;
-          placedRects.push({ x: tx, y: ty });
-          found = true;
-          break;
-        }
-      }
-
-      // Fallback if full
-      if (!found) {
-        p.currentX = Math.max(
-          24,
-          Math.min(
-            window.innerWidth - PIECE_RENDER_SIZE - 24,
-            Math.random() * Math.max(window.innerWidth - PIECE_RENDER_SIZE, 1),
-          ),
-        );
-        p.currentY = Math.max(
-          120,
-          Math.min(
-            window.innerHeight - PIECE_RENDER_SIZE - 40,
-            Math.random() * Math.max(window.innerHeight - PIECE_RENDER_SIZE, 1),
-          ),
-        );
-      }
-    });
-    setPieces(newPieces);
+    return () => window.removeEventListener("resize", updateDisplaySize);
   }, []);
 
+  useEffect(() => {
+    if (!playAreaRef.current || !boardRef.current) return;
+
+    const observer = new ResizeObserver(() => {
+      setLayoutVersion((prev) => prev + 1);
+    });
+
+    observer.observe(playAreaRef.current);
+    observer.observe(boardRef.current);
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      if (!playAreaRef.current || !boardRef.current) return;
+
+      const scale = displayPieceSize / PIECE_SIZE;
+
+      if (pieces.length === 0) {
+        setPieces(
+          assignSpawnPositions(
+            createPieces(),
+            playAreaRef.current,
+            boardRef.current,
+            scale,
+          ),
+        );
+        return;
+      }
+
+      setPieces((prev) =>
+        prev.map((piece) =>
+          piece.isPlaced
+            ? piece
+            : {
+                ...piece,
+                ...clampPiecePosition(
+                  piece,
+                  piece.currentX,
+                  piece.currentY,
+                  playAreaRef.current!.clientWidth,
+                  playAreaRef.current!.clientHeight,
+                  scale,
+                ),
+              },
+        ),
+      );
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [displayPieceSize, layoutVersion, pieces.length]);
+
   const handleDragStart = (event: DragStartEvent) => {
-    const id = Number(event.active.id);
-    setActiveId(id);
+    setActiveId(Number(event.active.id));
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over, delta } = event;
     const id = Number(active.id);
+    const scale = displayPieceSize / PIECE_SIZE;
+    const containerWidth = playAreaRef.current?.clientWidth ?? window.innerWidth;
+    const containerHeight =
+      playAreaRef.current?.clientHeight ?? window.innerHeight;
 
     setPieces((prev) =>
-      prev.map((p) => {
-        if (p.id !== id) return p;
+      prev.map((piece) => {
+        if (piece.id !== id) return piece;
 
-        // 1. Try to place it
         if (over && String(over.id).startsWith("cell-")) {
-          const [_, cx, cy] = String(over.id).split("-").map(Number);
+          const [, cx, cy] = String(over.id).split("-").map(Number);
           if (
-            p.correctX === cx &&
-            p.correctY === cy &&
-            p.rotation % 360 === 0
+            piece.correctX === cx &&
+            piece.correctY === cy &&
+            piece.rotation % 360 === 0
           ) {
-            return { ...p, isPlaced: true, currentX: -999, currentY: -999 };
+            return {
+              ...piece,
+              isPlaced: true,
+              currentX: -999,
+              currentY: -999,
+            };
           }
         }
 
-        // 2. If not placed, update its persistent position
         return {
-          ...p,
-          currentX: p.currentX + delta.x,
-          currentY: p.currentY + delta.y,
+          ...piece,
+          ...clampPiecePosition(
+            piece,
+            piece.currentX + delta.x,
+            piece.currentY + delta.y,
+            containerWidth,
+            containerHeight,
+            scale,
+          ),
         };
       }),
     );
@@ -475,22 +787,23 @@ const PuzzleGame: React.FC = () => {
     setActiveId(null);
   };
 
-  // Rotate handler using useCallback to keep identity stable
-  // Debounce to prevent rapid double-taps causing double rotation glithes
   const lastRotateTime = React.useRef(0);
   const handleRotate = React.useCallback((id: number) => {
     const now = Date.now();
-    if (now - lastRotateTime.current < 800) return; // 800ms debounce
+    if (now - lastRotateTime.current < 800) return;
     lastRotateTime.current = now;
 
     setPieces((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, rotation: p.rotation + 90 } : p)),
+      prev.map((piece) =>
+        piece.id === id
+          ? { ...piece, rotation: piece.rotation + 90 }
+          : piece,
+      ),
     );
   }, []);
 
-  // Check completion
   useEffect(() => {
-    if (pieces.length > 0 && pieces.every((p) => p.isPlaced)) {
+    if (pieces.length > 0 && pieces.every((piece) => piece.isPlaced)) {
       setCompleted(true);
     }
   }, [pieces]);
@@ -510,45 +823,46 @@ const PuzzleGame: React.FC = () => {
         mainClassName="relative overflow-hidden"
       >
         <div
+          ref={playAreaRef}
           className="w-full h-full bg-[#FFFFF8] relative overflow-hidden select-none touch-none flex flex-col"
-          style={{ "--piece-size": "min(18svw, 100px)", "--piece-bleed": `${PIECE_BLEED}px`, "--piece-render-size": `${PIECE_RENDER_SIZE}px` } as React.CSSProperties}
         >
-          {/* 2. Main Content Area (Left | Board | Right) */}
           <div className="flex w-full flex-1 overflow-hidden">
-            {/* Left Scatter Area */}
             <div
               className="flex-1 relative bg-[rgba(239,246,255,0.1)] hidden lg:block"
               id="area-left"
-            >
-              {/* Pieces will be absolutely positioned here by coordinates */}
-            </div>
+            />
 
-            {/* Center Board Area */}
             <div className="z-10 flex flex-1 items-center justify-center p-3 sm:p-4">
-              <div className="relative bg-pale-custard/50 backdrop-blur-sm shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-8 border-[#166D77] rounded-3xl p-6">
+              <div
+                ref={boardRef}
+                className="relative bg-pale-custard/50 backdrop-blur-sm shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-8 border-[#166D77] rounded-3xl p-6"
+              >
                 <div
                   className="relative bg-[#fafafa] overflow-hidden"
                   style={{
-                    width: `calc(var(--piece-size) * ${COLS})`,
-                    height: `calc(var(--piece-size) * ${ROWS})`,
+                    width: `${displayPieceSize * COLS}px`,
+                    height: `${displayPieceSize * ROWS}px`,
                   }}
                 >
                   <div className="absolute inset-0 grid grid-cols-4 grid-rows-4 gap-0">
-                    {Array.from({ length: ROWS * COLS }).map((_, i) => {
-                      const c = i % COLS;
-                      const r = Math.floor(i / COLS);
-                      const cellId = `cell-${c}-${r}`;
+                    {Array.from({ length: ROWS * COLS }).map((_, index) => {
+                      const col = index % COLS;
+                      const row = Math.floor(index / COLS);
+                      const cellId = `cell-${col}-${row}`;
                       const placedPiece = pieces.find(
-                        (p) =>
-                          p.isPlaced && p.correctX === c && p.correctY === r,
+                        (piece) =>
+                          piece.isPlaced &&
+                          piece.correctX === col &&
+                          piece.correctY === row,
                       );
 
                       return (
                         <DroppableCell
-                          key={i}
+                          key={index}
                           id={cellId}
                           placedPiece={placedPiece}
                           completed={completed}
+                          displayPieceSize={displayPieceSize}
                         />
                       );
                     })}
@@ -557,33 +871,34 @@ const PuzzleGame: React.FC = () => {
               </div>
             </div>
 
-            {/* Right Scatter Area */}
             <div
               className="flex-1 relative bg-[rgba(254,242,242,0.1)] hidden lg:block"
               id="area-right"
-            ></div>
+            />
           </div>
 
-          {/* 3. Bottom Scatter Area */}
           <div
             className="relative h-[180px] w-full bg-[rgba(240,253,244,0.1)] sm:h-[200px]"
             id="area-bottom"
-          ></div>
+          />
 
-          {/* Absolute Layer for Pieces (Positioned relative to Screen 0,0) */}
           <div className="absolute inset-0 pointer-events-none z-[30]">
             <div className="pointer-events-auto">
-              {pieces.map((p) => (
-                <DraggablePiece key={p.id} piece={p} onRotate={handleRotate} />
+              {pieces.map((piece) => (
+                <DraggablePiece
+                  key={piece.id}
+                  piece={piece}
+                  onRotate={handleRotate}
+                  displayPieceSize={displayPieceSize}
+                />
               ))}
             </div>
           </div>
 
-          {/* Drag Overlay */}
           <DragOverlay>
             {activeId !== null
               ? (() => {
-                  const activePiece = pieces.find((p) => p.id === activeId);
+                  const activePiece = pieces.find((piece) => piece.id === activeId);
                   return activePiece ? (
                     <div
                       className="pointer-events-none"
@@ -591,14 +906,17 @@ const PuzzleGame: React.FC = () => {
                         transform: `rotate(${activePiece.rotation}deg)`,
                       }}
                     >
-                      <PuzzlePieceComponent piece={activePiece} isOverlay />
+                      <PuzzlePieceComponent
+                        piece={activePiece}
+                        displayPieceSize={displayPieceSize}
+                        isOverlay
+                      />
                     </div>
                   ) : null;
                 })()
               : null}
           </DragOverlay>
 
-          {/* Completion Effects (Cute Modal - Smaller and at Bottom) */}
           <AnimatePresence>
             {showPopup && (
               <div className="fixed inset-x-0 bottom-10 z-[100] flex items-center justify-center pointer-events-none">
@@ -608,7 +926,6 @@ const PuzzleGame: React.FC = () => {
                   exit={{ scale: 0.8, opacity: 0, y: 100 }}
                   className="bg-pale-custard/95 backdrop-blur-md p-4 rounded-[30px] text-center shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-8 border-[#FFFFF8] pointer-events-auto relative max-w-lg mx-4"
                 >
-                  {/* Decorative elements */}
                   <div className="absolute -top-6 -left-6 text-4xl animate-bounce">
                     🎈
                   </div>
@@ -639,7 +956,6 @@ const PuzzleGame: React.FC = () => {
             )}
           </AnimatePresence>
 
-          {/* Persistent Play Again Button after closing popup */}
           <AnimatePresence>
             {completed && !showPopup && (
               <motion.button
