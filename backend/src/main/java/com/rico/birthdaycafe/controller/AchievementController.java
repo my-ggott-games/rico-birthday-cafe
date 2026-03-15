@@ -59,11 +59,10 @@ public class AchievementController {
      * Service layer handles idempotency (ignores if already earned).
      */
     @org.springframework.web.bind.annotation.PostMapping("/award/{code}")
-    public ResponseEntity<Void> awardAchievement(
+    public ResponseEntity<Boolean> awardAchievement(
             @org.springframework.web.bind.annotation.PathVariable String code,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        achievementService.awardAchievement(userDetails.getUser(), code);
-        return ResponseEntity.ok().build();
+        boolean awarded = achievementService.awardAchievement(userDetails.getUser(), code);
+        return ResponseEntity.ok(awarded);
     }
 }
-

@@ -4,7 +4,6 @@ import { GameContainer } from "../components/common/GameContainer";
 import type { TutorialSlide } from "../components/common/TutorialBanner";
 import {
   DndContext,
-  DragOverlay,
   MouseSensor,
   TouchSensor,
   useDraggable,
@@ -15,6 +14,9 @@ import {
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { AnimatePresence, motion } from "framer-motion";
 import confetti from "canvas-confetti";
+import { BASE_URL } from "../utils/api";
+import { useAuthStore } from "../store/useAuthStore";
+import { useToastStore } from "../store/useToastStore";
 
 const PUZZLE_TUTORIAL_SLIDES: TutorialSlide[] = [
   {
@@ -38,7 +40,7 @@ const PUZZLE_TUTORIAL_SLIDES: TutorialSlide[] = [
 const ROWS = 4;
 const COLS = 4;
 const PIECE_SIZE = 100;
-const CONNECTOR_NECK = 18;
+const CONNECTOR_NECK = 16;
 const CONNECTOR_DEPTH = 16;
 const BOARD_SIZE = {
   width: COLS * PIECE_SIZE,
@@ -50,6 +52,7 @@ const TOUCH_DRAG_ACTIVATION_DELAY_MS = 90;
 const TOUCH_DRAG_TOLERANCE_PX = 10;
 const TAP_ROTATE_MAX_MS = 180;
 const IMAGE_URL = "/assets/rico_puzzle_sample.png";
+const PUZZLE_ACHIEVEMENT_CODE = "FIRST_PUZZLE";
 
 // --- Types ---
 type EdgeValue = -1 | 0 | 1;
@@ -111,36 +114,55 @@ const createInterlockingPath = (
   const midX = x0 + PIECE_SIZE / 2;
   const midY = y0 + PIECE_SIZE / 2;
 
+  const neck = CONNECTOR_NECK;
+  const depth = CONNECTOR_DEPTH;
+
   const top =
     edges.top === 0
       ? `L ${x1} ${y0}`
-      : `L ${midX - CONNECTOR_NECK} ${y0}
-         C ${midX - 10} ${y0 + edges.top * -4}, ${midX - 8} ${y0 + edges.top * -CONNECTOR_DEPTH}, ${midX} ${y0 + edges.top * -CONNECTOR_DEPTH}
-         C ${midX + 8} ${y0 + edges.top * -CONNECTOR_DEPTH}, ${midX + 10} ${y0 + edges.top * -4}, ${midX + CONNECTOR_NECK} ${y0}
+      : `L ${midX - neck} ${y0}
+         C ${midX - neck} ${y0 + edges.top * -depth * 0.45},
+           ${midX - neck * 0.55} ${y0 + edges.top * -depth},
+           ${midX} ${y0 + edges.top * -depth}
+         C ${midX + neck * 0.55} ${y0 + edges.top * -depth},
+           ${midX + neck} ${y0 + edges.top * -depth * 0.45},
+           ${midX + neck} ${y0}
          L ${x1} ${y0}`;
 
   const right =
     edges.right === 0
       ? `L ${x1} ${y1}`
-      : `L ${x1} ${midY - CONNECTOR_NECK}
-         C ${x1 + edges.right * 4} ${midY - 10}, ${x1 + edges.right * CONNECTOR_DEPTH} ${midY - 8}, ${x1 + edges.right * CONNECTOR_DEPTH} ${midY}
-         C ${x1 + edges.right * CONNECTOR_DEPTH} ${midY + 8}, ${x1 + edges.right * 4} ${midY + 10}, ${x1} ${midY + CONNECTOR_NECK}
+      : `L ${x1} ${midY - neck}
+         C ${x1 + edges.right * depth * 0.45} ${midY - neck},
+           ${x1 + edges.right * depth} ${midY - neck * 0.55},
+           ${x1 + edges.right * depth} ${midY}
+         C ${x1 + edges.right * depth} ${midY + neck * 0.55},
+           ${x1 + edges.right * depth * 0.45} ${midY + neck},
+           ${x1} ${midY + neck}
          L ${x1} ${y1}`;
 
   const bottom =
     edges.bottom === 0
       ? `L ${x0} ${y1}`
-      : `L ${midX + CONNECTOR_NECK} ${y1}
-         C ${midX + 10} ${y1 + edges.bottom * 4}, ${midX + 8} ${y1 + edges.bottom * CONNECTOR_DEPTH}, ${midX} ${y1 + edges.bottom * CONNECTOR_DEPTH}
-         C ${midX - 8} ${y1 + edges.bottom * CONNECTOR_DEPTH}, ${midX - 10} ${y1 + edges.bottom * 4}, ${midX - CONNECTOR_NECK} ${y1}
+      : `L ${midX + neck} ${y1}
+         C ${midX + neck} ${y1 + edges.bottom * depth * 0.45},
+           ${midX + neck * 0.55} ${y1 + edges.bottom * depth},
+           ${midX} ${y1 + edges.bottom * depth}
+         C ${midX - neck * 0.55} ${y1 + edges.bottom * depth},
+           ${midX - neck} ${y1 + edges.bottom * depth * 0.45},
+           ${midX - neck} ${y1}
          L ${x0} ${y1}`;
 
   const left =
     edges.left === 0
       ? `L ${x0} ${y0}`
-      : `L ${x0} ${midY + CONNECTOR_NECK}
-         C ${x0 + edges.left * -4} ${midY + 10}, ${x0 + edges.left * -CONNECTOR_DEPTH} ${midY + 8}, ${x0 + edges.left * -CONNECTOR_DEPTH} ${midY}
-         C ${x0 + edges.left * -CONNECTOR_DEPTH} ${midY - 8}, ${x0 + edges.left * -4} ${midY - 10}, ${x0} ${midY - CONNECTOR_NECK}
+      : `L ${x0} ${midY + neck}
+         C ${x0 + edges.left * -depth * 0.45} ${midY + neck},
+           ${x0 + edges.left * -depth} ${midY + neck * 0.55},
+           ${x0 + edges.left * -depth} ${midY}
+         C ${x0 + edges.left * -depth} ${midY - neck * 0.55},
+           ${x0 + edges.left * -depth * 0.45} ${midY - neck},
+           ${x0} ${midY - neck}
          L ${x0} ${y0}`;
 
   return `M ${x0} ${y0} ${top} ${right} ${bottom} ${left} Z`
@@ -404,14 +426,12 @@ type PuzzlePieceComponentProps = {
   piece: PuzzlePiece;
   displayPieceSize: number;
   className?: string;
-  isOverlay?: boolean;
 };
 
 const PuzzlePieceComponent = ({
   piece,
   displayPieceSize,
   className,
-  isOverlay = false,
 }: PuzzlePieceComponentProps) => {
   const scale = displayPieceSize / PIECE_SIZE;
   const clipId = React.useId().replace(/:/g, "");
@@ -441,9 +461,7 @@ const PuzzlePieceComponent = ({
           height: `${renderHeight}px`,
           filter: piece.isPlaced
             ? "brightness(1.05)"
-            : isOverlay
-              ? "drop-shadow(0 10px 20px rgba(0,0,0,0.5))"
-              : "drop-shadow(0 8px 18px rgba(15,23,42,0.18)) drop-shadow(0 2px 5px rgba(15,23,42,0.12))",
+            : "drop-shadow(0 8px 18px rgba(15,23,42,0.18)) drop-shadow(0 2px 5px rgba(15,23,42,0.12))",
         }}
       >
         <defs>
@@ -465,8 +483,51 @@ const PuzzlePieceComponent = ({
   );
 };
 
+const PuzzleSlotShape = ({
+  piece,
+  displayPieceSize,
+  highlighted = false,
+}: {
+  piece: PuzzlePiece;
+  displayPieceSize: number;
+  highlighted?: boolean;
+}) => {
+  const scale = displayPieceSize / PIECE_SIZE;
+  const width = piece.expandedBounds.width * scale;
+  const height = piece.expandedBounds.height * scale;
+  const offsetX = piece.padding.left * scale;
+  const offsetY = piece.padding.top * scale;
+
+  return (
+    <svg
+      viewBox={`0 0 ${piece.expandedBounds.width} ${piece.expandedBounds.height}`}
+      style={{
+        position: "absolute",
+        left: `${-offsetX}px`,
+        top: `${-offsetY}px`,
+        width: `${width}px`,
+        height: `${height}px`,
+        overflow: "visible",
+      }}
+      aria-hidden
+    >
+      <path
+        d={piece.shapePath}
+        fill={
+          highlighted ? "rgba(94,199,165,0.24)" : "rgba(22,109,119,0.08)"
+        }
+        stroke={
+          highlighted ? "rgba(94,199,165,0.75)" : "rgba(22,109,119,0.24)"
+        }
+        strokeWidth={2}
+      />
+    </svg>
+  );
+};
+
 type DroppableCellProps = {
   id: string;
+  slotPiece?: PuzzlePiece;
   placedPiece?: PuzzlePiece | null;
   completed: boolean;
   displayPieceSize: number;
@@ -474,6 +535,7 @@ type DroppableCellProps = {
 
 const DroppableCell = ({
   id,
+  slotPiece,
   placedPiece,
   completed,
   displayPieceSize,
@@ -483,13 +545,21 @@ const DroppableCell = ({
   return (
     <div
       ref={setNodeRef}
-      className={`flex items-center justify-center transition-all duration-500 ${!completed ? "border-[0.5px] border-[rgba(209,213,219,0.5)]" : "border-transparent"} ${isOver ? "bg-[rgba(220,252,231,0.5)]" : ""}`}
+      className="flex items-center justify-center transition-all duration-500"
       style={{
         width: `${displayPieceSize}px`,
         height: `${displayPieceSize}px`,
         overflow: "visible",
+        position: "relative",
       }}
     >
+      {!placedPiece && slotPiece && (
+        <PuzzleSlotShape
+          piece={slotPiece}
+          displayPieceSize={displayPieceSize}
+          highlighted={isOver && !completed}
+        />
+      )}
       {placedPiece && (
         <PuzzlePieceComponent
           piece={placedPiece}
@@ -510,7 +580,8 @@ const DraggablePiece = React.memo(
     onRotate: (id: number) => void;
     displayPieceSize: number;
   }) => {
-    const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    const { attributes, listeners, setNodeRef, isDragging, transform } =
+      useDraggable({
       id: piece.id,
       disabled: piece.isPlaced,
     });
@@ -541,8 +612,11 @@ const DraggablePiece = React.memo(
           top: `${piece.currentY - offsetY}px`,
           width: `${renderWidth}px`,
           height: `${renderHeight}px`,
-          zIndex: isDragging ? 0 : 20,
-          opacity: isDragging ? 0 : 1,
+          zIndex: isDragging ? 60 : 20,
+          transform: transform
+            ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+            : undefined,
+          willChange: isDragging ? "transform" : undefined,
           touchAction: "none",
         }}
         {...attributes}
@@ -590,10 +664,7 @@ const DraggablePiece = React.memo(
           animate={{ rotate: piece.rotation }}
           transition={{ type: "spring", stiffness: 200, damping: 20 }}
         >
-          <PuzzlePieceComponent
-            piece={piece}
-            displayPieceSize={displayPieceSize}
-          />
+          <PuzzlePieceComponent piece={piece} displayPieceSize={displayPieceSize} />
         </motion.div>
       </div>
     );
@@ -605,7 +676,6 @@ const DraggablePiece = React.memo(
 
 const PuzzleGame: React.FC = () => {
   const [pieces, setPieces] = useState<PuzzlePiece[]>([]);
-  const [activeId, setActiveId] = useState<number | null>(null);
   const [completed, setCompleted] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [layoutVersion, setLayoutVersion] = useState(0);
@@ -616,6 +686,9 @@ const PuzzleGame: React.FC = () => {
   );
   const playAreaRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
+  const puzzleAchievementAwardedRef = useRef(false);
+  const { token } = useAuthStore();
+  const { addToast } = useToastStore();
 
   const triggerFireworks = () => {
     const duration = 15 * 1000;
@@ -660,6 +733,45 @@ const PuzzleGame: React.FC = () => {
       setShowPopup(true);
     }
   }, [completed]);
+
+  useEffect(() => {
+    if (!completed || !token || puzzleAchievementAwardedRef.current) {
+      return;
+    }
+
+    const awardPuzzleAchievement = async () => {
+      puzzleAchievementAwardedRef.current = true;
+
+      try {
+        const response = await fetch(
+          `${BASE_URL}/achievements/award/${PUZZLE_ACHIEVEMENT_CODE}`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        if (!response.ok) {
+          return;
+        }
+
+        const newlyAwarded = (await response.json()) === true;
+        if (newlyAwarded) {
+          addToast({
+            title: "퍼즐 첫 완성",
+            description: "퍼즐놀이를 처음으로 완성했다!",
+            icon: "🧩",
+          });
+        }
+      } catch (error) {
+        console.error("Failed to award puzzle achievement", error);
+      }
+    };
+
+    void awardPuzzleAchievement();
+  }, [addToast, completed, token]);
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -738,9 +850,7 @@ const PuzzleGame: React.FC = () => {
     return () => window.cancelAnimationFrame(frame);
   }, [displayPieceSize, layoutVersion, pieces.length]);
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(Number(event.active.id));
-  };
+  const handleDragStart = (_event: DragStartEvent) => {};
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over, delta } = event;
@@ -783,8 +893,6 @@ const PuzzleGame: React.FC = () => {
         };
       }),
     );
-
-    setActiveId(null);
   };
 
   const lastRotateTime = React.useRef(0);
@@ -815,8 +923,8 @@ const PuzzleGame: React.FC = () => {
       onDragEnd={handleDragEnd}
     >
       <GameContainer
-        title="퍼즐 좋아해?"
-        desc="조각을 누르면 회전"
+        title="퍼즐놀이"
+        desc="어떤 그림이 나올까?"
         gameName="퍼즐놀이"
         helpSlides={PUZZLE_TUTORIAL_SLIDES}
         className="bg-[#FFFFF8]"
@@ -849,6 +957,10 @@ const PuzzleGame: React.FC = () => {
                       const col = index % COLS;
                       const row = Math.floor(index / COLS);
                       const cellId = `cell-${col}-${row}`;
+                      const slotPiece = pieces.find(
+                        (piece) =>
+                          piece.correctX === col && piece.correctY === row,
+                      );
                       const placedPiece = pieces.find(
                         (piece) =>
                           piece.isPlaced &&
@@ -860,6 +972,7 @@ const PuzzleGame: React.FC = () => {
                         <DroppableCell
                           key={index}
                           id={cellId}
+                          slotPiece={slotPiece}
                           placedPiece={placedPiece}
                           completed={completed}
                           displayPieceSize={displayPieceSize}
@@ -894,28 +1007,6 @@ const PuzzleGame: React.FC = () => {
               ))}
             </div>
           </div>
-
-          <DragOverlay>
-            {activeId !== null
-              ? (() => {
-                  const activePiece = pieces.find((piece) => piece.id === activeId);
-                  return activePiece ? (
-                    <div
-                      className="pointer-events-none"
-                      style={{
-                        transform: `rotate(${activePiece.rotation}deg)`,
-                      }}
-                    >
-                      <PuzzlePieceComponent
-                        piece={activePiece}
-                        displayPieceSize={displayPieceSize}
-                        isOverlay
-                      />
-                    </div>
-                  ) : null;
-                })()
-              : null}
-          </DragOverlay>
 
           <AnimatePresence>
             {showPopup && (

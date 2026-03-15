@@ -44,7 +44,7 @@ public class AchievementService {
     }
 
     @Transactional
-    public void awardAchievement(User user, String achievementCode) {
+    public boolean awardAchievement(User user, String achievementCode) {
         Optional<Achievement> achievementOpt = achievementRepository.findByCode(achievementCode);
 
         if (achievementOpt.isPresent()) {
@@ -57,8 +57,11 @@ public class AchievementService {
                         .achievement(achievement)
                         .build();
                 userAchievementRepository.save(userAchievement);
+                return true;
             }
         }
+
+        return false;
     }
 
     @Transactional(readOnly = true)
@@ -114,4 +117,3 @@ public class AchievementService {
                 .collect(Collectors.toList());
     }
 }
-
