@@ -300,7 +300,7 @@ const Lobby: React.FC = () => {
               <div
                 className={`mt-2 bg-pale-custard ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-2"} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#102542] group-hover:text-white transition-colors`}
               >
-                위대한 모험
+                용사 리코 이야기
               </div>
             </motion.div>
           </Link>
