@@ -459,9 +459,7 @@ const PuzzlePieceComponent = ({
           top: `${-offsetY}px`,
           width: `${renderWidth}px`,
           height: `${renderHeight}px`,
-          filter: piece.isPlaced
-            ? "brightness(1.05)"
-            : "drop-shadow(0 8px 18px rgba(15,23,42,0.18)) drop-shadow(0 2px 5px rgba(15,23,42,0.12))",
+          filter: piece.isPlaced ? "brightness(1.05)" : "none",
         }}
       >
         <defs>
@@ -943,7 +941,7 @@ const PuzzleGame: React.FC = () => {
             <div className="z-10 flex flex-1 items-center justify-center p-3 sm:p-4">
               <div
                 ref={boardRef}
-                className="relative bg-pale-custard/50 backdrop-blur-sm shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-8 border-[#166D77] rounded-3xl p-6"
+                className="relative bg-pale-custard/50 backdrop-blur-sm border-8 border-[#166D77] rounded-3xl p-6"
               >
                 <div
                   className="relative bg-[#fafafa] overflow-hidden"

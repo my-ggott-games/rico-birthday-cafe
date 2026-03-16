@@ -65,7 +65,7 @@ export const Board: React.FC<BoardProps> = ({
           {
             "--board-padding": boardPadding,
             "--cell-radius": cellRadius,
-            maxWidth: "min(400px, 86vw)",
+            maxWidth: "min(400px, 70vw)",
             background: "#166D77",
             borderRadius: boardRadius,
             padding: "var(--board-padding)",

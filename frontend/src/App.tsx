@@ -12,7 +12,6 @@ import NotFound from "./pages/NotFound";
 const CodyGame = lazy(() => import("./pages/CodyGame"));
 const ItabagGame = lazy(() => import("./pages/ItabagGame"));
 const FortuneGame = lazy(() => import("./pages/FortuneGame"));
-const AdventureGame = lazy(() => import("./pages/AdventureGame"));
 const AdventureSample = lazy(() => import("./pages/AdventureSample"));
 const CodySample = lazy(() => import("./pages/CodySample"));
 const PuzzleGame = lazy(() => import("./pages/PuzzleGame"));
@@ -37,7 +36,8 @@ function App() {
             <Route path="/sample/cody" element={<CodySample />} />
             <Route path="/game/itabag" element={<ItabagGame />} />
             <Route path="/game/fortune" element={<FortuneGame />} />
-            <Route path="/game/adventure" element={<AdventureGame />} />
+            {/* <Route path="/game/adventure" element={<AdventureGame />} /> */}
+            <Route path="/game/adventure" element={<AdventureSample />} />
             <Route path="/sample/adventure" element={<AdventureSample />} />
             <Route
               path="/game/baseball"
