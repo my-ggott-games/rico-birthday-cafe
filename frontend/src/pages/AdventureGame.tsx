@@ -191,47 +191,53 @@ type HoleCollisionState = {
 
 const getHoleCollisionState = (
   holes: Hole[],
-  courseTime: number,
+  currentCourseTime: number,
+  nextCourseTime: number,
   playerY: number,
   ignoredHoleKeys: Set<string>,
 ): HoleCollisionState => {
+  // 플레이어 좌우 끝 계산
   const playerLeft = PLAYER_X - PLAYER_WIDTH / 2;
   const playerRight = PLAYER_X + PLAYER_WIDTH / 2;
   const playerBottom = -playerY;
+
   let wallHole: Hole | null = null;
   let fallingHole: Hole | null = null;
   let bottomHitHole: Hole | null = null;
   const newlyPassedHoleKeys: string[] = [];
 
   for (const hole of holes) {
-    if (ignoredHoleKeys.has(hole.key)) {
-      continue;
-    }
+    if (ignoredHoleKeys.has(hole.key)) continue;
 
-    const x = PLAYER_X + (hole.time - courseTime) * PIXELS_PER_SECOND;
-    const holeLeft = x - hole.width / 2;
-    const holeRight = x + hole.width / 2;
-    const collisionLeft = holeLeft + HOLE_COLLISION_INSET;
-    const collisionRight = holeRight - HOLE_COLLISION_INSET;
+    // 현재/다음 프레임에서 홀 중심 X 위치
+    const currentHoleCenterX =
+      PLAYER_X + (hole.time - currentCourseTime) * PIXELS_PER_SECOND;
+    const nextHoleCenterX =
+      PLAYER_X + (hole.time - nextCourseTime) * PIXELS_PER_SECOND;
+
+    // 홀의 좌우 경계 (collision inset 적용)
+    // const currentHoleLeft =
+    //   currentHoleCenterX - hole.width / 2 + HOLE_COLLISION_INSET;
+    const currentHoleRight =
+      currentHoleCenterX + hole.width / 2 - HOLE_COLLISION_INSET;
+    const nextHoleLeft =
+      nextHoleCenterX - hole.width / 2 + HOLE_COLLISION_INSET;
+    const nextHoleRight =
+      nextHoleCenterX + hole.width / 2 - HOLE_COLLISION_INSET;
+
     const holeTop = 0;
     const holeBottom = getHoleBottomKoDepth(hole);
-    const overlapsHoleBounds =
-      holeLeft <= playerRight && holeRight >= playerLeft;
-    const overlapsFallZone =
-      collisionLeft <= playerRight && collisionRight >= playerLeft;
-    const isInsideHoleVerticalRange =
-      playerBottom > holeTop && playerBottom < holeBottom;
-    const isAtOrBelowHoleTop = playerBottom >= holeTop;
 
-    if (
-      overlapsHoleBounds &&
-      isInsideHoleVerticalRange &&
-      playerRight >= holeRight
-    ) {
-      wallHole = hole;
-    }
+    // ── 추락/바닥 판정 ───────────────────────────────────────────────────────
+    // 플레이어가 홀 위에 있다고 판단하는 조건:
+    //   플레이어 우측이 홀 우측을 완전히 넘어서지 않았고 (아직 탈출 못함)
+    //   플레이어 좌측이 홀 우측보다 왼쪽에 있을 때 (홀과 수평 겹침 있음)
+    const playerOverlapsHoleHorizontally =
+      playerRight <= nextHoleRight && // 우측이 홀 우측을 완전히 못 넘었음
+      playerLeft < nextHoleRight && // 좌측이 홀 안에 걸쳐 있음
+      playerRight > nextHoleLeft; // 우측이 홀 좌측보다는 오른쪽
 
-    if (overlapsFallZone && isAtOrBelowHoleTop) {
+    if (playerOverlapsHoleHorizontally && playerBottom >= holeTop) {
       if (playerBottom >= holeBottom) {
         bottomHitHole = hole;
       } else {
@@ -239,7 +245,23 @@ const getHoleCollisionState = (
       }
     }
 
-    if (holeRight < PLAYER_X - 22) {
+    // ── 벽 충돌 판정 ─────────────────────────────────────────────────────────
+    // 플레이어 우측이 홀 우측 벽에 막히는 조건:
+    //   수직 범위 안에 있고, 우측 경계를 이번 프레임에 통과하려는 경우
+    const playerInsideHoleVertical =
+      playerBottom > holeTop && playerBottom < holeBottom;
+
+    const hitsWallThisFrame =
+      nextHoleRight > playerLeft &&
+      ((currentHoleRight > playerRight && nextHoleRight <= playerRight) ||
+        (nextHoleRight <= playerRight && nextHoleLeft < playerRight));
+
+    if (playerInsideHoleVertical && hitsWallThisFrame) {
+      wallHole = hole;
+    }
+
+    // ── 통과 판정 ─────────────────────────────────────────────────────────────
+    if (nextHoleRight < PLAYER_X - 22) {
       newlyPassedHoleKeys.push(hole.key);
     }
   }
@@ -375,12 +397,9 @@ export default function AdventureGame() {
   const fallingHoleKeyRef = useRef<string | null>(null);
   const runStateRef = useRef<RunState>("ready");
   const courseTimeRef = useRef(0);
-  const holesLayerRef = useRef<HTMLDivElement | null>(null);
-  const playerRef = useRef<HTMLDivElement | null>(null);
 
   const [runState, setRunState] = useState<RunState>("ready");
   const [hudCourseTime, setHudCourseTime] = useState(0);
-  const [hudPlayerY, setHudPlayerY] = useState(0);
   const [bestScore, setBestScore] = useState(() => getSavedBestScore());
   const [holes, setHoles] = useState<Hole[]>(() => buildHoleCourse());
   const [deathMessage, setDeathMessage] = useState(DEFAULT_DEATH_MESSAGE);
@@ -394,14 +413,6 @@ export default function AdventureGame() {
         visualHeight: getHoleVisualHeight(hole.width),
       })),
     [holes],
-  );
-  const visibleHoles = useMemo(
-    () =>
-      holesWithPosition.filter(
-        (hole) =>
-          hole.time >= hudCourseTime - 1.2 && hole.time <= hudCourseTime + 6,
-      ),
-    [holesWithPosition, hudCourseTime],
   );
   const currentScore = useMemo(
     () => getScoreAtTime(hudCourseTime),
@@ -434,15 +445,6 @@ export default function AdventureGame() {
     runStateRef.current = runState;
   }, [runState]);
 
-  const applyFrameTransforms = () => {
-    if (playerRef.current) {
-      playerRef.current.style.transform = `translateY(${-playerYRef.current}px)`;
-    }
-    if (holesLayerRef.current) {
-      holesLayerRef.current.style.transform = `translateX(${-courseTimeRef.current * PIXELS_PER_SECOND}px)`;
-    }
-  };
-
   useEffect(() => {
     if (runState !== "running") {
       lastFrameTsRef.current = null;
@@ -453,43 +455,52 @@ export default function AdventureGame() {
       const previousTs = lastFrameTsRef.current ?? ts;
       const delta = Math.min((ts - previousTs) / 1000, 0.04);
       lastFrameTsRef.current = ts;
+      const currentCourseTime = courseTimeRef.current;
       const speedMultiplier = getStageSpeedMultiplier(
-        getCurrentPhase(courseTimeRef.current).id,
+        getCurrentPhase(currentCourseTime).id,
       );
 
       let nextTime = Math.min(
-        courseTimeRef.current + delta * speedMultiplier,
+        currentCourseTime + delta * speedMultiplier,
         PHASES[PHASES.length - 1].end,
       );
       const nextJumpVelocity = jumpVelocityRef.current - GRAVITY * delta;
       const nextPlayerY = playerYRef.current + nextJumpVelocity * delta;
       let collisionState = getHoleCollisionState(
         holes,
+        currentCourseTime,
         nextTime,
         nextPlayerY,
         passedHoleKeysRef.current,
       );
 
       if (collisionState.wallHole) {
-        const holeRightNow =
-          PLAYER_X +
-          (collisionState.wallHole.time - courseTimeRef.current) *
-            PIXELS_PER_SECOND +
-          collisionState.wallHole.width / 2;
-        const playerRight = PLAYER_X + PLAYER_WIDTH / 2;
-        const allowedDelta = Math.max(
-          0,
-          (holeRightNow - playerRight) / PIXELS_PER_SECOND,
+        // 플레이어 우측이 홀 우측 벽에 닿은 순간의 courseTime을 계산
+        // hole.right(in time) = hole.time + (hole.width/2 - PLAYER_WIDTH/2) / PPS
+        const wallContactTime =
+          collisionState.wallHole.time +
+          (collisionState.wallHole.width / 2 - PLAYER_WIDTH / 2) /
+            PIXELS_PER_SECOND;
+
+        // nextTime을 벽 접촉 시점으로 클램핑 → 맵이 더 이상 좌로 이동하지 않음
+        nextTime = Math.max(
+          currentCourseTime,
+          Math.min(nextTime, wallContactTime),
         );
-        const proposedDelta = nextTime - courseTimeRef.current;
-        if (proposedDelta > allowedDelta) {
-          nextTime = courseTimeRef.current + allowedDelta;
-          collisionState = getHoleCollisionState(
-            holes,
-            nextTime,
-            nextPlayerY,
-            passedHoleKeysRef.current,
-          );
+
+        // 클램핑 후 상태 재계산
+        collisionState = getHoleCollisionState(
+          holes,
+          currentCourseTime,
+          nextTime,
+          nextPlayerY,
+          passedHoleKeysRef.current,
+        );
+
+        // 플레이어가 홀 위로 올라갔으면(playerBottom <= holeTop = 0) 벽 차단 해제
+        // → nextTime 클램핑을 취소하고 원래 nextTime 사용
+        if (nextPlayerY > 0 && collisionState.wallHole === null) {
+          // 위로 탈출 성공: 별도 처리 없이 이미 collisionState가 null이므로 자연스럽게 이동 재개
         }
       }
 
@@ -520,8 +531,6 @@ export default function AdventureGame() {
         setDeathMessage(DEFAULT_DEATH_MESSAGE);
         setRunState("gameover");
         courseTimeRef.current = nextTime;
-        applyFrameTransforms();
-        setHudPlayerY(playerYRef.current);
         setHudCourseTime(nextTime);
         return;
       }
@@ -539,25 +548,20 @@ export default function AdventureGame() {
         setDeathMessage(DEFAULT_DEATH_MESSAGE);
         setRunState("gameover");
         courseTimeRef.current = nextTime;
-        applyFrameTransforms();
-        setHudPlayerY(playerYRef.current);
         setHudCourseTime(nextTime);
         return;
       }
 
       courseTimeRef.current = nextTime;
-      applyFrameTransforms();
 
       const shouldUpdateHud =
         ts - lastHudUpdateRef.current >= HUD_UPDATE_INTERVAL_MS;
       if (shouldUpdateHud) {
         lastHudUpdateRef.current = ts;
-        setHudPlayerY(playerYRef.current);
         setHudCourseTime(nextTime);
       }
 
       if (nextTime >= PHASES[PHASES.length - 1].end) {
-        setHudPlayerY(playerYRef.current);
         setHudCourseTime(nextTime);
         setRunState("completed");
         return;
@@ -631,7 +635,7 @@ export default function AdventureGame() {
     void award(
       "R-GEND-HERO",
       "R전드 용사",
-      "첫 구간부터 끝까지 한 번에 여정을 완주했다.",
+      "단 한 번의 실패 없이 여정을 끝마쳤다.",
       "👑",
     );
   }, [addToast, runState, token]);
@@ -651,11 +655,9 @@ export default function AdventureGame() {
     fallingHoleKeyRef.current = null;
     passedHoleKeysRef.current = new Set();
     setHoles(nextHoles);
-    setHudPlayerY(0);
     setHudCourseTime(0);
     setDeathMessage(DEFAULT_DEATH_MESSAGE);
     courseTimeRef.current = 0;
-    applyFrameTransforms();
   };
 
   const restartFromTime = (
@@ -682,11 +684,9 @@ export default function AdventureGame() {
       setHoles(nextHoles);
     }
 
-    setHudPlayerY(0);
     setHudCourseTime(time);
     setDeathMessage(DEFAULT_DEATH_MESSAGE);
     courseTimeRef.current = time;
-    applyFrameTransforms();
     setRunState("running");
   };
 
@@ -788,10 +788,9 @@ export default function AdventureGame() {
       onJumpInput={handleJumpInput}
       onStart={handleStart}
       deathMessage={deathMessage}
-      visibleHoles={visibleHoles}
-      holesLayerRef={holesLayerRef}
-      playerRef={playerRef}
-      hudPlayerY={hudPlayerY}
+      holes={holesWithPosition}
+      courseTimeRef={courseTimeRef}
+      playerYRef={playerYRef}
       phaseProgress={phaseProgress}
       helpSlides={ADVENTURE_TUTORIAL_SLIDES}
       formatTime={formatTime}

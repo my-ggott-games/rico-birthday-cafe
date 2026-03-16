@@ -24,6 +24,10 @@ export default defineConfig({
             return "router";
           }
 
+          if (id.includes("pixi.js") || id.includes("@pixi/react")) {
+            return "pixi";
+          }
+
           if (id.includes("react") || id.includes("zustand")) {
             return "framework";
           }

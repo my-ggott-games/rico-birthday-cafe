@@ -1,8 +1,8 @@
-import type { RefObject } from "react";
+import type { MutableRefObject } from "react";
 import { GameContainer } from "../common/GameContainer";
 import type { TutorialSlide } from "../common/TutorialBanner";
 import { AdventureModal, type AdventureModalAction } from "./AdventureModal";
-import { AdventureHoleLayer } from "./AdventureHoleLayer";
+import { AdventurePixiScene } from "./AdventurePixiScene";
 import type { Phase, PositionedHole, RunState } from "../../types/adventure";
 
 type AdventureGameViewProps = {
@@ -21,10 +21,9 @@ type AdventureGameViewProps = {
   onJumpInput: () => void;
   onStart: () => void;
   deathMessage: string;
-  visibleHoles: PositionedHole[];
-  holesLayerRef: RefObject<HTMLDivElement | null>;
-  playerRef: RefObject<HTMLDivElement | null>;
-  hudPlayerY: number;
+  holes: PositionedHole[];
+  courseTimeRef: MutableRefObject<number>;
+  playerYRef: MutableRefObject<number>;
   phaseProgress: number;
   helpSlides: TutorialSlide[];
   formatTime: (seconds: number) => string;
@@ -50,10 +49,9 @@ export function AdventureGameView({
   onJumpInput,
   onStart,
   deathMessage,
-  visibleHoles,
-  holesLayerRef,
-  playerRef,
-  hudPlayerY,
+  holes,
+  courseTimeRef,
+  playerYRef,
   phaseProgress,
   helpSlides,
   formatTime,
@@ -65,7 +63,7 @@ export function AdventureGameView({
   return (
     <GameContainer
       title="용사 리코 이야기"
-      desc="러너 코어만 남긴 디버그 버전"
+      desc="라떼는 말이야 검 하나로 마왕을 잡았다고"
       gameName="용사 리코 이야기"
       helpSlides={helpSlides}
       className="relative overflow-hidden bg-[#f7f2e8] text-[#1d3557] select-none"
@@ -153,10 +151,20 @@ export function AdventureGameView({
             </div>
 
             <div
-              onPointerDown={onJumpInput}
               className="relative h-[360px] w-full overflow-hidden rounded-[1.6rem] border border-white/60 text-left sm:h-[420px]"
               style={{ backgroundColor: "rgba(255, 255, 255, 0.12)" }}
             >
+              <AdventurePixiScene
+                phase={phase}
+                holes={holes}
+                runState={runState}
+                playerX={playerX}
+                pixelsPerSecond={pixelsPerSecond}
+                courseTimeRef={courseTimeRef}
+                playerYRef={playerYRef}
+                onJumpInput={onJumpInput}
+              />
+
               <div className="absolute inset-x-0 bottom-[10%] z-[1] border-t-2 border-dashed border-[#102542]/45" />
 
               <div className="absolute left-0 right-0 top-4 flex justify-center">
@@ -197,28 +205,6 @@ export function AdventureGameView({
                   embedded
                 />
               )}
-
-              <AdventureHoleLayer
-                holesLayerRef={holesLayerRef}
-                visibleHoles={visibleHoles}
-                hudCourseTime={hudCourseTime}
-                playerX={playerX}
-                pixelsPerSecond={pixelsPerSecond}
-              />
-
-              <div
-                ref={playerRef}
-                className="absolute bottom-[10%] flex h-20 w-20 items-end justify-center will-change-transform"
-                style={{
-                  transform: `translateY(${-hudPlayerY}px)`,
-                  left: `${playerX}px`,
-                }}
-              >
-                <div className="relative flex h-16 w-16 items-center justify-center rounded-full border-4 border-white/80 bg-[#fff7db] text-4xl shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
-                  {hudPlayerY > 4 ? "🤸‍♀️" : hudPlayerY < -12 ? "😵" : "🦸‍♀️"}
-                  <div className="absolute -bottom-4 h-3 w-14 rounded-full bg-black/15 blur-md" />
-                </div>
-              </div>
 
               {(runState === "ready" || runState === "completed") && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
