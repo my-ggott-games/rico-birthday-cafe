@@ -55,25 +55,25 @@ type RunState = "ready" | "running" | "paused" | "gameover";
 
 const HELP_SLIDES: TutorialSlide[] = [
   {
-    title: "Tap, Jump, Recover",
+    title: "용사 리코 이야기",
     lines: [
-      "Tap the stage or press Space to jump.",
-      "A second jump is available in the air.",
+      "이세계 용사 리코와 함께 모험을 떠나자!",
+      "화면을 탭하면 점프 할 수 있어",
     ],
+    showArrows: false,
   },
   {
-    title: "Mind The Holes",
+    title: "함정에 빠지지 않게 조심해!",
     lines: [
-      "The ground has moving gaps instead of obstacles.",
-      "If Rico falls too deep, the run is over.",
+      "함정에 빠지면 우리의 모험이 끝나버려...",
+      "함정을 잘 피해서 달려보자!",
     ],
+    showArrows: false,
   },
   {
-    title: "Mobile Ready",
-    lines: [
-      "Landscape mode gives the cleanest view.",
-      "Press P or tap pause anytime.",
-    ],
+    title: "점프는 2번까지 할 수 있어",
+    lines: ["힘내서 마왕을 무찌르자!"],
+    showArrows: false,
   },
 ];
 
@@ -192,27 +192,41 @@ function RunnerScene({
       const clampedRight = clamp(hole.x + hole.width, 0, STAGE_WIDTH);
 
       if (clampedRight > clampedLeft) {
-        graphics.rect(clampedLeft, GROUND_Y - 4, clampedRight - clampedLeft, STAGE_HEIGHT - GROUND_Y + 4).fill(
-          0x3d2b2c,
-        );
-        graphics.rect(clampedLeft + 12, GROUND_Y + 28, Math.max(clampedRight - clampedLeft - 24, 0), 10).fill({
-          color: 0x000000,
-          alpha: 0.16,
-        });
+        graphics
+          .rect(
+            clampedLeft,
+            GROUND_Y - 4,
+            clampedRight - clampedLeft,
+            STAGE_HEIGHT - GROUND_Y + 4,
+          )
+          .fill(0x3d2b2c);
+        graphics
+          .rect(
+            clampedLeft + 12,
+            GROUND_Y + 28,
+            Math.max(clampedRight - clampedLeft - 24, 0),
+            10,
+          )
+          .fill({
+            color: 0x000000,
+            alpha: 0.16,
+          });
       }
 
       if (hole.x > segmentStart) {
         const segmentWidth = hole.x - segmentStart;
-        graphics.roundRect(
-          segmentStart,
-          GROUND_Y - 16,
-          segmentWidth,
-          STAGE_HEIGHT - GROUND_Y + 24,
-          18,
-        ).fill(0xf0d3ae);
-        graphics.rect(segmentStart, GROUND_Y - 18, segmentWidth, 14).fill(
-          0x5ec7a5,
-        );
+        graphics
+          .roundRect(
+            segmentStart,
+            GROUND_Y - 16,
+            segmentWidth,
+            STAGE_HEIGHT - GROUND_Y + 24,
+            18,
+          )
+          .fill(0xf0d3ae);
+        graphics
+          .rect(segmentStart, GROUND_Y - 18, segmentWidth, 14)
+          .fill(0x5ec7a5);
         graphics.rect(segmentStart, GROUND_Y + 24, segmentWidth, 9).fill({
           color: 0xffffff,
           alpha: 0.18,
@@ -224,16 +238,18 @@ function RunnerScene({
 
     if (segmentStart < STAGE_WIDTH) {
       const segmentWidth = STAGE_WIDTH - segmentStart;
-      graphics.roundRect(
-        segmentStart,
-        GROUND_Y - 16,
-        segmentWidth,
-        STAGE_HEIGHT - GROUND_Y + 24,
-        18,
-      ).fill(0xf0d3ae);
-      graphics.rect(segmentStart, GROUND_Y - 18, segmentWidth, 14).fill(
-        0x5ec7a5,
-      );
+      graphics
+        .roundRect(
+          segmentStart,
+          GROUND_Y - 16,
+          segmentWidth,
+          STAGE_HEIGHT - GROUND_Y + 24,
+          18,
+        )
+        .fill(0xf0d3ae);
+      graphics
+        .rect(segmentStart, GROUND_Y - 18, segmentWidth, 14)
+        .fill(0x5ec7a5);
       graphics.rect(segmentStart, GROUND_Y + 24, segmentWidth, 9).fill({
         color: 0xffffff,
         alpha: 0.18,
@@ -253,23 +269,29 @@ function RunnerScene({
     player.rotation = rotationRef.current;
 
     const stretch = clamp(1 + velocityRef.current / 2400, 0.9, 1.06);
-    player.scale.x = playerYRef.current <= 0.1 ? 1.02 : clamp(1 - rotationRef.current * 0.08, 0.92, 1.08);
+    player.scale.x =
+      playerYRef.current <= 0.1
+        ? 1.02
+        : clamp(1 - rotationRef.current * 0.08, 0.92, 1.08);
     player.scale.y = stretch;
 
-    const shadowScale = clamp(1 - Math.max(playerYRef.current, 0) / 190, 0.46, 1);
+    const shadowScale = clamp(
+      1 - Math.max(playerYRef.current, 0) / 190,
+      0.46,
+      1,
+    );
     const shadowAlpha =
-      isPlayerOverHole(holesRef.current) && playerYRef.current < -12 ? 0.12 : 0.22;
+      isPlayerOverHole(holesRef.current) && playerYRef.current < -12
+        ? 0.12
+        : 0.22;
 
     shadow.clear();
-    shadow.ellipse(
-      PLAYER_X,
-      GROUND_Y + 9,
-      36 * shadowScale,
-      12 * shadowScale,
-    ).fill({
-      color: 0x102542,
-      alpha: shadowAlpha,
-    });
+    shadow
+      .ellipse(PLAYER_X, GROUND_Y + 9, 36 * shadowScale, 12 * shadowScale)
+      .fill({
+        color: 0x102542,
+        alpha: shadowAlpha,
+      });
   }, []);
 
   const resetScene = useCallback(() => {
@@ -288,7 +310,13 @@ function RunnerScene({
     onScoreChange(0);
     drawWorld();
     syncPlayerVisuals();
-  }, [drawWorld, onScoreChange, syncPlayerVisuals, updateHintText, updateHudText]);
+  }, [
+    drawWorld,
+    onScoreChange,
+    syncPlayerVisuals,
+    updateHintText,
+    updateHudText,
+  ]);
 
   const tryJump = useCallback(() => {
     const overHole = isPlayerOverHole(holesRef.current);
@@ -406,8 +434,7 @@ function RunnerScene({
           const scoreTicks = Math.floor(
             scoreTickTimerRef.current / SCORE_TICK_INTERVAL_SECONDS,
           );
-          scoreTickTimerRef.current -=
-            scoreTicks * SCORE_TICK_INTERVAL_SECONDS;
+          scoreTickTimerRef.current -= scoreTicks * SCORE_TICK_INTERVAL_SECONDS;
           scoreRef.current += scoreTicks * SCORE_STEP;
           updateHudText(scoreRef.current);
           onScoreChange(scoreRef.current);
@@ -671,7 +698,10 @@ export default function AdventureSample() {
         return;
       }
 
-      if (event.code === "Enter" && (runState === "ready" || runState === "gameover")) {
+      if (
+        event.code === "Enter" &&
+        (runState === "ready" || runState === "gameover")
+      ) {
         event.preventDefault();
         startGame();
         return;
@@ -700,7 +730,10 @@ export default function AdventureSample() {
       }
 
       const target = event.target;
-      if (target instanceof HTMLElement && target.closest("[data-ui-control='true']")) {
+      if (
+        target instanceof HTMLElement &&
+        target.closest("[data-ui-control='true']")
+      ) {
         return;
       }
 
@@ -828,8 +861,8 @@ export default function AdventureSample() {
                 {runState === "paused" && (
                   <StageOverlay
                     eyebrow="Pause"
-                    title="Take A Breath"
-                    description="The run is paused. Press P or tap resume when you are ready to jump again."
+                    title="용사에게도 휴식이 필요해"
+                    description="다시 마왕을 무찌르러 가볼까?"
                     actions={[
                       {
                         label: "Resume",
@@ -927,8 +960,8 @@ export default function AdventureSample() {
               Please rotate your device
             </h3>
             <p className="mt-3 text-sm font-bold leading-relaxed text-[#365486]">
-              The runner uses a wide 2:1 stage. Rotate to landscape so the
-              Pixi canvas can fill the frame cleanly without being cut off.
+              The runner uses a wide 2:1 stage. Rotate to landscape so the Pixi
+              canvas can fill the frame cleanly without being cut off.
             </p>
           </div>
         </div>

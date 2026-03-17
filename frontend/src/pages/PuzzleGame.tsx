@@ -51,7 +51,7 @@ const MOUSE_DRAG_DISTANCE_PX = 4;
 const TOUCH_DRAG_ACTIVATION_DELAY_MS = 90;
 const TOUCH_DRAG_TOLERANCE_PX = 10;
 const TAP_ROTATE_MAX_MS = 180;
-const IMAGE_URL = "/assets/rico_puzzle_sample.png";
+const IMAGE_URL = "/assets/rico_puzzle_birthday_banquet.png";
 const PUZZLE_ACHIEVEMENT_CODE = "FIRST_PUZZLE";
 
 // --- Types ---
@@ -182,10 +182,12 @@ const createPieces = () => {
 
   for (let row = 0; row < ROWS; row++) {
     for (let col = 0; col < COLS; col++) {
-      const top = row === 0 ? 0 : internalHorizontal[row - 1][col] === 1 ? -1 : 1;
+      const top =
+        row === 0 ? 0 : internalHorizontal[row - 1][col] === 1 ? -1 : 1;
       const right = col === COLS - 1 ? 0 : internalVertical[row][col];
       const bottom = row === ROWS - 1 ? 0 : internalHorizontal[row][col];
-      const left = col === 0 ? 0 : internalVertical[row][col - 1] === 1 ? -1 : 1;
+      const left =
+        col === 0 ? 0 : internalVertical[row][col - 1] === 1 ? -1 : 1;
       const padding = {
         top: top === 1 ? CONNECTOR_DEPTH : 0,
         right: right === 1 ? CONNECTOR_DEPTH : 0,
@@ -285,7 +287,9 @@ const buildSpawnZones = (
       x: boardBounds.x + boardBounds.width + margin,
       y: margin,
       width:
-        containerBounds.width - (boardBounds.x + boardBounds.width) - margin * 2,
+        containerBounds.width -
+        (boardBounds.x + boardBounds.width) -
+        margin * 2,
       height: containerBounds.height - margin * 2,
     },
     {
@@ -299,7 +303,9 @@ const buildSpawnZones = (
       y: boardBounds.y + boardBounds.height + margin,
       width: containerBounds.width - margin * 2,
       height:
-        containerBounds.height - (boardBounds.y + boardBounds.height) - margin * 2,
+        containerBounds.height -
+        (boardBounds.y + boardBounds.height) -
+        margin * 2,
     },
   ].filter((zone) => zone.width > 24 && zone.height > 24);
 };
@@ -339,18 +345,17 @@ const assignSpawnPositions = (
     boardRect,
   );
   const placedRects: Bounds[] = [];
-  const fallbackZone =
-    zones.reduce<SpawnZone | null>((largest, zone) => {
-      if (!largest) return zone;
-      return zone.width * zone.height > largest.width * largest.height
-        ? zone
-        : largest;
-    }, null) ?? {
-      x: 16,
-      y: 16,
-      width: Math.max(containerRect.width - 32, 1),
-      height: Math.max(containerRect.height - 32, 1),
-    };
+  const fallbackZone = zones.reduce<SpawnZone | null>((largest, zone) => {
+    if (!largest) return zone;
+    return zone.width * zone.height > largest.width * largest.height
+      ? zone
+      : largest;
+  }, null) ?? {
+    x: 16,
+    y: 16,
+    width: Math.max(containerRect.width - 32, 1),
+    height: Math.max(containerRect.height - 32, 1),
+  };
 
   return basePieces.map((piece) => {
     const { renderWidth, renderHeight, offsetX, offsetY } = getScaledBounds(
@@ -361,7 +366,8 @@ const assignSpawnPositions = (
     let position: { currentX: number; currentY: number } | null = null;
 
     for (let i = 0; i < 100; i++) {
-      const zone = zones[Math.floor(Math.random() * zones.length)] ?? fallbackZone;
+      const zone =
+        zones[Math.floor(Math.random() * zones.length)] ?? fallbackZone;
       const maxLeft = Math.max(zone.x, zone.x + zone.width - renderWidth);
       const maxTop = Math.max(zone.y, zone.y + zone.height - renderHeight);
       const expandedLeft =
@@ -511,12 +517,8 @@ const PuzzleSlotShape = ({
     >
       <path
         d={piece.shapePath}
-        fill={
-          highlighted ? "rgba(94,199,165,0.24)" : "rgba(22,109,119,0.08)"
-        }
-        stroke={
-          highlighted ? "rgba(94,199,165,0.75)" : "rgba(22,109,119,0.24)"
-        }
+        fill={highlighted ? "rgba(94,199,165,0.24)" : "rgba(22,109,119,0.08)"}
+        stroke={highlighted ? "rgba(94,199,165,0.75)" : "rgba(22,109,119,0.24)"}
         strokeWidth={2}
       />
     </svg>
@@ -580,9 +582,9 @@ const DraggablePiece = React.memo(
   }) => {
     const { attributes, listeners, setNodeRef, isDragging, transform } =
       useDraggable({
-      id: piece.id,
-      disabled: piece.isPlaced,
-    });
+        id: piece.id,
+        disabled: piece.isPlaced,
+      });
 
     const startRef = React.useRef<{
       x: number;
@@ -662,7 +664,10 @@ const DraggablePiece = React.memo(
           animate={{ rotate: piece.rotation }}
           transition={{ type: "spring", stiffness: 200, damping: 20 }}
         >
-          <PuzzlePieceComponent piece={piece} displayPieceSize={displayPieceSize} />
+          <PuzzlePieceComponent
+            piece={piece}
+            displayPieceSize={displayPieceSize}
+          />
         </motion.div>
       </div>
     );
@@ -854,7 +859,8 @@ const PuzzleGame: React.FC = () => {
     const { active, over, delta } = event;
     const id = Number(active.id);
     const scale = displayPieceSize / PIECE_SIZE;
-    const containerWidth = playAreaRef.current?.clientWidth ?? window.innerWidth;
+    const containerWidth =
+      playAreaRef.current?.clientWidth ?? window.innerWidth;
     const containerHeight =
       playAreaRef.current?.clientHeight ?? window.innerHeight;
 
@@ -901,9 +907,7 @@ const PuzzleGame: React.FC = () => {
 
     setPieces((prev) =>
       prev.map((piece) =>
-        piece.id === id
-          ? { ...piece, rotation: piece.rotation + 90 }
-          : piece,
+        piece.id === id ? { ...piece, rotation: piece.rotation + 90 } : piece,
       ),
     );
   }, []);

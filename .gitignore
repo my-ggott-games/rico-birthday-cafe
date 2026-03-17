@@ -7,6 +7,7 @@
 # User requested: Ignore main assets but ALLOW codygame assets
 frontend/public/assets/*.png
 !frontend/public/assets/rico_puzzle_sample.png
+!frontend/public/assets/rico_puzzle_birthday_banquet.png
 frontend/public/assets/*.webp
 frontend/public/assets/*.svg
 !frontend/public/assets/codygame/
