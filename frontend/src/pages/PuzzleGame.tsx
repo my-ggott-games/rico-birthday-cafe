@@ -1472,7 +1472,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   return (
     <GameContainer
       title="퍼즐 맞추기"
-      desc="어떤 그림이 나올까?"
+      desc="리코야 생일상 차려놨어 밥 굶으면 안돼"
       gameName="퍼즐 맞추기"
       helpSlides={PUZZLE_TUTORIAL_SLIDES}
       className="bg-[#FFFFF8]"
