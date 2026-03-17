@@ -34,40 +34,58 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const hiddenClass = headerHidden
     ? "opacity-0 pointer-events-none"
     : "opacity-100";
+  const preventTextDrag = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+  };
+  const containerLayoutVars = {
+    "--container-gutter": "clamp(1rem, 5vw, 3rem)",
+    "--header-top-padding": "clamp(1rem, 8vh, 3rem)",
+    "--header-bottom-padding": "clamp(0.875rem, 3vh, 1.5rem)",
+    "--header-gap": "clamp(0.75rem, 2vw, 1.25rem)",
+  } as React.CSSProperties;
 
   return (
     <div
       className={`w-full min-h-[100dvh] flex flex-col overflow-x-hidden ${className}`}
+      style={containerLayoutVars}
     >
       <div
-        className={`fixed top-4 left-4 z-40 lg:hidden transition-opacity duration-500 ${hiddenClass}`}
+        className={`fixed z-40 select-none lg:hidden transition-opacity duration-500 ${hiddenClass}`}
+        draggable={false}
+        onDragStart={preventTextDrag}
+        style={{
+          top: "var(--container-gutter)",
+          left: "var(--container-gutter)",
+        }}
       >
         <ReturnButton
           gameName={gameName}
           label="돌아가기"
-          className="px-3 py-2 rounded-2xl font-bold text-sm flex items-center gap-1 border-2 whitespace-nowrap bg-pale-custard text-[#166D77] border-[#bef264] shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 items-center px-4 sm:px-8 pt-8 sm:pt-10 pb-4 sm:pb-6 gap-3 sm:gap-4">
+      <div
+        className="grid grid-cols-1 items-center select-none lg:grid-cols-3"
+        draggable={false}
+        onDragStart={preventTextDrag}
+        style={{
+          paddingInline: "var(--container-gutter)",
+          paddingTop: "var(--header-top-padding)",
+          paddingBottom: "var(--header-bottom-padding)",
+          gap: "var(--header-gap)",
+        }}
+      >
         <div
           className={`hidden lg:flex justify-start order-1 transition-opacity duration-500 ${hiddenClass}`}
         >
           <ReturnButton
             gameName={gameName}
             label="돌아가기"
-            className="px-4 py-2 rounded-2xl font-bold text-sm flex items-center gap-1.5 border-2 whitespace-nowrap"
-            style={{
-              background: "#FFFFF8",
-              color: "#166D77",
-              borderColor: "#bef264",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            }}
           />
         </div>
 
         <div
-          className={`flex flex-col items-center text-center order-1 lg:order-2 pt-4 sm:pt-6 lg:pt-0 transition-opacity duration-500 ${hiddenClass}`}
+          className={`flex flex-col items-center text-center order-1 lg:order-2 transition-opacity duration-500 ${hiddenClass}`}
         >
           <CommonTitle
             title={title}

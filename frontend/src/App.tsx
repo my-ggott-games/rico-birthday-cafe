@@ -15,6 +15,7 @@ const FortuneGame = lazy(() => import("./pages/FortuneGame"));
 const AdventureSample = lazy(() => import("./pages/AdventureSample"));
 const CodySample = lazy(() => import("./pages/CodySample"));
 const PuzzleGame = lazy(() => import("./pages/PuzzleGame"));
+const PuzzleSandbox = lazy(() => import("./pages/PuzzleSandbox"));
 const AsparagusMerge = lazy(() => import("./pages/AsparagusMerge"));
 const Credits = lazy(() => import("./pages/Credits"));
 
@@ -39,19 +40,8 @@ function App() {
             {/* <Route path="/game/adventure" element={<AdventureGame />} /> */}
             <Route path="/game/adventure" element={<AdventureSample />} />
             <Route path="/sample/adventure" element={<AdventureSample />} />
-            <Route
-              path="/game/baseball"
-              element={
-                <div className="min-h-screen bg-[#FFFFF8] text-[#166D77] flex flex-col items-center justify-center">
-                  <div className="text-6xl mb-4">⚾</div>
-                  <h2 className="text-3xl font-black font-handwriting">
-                    Number Baseball
-                  </h2>
-                  <p className="mt-2 text-[#5EC7A5] font-bold">Coming Soon!</p>
-                </div>
-              }
-            />
             <Route path="/game/puzzle" element={<PuzzleGame />} />
+            <Route path="/sample/puzzle" element={<PuzzleSandbox />} />
             <Route path="/game/asparagus" element={<AsparagusMerge />} />
             <Route path="/credits" element={<Credits />} />
             {/* </Route> */}

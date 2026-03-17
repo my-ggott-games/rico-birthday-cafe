@@ -17,6 +17,8 @@ import confetti from "canvas-confetti";
 import { BASE_URL } from "../utils/api";
 import { useAuthStore } from "../store/useAuthStore";
 import { useToastStore } from "../store/useToastStore";
+import { HolographicOverlay } from "../components/game/HolographicOverlay";
+import { ActionButton } from "../components/common/ActionButton";
 
 const PUZZLE_TUTORIAL_SLIDES: TutorialSlide[] = [
   {
@@ -37,8 +39,8 @@ const PUZZLE_TUTORIAL_SLIDES: TutorialSlide[] = [
 ];
 
 // --- Constants ---
-const ROWS = 4;
-const COLS = 4;
+const ROWS = 10;
+const COLS = 10;
 const PIECE_SIZE = 100;
 const CONNECTOR_NECK = 16;
 const CONNECTOR_DEPTH = 16;
@@ -46,13 +48,25 @@ const BOARD_SIZE = {
   width: COLS * PIECE_SIZE,
   height: ROWS * PIECE_SIZE,
 };
-const MIN_DISPLAY_PIECE_SIZE = 64;
+const MIN_DISPLAY_PIECE_SIZE = 24;
+const MOBILE_BOARD_HORIZONTAL_PADDING = 96;
+const DESKTOP_BOARD_HORIZONTAL_PADDING = 96;
+const MOBILE_BOARD_VERTICAL_PADDING = 360;
+const DESKTOP_BOARD_VERTICAL_PADDING = 180;
 const MOUSE_DRAG_DISTANCE_PX = 4;
 const TOUCH_DRAG_ACTIVATION_DELAY_MS = 90;
 const TOUCH_DRAG_TOLERANCE_PX = 10;
 const TAP_ROTATE_MAX_MS = 180;
 const IMAGE_URL = "/assets/rico_puzzle_birthday_banquet.png";
 const PUZZLE_ACHIEVEMENT_CODE = "FIRST_PUZZLE";
+
+type DeviceOrientationEventWithPermission = typeof DeviceOrientationEvent & {
+  requestPermission?: () => Promise<"granted" | "denied">;
+};
+
+type DeviceMotionEventWithPermission = typeof DeviceMotionEvent & {
+  requestPermission?: () => Promise<"granted" | "denied">;
+};
 
 // --- Types ---
 type EdgeValue = -1 | 0 | 1;
@@ -94,14 +108,77 @@ interface PuzzlePiece {
 }
 
 // --- Helpers ---
-const getDisplayPieceSize = (viewportWidth: number) =>
-  Math.max(
+const getDisplayPieceSize = (viewportWidth: number, viewportHeight: number) => {
+  const isDesktop = viewportWidth >= 1024;
+  const availableBoardWidth =
+    (isDesktop ? viewportWidth * 0.42 : viewportWidth) -
+    (isDesktop
+      ? DESKTOP_BOARD_HORIZONTAL_PADDING
+      : MOBILE_BOARD_HORIZONTAL_PADDING);
+  const availableBoardHeight =
+    viewportHeight -
+    (isDesktop
+      ? DESKTOP_BOARD_VERTICAL_PADDING
+      : MOBILE_BOARD_VERTICAL_PADDING);
+
+  return Math.max(
     MIN_DISPLAY_PIECE_SIZE,
-    Math.min(PIECE_SIZE, Math.floor(viewportWidth * 0.18)),
+    Math.min(
+      PIECE_SIZE,
+      Math.floor(availableBoardWidth / COLS),
+      Math.floor(availableBoardHeight / ROWS),
+    ),
   );
+};
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
+
+const requestSensorPermission = async () => {
+  if (typeof window === "undefined" || !("DeviceOrientationEvent" in window)) {
+    return true;
+  }
+
+  if (!window.isSecureContext) {
+    return false;
+  }
+
+  const orientationEvent = window.DeviceOrientationEvent as
+    | DeviceOrientationEventWithPermission
+    | undefined;
+  const motionEvent = window.DeviceMotionEvent as
+    | DeviceMotionEventWithPermission
+    | undefined;
+
+  const permissionRequests: Array<Promise<"granted" | "denied">> = [];
+
+  if (typeof orientationEvent?.requestPermission === "function") {
+    permissionRequests.push(orientationEvent.requestPermission());
+  }
+
+  if (typeof motionEvent?.requestPermission === "function") {
+    permissionRequests.push(motionEvent.requestPermission());
+  }
+
+  if (permissionRequests.length === 0) {
+    return true;
+  }
+
+  try {
+    const results = await Promise.all(permissionRequests);
+    return results.every((result) => result === "granted");
+  } catch (error) {
+    console.error("Device sensor permission request failed", error);
+    return false;
+  }
+};
+
+const getNodeEnv = () =>
+  (
+    globalThis as typeof globalThis & {
+      process?: { env?: { NODE_ENV?: string } };
+    }
+  ).process?.env?.NODE_ENV;
 
 const createInterlockingPath = (
   edges: PuzzlePiece["edgeTypes"],
@@ -168,6 +245,81 @@ const createInterlockingPath = (
   return `M ${x0} ${y0} ${top} ${right} ${bottom} ${left} Z`
     .replace(/\s+/g, " ")
     .trim();
+};
+
+const createGuidelinePath = (
+  piece: Pick<PuzzlePiece, "edgeTypes" | "padding" | "correctX" | "correctY">,
+) => {
+  const { edgeTypes: edges, padding, correctX, correctY } = piece;
+  const x0 = padding.left;
+  const y0 = padding.top;
+  const x1 = x0 + PIECE_SIZE;
+  const y1 = y0 + PIECE_SIZE;
+  const midX = x0 + PIECE_SIZE / 2;
+  const midY = y0 + PIECE_SIZE / 2;
+
+  const neck = CONNECTOR_NECK;
+  const depth = CONNECTOR_DEPTH;
+
+  const top =
+    edges.top === 0
+      ? `L ${x1} ${y0}`
+      : `L ${midX - neck} ${y0}
+         C ${midX - neck} ${y0 + edges.top * -depth * 0.45},
+           ${midX - neck * 0.55} ${y0 + edges.top * -depth},
+           ${midX} ${y0 + edges.top * -depth}
+         C ${midX + neck * 0.55} ${y0 + edges.top * -depth},
+           ${midX + neck} ${y0 + edges.top * -depth * 0.45},
+           ${midX + neck} ${y0}
+         L ${x1} ${y0}`;
+
+  const right =
+    edges.right === 0
+      ? `L ${x1} ${y1}`
+      : `L ${x1} ${midY - neck}
+         C ${x1 + edges.right * depth * 0.45} ${midY - neck},
+           ${x1 + edges.right * depth} ${midY - neck * 0.55},
+           ${x1 + edges.right * depth} ${midY}
+         C ${x1 + edges.right * depth} ${midY + neck * 0.55},
+           ${x1 + edges.right * depth * 0.45} ${midY + neck},
+           ${x1} ${midY + neck}
+         L ${x1} ${y1}`;
+
+  const bottom =
+    edges.bottom === 0
+      ? `L ${x0} ${y1}`
+      : `L ${midX + neck} ${y1}
+         C ${midX + neck} ${y1 + edges.bottom * depth * 0.45},
+           ${midX + neck * 0.55} ${y1 + edges.bottom * depth},
+           ${midX} ${y1 + edges.bottom * depth}
+         C ${midX - neck * 0.55} ${y1 + edges.bottom * depth},
+           ${midX - neck} ${y1 + edges.bottom * depth * 0.45},
+           ${midX - neck} ${y1}
+         L ${x0} ${y1}`;
+
+  const left =
+    edges.left === 0
+      ? `L ${x0} ${y0}`
+      : `L ${x0} ${midY + neck}
+         C ${x0 + edges.left * -depth * 0.45} ${midY + neck},
+           ${x0 + edges.left * -depth} ${midY + neck * 0.55},
+           ${x0 + edges.left * -depth} ${midY}
+         C ${x0 + edges.left * -depth} ${midY - neck * 0.55},
+           ${x0 + edges.left * -depth * 0.45} ${midY - neck},
+           ${x0} ${midY - neck}
+         L ${x0} ${y0}`;
+
+  const segments = [`M ${x0} ${y0} ${top}`, `M ${x0} ${y1} ${left}`];
+
+  if (correctX === COLS - 1) {
+    segments.push(`M ${x1} ${y0} ${right}`);
+  }
+
+  if (correctY === ROWS - 1) {
+    segments.push(`M ${x1} ${y1} ${bottom}`);
+  }
+
+  return segments.join(" ").replace(/\s+/g, " ").trim();
 };
 
 const createPieces = () => {
@@ -432,17 +584,22 @@ type PuzzlePieceComponentProps = {
   piece: PuzzlePiece;
   displayPieceSize: number;
   className?: string;
+  showOutline?: boolean;
 };
+
+const PIECE_RENDER_BLEED = 3;
 
 const PuzzlePieceComponent = ({
   piece,
   displayPieceSize,
   className,
+  showOutline = true,
 }: PuzzlePieceComponentProps) => {
   const scale = displayPieceSize / PIECE_SIZE;
   const clipId = React.useId().replace(/:/g, "");
-  const renderWidth = piece.expandedBounds.width * scale;
-  const renderHeight = piece.expandedBounds.height * scale;
+  const bleed = PIECE_RENDER_BLEED * scale;
+  const renderWidth = piece.expandedBounds.width * scale + bleed * 2;
+  const renderHeight = piece.expandedBounds.height * scale + bleed * 2;
   const offsetX = piece.padding.left * scale;
   const offsetY = piece.padding.top * scale;
 
@@ -458,14 +615,16 @@ const PuzzlePieceComponent = ({
       className={`flex items-center justify-center ${className || ""}`}
     >
       <svg
-        viewBox={`0 0 ${piece.expandedBounds.width} ${piece.expandedBounds.height}`}
+        viewBox={`${-PIECE_RENDER_BLEED} ${-PIECE_RENDER_BLEED} ${piece.expandedBounds.width + PIECE_RENDER_BLEED * 2} ${piece.expandedBounds.height + PIECE_RENDER_BLEED * 2}`}
         style={{
           position: "absolute",
-          left: `${-offsetX}px`,
-          top: `${-offsetY}px`,
+          left: `${-offsetX - bleed}px`,
+          top: `${-offsetY - bleed}px`,
           width: `${renderWidth}px`,
           height: `${renderHeight}px`,
-          filter: piece.isPlaced ? "brightness(1.05)" : "none",
+          filter: piece.isPlaced
+            ? "brightness(1.06) saturate(1.08) drop-shadow(0 10px 16px rgba(22,109,119,0.14))"
+            : "drop-shadow(0 8px 12px rgba(22,109,119,0.12))",
         }}
       >
         <defs>
@@ -482,6 +641,24 @@ const PuzzlePieceComponent = ({
           preserveAspectRatio="none"
           clipPath={`url(#${clipId})`}
         />
+        {showOutline && (
+          <>
+            <path
+              d={piece.shapePath}
+              fill="none"
+              stroke="rgba(255, 255, 255, 0.88)"
+              strokeWidth={2}
+              vectorEffect="non-scaling-stroke"
+            />
+            <path
+              d={piece.shapePath}
+              fill="none"
+              stroke="rgba(22, 109, 119, 1)"
+              strokeWidth={1}
+              vectorEffect="non-scaling-stroke"
+            />
+          </>
+        )}
       </svg>
     </div>
   );
@@ -497,29 +674,35 @@ const PuzzleSlotShape = ({
   highlighted?: boolean;
 }) => {
   const scale = displayPieceSize / PIECE_SIZE;
-  const width = piece.expandedBounds.width * scale;
-  const height = piece.expandedBounds.height * scale;
+  const bleed = PIECE_RENDER_BLEED * scale;
+  const width = piece.expandedBounds.width * scale + bleed * 2;
+  const height = piece.expandedBounds.height * scale + bleed * 2;
   const offsetX = piece.padding.left * scale;
   const offsetY = piece.padding.top * scale;
+  const guidelinePath = createGuidelinePath(piece);
 
   return (
     <svg
-      viewBox={`0 0 ${piece.expandedBounds.width} ${piece.expandedBounds.height}`}
+      viewBox={`${-PIECE_RENDER_BLEED} ${-PIECE_RENDER_BLEED} ${piece.expandedBounds.width + PIECE_RENDER_BLEED * 2} ${piece.expandedBounds.height + PIECE_RENDER_BLEED * 2}`}
       style={{
         position: "absolute",
-        left: `${-offsetX}px`,
-        top: `${-offsetY}px`,
+        left: `${-offsetX - bleed}px`,
+        top: `${-offsetY - bleed}px`,
         width: `${width}px`,
         height: `${height}px`,
         overflow: "visible",
+        shapeRendering: "geometricPrecision",
       }}
       aria-hidden
     >
       <path
-        d={piece.shapePath}
-        fill={highlighted ? "rgba(94,199,165,0.24)" : "rgba(22,109,119,0.08)"}
-        stroke={highlighted ? "rgba(94,199,165,0.75)" : "rgba(22,109,119,0.24)"}
-        strokeWidth={2}
+        d={guidelinePath}
+        fill="none"
+        stroke={highlighted ? "#1B7C87" : "#166D77"}
+        strokeWidth={1.0}
+        vectorEffect="non-scaling-stroke"
+        strokeLinejoin="round"
+        strokeLinecap="round"
       />
     </svg>
   );
@@ -564,11 +747,111 @@ const DroppableCell = ({
         <PuzzlePieceComponent
           piece={placedPiece}
           displayPieceSize={displayPieceSize}
+          showOutline={!completed}
         />
       )}
     </div>
   );
 };
+
+const CORNER_PETAL_ROTATIONS = [0, 45, 90, 135, 180, 225, 270, 315];
+
+const FrameCorner = ({
+  className,
+  shadowDirection = "down",
+}: {
+  className: string;
+  shadowDirection?: "down" | "up";
+}) => (
+  <div
+    className={`pointer-events-none absolute z-[12] h-11 w-11 overflow-visible sm:h-12 sm:w-12 lg:h-14 lg:w-14 ${className}`}
+  >
+    <div
+      className="absolute inset-[3px] rounded-full sm:inset-[3.5px] lg:inset-[4px]"
+      style={{
+        background:
+          "radial-gradient(circle at 34% 30%, #fffaf0 0%, #f4e4c0 38%, #d4a466 68%, #8d673f 100%)",
+        boxShadow:
+          shadowDirection === "up"
+            ? "0 -14px 24px rgba(75,51,28,0.24), 0 0 0 1px rgba(255,247,235,0.55)"
+            : "0 14px 24px rgba(75,51,28,0.26), 0 0 0 1px rgba(255,247,235,0.55)",
+      }}
+    />
+    <svg viewBox="0 0 56 56" className="relative h-full w-full" aria-hidden>
+      <g transform="translate(28 28)">
+        <circle
+          r="25.4"
+          fill="rgba(255, 249, 237, 0.58)"
+          stroke="#b98b4a"
+          strokeWidth="1.2"
+        />
+        <circle
+          r="21.2"
+          fill="none"
+          stroke="rgba(125, 90, 53, 0.92)"
+          strokeWidth="0.9"
+        />
+        <circle
+          r="17.2"
+          fill="rgba(255, 247, 232, 0.92)"
+          stroke="#c89d60"
+          strokeWidth="0.8"
+        />
+        {CORNER_PETAL_ROTATIONS.map((rotation) => (
+          <path
+            key={rotation}
+            d="M 0 -19 C 3.4 -15.5 3.8 -9.5 0 -5.7 C -3.8 -9.5 -3.4 -15.5 0 -19 Z"
+            fill="rgba(200, 157, 96, 0.9)"
+            stroke="#7d5a35"
+            strokeWidth="0.7"
+            transform={`rotate(${rotation})`}
+          />
+        ))}
+        <circle
+          r="8.2"
+          fill="rgba(247, 237, 220, 0.96)"
+          stroke="#7d5a35"
+          strokeWidth="0.8"
+        />
+        <circle r="4.3" fill="#b98b4a" />
+        <circle r="2.1" fill="#fff7e8" />
+        <circle cx="0" cy="-13" r="1.3" fill="#7d5a35" />
+        <circle cx="13" cy="0" r="1.3" fill="#7d5a35" />
+        <circle cx="0" cy="13" r="1.3" fill="#7d5a35" />
+        <circle cx="-13" cy="0" r="1.3" fill="#7d5a35" />
+      </g>
+    </svg>
+  </div>
+);
+
+const MuseumPlaque = ({ className = "mt-5" }: { className?: string }) => (
+  <div className={`${className} flex justify-center`}>
+    <div
+      className="w-full rounded-[1.35rem] p-[6px]"
+      style={{
+        background:
+          "linear-gradient(145deg, #4B331C 0%, #7D5A35 22%, #BC9159 48%, #E8D2A8 76%, #8D673F 100%)",
+      }}
+    >
+      <div
+        className="pointer-events-none rounded-[1.05rem] border border-[#fff6df]/35 p-[3px]"
+        style={{
+          boxShadow:
+            "inset 0 1px 0 rgba(255, 247, 235, 0.32), inset 0 -8px 14px rgba(75, 51, 28, 0.14)",
+        }}
+      >
+        <div className="rounded-[0.9rem] border border-[#fff7eb] bg-[linear-gradient(180deg,#f8f4ea_0%,#ede5d3_100%)] px-6 py-4 text-center text-[#4b331c]">
+          <h3 className="mt-2 text-2xl font-semibold tracking-[0.02em]">
+            Birthday Banquet
+          </h3>
+          <p className="mt-2 text-sm tracking-[0.12em] text-[#6f5130]">
+            상승새 (2026)
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 const DraggablePiece = React.memo(
   ({
@@ -677,63 +960,90 @@ const DraggablePiece = React.memo(
     prev.displayPieceSize === next.displayPieceSize,
 );
 
-const PuzzleGame: React.FC = () => {
+type PuzzleGameProps = {
+  embedInContainer?: boolean;
+};
+
+const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   const [pieces, setPieces] = useState<PuzzlePiece[]>([]);
   const [completed, setCompleted] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
+  const [isOpeningPhotocard, setIsOpeningPhotocard] = useState(false);
+  const [sensorUnavailable, setSensorUnavailable] = useState(false);
+  const [orientationEnabled, setOrientationEnabled] = useState(false);
   const [layoutVersion, setLayoutVersion] = useState(0);
   const [displayPieceSize, setDisplayPieceSize] = useState(() =>
     typeof window === "undefined"
       ? PIECE_SIZE
-      : getDisplayPieceSize(window.innerWidth),
+      : getDisplayPieceSize(window.innerWidth, window.innerHeight),
   );
   const playAreaRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const puzzleAchievementAwardedRef = useRef(false);
   const { token } = useAuthStore();
   const { addToast } = useToastStore();
+  const isDevelopment = getNodeEnv() === "development" || import.meta.env.DEV;
+  const isCoarsePointerDevice =
+    typeof window !== "undefined" &&
+    window.matchMedia("(pointer: coarse)").matches;
 
   const triggerFireworks = () => {
-    const duration = 15 * 1000;
-    const animationEnd = Date.now() + duration;
-    const defaults = {
-      startVelocity: 45,
-      spread: 360,
-      ticks: 100,
+    const burstColors = [
+      "#5EC7A5",
+      "#7DD3FC",
+      "#C4B5FD",
+      "#F9A8D4",
+      "#FDE68A",
+      "#FB7185",
+      "#F97316",
+      "#A3E635",
+      "#F8FAFC",
+    ];
+
+    confetti({
+      particleCount: 140,
+      spread: 108,
+      startVelocity: 46,
+      decay: 0.94,
+      gravity: 0.95,
+      scalar: 1,
+      ticks: 180,
       zIndex: 0,
-      colors: ["#5EC7A5", "#bef264", "#FFD700", "#FFFFF8"],
-    };
+      colors: burstColors,
+      origin: { x: 0.5, y: 0.42 },
+    });
 
-    const randomInRange = (min: number, max: number) =>
-      Math.random() * (max - min) + min;
+    confetti({
+      particleCount: 70,
+      angle: 60,
+      spread: 72,
+      startVelocity: 42,
+      decay: 0.94,
+      gravity: 1,
+      scalar: 0.9,
+      ticks: 160,
+      zIndex: 0,
+      colors: burstColors,
+      origin: { x: 0.06, y: 0.72 },
+    });
 
-    const interval: ReturnType<typeof setInterval> = window.setInterval(() => {
-      const timeLeft = animationEnd - Date.now();
-
-      if (timeLeft <= 0) {
-        clearInterval(interval);
-        return;
-      }
-
-      const particleCount = 70 * (timeLeft / duration);
-
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.1, 0.4), y: Math.random() - 0.2 },
-      });
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.6, 0.9), y: Math.random() - 0.2 },
-      });
-    }, 300);
+    confetti({
+      particleCount: 70,
+      angle: 120,
+      spread: 72,
+      startVelocity: 42,
+      decay: 0.94,
+      gravity: 1,
+      scalar: 0.9,
+      ticks: 160,
+      zIndex: 0,
+      colors: burstColors,
+      origin: { x: 0.94, y: 0.72 },
+    });
   };
 
   useEffect(() => {
     if (completed) {
       triggerFireworks();
-      setShowPopup(true);
     }
   }, [completed]);
 
@@ -763,8 +1073,8 @@ const PuzzleGame: React.FC = () => {
         const newlyAwarded = (await response.json()) === true;
         if (newlyAwarded) {
           addToast({
-            title: "퍼즐 첫 완성",
-            description: "퍼즐놀이를 처음으로 완성했다!",
+            title: "퍼즐 완성",
+            description: "퍼즐을 처음으로 완성했다!",
             icon: "🧩",
           });
         }
@@ -792,7 +1102,9 @@ const PuzzleGame: React.FC = () => {
 
   useEffect(() => {
     const updateDisplaySize = () =>
-      setDisplayPieceSize(getDisplayPieceSize(window.innerWidth));
+      setDisplayPieceSize(
+        getDisplayPieceSize(window.innerWidth, window.innerHeight),
+      );
 
     updateDisplaySize();
     window.addEventListener("resize", updateDisplaySize);
@@ -912,158 +1224,262 @@ const PuzzleGame: React.FC = () => {
     );
   }, []);
 
+  const handleDebugComplete = React.useCallback(() => {
+    setPieces((prev) =>
+      prev.map((piece) => ({
+        ...piece,
+        isPlaced: true,
+        rotation: 0,
+        currentX: -999,
+        currentY: -999,
+      })),
+    );
+  }, []);
+
+  const handlePhotocardMode = React.useCallback(async () => {
+    if (
+      typeof window === "undefined" ||
+      !isCoarsePointerDevice ||
+      !("DeviceOrientationEvent" in window)
+    ) {
+      setOrientationEnabled(false);
+      setSensorUnavailable(true);
+      return;
+    }
+
+    setIsOpeningPhotocard(true);
+
+    try {
+      const permissionGranted = await requestSensorPermission();
+      const canUseOrientation = window.isSecureContext && permissionGranted;
+
+      setOrientationEnabled(canUseOrientation);
+      setSensorUnavailable(!canUseOrientation);
+    } finally {
+      setIsOpeningPhotocard(false);
+    }
+  }, [isCoarsePointerDevice]);
+
   useEffect(() => {
     if (pieces.length > 0 && pieces.every((piece) => piece.isPlaced)) {
       setCompleted(true);
     }
   }, [pieces]);
 
-  return (
+  const content = (
     <DndContext
       sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <GameContainer
-        title="퍼즐놀이"
-        desc="어떤 그림이 나올까?"
-        gameName="퍼즐놀이"
-        helpSlides={PUZZLE_TUTORIAL_SLIDES}
-        className="bg-[#FFFFF8]"
-        mainClassName="relative overflow-hidden"
+      <div
+        ref={playAreaRef}
+        className="w-full h-full bg-[#FFFFF8] relative overflow-hidden select-none touch-none flex flex-col"
       >
-        <div
-          ref={playAreaRef}
-          className="w-full h-full bg-[#FFFFF8] relative overflow-hidden select-none touch-none flex flex-col"
-        >
-          <div className="flex w-full flex-1 overflow-hidden">
-            <div
-              className="flex-1 relative bg-[rgba(239,246,255,0.1)] hidden lg:block"
-              id="area-left"
-            />
+        <div className="flex w-full flex-1 overflow-hidden">
+          <div
+            className="flex-1 relative bg-[rgba(239,246,255,0.1)] hidden lg:block"
+            id="area-left"
+          />
 
-            <div className="z-10 flex flex-1 items-center justify-center p-3 sm:p-4">
+          <div className="z-10 flex flex-1 items-center justify-center my-8 p-3 sm:p-4">
+            <div className="flex w-full flex-col items-center">
               <div
                 ref={boardRef}
-                className="relative bg-pale-custard/50 backdrop-blur-sm border-8 border-[#166D77] rounded-3xl p-6"
+                className="relative rounded-[2.3rem] p-[14px]"
+                style={{
+                  background:
+                    "linear-gradient(145deg, #4B331C 0%, #7D5A35 22%, #BC9159 48%, #E8D2A8 76%, #8D673F 100%)",
+                }}
               >
-                <div
-                  className="relative bg-[#fafafa] overflow-hidden"
-                  style={{
-                    width: `${displayPieceSize * COLS}px`,
-                    height: `${displayPieceSize * ROWS}px`,
-                  }}
-                >
-                  <div className="absolute inset-0 grid grid-cols-4 grid-rows-4 gap-0">
-                    {Array.from({ length: ROWS * COLS }).map((_, index) => {
-                      const col = index % COLS;
-                      const row = Math.floor(index / COLS);
-                      const cellId = `cell-${col}-${row}`;
-                      const slotPiece = pieces.find(
-                        (piece) =>
-                          piece.correctX === col && piece.correctY === row,
-                      );
-                      const placedPiece = pieces.find(
-                        (piece) =>
-                          piece.isPlaced &&
-                          piece.correctX === col &&
-                          piece.correctY === row,
-                      );
+                <FrameCorner className="-left-4 -top-4 sm:-left-5 sm:-top-5 lg:-left-6 lg:-top-6" />
+                <FrameCorner className="-right-4 -top-4 sm:-right-5 sm:-top-5 lg:-right-6 lg:-top-6" />
+                <FrameCorner
+                  className="-bottom-4 -left-4 sm:-bottom-5 sm:-left-5 lg:-bottom-6 lg:-left-6"
+                  shadowDirection="up"
+                />
+                <FrameCorner
+                  className="-bottom-4 -right-4 sm:-bottom-5 sm:-right-5 lg:-bottom-6 lg:-right-6"
+                  shadowDirection="up"
+                />
+                <div className="pointer-events-none absolute inset-[6px] rounded-[2rem] border border-[#fff6df]/35" />
 
-                      return (
-                        <DroppableCell
-                          key={index}
-                          id={cellId}
-                          slotPiece={slotPiece}
-                          placedPiece={placedPiece}
-                          completed={completed}
-                          displayPieceSize={displayPieceSize}
-                        />
-                      );
-                    })}
+                <div className="relative rounded-[1.7rem] border border-[#fff7eb] bg-[linear-gradient(180deg,#f8f4ea_0%,#ede5d3_100%)] p-4 sm:p-5">
+                  <div
+                    className="relative overflow-hidden border border-[#e8ddc6] bg-[#faf8f1]"
+                    style={{
+                      width: `${displayPieceSize * COLS}px`,
+                      height: `${displayPieceSize * ROWS}px`,
+                    }}
+                  >
+                    <div className="pointer-events-none absolute inset-0 z-[1] border border-white/35" />
+                    {!completed && (
+                      <div
+                        className="pointer-events-none absolute inset-0 z-[1]"
+                        style={{
+                          background:
+                            "linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0) 20%, rgba(68,46,24,0.04) 100%)",
+                        }}
+                      />
+                    )}
+                    <div
+                      className="absolute inset-0 z-[2] grid gap-0"
+                      style={{
+                        gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`,
+                        gridTemplateRows: `repeat(${ROWS}, minmax(0, 1fr))`,
+                      }}
+                    >
+                      {Array.from({ length: ROWS * COLS }).map((_, index) => {
+                        const col = index % COLS;
+                        const row = Math.floor(index / COLS);
+                        const cellId = `cell-${col}-${row}`;
+                        const slotPiece = pieces.find(
+                          (piece) =>
+                            piece.correctX === col && piece.correctY === row,
+                        );
+                        const placedPiece = pieces.find(
+                          (piece) =>
+                            piece.isPlaced &&
+                            piece.correctX === col &&
+                            piece.correctY === row,
+                        );
+
+                        return (
+                          <DroppableCell
+                            key={index}
+                            id={cellId}
+                            slotPiece={slotPiece}
+                            placedPiece={placedPiece}
+                            completed={completed}
+                            displayPieceSize={displayPieceSize}
+                          />
+                        );
+                      })}
+                    </div>
+                    <HolographicOverlay
+                      visible={completed}
+                      orientationEnabled={orientationEnabled}
+                      imageUrl={IMAGE_URL}
+                    />
                   </div>
                 </div>
               </div>
+              {completed && (
+                <MuseumPlaque className="mt-5 w-full max-w-[19rem] lg:hidden" />
+              )}
             </div>
-
-            <div
-              className="flex-1 relative bg-[rgba(254,242,242,0.1)] hidden lg:block"
-              id="area-right"
-            />
           </div>
 
           <div
-            className="relative h-[180px] w-full bg-[rgba(240,253,244,0.1)] sm:h-[200px]"
-            id="area-bottom"
-          />
-
-          <div className="absolute inset-0 pointer-events-none z-[30]">
-            <div className="pointer-events-auto">
-              {pieces.map((piece) => (
-                <DraggablePiece
-                  key={piece.id}
-                  piece={piece}
-                  onRotate={handleRotate}
-                  displayPieceSize={displayPieceSize}
-                />
-              ))}
-            </div>
-          </div>
-
-          <AnimatePresence>
-            {showPopup && (
-              <div className="fixed inset-x-0 bottom-10 z-[100] flex items-center justify-center pointer-events-none">
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0, y: 100 }}
-                  animate={{ scale: 1, opacity: 1, y: 0 }}
-                  exit={{ scale: 0.8, opacity: 0, y: 100 }}
-                  className="bg-pale-custard/95 backdrop-blur-md p-4 rounded-[30px] text-center shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-8 border-[#FFFFF8] pointer-events-auto relative max-w-lg mx-4"
-                >
-                  <div className="absolute -top-6 -left-6 text-4xl animate-bounce">
-                    🎈
-                  </div>
-                  <div className="absolute -top-6 -right-6 text-4xl animate-bounce delay-100">
-                    🎁
-                  </div>
-
-                  <h1 className="font-handwriting text-6xl text-[#5EC7A5] mb-3 drop-shadow-sm select-none">
-                    Happy Birthday!
-                  </h1>
-
-                  <div className="flex gap-3 justify-center">
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="bg-[#bef264] hover:bg-[#a8e04b] text-[#166D77] px-8 py-3 rounded-2xl font-black text-xl shadow-lg transition-all hover:scale-105 active:scale-95 border-b-4 border-black/10"
-                    >
-                      다시 하기
-                    </button>
-                    <button
-                      onClick={() => setShowPopup(false)}
-                      className="bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#6b7280] px-6 py-3 rounded-2xl font-bold text-lg transition-all border-b-4 border-black/5"
-                    >
-                      닫기
-                    </button>
-                  </div>
-                </motion.div>
+            className="relative hidden flex-1 bg-[rgba(254,242,242,0.1)] lg:block"
+            id="area-right"
+          >
+            {completed && (
+              <div className="absolute inset-0 flex items-center justify-center px-8">
+                <div className="flex w-full max-w-[19rem] flex-col items-center gap-6">
+                  <MuseumPlaque className="mt-0" />
+                  <ActionButton
+                    onClick={() => window.location.reload()}
+                    className="w-full"
+                    variant="sage"
+                    size="lg"
+                  >
+                    다시 하기
+                  </ActionButton>
+                </div>
               </div>
             )}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {completed && !showPopup && (
-              <motion.button
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                onClick={() => window.location.reload()}
-                className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[90] bg-[#5EC7A5] text-pale-custard px-10 py-4 rounded-full font-black text-2xl shadow-[0_10px_30px_rgba(244,63,94,0.3)] hover:scale-110 active:scale-95 transition-all border-b-4 border-black/20"
-              >
-                다시하기
-              </motion.button>
-            )}
-          </AnimatePresence>
+          </div>
         </div>
-      </GameContainer>
+
+        <div
+          className="relative h-[180px] w-full bg-[rgba(240,253,244,0.1)] sm:h-[200px]"
+          id="area-bottom"
+        />
+
+        <div className="absolute inset-0 pointer-events-none z-[30]">
+          <div className="pointer-events-auto">
+            {pieces.map((piece) => (
+              <DraggablePiece
+                key={piece.id}
+                piece={piece}
+                onRotate={handleRotate}
+                displayPieceSize={displayPieceSize}
+              />
+            ))}
+          </div>
+        </div>
+
+        {isDevelopment && !completed && (
+          <button
+            type="button"
+            onClick={handleDebugComplete}
+            className="fixed right-4 top-4 z-[120] rounded-full border border-[#166D77]/30 bg-[#166D77] px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#FFFFF8] shadow-[0_12px_26px_rgba(22,109,119,0.28)] transition-transform hover:scale-[1.04] active:scale-[0.98]"
+          >
+            DEBUG: COMPLETE PUZZLE
+          </button>
+        )}
+
+        <AnimatePresence>
+          {completed && (
+            <motion.div
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="fixed bottom-8 left-1/2 z-[90] flex w-[min(calc(100%-1.5rem),34rem)] -translate-x-1/2 flex-col items-center gap-3 px-3"
+            >
+              <div className="flex w-full flex-wrap items-center justify-center gap-3 rounded-[1.8rem] bg-[#fffaf0]/92 px-4 py-4 shadow-[0_18px_38px_rgba(75,51,28,0.12)] backdrop-blur-md lg:hidden">
+                <ActionButton
+                  onClick={() => window.location.reload()}
+                  variant="sage"
+                  size="md"
+                >
+                  다시 하기
+                </ActionButton>
+                {isCoarsePointerDevice && (
+                  <ActionButton
+                    onClick={() => void handlePhotocardMode()}
+                    disabled={isOpeningPhotocard}
+                    variant="teal"
+                    size="md"
+                  >
+                    {isOpeningPhotocard ? "열는 중..." : "Photocard Mode"}
+                  </ActionButton>
+                )}
+              </div>
+              {isCoarsePointerDevice && (
+                <p className="rounded-full bg-[#fffaf0]/88 px-4 py-2 text-center text-xs leading-5 text-[#166D77]/70 backdrop-blur-sm lg:hidden">
+                  `Photocard Mode`를 누르면 모바일에서 자이로스코프 권한을
+                  요청해.
+                </p>
+              )}
+              {sensorUnavailable && (
+                <p className="rounded-full bg-[#fff1f1]/92 px-4 py-2 text-center text-xs leading-5 text-[#A14646] backdrop-blur-sm lg:hidden">
+                  센서 권한을 받지 못했거나 HTTPS 환경이 아니라서 기울임 효과를
+                  켤 수 없어.
+                </p>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </DndContext>
+  );
+
+  if (!embedInContainer) {
+    return content;
+  }
+
+  return (
+    <GameContainer
+      title="퍼즐 맞추기"
+      desc="어떤 그림이 나올까?"
+      gameName="퍼즐 맞추기"
+      helpSlides={PUZZLE_TUTORIAL_SLIDES}
+      className="bg-[#FFFFF8]"
+      mainClassName="relative overflow-hidden"
+    >
+      {content}
+    </GameContainer>
   );
 };
 

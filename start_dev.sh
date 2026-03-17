@@ -23,12 +23,13 @@ cd ..
 # 3. Start Frontend
 echo "🎨 Starting React Frontend..."
 cd frontend
-npm run dev &
+npm run dev -- --host &
 FRONTEND_PID=$!
 cd ..
 
 echo "✅ All services started!"
 echo "   - Frontend: http://localhost:5173"
+echo "   - Frontend (LAN): http://<your-mac-ip>:5173"
 echo "   - Backend:  http://localhost:8080"
 echo "   - Database: localhost:5432"
 echo ""

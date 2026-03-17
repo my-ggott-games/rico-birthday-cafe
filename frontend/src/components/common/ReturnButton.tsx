@@ -2,12 +2,16 @@ import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { ActionButton } from "./ActionButton";
+import type { ActionButtonSize, ActionButtonVariant } from "./ActionButton";
 
 interface ReturnButtonProps {
   className?: string;
   style?: React.CSSProperties;
   gameName?: string;
   label?: string;
+  buttonVariant?: ActionButtonVariant;
+  buttonSize?: ActionButtonSize;
 }
 
 const MESSAGES = [
@@ -22,10 +26,15 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({
   style,
   gameName = "게임",
   label = "← 돌아가기",
+  buttonVariant = "frame",
+  buttonSize = "sm",
 }) => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const preventDrag = (event: React.DragEvent<HTMLElement>) => {
+    event.preventDefault();
+  };
 
   const handleOpen = () => {
     const randomMsg = MESSAGES[
@@ -37,20 +46,29 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({
 
   return (
     <>
-      <motion.button
+      <motion.div
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        onClick={handleOpen}
-        className={className}
-        style={style}
       >
-        {label}
-      </motion.button>
+        <ActionButton
+          onClick={handleOpen}
+          className={className}
+          style={style}
+          variant={buttonVariant}
+          size={buttonSize}
+        >
+          {label}
+        </ActionButton>
+      </motion.div>
 
       {createPortal(
         <AnimatePresence>
           {isOpen && (
-            <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4">
+            <div
+              className="fixed inset-0 z-[999999] flex items-center justify-center p-4 select-none"
+              draggable={false}
+              onDragStart={preventDrag}
+            >
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -62,25 +80,33 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({
                 initial={{ scale: 0.8, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.8, opacity: 0, y: 20 }}
-                className="bg-[#FFFFF8] p-6 rounded-[2rem] shadow-2xl z-10 max-w-sm w-full border-4 border-[#D6C0B0] text-center"
+                className="bg-[#FFFFF8] p-6 rounded-[2rem] shadow-2xl z-10 max-w-sm w-full border-4 border-[#D6C0B0] text-center select-none"
+                draggable={false}
               >
                 <span className="text-4xl block mb-3">🚪</span>
-                <h3 className="text-[#166D77] font-black text-xl mb-6">
+                <h3
+                  className="text-[#166D77] font-black text-xl mb-6 select-none"
+                  draggable={false}
+                >
                   {message}
                 </h3>
                 <div className="flex gap-3">
-                  <button
+                  <ActionButton
                     onClick={() => navigate("/lobby")}
-                    className="flex-1 py-3 rounded-xl font-black text-sm bg-[#ff6b6b] text-white hover:bg-[#fa5252] transition-colors"
+                    className="flex-1"
+                    variant="teal"
+                    size="md"
                   >
                     응
-                  </button>
-                  <button
+                  </ActionButton>
+                  <ActionButton
                     onClick={() => setIsOpen(false)}
-                    className="flex-1 py-3 rounded-xl font-black text-sm bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
+                    className="flex-1"
+                    variant="neutral"
+                    size="md"
                   >
                     아니
-                  </button>
+                  </ActionButton>
                 </div>
               </motion.div>
             </div>
