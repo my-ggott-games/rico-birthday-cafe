@@ -1029,6 +1029,12 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
               animate={{ y: 0, opacity: 1 }}
               className="flex w-full max-w-md flex-col items-center gap-3 lg:hidden"
             >
+              {sensorUnavailable && (
+                <p className="rounded-full bg-[#fff1f1]/92 px-4 py-2 text-center text-xs leading-5 text-[#A14646] backdrop-blur-sm">
+                  센서 권한을 받지 못했거나 HTTPS 환경이 아니라서 기울임 효과를
+                  켤 수 없어.
+                </p>
+              )}
             </motion.div>
           )}
         </div>
