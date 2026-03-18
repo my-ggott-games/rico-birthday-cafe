@@ -378,13 +378,32 @@ export const HolographicOverlay = ({
       {mobileInteractive && (
         <motion.div
           aria-hidden
-          className="absolute z-[6] h-5 w-5 rounded-full border-2 border-white/90 bg-[#ff3b30] shadow-[0_0_0_4px_rgba(255,255,255,0.18),0_10px_24px_rgba(122,10,10,0.42)]"
+          className="absolute z-[6] h-6 w-6 rounded-full"
           style={{
             left: probeX,
             top: probeY,
             transform: "translate(-50%, -50%)",
+            background:
+              `conic-gradient(from 0deg,
+                hsla(192,100%,54%,0.95),
+                hsla(272,100%,62%,0.95),
+                hsla(324,100%,62%,0.95),
+                hsla(52,100%,56%,0.95),
+                hsla(192,100%,54%,0.95))`,
+            boxShadow:
+              "0 0 0 2px rgba(255,255,255,0.72), 0 0 12px 4px rgba(100,220,255,0.55), 0 0 24px 6px rgba(200,100,255,0.35)",
+            filter: "blur(0.5px) saturate(1.4)",
           }}
-        />
+        >
+          {/* inner frosted core */}
+          <div
+            className="absolute inset-[4px] rounded-full"
+            style={{
+              background: "rgba(255,255,255,0.38)",
+              backdropFilter: "blur(2px)",
+            }}
+          />
+        </motion.div>
       )}
 
       {isDev && mobileInteractive && (
