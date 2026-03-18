@@ -86,22 +86,23 @@ export const HolographicOverlay = ({
 
   const diagonalField = useMemo(
     () =>
-      `linear-gradient(125deg,
-        transparent 0%,
-        ${palette.cyan} 18%,
-        transparent 36%,
-        ${palette.violet} 54%,
-        transparent 70%,
-        ${palette.gold} 92%)`,
+      `repeating-linear-gradient(125deg,
+        transparent 0 18px,
+        ${palette.cyan} 18px 34px,
+        transparent 34px 58px,
+        ${palette.violet} 58px 74px,
+        transparent 74px 96px,
+        ${palette.gold} 96px 112px,
+        transparent 112px 136px)`,
     [palette],
   );
   const diagonalOffsetX = useTransform(
     springX,
-    (value) => `${(value - 50) * 0.35}%`,
+    (value) => `${(value - 50) * 0.45}%`,
   );
   const diagonalOffsetY = useTransform(
     springY,
-    (value) => `${(value - 50) * 0.35}%`,
+    (value) => `${(value - 50) * 0.45}%`,
   );
 
   const desktopSweepGradient = useMemo(
@@ -215,9 +216,11 @@ export const HolographicOverlay = ({
         />
       )}
       <motion.div
-        className="absolute inset-0"
+        className="absolute inset-[-22%]"
         style={{
           background: diagonalField,
+          backgroundSize: "180px 180px",
+          backgroundRepeat: "repeat",
           mixBlendMode: "overlay",
           opacity: mobileInteractive ? 0.5 : 0,
           filter: mobileInteractive
