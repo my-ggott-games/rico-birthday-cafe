@@ -47,7 +47,6 @@ import {
   createPieces,
   getDisplayPieceSize,
   getScaledBounds,
-  requestSensorPermission,
 } from "../features/puzzle/helpers";
 import type { PuzzlePiece } from "../features/puzzle/types";
 
@@ -729,8 +728,12 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
         return;
       }
 
-      const permissionGranted = await requestSensorPermission();
-      const canUseOrientation = window.isSecureContext && permissionGranted;
+      // Gyro sensor permission flow is intentionally disabled for now.
+      // Revisit this later when we want to restore DeviceOrientation access.
+      //
+      // const permissionGranted = await requestSensorPermission();
+      // const canUseOrientation = window.isSecureContext && permissionGranted;
+      const canUseOrientation = false;
 
       // Even when denied, enable photocard mode so the overlay (Case 3) shows
       // and the button flips to "홀로그램 끄기".
