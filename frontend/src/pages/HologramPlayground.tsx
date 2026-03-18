@@ -94,38 +94,6 @@ const HologramPlayground: React.FC = () => {
     [fieldX, fieldY, glintX, glintY],
   );
 
-  const radialBurst = useMemo(
-    () =>
-      `radial-gradient(circle at var(--glint-x) var(--glint-y),
-        ${palette.cyan} 0%,
-        ${palette.pink} 28%,
-        ${palette.gold} 52%,
-        transparent 76%)`,
-    [palette],
-  );
-
-  const spectralField = useMemo(
-    () =>
-      `conic-gradient(from 210deg at var(--field-x) var(--field-y),
-        ${palette.cyan},
-        ${palette.violet},
-        ${palette.pink},
-        ${palette.gold},
-        ${palette.cyan})`,
-    [palette],
-  );
-
-  const diagonalField = useMemo(
-    () =>
-      `linear-gradient(125deg,
-        transparent 0%,
-        ${palette.cyan} 18%,
-        transparent 36%,
-        ${palette.violet} 54%,
-        transparent 70%,
-        ${palette.gold} 92%)`,
-    [palette],
-  );
 
   const autoSweepGradient = useMemo(
     () =>
@@ -366,7 +334,7 @@ const HologramPlayground: React.FC = () => {
                 showProbe && "프로브",
                 followPointer ? "포인터" : "중앙",
               ]
-                .filter(Boolean)
+                .filter((label): label is string => Boolean(label))
                 .map((label) => (
                   <span
                     key={label}

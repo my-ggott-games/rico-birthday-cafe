@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useMemo, useState } from "react";
+import React, { useEffect, useId, useMemo } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
 const clamp = (value: number, min: number, max: number) =>
@@ -28,7 +28,6 @@ export const HolographicOverlay = ({
   const noiseFilterId = useId().replace(/:/g, "");
   const targetX = useMotionValue(50);
   const targetY = useMotionValue(50);
-  const [sensorDebug, setSensorDebug] = useState({ beta: 0, gamma: 0 });
   const springX = useSpring(targetX, HOLOGRAPHIC_SPRING);
   const springY = useSpring(targetY, HOLOGRAPHIC_SPRING);
   const glintX = useTransform(springX, (value) => `${value}%`);
@@ -121,7 +120,6 @@ export const HolographicOverlay = ({
   useEffect(() => {
     targetX.set(50);
     targetY.set(50);
-    setSensorDebug({ beta: 0, gamma: 0 });
   }, [targetX, targetY, visible]);
 
   useEffect(() => {
@@ -145,7 +143,6 @@ export const HolographicOverlay = ({
       targetY.set(normalizedY);
 
       if (isDev) {
-        setSensorDebug({ beta, gamma });
         console.log("[gyro]", { beta, gamma, x: normalizedX, y: normalizedY });
       }
     };
