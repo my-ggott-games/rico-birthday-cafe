@@ -39,8 +39,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   };
   const containerLayoutVars = {
     "--container-gutter": "clamp(1rem, 5vw, 3rem)",
-    "--header-top-padding": "clamp(1rem, 8vh, 3rem)",
-    "--header-bottom-padding": "clamp(0.875rem, 3vh, 1.5rem)",
+    "--header-top-padding": "clamp(0.625rem, 4vh, 1.75rem)",
+    "--header-bottom-padding": "clamp(0.5rem, 2vh, 1rem)",
     "--header-gap": "clamp(0.75rem, 2vw, 1.25rem)",
   } as React.CSSProperties;
 
@@ -50,22 +50,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
       style={containerLayoutVars}
     >
       <div
-        className={`fixed z-40 select-none lg:hidden transition-opacity duration-500 ${hiddenClass}`}
-        draggable={false}
-        onDragStart={preventTextDrag}
-        style={{
-          top: "var(--container-gutter)",
-          left: "var(--container-gutter)",
-        }}
-      >
-        <ReturnButton
-          gameName={gameName}
-          label="돌아가기"
-        />
-      </div>
-
-      <div
-        className="grid grid-cols-1 items-center select-none lg:grid-cols-3"
+        className="relative flex min-h-[4.5rem] items-center justify-center select-none lg:min-h-[5.25rem]"
         draggable={false}
         onDragStart={preventTextDrag}
         style={{
@@ -76,16 +61,18 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         }}
       >
         <div
-          className={`hidden lg:flex justify-start order-1 transition-opacity duration-500 ${hiddenClass}`}
+          className={`absolute left-[var(--container-gutter)] top-1/2 z-[1] flex -translate-y-1/2 items-center transition-opacity duration-500 ${hiddenClass}`}
         >
           <ReturnButton
             gameName={gameName}
             label="돌아가기"
+            buttonSize="sm"
+            className="min-w-[5.2rem] justify-center px-1 py-1 text-xs lg:min-w-[9.5rem] lg:px-6 lg:py-3 lg:text-base"
           />
         </div>
 
         <div
-          className={`flex flex-col items-center text-center order-1 lg:order-2 transition-opacity duration-500 ${hiddenClass}`}
+          className={`flex min-w-0 max-w-full flex-col items-center px-[5.5rem] text-center transition-opacity duration-500 lg:px-[10rem] ${hiddenClass}`}
         >
           <CommonTitle
             title={title}
@@ -94,7 +81,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           />
         </div>
 
-        <div className="flex justify-center lg:justify-end gap-3 order-2 lg:order-3">
+        <div className="absolute right-[var(--container-gutter)] top-1/2 flex -translate-y-1/2 items-center justify-end gap-3">
           {headerRight}
         </div>
       </div>

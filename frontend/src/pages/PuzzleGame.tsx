@@ -57,7 +57,7 @@ const BOARD_SIZE = {
   height: ROWS * PIECE_SIZE,
 };
 const MIN_DISPLAY_PIECE_SIZE = 24;
-const MOBILE_BOARD_HORIZONTAL_PADDING = 96;
+const MOBILE_BOARD_HORIZONTAL_PADDING = 128;
 const DESKTOP_BOARD_HORIZONTAL_PADDING = 96;
 const MOBILE_BOARD_VERTICAL_PADDING = 360;
 const DESKTOP_BOARD_VERTICAL_PADDING = 180;
@@ -1234,6 +1234,14 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   }, []);
 
   const handlePhotocardMode = React.useCallback(async () => {
+    if (photocardModeEnabled) {
+      setPhotocardModeEnabled(false);
+      setOrientationEnabled(false);
+      setSensorUnavailable(false);
+      setIsOpeningPhotocard(false);
+      return;
+    }
+
     if (
       typeof window === "undefined" ||
       !isCoarsePointerDevice ||
@@ -1257,7 +1265,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
     } finally {
       setIsOpeningPhotocard(false);
     }
-  }, [isCoarsePointerDevice]);
+  }, [isCoarsePointerDevice, photocardModeEnabled]);
 
   const handleReplay = React.useCallback(() => {
     setCompleted(false);
@@ -1338,7 +1346,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
             id="area-left"
           />
 
-          <div className="z-10 flex flex-1 items-center justify-center my-8 p-3 sm:p-4">
+          <div className="z-10 flex flex-1 items-center justify-center my-2 px-4 py-3 sm:px-5 sm:py-4">
             <div className="flex w-full flex-col items-center">
               <div
                 ref={boardRef}
@@ -1463,28 +1471,39 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
               </div>
               {completed && (
                 <div className="mt-5 flex w-full max-w-[19rem] flex-col items-center gap-4 lg:hidden">
-                  <MuseumPlaque className="mt-0 w-full max-w-none" />
+                  <motion.div
+                    initial={{ opacity: 0, y: -24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.45, ease: "easeOut" }}
+                    className="w-full"
+                  >
+                    <MuseumPlaque className="mt-0 w-full max-w-none" />
+                  </motion.div>
                   <div className="flex w-full items-center gap-3">
-                    {isCoarsePointerDevice && !photocardModeEnabled && (
+                    {isCoarsePointerDevice && (
                       <ActionButton
                         onClick={() => void handlePhotocardMode()}
                         disabled={isOpeningPhotocard}
-                        className="flex-1"
+                        className="flex-1 shadow-none hover:shadow-none"
                         variant="teal"
                         size="md"
                       >
-                        {isOpeningPhotocard ? "준비 중..." : "홀로그램 모드"}
+                        {isOpeningPhotocard
+                          ? "준비 중..."
+                          : photocardModeEnabled
+                            ? "홀로그램 끄기"
+                            : "홀로그램 모드"}
                       </ActionButton>
                     )}
                     <ActionButton
                       onClick={handleReplay}
                       className={
-                        isCoarsePointerDevice && !photocardModeEnabled
-                          ? "flex-1"
-                          : "w-full"
+                        isCoarsePointerDevice
+                          ? "flex-1 shadow-none hover:shadow-none"
+                          : "w-full shadow-none hover:shadow-none"
                       }
                       variant="sage"
-                      size="lg"
+                      size="md"
                     >
                       다시 하기
                     </ActionButton>
@@ -1501,12 +1520,34 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
             {completed && (
               <div className="absolute inset-0 flex items-center justify-center px-8">
                 <div className="flex w-full max-w-[19rem] flex-col items-center gap-6">
-                  <MuseumPlaque className="mt-0" />
+                  <motion.div
+                    initial={{ opacity: 0, x: -36 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="w-full"
+                  >
+                    <MuseumPlaque className="mt-0" />
+                  </motion.div>
+                  {isCoarsePointerDevice && (
+                    <ActionButton
+                      onClick={() => void handlePhotocardMode()}
+                      disabled={isOpeningPhotocard}
+                      className="w-full shadow-none hover:shadow-none"
+                      variant="teal"
+                      size="md"
+                    >
+                      {isOpeningPhotocard
+                        ? "준비 중..."
+                        : photocardModeEnabled
+                          ? "홀로그램 끄기"
+                          : "홀로그램 모드"}
+                    </ActionButton>
+                  )}
                   <ActionButton
                     onClick={handleReplay}
-                    className="w-full"
+                    className="w-full shadow-none hover:shadow-none"
                     variant="sage"
-                    size="lg"
+                    size="md"
                   >
                     다시 하기
                   </ActionButton>
@@ -1550,7 +1591,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
         </div>
 
         {isDevelopment && !completed && (
-          <div className="fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-[120] flex justify-center px-4 sm:inset-x-auto sm:bottom-auto sm:right-4 sm:top-4 sm:px-0">
+          <div className="fixed right-4 top-[max(1rem,env(safe-area-inset-top))] z-[120] flex justify-end px-0">
             <button
               type="button"
               onClick={handleDebugComplete}
