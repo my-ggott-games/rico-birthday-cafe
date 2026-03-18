@@ -12,13 +12,21 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { BASE_URL } from "../utils/api";
 import { useAuthStore } from "../store/useAuthStore";
 import { useToastStore } from "../store/useToastStore";
 import { HolographicOverlay } from "../components/game/HolographicOverlay";
 import { ActionButton } from "../components/common/ActionButton";
+import { MuseumPlaque } from "../components/game/MuseumPlaque";
+import { MagnifyingGlass } from "../components/game/MagnifyingGlass";
+import {
+  PUZZLE_ACHIEVEMENT_CODE,
+  PUZZLE_IMAGE_URL,
+  PUZZLE_MUSEUM_UNLOCK_EVENT,
+  PUZZLE_MUSEUM_UNLOCK_KEY,
+} from "../constants/puzzle";
 
 const PUZZLE_TUTORIAL_SLIDES: TutorialSlide[] = [
   {
@@ -57,8 +65,6 @@ const MOUSE_DRAG_DISTANCE_PX = 4;
 const TOUCH_DRAG_ACTIVATION_DELAY_MS = 90;
 const TOUCH_DRAG_TOLERANCE_PX = 10;
 const TAP_ROTATE_MAX_MS = 180;
-const IMAGE_URL = "/assets/rico_puzzle_birthday_banquet.png";
-const PUZZLE_ACHIEVEMENT_CODE = "FIRST_PUZZLE";
 
 type DeviceOrientationEventWithPermission = typeof DeviceOrientationEvent & {
   requestPermission?: () => Promise<"granted" | "denied">;
@@ -609,7 +615,7 @@ const PuzzlePieceComponent = ({
         width: `${displayPieceSize}px`,
         height: `${displayPieceSize}px`,
         position: "relative",
-        touchAction: "none",
+        touchAction: "pinch-zoom",
         overflow: "visible",
       }}
       className={`flex items-center justify-center ${className || ""}`}
@@ -622,9 +628,7 @@ const PuzzlePieceComponent = ({
           top: `${-offsetY - bleed}px`,
           width: `${renderWidth}px`,
           height: `${renderHeight}px`,
-          filter: piece.isPlaced
-            ? "brightness(1.06) saturate(1.08) drop-shadow(0 10px 16px rgba(22,109,119,0.14))"
-            : "drop-shadow(0 8px 12px rgba(22,109,119,0.12))",
+          filter: "none",
         }}
       >
         <defs>
@@ -633,7 +637,7 @@ const PuzzlePieceComponent = ({
           </clipPath>
         </defs>
         <image
-          href={IMAGE_URL}
+          href={PUZZLE_IMAGE_URL}
           x={-piece.expandedBounds.x}
           y={-piece.expandedBounds.y}
           width={BOARD_SIZE.width}
@@ -736,19 +740,21 @@ const DroppableCell = ({
         position: "relative",
       }}
     >
-      {!placedPiece && slotPiece && (
-        <PuzzleSlotShape
-          piece={slotPiece}
-          displayPieceSize={displayPieceSize}
-          highlighted={isOver && !completed}
-        />
-      )}
       {placedPiece && (
         <PuzzlePieceComponent
           piece={placedPiece}
           displayPieceSize={displayPieceSize}
-          showOutline={!completed}
+          showOutline={false}
         />
+      )}
+      {slotPiece && !completed && (
+        <div className="pointer-events-none absolute inset-0 z-[3]">
+          <PuzzleSlotShape
+            piece={slotPiece}
+            displayPieceSize={displayPieceSize}
+            highlighted={isOver && !placedPiece}
+          />
+        </div>
       )}
     </div>
   );
@@ -824,35 +830,6 @@ const FrameCorner = ({
   </div>
 );
 
-const MuseumPlaque = ({ className = "mt-5" }: { className?: string }) => (
-  <div className={`${className} flex justify-center`}>
-    <div
-      className="w-full rounded-[1.35rem] p-[6px]"
-      style={{
-        background:
-          "linear-gradient(145deg, #4B331C 0%, #7D5A35 22%, #BC9159 48%, #E8D2A8 76%, #8D673F 100%)",
-      }}
-    >
-      <div
-        className="pointer-events-none rounded-[1.05rem] border border-[#fff6df]/35 p-[3px]"
-        style={{
-          boxShadow:
-            "inset 0 1px 0 rgba(255, 247, 235, 0.32), inset 0 -8px 14px rgba(75, 51, 28, 0.14)",
-        }}
-      >
-        <div className="rounded-[0.9rem] border border-[#fff7eb] bg-[linear-gradient(180deg,#f8f4ea_0%,#ede5d3_100%)] px-6 py-4 text-center text-[#4b331c]">
-          <h3 className="mt-2 text-2xl font-semibold tracking-[0.02em]">
-            Birthday Banquet
-          </h3>
-          <p className="mt-2 text-sm tracking-[0.12em] text-[#6f5130]">
-            상승새 (2026)
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
 const DraggablePiece = React.memo(
   ({
     piece,
@@ -900,7 +877,7 @@ const DraggablePiece = React.memo(
             ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
             : undefined,
           willChange: isDragging ? "transform" : undefined,
-          touchAction: "none",
+          touchAction: "pinch-zoom",
         }}
         {...attributes}
         {...otherListeners}
@@ -967,10 +944,13 @@ type PuzzleGameProps = {
 const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   const [pieces, setPieces] = useState<PuzzlePiece[]>([]);
   const [completed, setCompleted] = useState(false);
+  const [photocardModeEnabled, setPhotocardModeEnabled] = useState(false);
   const [isOpeningPhotocard, setIsOpeningPhotocard] = useState(false);
   const [sensorUnavailable, setSensorUnavailable] = useState(false);
   const [orientationEnabled, setOrientationEnabled] = useState(false);
   const [layoutVersion, setLayoutVersion] = useState(0);
+  const [isMagnifierActive, setIsMagnifierActive] = useState(false);
+  const [magnifierPoint, setMagnifierPoint] = useState({ x: 0, y: 0 });
   const [displayPieceSize, setDisplayPieceSize] = useState(() =>
     typeof window === "undefined"
       ? PIECE_SIZE
@@ -978,7 +958,9 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   );
   const playAreaRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
+  const artworkRef = useRef<HTMLDivElement>(null);
   const puzzleAchievementAwardedRef = useRef(false);
+  const completionMetaTriggeredRef = useRef(false);
   const { token } = useAuthStore();
   const { addToast } = useToastStore();
   const isDevelopment = getNodeEnv() === "development" || import.meta.env.DEV;
@@ -1045,6 +1027,21 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
     if (completed) {
       triggerFireworks();
     }
+  }, [completed]);
+
+  useEffect(() => {
+    if (!completed || completionMetaTriggeredRef.current) {
+      return;
+    }
+
+    completionMetaTriggeredRef.current = true;
+    window.localStorage.setItem(PUZZLE_MUSEUM_UNLOCK_KEY, "true");
+    window.dispatchEvent(new Event(PUZZLE_MUSEUM_UNLOCK_EVENT));
+    window.dispatchEvent(
+      new CustomEvent("achievement-unlocked", {
+        detail: { code: PUZZLE_ACHIEVEMENT_CODE },
+      }),
+    );
   }, [completed]);
 
   useEffect(() => {
@@ -1242,6 +1239,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
       !isCoarsePointerDevice ||
       !("DeviceOrientationEvent" in window)
     ) {
+      setPhotocardModeEnabled(false);
       setOrientationEnabled(false);
       setSensorUnavailable(true);
       return;
@@ -1253,6 +1251,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
       const permissionGranted = await requestSensorPermission();
       const canUseOrientation = window.isSecureContext && permissionGranted;
 
+      setPhotocardModeEnabled(canUseOrientation);
       setOrientationEnabled(canUseOrientation);
       setSensorUnavailable(!canUseOrientation);
     } finally {
@@ -1260,11 +1259,67 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
     }
   }, [isCoarsePointerDevice]);
 
+  const handleReplay = React.useCallback(() => {
+    setCompleted(false);
+    setPhotocardModeEnabled(false);
+    setIsOpeningPhotocard(false);
+    setSensorUnavailable(false);
+    setOrientationEnabled(false);
+    setIsMagnifierActive(false);
+    setMagnifierPoint({ x: 0, y: 0 });
+    setPieces([]);
+    setLayoutVersion((prev) => prev + 1);
+  }, []);
+
+  const updateMagnifierPoint = React.useCallback(
+    (clientX: number, clientY: number) => {
+      if (!artworkRef.current) {
+        return;
+      }
+
+      const rect = artworkRef.current.getBoundingClientRect();
+      setMagnifierPoint({
+        x: clamp(clientX - rect.left, 0, rect.width),
+        y: clamp(clientY - rect.top, 0, rect.height),
+      });
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!isMagnifierActive) {
+      return;
+    }
+
+    const handlePointerRelease = () => setIsMagnifierActive(false);
+
+    window.addEventListener("mouseup", handlePointerRelease);
+    window.addEventListener("touchend", handlePointerRelease);
+    window.addEventListener("touchcancel", handlePointerRelease);
+
+    return () => {
+      window.removeEventListener("mouseup", handlePointerRelease);
+      window.removeEventListener("touchend", handlePointerRelease);
+      window.removeEventListener("touchcancel", handlePointerRelease);
+    };
+  }, [isMagnifierActive]);
+
   useEffect(() => {
     if (pieces.length > 0 && pieces.every((piece) => piece.isPlaced)) {
       setCompleted(true);
     }
   }, [pieces]);
+
+  useEffect(() => {
+    if (!completed) {
+      setIsMagnifierActive(false);
+    }
+  }, [completed]);
+
+  const mobilePhotocardActive =
+    isCoarsePointerDevice && photocardModeEnabled && orientationEnabled;
+  const hologramVisible = completed;
+  const desktopSweepEnabled = completed && !mobilePhotocardActive;
 
   const content = (
     <DndContext
@@ -1274,7 +1329,8 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
     >
       <div
         ref={playAreaRef}
-        className="w-full h-full bg-[#FFFFF8] relative overflow-hidden select-none touch-none flex flex-col"
+        className="w-full h-full bg-[#FFFFF8] relative overflow-hidden select-none flex flex-col"
+        style={{ touchAction: "pinch-zoom" }}
       >
         <div className="flex w-full flex-1 overflow-hidden">
           <div
@@ -1306,6 +1362,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
 
                 <div className="relative rounded-[1.7rem] border border-[#fff7eb] bg-[linear-gradient(180deg,#f8f4ea_0%,#ede5d3_100%)] p-4 sm:p-5">
                   <div
+                    ref={artworkRef}
                     className="relative overflow-hidden border border-[#e8ddc6] bg-[#faf8f1]"
                     style={{
                       width: `${displayPieceSize * COLS}px`,
@@ -1357,10 +1414,50 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
                       })}
                     </div>
                     <HolographicOverlay
-                      visible={completed}
-                      orientationEnabled={orientationEnabled}
-                      imageUrl={IMAGE_URL}
+                      visible={hologramVisible}
+                      mobileInteractive={mobilePhotocardActive}
+                      desktopSweep={desktopSweepEnabled}
+                      imageUrl={PUZZLE_IMAGE_URL}
                     />
+                    {completed && (
+                      <>
+                        <div
+                          className="absolute inset-0 z-[5] cursor-zoom-in"
+                          onMouseDown={(event) => {
+                            updateMagnifierPoint(event.clientX, event.clientY);
+                            setIsMagnifierActive(true);
+                          }}
+                          onMouseMove={(event) => {
+                            if (!isMagnifierActive) return;
+                            updateMagnifierPoint(event.clientX, event.clientY);
+                          }}
+                          onMouseLeave={() => setIsMagnifierActive(false)}
+                          onTouchStart={(event) => {
+                            const touch = event.touches[0];
+                            if (!touch) return;
+                            updateMagnifierPoint(touch.clientX, touch.clientY);
+                            setIsMagnifierActive(true);
+                          }}
+                          onTouchMove={(event) => {
+                            const touch = event.touches[0];
+                            if (!touch) return;
+                            event.preventDefault();
+                            updateMagnifierPoint(touch.clientX, touch.clientY);
+                          }}
+                          onTouchEnd={() => setIsMagnifierActive(false)}
+                          onTouchCancel={() => setIsMagnifierActive(false)}
+                          aria-label="완성된 그림 확대해서 보기"
+                        />
+                        <MagnifyingGlass
+                          visible={isMagnifierActive}
+                          imageUrl={PUZZLE_IMAGE_URL}
+                          boardWidth={displayPieceSize * COLS}
+                          boardHeight={displayPieceSize * ROWS}
+                          pointerX={magnifierPoint.x}
+                          pointerY={magnifierPoint.y}
+                        />
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1379,7 +1476,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
                 <div className="flex w-full max-w-[19rem] flex-col items-center gap-6">
                   <MuseumPlaque className="mt-0" />
                   <ActionButton
-                    onClick={() => window.location.reload()}
+                    onClick={handleReplay}
                     className="w-full"
                     variant="sage"
                     size="lg"
@@ -1393,9 +1490,43 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
         </div>
 
         <div
-          className="relative h-[180px] w-full bg-[rgba(240,253,244,0.1)] sm:h-[200px]"
+          className="relative flex h-[180px] w-full items-end justify-center bg-[rgba(240,253,244,0.1)] px-4 pb-6 sm:h-[200px]"
           id="area-bottom"
-        />
+        >
+          {completed && (
+            <motion.div
+              initial={{ y: 28, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="flex w-full max-w-md flex-col items-center gap-3 lg:hidden"
+            >
+              <div className="flex w-full flex-wrap items-center justify-center gap-3 bg-transparent px-4 py-4">
+                {isCoarsePointerDevice && !photocardModeEnabled && (
+                  <ActionButton
+                    onClick={() => void handlePhotocardMode()}
+                    disabled={isOpeningPhotocard}
+                    variant="teal"
+                    size="md"
+                  >
+                    {isOpeningPhotocard ? "준비 중..." : "홀로그램 모드"}
+                  </ActionButton>
+                )}
+                <ActionButton
+                  onClick={handleReplay}
+                  variant="sage"
+                  size="md"
+                >
+                  다시 하기
+                </ActionButton>
+              </div>
+              {sensorUnavailable && (
+                <p className="rounded-full bg-[#fff1f1]/92 px-4 py-2 text-center text-xs leading-5 text-[#A14646] backdrop-blur-sm">
+                  센서 권한을 받지 못했거나 HTTPS 환경이 아니라서 기울임 효과를
+                  켤 수 없어.
+                </p>
+              )}
+            </motion.div>
+          )}
+        </div>
 
         <div className="absolute inset-0 pointer-events-none z-[30]">
           <div className="pointer-events-auto">
@@ -1419,48 +1550,6 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
             DEBUG: COMPLETE PUZZLE
           </button>
         )}
-
-        <AnimatePresence>
-          {completed && (
-            <motion.div
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="fixed bottom-8 left-1/2 z-[90] flex w-[min(calc(100%-1.5rem),34rem)] -translate-x-1/2 flex-col items-center gap-3 px-3"
-            >
-              <div className="flex w-full flex-wrap items-center justify-center gap-3 rounded-[1.8rem] bg-[#fffaf0]/92 px-4 py-4 shadow-[0_18px_38px_rgba(75,51,28,0.12)] backdrop-blur-md lg:hidden">
-                <ActionButton
-                  onClick={() => window.location.reload()}
-                  variant="sage"
-                  size="md"
-                >
-                  다시 하기
-                </ActionButton>
-                {isCoarsePointerDevice && (
-                  <ActionButton
-                    onClick={() => void handlePhotocardMode()}
-                    disabled={isOpeningPhotocard}
-                    variant="teal"
-                    size="md"
-                  >
-                    {isOpeningPhotocard ? "열는 중..." : "Photocard Mode"}
-                  </ActionButton>
-                )}
-              </div>
-              {isCoarsePointerDevice && (
-                <p className="rounded-full bg-[#fffaf0]/88 px-4 py-2 text-center text-xs leading-5 text-[#166D77]/70 backdrop-blur-sm lg:hidden">
-                  `Photocard Mode`를 누르면 모바일에서 자이로스코프 권한을
-                  요청해.
-                </p>
-              )}
-              {sensorUnavailable && (
-                <p className="rounded-full bg-[#fff1f1]/92 px-4 py-2 text-center text-xs leading-5 text-[#A14646] backdrop-blur-sm lg:hidden">
-                  센서 권한을 받지 못했거나 HTTPS 환경이 아니라서 기울임 효과를
-                  켤 수 없어.
-                </p>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </DndContext>
   );

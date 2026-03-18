@@ -4,18 +4,41 @@ import { motion } from "framer-motion";
 import { KCelebrateSlogan } from "k-celebrate-slogan";
 import { AchievementModal } from "../components/common/AchievementModal";
 import { AdminModal } from "../components/auth/AdminModal";
+import {
+  PUZZLE_IMAGE_URL,
+  PUZZLE_MUSEUM_UNLOCK_EVENT,
+  PUZZLE_MUSEUM_UNLOCK_KEY,
+} from "../constants/puzzle";
 
 const Lobby: React.FC = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [isAchievementOpen, setIsAchievementOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isPuzzleMuseumUnlocked, setIsPuzzleMuseumUnlocked] = useState(
+    window.localStorage.getItem(PUZZLE_MUSEUM_UNLOCK_KEY) === "true",
+  );
 
   useEffect(() => {
     console.log("519_2024"); // Easter Egg
 
     const handleResize = () => setWindowWidth(window.innerWidth);
+    const handlePuzzleUnlock = () =>
+      setIsPuzzleMuseumUnlocked(
+        window.localStorage.getItem(PUZZLE_MUSEUM_UNLOCK_KEY) === "true",
+      );
+
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener("storage", handlePuzzleUnlock);
+    window.addEventListener(PUZZLE_MUSEUM_UNLOCK_EVENT, handlePuzzleUnlock);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("storage", handlePuzzleUnlock);
+      window.removeEventListener(
+        PUZZLE_MUSEUM_UNLOCK_EVENT,
+        handlePuzzleUnlock,
+      );
+    };
   }, []);
 
   const isMobile = windowWidth < 768;
@@ -183,13 +206,31 @@ const Lobby: React.FC = () => {
               className="flex flex-col items-center"
             >
               <div
-                className={`relative ${isMobile ? "w-20 h-[7.5rem]" : "w-40 h-56"} bg-[#a3e635] rounded-t-3xl border-4 border-[#166D77] shadow-xl flex flex-col items-center justify-center p-4`}
+                className={`relative overflow-hidden ${isMobile ? "w-24 h-24" : "w-40 h-40"} rounded-[1.75rem] border-4 border-[#166D77] shadow-xl flex items-center justify-center ${
+                  isPuzzleMuseumUnlocked
+                    ? "bg-[#f5ecdd] p-[0.34rem]"
+                    : "bg-[#a3e635] p-4"
+                }`}
               >
-                <div
-                  className={`${isMobile ? "text-3xl" : "text-6xl"} drop-shadow-md`}
-                >
-                  🧩
-                </div>
+                {isPuzzleMuseumUnlocked ? (
+                  <div className="w-full rounded-[1.35rem] bg-[linear-gradient(145deg,#4B331C_0%,#7D5A35_22%,#BC9159_48%,#E8D2A8_76%,#8D673F_100%)] p-[4px]">
+                    <div className="rounded-[1.08rem] border border-[#fff6df]/35 p-[4px]">
+                      <div className="overflow-hidden rounded-[0.92rem] border border-[#fff7eb] bg-[linear-gradient(180deg,#f8f4ea_0%,#ede5d3_100%)] p-[4px]">
+                        <img
+                          src={PUZZLE_IMAGE_URL}
+                          alt="Birthday Banquet"
+                          className="aspect-square w-full rounded-[0.72rem] object-cover"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className={`${isMobile ? "text-3xl" : "text-6xl"} drop-shadow-md`}
+                  >
+                    🧩
+                  </div>
+                )}
               </div>
               <div
                 className={`mt-2 bg-pale-custard ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-2"} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#5EC7A5] group-hover:text-pale-custard transition-colors`}
