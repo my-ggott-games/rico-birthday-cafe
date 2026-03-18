@@ -213,17 +213,11 @@ const Lobby: React.FC = () => {
                 }`}
               >
                 {isPuzzleMuseumUnlocked ? (
-                  <div className="w-full rounded-[1.35rem] bg-[linear-gradient(145deg,#4B331C_0%,#7D5A35_22%,#BC9159_48%,#E8D2A8_76%,#8D673F_100%)] p-[4px]">
-                    <div className="rounded-[1.08rem] border border-[#fff6df]/35 p-[4px]">
-                      <div className="overflow-hidden rounded-[0.92rem] border border-[#fff7eb] bg-[linear-gradient(180deg,#f8f4ea_0%,#ede5d3_100%)] p-[4px]">
-                        <img
-                          src={PUZZLE_IMAGE_URL}
-                          alt="Birthday Banquet"
-                          className="aspect-square w-full rounded-[0.72rem] object-cover"
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  <img
+                    src={PUZZLE_IMAGE_URL}
+                    alt="Birthday Banquet"
+                    className="aspect-square h-full w-full object-cover"
+                  />
                 ) : (
                   <div
                     className={`${isMobile ? "text-3xl" : "text-6xl"} drop-shadow-md`}
