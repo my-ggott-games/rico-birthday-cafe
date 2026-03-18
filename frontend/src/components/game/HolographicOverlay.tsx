@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useMemo } from "react";
+import { useEffect, useId, useMemo, type CSSProperties } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
 const clamp = (value: number, min: number, max: number) =>
@@ -14,9 +14,15 @@ type HolographicOverlayProps = {
 };
 
 const HOLOGRAPHIC_SPRING = {
-  stiffness: 120,
+  stiffness: 150,
   damping: 25,
 };
+
+const GYRO_GAMMA_MIN = -20;
+const GYRO_GAMMA_MAX = 20;
+const GYRO_BETA_MIN = 25;
+const GYRO_BETA_MAX = 65;
+const GYRO_BETA_NATURAL = 45;
 
 export const HolographicOverlay = ({
   visible,
@@ -30,92 +36,99 @@ export const HolographicOverlay = ({
   const targetY = useMotionValue(50);
   const springX = useSpring(targetX, HOLOGRAPHIC_SPRING);
   const springY = useSpring(targetY, HOLOGRAPHIC_SPRING);
-  const glintX = useTransform(springX, (value) => `${value}%`);
-  const glintY = useTransform(springY, (value) => `${value}%`);
-  const fieldX = useTransform(
-    springX,
-    (value) => `${clamp(50 + (value - 50) * 0.72, 0, 100)}%`,
-  );
-  const fieldY = useTransform(
-    springY,
-    (value) => `${clamp(50 + (value - 50) * 0.68, 0, 100)}%`,
-  );
-  const isDev = import.meta.env.DEV;
 
-  const palette = useMemo(
-    () => ({
-      cyan: "hsla(192, 100%, 54%, 1)",
-      pink: "hsla(324, 100%, 62%, 0.96)",
-      violet: "hsla(272, 100%, 62%, 0.92)",
-      gold: "hsla(52, 100%, 56%, 0.88)",
-    }),
-    [],
+  const shineX = useTransform(springX, (value) => `${clamp(value, 0, 100)}%`);
+  const shineY = useTransform(springY, (value) => `${clamp(value, 0, 100)}%`);
+  const glareX = useTransform(
+    springX,
+    (value) => `${clamp(50 + (value - 50) * 1.06, 0, 100)}%`,
   );
+  const glareY = useTransform(
+    springY,
+    (value) => `${clamp(50 + (value - 50) * 0.94, 0, 100)}%`,
+  );
+  const sparkleDriftX = useTransform(springX, (value) => (value - 50) * 0.18);
+  const sparkleDriftY = useTransform(springY, (value) => (value - 50) * 0.22);
 
   const overlayVars = useMemo(
     () =>
       ({
-        "--glint-x": glintX,
-        "--glint-y": glintY,
-        "--field-x": fieldX,
-        "--field-y": fieldY,
-      }) as React.CSSProperties,
-    [fieldX, fieldY, glintX, glintY],
+        "--shine-x": shineX,
+        "--shine-y": shineY,
+        "--glare-x": glareX,
+        "--glare-y": glareY,
+      }) as CSSProperties,
+    [glareX, glareY, shineX, shineY],
   );
 
-  const radialBurst = useMemo(
+  const shineGradient = useMemo(
     () =>
-      `radial-gradient(circle at var(--glint-x) var(--glint-y),
-        ${palette.cyan} 0%,
-        ${palette.pink} 28%,
-        ${palette.gold} 52%,
-        transparent 76%)`,
-    [palette],
+      `linear-gradient(
+        118deg,
+        rgba(255, 255, 255, 0) 12%,
+        hsla(188, 100%, 72%, 0.9) 24%,
+        hsla(316, 100%, 72%, 0.92) 42%,
+        hsla(54, 100%, 72%, 0.88) 58%,
+        hsla(272, 100%, 74%, 0.92) 74%,
+        rgba(255, 255, 255, 0) 88%
+      ),
+      conic-gradient(
+        from 180deg at var(--shine-x) var(--shine-y),
+        hsla(188, 100%, 62%, 0.95) 0deg,
+        hsla(316, 100%, 68%, 0.95) 95deg,
+        hsla(54, 100%, 70%, 0.92) 190deg,
+        hsla(272, 100%, 72%, 0.94) 280deg,
+        hsla(188, 100%, 62%, 0.95) 360deg
+      )`,
+    [],
   );
 
-  const spectralField = useMemo(
+  const glareGradient = useMemo(
     () =>
-      `conic-gradient(from 210deg at var(--field-x) var(--field-y),
-        ${palette.cyan},
-        ${palette.violet},
-        ${palette.pink},
-        ${palette.gold},
-        ${palette.cyan})`,
-    [palette],
+      `radial-gradient(
+        farthest-corner circle at var(--glare-x) var(--glare-y),
+        rgba(255, 255, 255, 0.96) 0%,
+        rgba(255, 255, 255, 0.84) 6%,
+        rgba(255, 236, 244, 0.46) 14%,
+        rgba(172, 232, 255, 0.22) 24%,
+        rgba(255, 255, 255, 0.08) 34%,
+        transparent 48%
+      )`,
+    [],
   );
 
-  const diagonalField = useMemo(
+  const sparkleGradient = useMemo(
     () =>
-      `repeating-linear-gradient(125deg,
-        transparent 0 18px,
-        ${palette.cyan} 18px 34px,
-        transparent 34px 58px,
-        ${palette.violet} 58px 74px,
-        transparent 74px 96px,
-        ${palette.gold} 96px 112px,
-        transparent 112px 136px)`,
-    [palette],
-  );
-  const diagonalOffsetX = useTransform(
-    springX,
-    (value) => `${(value - 50) * 0.45}%`,
-  );
-  const diagonalOffsetY = useTransform(
-    springY,
-    (value) => `${(value - 50) * 0.45}%`,
+      `radial-gradient(
+        farthest-corner circle at var(--glare-x) var(--glare-y),
+        rgba(255, 255, 255, 0.36) 0%,
+        rgba(255, 255, 255, 0.12) 18%,
+        rgba(255, 255, 255, 0) 44%
+      ),
+      linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.16) 8%,
+        rgba(255, 255, 255, 0) 26%,
+        rgba(255, 255, 255, 0.2) 52%,
+        rgba(255, 255, 255, 0) 74%,
+        rgba(255, 255, 255, 0.14) 100%
+      )`,
+    [],
   );
 
   const desktopSweepGradient = useMemo(
     () =>
-      `linear-gradient(118deg,
-        transparent 0%,
-        transparent 20%,
-        ${palette.cyan} 38%,
-        ${palette.pink} 52%,
-        ${palette.violet} 66%,
-        ${palette.gold} 80%,
-        transparent 100%)`,
-    [palette],
+      `linear-gradient(
+        118deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0) 18%,
+        hsla(188, 100%, 72%, 0.84) 34%,
+        hsla(316, 100%, 72%, 0.88) 48%,
+        hsla(54, 100%, 72%, 0.84) 62%,
+        hsla(272, 100%, 74%, 0.86) 76%,
+        rgba(255, 255, 255, 0) 100%
+      )`,
+    [],
   );
 
   useEffect(() => {
@@ -135,17 +148,23 @@ export const HolographicOverlay = ({
     }
 
     const handleOrientation = (event: DeviceOrientationEvent) => {
-      const gamma = clamp(event.gamma ?? 0, -35, 35);
-      const beta = clamp(event.beta ?? 0, -50, 50);
-      const normalizedX = clamp(((gamma + 35) / 70) * 100, 0, 100);
-      const normalizedY = clamp(((beta + 50) / 100) * 100, 0, 100);
+      const normalizedX =
+        ((clamp(event.gamma ?? 0, GYRO_GAMMA_MIN, GYRO_GAMMA_MAX) -
+          GYRO_GAMMA_MIN) /
+          (GYRO_GAMMA_MAX - GYRO_GAMMA_MIN)) *
+        100;
+      const normalizedY =
+        ((clamp(
+          event.beta ?? GYRO_BETA_NATURAL,
+          GYRO_BETA_MIN,
+          GYRO_BETA_MAX,
+        ) -
+          GYRO_BETA_MIN) /
+          (GYRO_BETA_MAX - GYRO_BETA_MIN)) *
+        100;
 
-      targetX.set(normalizedX);
-      targetY.set(normalizedY);
-
-      if (isDev) {
-        console.log("[gyro]", { beta, gamma, x: normalizedX, y: normalizedY });
-      }
+      targetX.set(clamp(normalizedX, 0, 100));
+      targetY.set(clamp(normalizedY, 0, 100));
     };
 
     window.addEventListener("deviceorientation", handleOrientation);
@@ -153,7 +172,7 @@ export const HolographicOverlay = ({
     return () => {
       window.removeEventListener("deviceorientation", handleOrientation);
     };
-  }, [isDev, mobileInteractive, orientationEnabled, targetX, targetY, visible]);
+  }, [mobileInteractive, orientationEnabled, targetX, targetY, visible]);
 
   if (!visible) {
     return null;
@@ -168,20 +187,41 @@ export const HolographicOverlay = ({
     >
       <svg className="absolute h-0 w-0" aria-hidden>
         <defs>
-          <filter id={noiseFilterId}>
+          <filter
+            id={noiseFilterId}
+            x="-20%"
+            y="-20%"
+            width="140%"
+            height="140%"
+            colorInterpolationFilters="sRGB"
+          >
             <feTurbulence
               type="fractalNoise"
-              baseFrequency="0.78"
+              baseFrequency="0.85 1.1"
               numOctaves="2"
-              seed="23"
-              stitchTiles="stitch"
+              seed="19"
+              result="fineNoise"
+            />
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.12 0.18"
+              numOctaves="1"
+              seed="7"
+              result="coarseNoise"
+            />
+            <feBlend
+              in="fineNoise"
+              in2="coarseNoise"
+              mode="screen"
+              result="combinedNoise"
             />
             <feColorMatrix
+              in="combinedNoise"
               type="matrix"
               values="1 0 0 0 0
                       0 1 0 0 0
                       0 0 1 0 0
-                      0 0 0 10 -4"
+                      0 0 0 3.2 -1.3"
             />
           </filter>
         </defs>
@@ -194,56 +234,44 @@ export const HolographicOverlay = ({
         className="absolute inset-0 h-full w-full object-cover"
       />
 
-      {!mobileInteractive && (
-        <div
-          className="absolute inset-0"
-          style={{
-            ...overlayVars,
-            background: radialBurst,
-            opacity: 0.72,
-          }}
-        />
-      )}
-      {!mobileInteractive && (
-        <div
-          className="absolute inset-0"
-          style={{
-            ...overlayVars,
-            background: spectralField,
-            mixBlendMode: "color-dodge",
-            opacity: 0.5,
-          }}
-        />
-      )}
-      <motion.div
-        className="absolute inset-[-22%]"
+      <div
+        className="absolute inset-0"
         style={{
-          background: diagonalField,
-          backgroundSize: "180px 180px",
-          backgroundRepeat: "repeat",
-          mixBlendMode: "overlay",
-          opacity: mobileInteractive ? 0.5 : 0,
-          filter: mobileInteractive
-            ? "saturate(1.6) contrast(1.14)"
-            : "saturate(1.06)",
-          x: mobileInteractive && orientationEnabled ? diagonalOffsetX : 0,
-          y: mobileInteractive && orientationEnabled ? diagonalOffsetY : 0,
+          ...overlayVars,
+          backgroundImage: shineGradient,
+          backgroundSize: "240% 240%, 165% 165%",
+          backgroundPosition:
+            "var(--shine-x) var(--shine-y), var(--shine-x) var(--shine-y)",
+          backgroundRepeat: "no-repeat",
+          mixBlendMode: "color-dodge",
+          opacity: mobileInteractive ? 0.82 : 0.68,
+          filter: "saturate(1.35) contrast(1.14)",
         }}
-        transition={{ type: "spring", stiffness: 90, damping: 18 }}
+      />
+
+      <div
+        className="absolute inset-0"
+        style={{
+          ...overlayVars,
+          background: glareGradient,
+          mixBlendMode: "overlay",
+          opacity: mobileInteractive ? 0.88 : 0.72,
+          filter: "blur(8px) saturate(1.08)",
+        }}
       />
 
       {desktopSweep && !mobileInteractive && (
         <motion.div
-          className="absolute inset-[-45%]"
+          className="absolute inset-[-48%]"
           style={{
             background: desktopSweepGradient,
             mixBlendMode: "color-dodge",
             transform: "rotate(-18deg)",
-            filter: "blur(16px) saturate(1.12)",
+            filter: "blur(18px) saturate(1.2)",
           }}
           animate={{
             x: ["-140%", "138%"],
-            opacity: [0, 0.84, 0],
+            opacity: [0, 0.8, 0],
           }}
           transition={{
             duration: 1.8,
@@ -254,20 +282,21 @@ export const HolographicOverlay = ({
         />
       )}
 
-      <svg
-        className="absolute inset-0 h-full w-full"
-        preserveAspectRatio="none"
-        aria-hidden
-      >
-        <rect
-          width="100%"
-          height="100%"
-          fill="rgba(22,109,119,0.82)"
-          filter={`url(#${noiseFilterId})`}
-          opacity="0.18"
-          style={{ mixBlendMode: "soft-light" }}
-        />
-      </svg>
+      <motion.div
+        className="absolute inset-[-10%]"
+        style={{
+          ...overlayVars,
+          backgroundImage: sparkleGradient,
+          backgroundSize: "145% 145%, 220% 220%",
+          backgroundPosition: "center, var(--shine-x) var(--shine-y)",
+          backgroundRepeat: "no-repeat",
+          mixBlendMode: "soft-light",
+          opacity: mobileInteractive ? 0.42 : 0.3,
+          filter: `url(#${noiseFilterId}) saturate(1.3) contrast(1.18)`,
+          x: sparkleDriftX,
+          y: sparkleDriftY,
+        }}
+      />
     </motion.div>
   );
 };
