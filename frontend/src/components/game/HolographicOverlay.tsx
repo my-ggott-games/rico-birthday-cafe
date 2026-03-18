@@ -10,6 +10,8 @@ type HolographicOverlayProps = {
   orientationEnabled: boolean;
   desktopSweep: boolean;
   imageUrl: string;
+  /** Case 3: permission was denied — renders a static rainbow overlay with no motion */
+  permissionDenied?: boolean;
 };
 
 const HOLOGRAPHIC_SPRING = {
@@ -23,6 +25,7 @@ export const HolographicOverlay = ({
   orientationEnabled,
   desktopSweep,
   imageUrl,
+  permissionDenied = false,
 }: HolographicOverlayProps) => {
   const noiseFilterId = useId().replace(/:/g, "");
   const targetX = useMotionValue(50);
@@ -154,6 +157,122 @@ export const HolographicOverlay = ({
     return null;
   }
 
+  // ─── Case 3: Permission Denied — static rainbow holographic overlay ───────
+  if (permissionDenied) {
+    const staticVars = {
+      "--glint-x": "50%",
+      "--glint-y": "50%",
+      "--field-x": "50%",
+      "--field-y": "50%",
+    } as React.CSSProperties;
+
+    const staticRadialBurst = `radial-gradient(circle at 50% 50%,
+      ${palette.cyan} 0%,
+      ${palette.pink} 28%,
+      ${palette.gold} 52%,
+      transparent 76%)`;
+
+    const staticSpectralField = `conic-gradient(from 210deg at 50% 50%,
+      ${palette.cyan},
+      ${palette.violet},
+      ${palette.pink},
+      ${palette.gold},
+      ${palette.cyan})`;
+
+    const staticDiagonalField = `linear-gradient(125deg,
+      transparent 0%,
+      ${palette.cyan} 18%,
+      transparent 36%,
+      ${palette.violet} 54%,
+      transparent 70%,
+      ${palette.gold} 92%)`;
+
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="pointer-events-none absolute inset-0 z-[3] overflow-hidden"
+      >
+        <svg className="absolute h-0 w-0" aria-hidden>
+          <defs>
+            <filter id={noiseFilterId}>
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency="0.78"
+                numOctaves="2"
+                seed="23"
+                stitchTiles="stitch"
+              />
+              <feColorMatrix
+                type="matrix"
+                values="1 0 0 0 0
+                        0 1 0 0 0
+                        0 0 1 0 0
+                        0 0 0 10 -4"
+              />
+            </filter>
+          </defs>
+        </svg>
+
+        <img
+          src={imageUrl}
+          alt=""
+          aria-hidden
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+
+        {/* Radial burst — centered, static */}
+        <div
+          className="absolute inset-0"
+          style={{
+            ...staticVars,
+            background: staticRadialBurst,
+            mixBlendMode: "color-dodge",
+            opacity: 0.72,
+          }}
+        />
+        {/* Spectral conic — centered, static */}
+        <div
+          className="absolute inset-0"
+          style={{
+            ...staticVars,
+            background: staticSpectralField,
+            mixBlendMode: "color-dodge",
+            opacity: 0.34,
+          }}
+        />
+        {/* Diagonal linear — static */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: staticDiagonalField,
+            mixBlendMode: "overlay",
+            opacity: 0.2,
+            filter: "saturate(1.06)",
+          }}
+        />
+
+        {/* Noise grain */}
+        <svg
+          className="absolute inset-0 h-full w-full"
+          preserveAspectRatio="none"
+          aria-hidden
+        >
+          <rect
+            width="100%"
+            height="100%"
+            fill="rgba(22,109,119,0.82)"
+            filter={`url(#${noiseFilterId})`}
+            opacity="0.18"
+            style={{ mixBlendMode: "soft-light" }}
+          />
+        </svg>
+      </motion.div>
+    );
+  }
+
+  // ─── Cases 1, 2, 4: existing motion-value render path ────────────────────
   return (
     <motion.div
       initial={{ opacity: 0 }}
