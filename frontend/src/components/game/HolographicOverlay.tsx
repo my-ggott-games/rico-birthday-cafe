@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useMemo } from "react";
+import React, { useEffect, useId, useMemo, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
 const clamp = (value: number, min: number, max: number) =>
@@ -7,43 +7,47 @@ const clamp = (value: number, min: number, max: number) =>
 type HolographicOverlayProps = {
   visible: boolean;
   mobileInteractive: boolean;
+  orientationEnabled: boolean;
   desktopSweep: boolean;
   imageUrl: string;
 };
 
 const HOLOGRAPHIC_SPRING = {
-  stiffness: 140,
-  damping: 22,
+  stiffness: 120,
+  damping: 25,
 };
 
 export const HolographicOverlay = ({
   visible,
   mobileInteractive,
+  orientationEnabled,
   desktopSweep,
   imageUrl,
 }: HolographicOverlayProps) => {
   const noiseFilterId = useId().replace(/:/g, "");
   const targetX = useMotionValue(50);
   const targetY = useMotionValue(50);
+  const [sensorDebug, setSensorDebug] = useState({ beta: 0, gamma: 0 });
   const springX = useSpring(targetX, HOLOGRAPHIC_SPRING);
   const springY = useSpring(targetY, HOLOGRAPHIC_SPRING);
   const glintX = useTransform(springX, (value) => `${value}%`);
   const glintY = useTransform(springY, (value) => `${value}%`);
   const fieldX = useTransform(
     springX,
-    (value) => `${clamp(50 + (value - 50) * 0.65, 4, 96)}%`,
+    (value) => `${clamp(50 + (value - 50) * 0.72, 0, 100)}%`,
   );
   const fieldY = useTransform(
     springY,
-    (value) => `${clamp(50 + (value - 50) * 0.6, 4, 96)}%`,
+    (value) => `${clamp(50 + (value - 50) * 0.68, 0, 100)}%`,
   );
+  const isDev = import.meta.env.DEV;
 
   const palette = useMemo(
     () => ({
-      cyan: "hsla(192, 100%, 56%, 0.95)",
-      pink: "hsla(320, 100%, 66%, 0.9)",
-      violet: "hsla(266, 100%, 65%, 0.88)",
-      gold: "hsla(52, 100%, 58%, 0.82)",
+      cyan: "hsla(192, 100%, 54%, 1)",
+      pink: "hsla(324, 100%, 62%, 0.96)",
+      violet: "hsla(272, 100%, 62%, 0.92)",
+      gold: "hsla(52, 100%, 56%, 0.88)",
     }),
     [],
   );
@@ -108,11 +112,13 @@ export const HolographicOverlay = ({
   useEffect(() => {
     targetX.set(50);
     targetY.set(50);
+    setSensorDebug({ beta: 0, gamma: 0 });
   }, [targetX, targetY, visible]);
 
   useEffect(() => {
     if (
       !visible ||
+      !orientationEnabled ||
       !mobileInteractive ||
       typeof window === "undefined" ||
       !("DeviceOrientationEvent" in window)
@@ -123,9 +129,16 @@ export const HolographicOverlay = ({
     const handleOrientation = (event: DeviceOrientationEvent) => {
       const gamma = clamp(event.gamma ?? 0, -35, 35);
       const beta = clamp(event.beta ?? 0, -50, 50);
+      const normalizedX = clamp(((gamma + 35) / 70) * 100, 0, 100);
+      const normalizedY = clamp(((beta + 50) / 100) * 100, 0, 100);
 
-      targetX.set(clamp(50 + (gamma / 35) * 28, 4, 96));
-      targetY.set(clamp(50 + (beta / 50) * 22, 6, 94));
+      targetX.set(normalizedX);
+      targetY.set(normalizedY);
+
+      if (isDev) {
+        setSensorDebug({ beta, gamma });
+        console.log("[gyro]", { beta, gamma, x: normalizedX, y: normalizedY });
+      }
     };
 
     window.addEventListener("deviceorientation", handleOrientation);
@@ -133,7 +146,7 @@ export const HolographicOverlay = ({
     return () => {
       window.removeEventListener("deviceorientation", handleOrientation);
     };
-  }, [mobileInteractive, targetX, targetY, visible]);
+  }, [isDev, mobileInteractive, orientationEnabled, targetX, targetY, visible]);
 
   if (!visible) {
     return null;
@@ -180,7 +193,7 @@ export const HolographicOverlay = ({
           ...overlayVars,
           background: radialBurst,
           mixBlendMode: "color-dodge",
-          opacity: mobileInteractive ? 0.98 : 0.72,
+          opacity: mobileInteractive ? 1 : 0.72,
         }}
       />
       <div
@@ -189,7 +202,7 @@ export const HolographicOverlay = ({
           ...overlayVars,
           background: spectralField,
           mixBlendMode: "color-dodge",
-          opacity: mobileInteractive ? 0.72 : 0.34,
+          opacity: mobileInteractive ? 0.84 : 0.34,
         }}
       />
       <div
@@ -197,8 +210,10 @@ export const HolographicOverlay = ({
         style={{
           background: diagonalField,
           mixBlendMode: "overlay",
-          opacity: mobileInteractive ? 0.58 : 0.2,
-          filter: mobileInteractive ? "saturate(1.32) contrast(1.08)" : "saturate(1.06)",
+          opacity: mobileInteractive ? 0.7 : 0.2,
+          filter: mobileInteractive
+            ? "saturate(1.56) contrast(1.12)"
+            : "saturate(1.06)",
         }}
       />
 
@@ -238,6 +253,12 @@ export const HolographicOverlay = ({
           style={{ mixBlendMode: "soft-light" }}
         />
       </svg>
+
+      {isDev && mobileInteractive && (
+        <div className="absolute bottom-2 left-2 rounded-full bg-black/45 px-2 py-1 text-[10px] font-medium tracking-[0.08em] text-white/90 backdrop-blur-sm">
+          beta {sensorDebug.beta.toFixed(1)} / gamma {sensorDebug.gamma.toFixed(1)}
+        </div>
+      )}
     </motion.div>
   );
 };
