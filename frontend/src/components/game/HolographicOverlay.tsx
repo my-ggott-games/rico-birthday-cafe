@@ -10,6 +10,7 @@ type HolographicOverlayProps = {
   orientationEnabled: boolean;
   desktopSweep: boolean;
   imageUrl: string;
+  permissionDenied?: boolean;
 };
 
 const HOLOGRAPHIC_SPRING = {
@@ -32,8 +33,6 @@ export const HolographicOverlay = ({
   const springY = useSpring(targetY, HOLOGRAPHIC_SPRING);
   const glintX = useTransform(springX, (value) => `${value}%`);
   const glintY = useTransform(springY, (value) => `${value}%`);
-  const probeX = useTransform(springX, (value) => `${clamp(value, 0, 100)}%`);
-  const probeY = useTransform(springY, (value) => `${clamp(value, 0, 100)}%`);
   const fieldX = useTransform(
     springX,
     (value) => `${clamp(50 + (value - 50) * 0.72, 0, 100)}%`,
@@ -96,6 +95,14 @@ export const HolographicOverlay = ({
         transparent 70%,
         ${palette.gold} 92%)`,
     [palette],
+  );
+  const diagonalOffsetX = useTransform(
+    springX,
+    (value) => `${(value - 50) * 0.35}%`,
+  );
+  const diagonalOffsetY = useTransform(
+    springY,
+    (value) => `${(value - 50) * 0.35}%`,
   );
 
   const desktopSweepGradient = useMemo(
@@ -189,34 +196,40 @@ export const HolographicOverlay = ({
         className="absolute inset-0 h-full w-full object-cover"
       />
 
-      <div
-        className="absolute inset-0"
-        style={{
-          ...overlayVars,
-          background: radialBurst,
-          mixBlendMode: "color-dodge",
-          opacity: mobileInteractive ? 1 : 0.72,
-        }}
-      />
-      <div
-        className="absolute inset-0"
-        style={{
-          ...overlayVars,
-          background: spectralField,
-          mixBlendMode: "color-dodge",
-          opacity: mobileInteractive ? 0.84 : 0.34,
-        }}
-      />
-      <div
+      {!mobileInteractive && (
+        <div
+          className="absolute inset-0"
+          style={{
+            ...overlayVars,
+            background: radialBurst,
+            opacity: 0.72,
+          }}
+        />
+      )}
+      {!mobileInteractive && (
+        <div
+          className="absolute inset-0"
+          style={{
+            ...overlayVars,
+            background: spectralField,
+            mixBlendMode: "color-dodge",
+            opacity: 0.5,
+          }}
+        />
+      )}
+      <motion.div
         className="absolute inset-0"
         style={{
           background: diagonalField,
           mixBlendMode: "overlay",
-          opacity: mobileInteractive ? 0.7 : 0.2,
+          opacity: mobileInteractive ? 0.5 : 0,
           filter: mobileInteractive
-            ? "saturate(1.56) contrast(1.12)"
+            ? "saturate(1.6) contrast(1.14)"
             : "saturate(1.06)",
+          x: mobileInteractive && orientationEnabled ? diagonalOffsetX : 0,
+          y: mobileInteractive && orientationEnabled ? diagonalOffsetY : 0,
         }}
+        transition={{ type: "spring", stiffness: 90, damping: 18 }}
       />
 
       {desktopSweep && !mobileInteractive && (
@@ -255,43 +268,6 @@ export const HolographicOverlay = ({
           style={{ mixBlendMode: "soft-light" }}
         />
       </svg>
-
-      {mobileInteractive && (
-        <motion.div
-          aria-hidden
-          className="absolute z-[6] h-6 w-6 rounded-full"
-          style={{
-            left: probeX,
-            top: probeY,
-            transform: "translate(-50%, -50%)",
-            background:
-              `conic-gradient(from 0deg,
-                hsla(192,100%,54%,0.95),
-                hsla(272,100%,62%,0.95),
-                hsla(324,100%,62%,0.95),
-                hsla(52,100%,56%,0.95),
-                hsla(192,100%,54%,0.95))`,
-            boxShadow:
-              "0 0 0 2px rgba(255,255,255,0.72), 0 0 12px 4px rgba(100,220,255,0.55), 0 0 24px 6px rgba(200,100,255,0.35)",
-            filter: "blur(0.5px) saturate(1.4)",
-          }}
-        >
-          {/* inner frosted core */}
-          <div
-            className="absolute inset-[4px] rounded-full"
-            style={{
-              background: "rgba(255,255,255,0.38)",
-              backdropFilter: "blur(2px)",
-            }}
-          />
-        </motion.div>
-      )}
-
-      {isDev && mobileInteractive && (
-        <div className="absolute bottom-2 left-2 rounded-full bg-black/45 px-2 py-1 text-[10px] font-medium tracking-[0.08em] text-white/90 backdrop-blur-sm">
-          beta {sensorDebug.beta.toFixed(1)} / gamma {sensorDebug.gamma.toFixed(1)}
-        </div>
-      )}
     </motion.div>
   );
 };

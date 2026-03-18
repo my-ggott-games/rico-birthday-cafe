@@ -16,6 +16,7 @@ const AdventureSample = lazy(() => import("./pages/AdventureSample"));
 const CodySample = lazy(() => import("./pages/CodySample"));
 const PuzzleGame = lazy(() => import("./pages/PuzzleGame"));
 const PuzzleSandbox = lazy(() => import("./pages/PuzzleSandbox"));
+const HologramPlayground = lazy(() => import("./pages/HologramPlayground"));
 const AsparagusMerge = lazy(() => import("./pages/AsparagusMerge"));
 const Credits = lazy(() => import("./pages/Credits"));
 
@@ -42,6 +43,7 @@ function App() {
             <Route path="/sample/adventure" element={<AdventureSample />} />
             <Route path="/game/puzzle" element={<PuzzleGame />} />
             <Route path="/sample/puzzle" element={<PuzzleSandbox />} />
+            <Route path="/sample/hologram" element={<HologramPlayground />} />
             <Route path="/game/asparagus" element={<AsparagusMerge />} />
             <Route path="/credits" element={<Credits />} />
             {/* </Route> */}

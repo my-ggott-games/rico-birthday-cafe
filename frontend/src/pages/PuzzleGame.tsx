@@ -418,6 +418,9 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
       ? PIECE_SIZE
       : getDisplayPieceSize(window.innerWidth, window.innerHeight),
   );
+  const [isNarrowViewport, setIsNarrowViewport] = useState(
+    typeof window !== "undefined" ? window.innerWidth <= 768 : false,
+  );
   const playAreaRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const artworkRef = useRef<HTMLDivElement>(null);
@@ -428,6 +431,14 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   const isCoarsePointerDevice =
     typeof window !== "undefined" &&
     window.matchMedia("(pointer: coarse)").matches;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleResize = () => setIsNarrowViewport(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const triggerFireworks = () => {
     const burstColors = [
@@ -703,20 +714,21 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
       return;
     }
 
-    if (
-      typeof window === "undefined" ||
-      !isCoarsePointerDevice ||
-      !("DeviceOrientationEvent" in window)
-    ) {
-      setPhotocardModeEnabled(false);
-      setOrientationEnabled(false);
-      setSensorUnavailable(true);
-      return;
-    }
-
     setIsOpeningPhotocard(true);
 
     try {
+      const hasDeviceOrientation =
+        typeof window !== "undefined" &&
+        "DeviceOrientationEvent" in window &&
+        (isCoarsePointerDevice || isNarrowViewport);
+
+      if (!hasDeviceOrientation) {
+        setPhotocardModeEnabled(true);
+        setOrientationEnabled(false);
+        setSensorUnavailable(true);
+        return;
+      }
+
       const permissionGranted = await requestSensorPermission();
       const canUseOrientation = window.isSecureContext && permissionGranted;
 
@@ -728,7 +740,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
     } finally {
       setIsOpeningPhotocard(false);
     }
-  }, [isCoarsePointerDevice, photocardModeEnabled]);
+  }, [isCoarsePointerDevice, isNarrowViewport, photocardModeEnabled]);
 
   const handleReplay = React.useCallback(() => {
     setCompleted(false);
@@ -788,7 +800,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   }, [completed]);
 
   const mobilePhotocardActive =
-    isCoarsePointerDevice && photocardModeEnabled && orientationEnabled;
+    (isCoarsePointerDevice || isNarrowViewport) && photocardModeEnabled;
   const hologramVisible = completed;
   const desktopSweepEnabled = completed && !mobilePhotocardActive;
 
@@ -945,7 +957,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
                     <MuseumPlaque className="mt-0 w-full max-w-none" />
                   </motion.div>
                   <div className="flex w-full items-center gap-3">
-                    {isCoarsePointerDevice && (
+                    {(isCoarsePointerDevice || isNarrowViewport) && (
                       <ActionButton
                         onClick={() => void handlePhotocardMode()}
                         disabled={isOpeningPhotocard}
@@ -963,7 +975,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
                     <ActionButton
                       onClick={handleReplay}
                       className={
-                        isCoarsePointerDevice
+                        isCoarsePointerDevice || isNarrowViewport
                           ? "flex-1 shadow-none hover:shadow-none"
                           : "w-full shadow-none hover:shadow-none"
                       }
@@ -993,7 +1005,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
                   >
                     <MuseumPlaque className="mt-0" />
                   </motion.div>
-                  {isCoarsePointerDevice && (
+                  {(isCoarsePointerDevice || isNarrowViewport) && (
                     <ActionButton
                       onClick={() => void handlePhotocardMode()}
                       disabled={isOpeningPhotocard}
