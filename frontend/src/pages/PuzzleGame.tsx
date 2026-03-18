@@ -720,7 +720,9 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
       const permissionGranted = await requestSensorPermission();
       const canUseOrientation = window.isSecureContext && permissionGranted;
 
-      setPhotocardModeEnabled(canUseOrientation);
+      // Even when denied, enable photocard mode so the overlay (Case 3) shows
+      // and the button flips to "홀로그램 끄기".
+      setPhotocardModeEnabled(true);
       setOrientationEnabled(canUseOrientation);
       setSensorUnavailable(!canUseOrientation);
     } finally {
@@ -888,6 +890,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
                       orientationEnabled={orientationEnabled}
                       desktopSweep={desktopSweepEnabled}
                       imageUrl={PUZZLE_IMAGE_URL}
+                      permissionDenied={sensorUnavailable}
                     />
                     {completed && (
                       <>
