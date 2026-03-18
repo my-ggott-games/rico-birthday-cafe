@@ -25,6 +25,7 @@ export const HolographicOverlay = ({
   desktopSweep,
   imageUrl,
 }: HolographicOverlayProps) => {
+  const mobileGyroActive = mobileInteractive && orientationEnabled;
   const noiseFilterId = useId().replace(/:/g, "");
   const targetX = useMotionValue(50);
   const targetY = useMotionValue(50);
@@ -215,7 +216,7 @@ export const HolographicOverlay = ({
         />
       )}
       <motion.div
-        className="absolute inset-0"
+        className={mobileGyroActive ? "absolute inset-[-18%]" : "absolute inset-0"}
         style={{
           background: diagonalField,
           mixBlendMode: "overlay",
