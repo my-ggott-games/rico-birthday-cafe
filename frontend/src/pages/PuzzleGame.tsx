@@ -1462,7 +1462,34 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
                 </div>
               </div>
               {completed && (
-                <MuseumPlaque className="mt-5 w-full max-w-[19rem] lg:hidden" />
+                <div className="mt-5 flex w-full max-w-[19rem] flex-col items-center gap-4 lg:hidden">
+                  <MuseumPlaque className="mt-0 w-full max-w-none" />
+                  <div className="flex w-full items-center gap-3">
+                    {isCoarsePointerDevice && !photocardModeEnabled && (
+                      <ActionButton
+                        onClick={() => void handlePhotocardMode()}
+                        disabled={isOpeningPhotocard}
+                        className="flex-1"
+                        variant="teal"
+                        size="md"
+                      >
+                        {isOpeningPhotocard ? "준비 중..." : "홀로그램 모드"}
+                      </ActionButton>
+                    )}
+                    <ActionButton
+                      onClick={handleReplay}
+                      className={
+                        isCoarsePointerDevice && !photocardModeEnabled
+                          ? "flex-1"
+                          : "w-full"
+                      }
+                      variant="sage"
+                      size="lg"
+                    >
+                      다시 하기
+                    </ActionButton>
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -1499,25 +1526,6 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
               animate={{ y: 0, opacity: 1 }}
               className="flex w-full max-w-md flex-col items-center gap-3 lg:hidden"
             >
-              <div className="flex w-full flex-wrap items-center justify-center gap-3 bg-transparent px-4 py-4">
-                {isCoarsePointerDevice && !photocardModeEnabled && (
-                  <ActionButton
-                    onClick={() => void handlePhotocardMode()}
-                    disabled={isOpeningPhotocard}
-                    variant="teal"
-                    size="md"
-                  >
-                    {isOpeningPhotocard ? "준비 중..." : "홀로그램 모드"}
-                  </ActionButton>
-                )}
-                <ActionButton
-                  onClick={handleReplay}
-                  variant="sage"
-                  size="md"
-                >
-                  다시 하기
-                </ActionButton>
-              </div>
               {sensorUnavailable && (
                 <p className="rounded-full bg-[#fff1f1]/92 px-4 py-2 text-center text-xs leading-5 text-[#A14646] backdrop-blur-sm">
                   센서 권한을 받지 못했거나 HTTPS 환경이 아니라서 기울임 효과를
@@ -1542,13 +1550,15 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
         </div>
 
         {isDevelopment && !completed && (
-          <button
-            type="button"
-            onClick={handleDebugComplete}
-            className="fixed right-4 top-4 z-[120] rounded-full border border-[#166D77]/30 bg-[#166D77] px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#FFFFF8] shadow-[0_12px_26px_rgba(22,109,119,0.28)] transition-transform hover:scale-[1.04] active:scale-[0.98]"
-          >
-            DEBUG: COMPLETE PUZZLE
-          </button>
+          <div className="fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-[120] flex justify-center px-4 sm:inset-x-auto sm:bottom-auto sm:right-4 sm:top-4 sm:px-0">
+            <button
+              type="button"
+              onClick={handleDebugComplete}
+              className="rounded-full border border-[#166D77]/30 bg-[#166D77] px-4 py-2 text-[11px] font-black uppercase tracking-[0.2em] text-[#FFFFF8] shadow-[0_12px_26px_rgba(22,109,119,0.28)] transition-transform hover:scale-[1.04] active:scale-[0.98] sm:text-xs sm:tracking-[0.22em]"
+            >
+              DEBUG: COMPLETE PUZZLE
+            </button>
+          </div>
         )}
       </div>
     </DndContext>
