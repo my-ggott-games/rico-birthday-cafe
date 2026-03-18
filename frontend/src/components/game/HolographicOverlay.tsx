@@ -32,6 +32,8 @@ export const HolographicOverlay = ({
   const springY = useSpring(targetY, HOLOGRAPHIC_SPRING);
   const glintX = useTransform(springX, (value) => `${value}%`);
   const glintY = useTransform(springY, (value) => `${value}%`);
+  const probeX = useTransform(springX, (value) => `${clamp(value, 0, 100)}%`);
+  const probeY = useTransform(springY, (value) => `${clamp(value, 0, 100)}%`);
   const fieldX = useTransform(
     springX,
     (value) => `${clamp(50 + (value - 50) * 0.72, 0, 100)}%`,
@@ -253,6 +255,18 @@ export const HolographicOverlay = ({
           style={{ mixBlendMode: "soft-light" }}
         />
       </svg>
+
+      {mobileInteractive && (
+        <motion.div
+          aria-hidden
+          className="absolute z-[6] h-5 w-5 rounded-full border-2 border-white/90 bg-[#ff3b30] shadow-[0_0_0_4px_rgba(255,255,255,0.18),0_10px_24px_rgba(122,10,10,0.42)]"
+          style={{
+            left: probeX,
+            top: probeY,
+            transform: "translate(-50%, -50%)",
+          }}
+        />
+      )}
 
       {isDev && mobileInteractive && (
         <div className="absolute bottom-2 left-2 rounded-full bg-black/45 px-2 py-1 text-[10px] font-medium tracking-[0.08em] text-white/90 backdrop-blur-sm">
