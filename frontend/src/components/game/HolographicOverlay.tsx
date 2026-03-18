@@ -104,6 +104,40 @@ export const HolographicOverlay = ({
     springY,
     (value) => `${(value - 50) * 0.35}%`,
   );
+  const mobileTiltStrength = useTransform([springX, springY], (latest) => {
+    const [x, y] = latest as number[];
+    const normalizedX = (x - 50) / 50;
+    const normalizedY = (y - 50) / 50;
+    return Math.min(Math.hypot(normalizedX, normalizedY), 1);
+  });
+  const mobileSweepAngle = useTransform([springX, springY], (latest) => {
+    const [x, y] = latest as number[];
+    const angle = 110 + x * 0.2 + (y - 50) * 0.08;
+    return `${clamp(angle, 110, 140)}deg`;
+  });
+  const mobileSweepPosition = useTransform([springX, springY], (latest) => {
+    const [x, y] = latest as number[];
+    return `${clamp(x, 0, 100)}% ${clamp(y, 0, 100)}%`;
+  });
+  const mobileSweepOpacity = useTransform(
+    mobileTiltStrength,
+    (value) => 0.58 + value * 0.18,
+  );
+  const mobileSweepFilter = useTransform(
+    mobileTiltStrength,
+    (value) => `blur(${12 + value * 4}px) saturate(${1.18 + value * 0.12})`,
+  );
+  const mobileSweepGradient = useTransform([mobileSweepAngle], (latest) => {
+    const [angle] = latest as [string];
+    return `linear-gradient(${angle},
+      transparent 0%,
+      rgba(255,255,255,0.03) 14%,
+      hsla(192, 100%, 70%, 0.34) 32%,
+      hsla(324, 100%, 72%, 0.48) 50%,
+      hsla(272, 100%, 72%, 0.42) 64%,
+      hsla(52, 100%, 72%, 0.34) 80%,
+      transparent 100%)`;
+  });
 
   const desktopSweepGradient = useMemo(
     () =>
@@ -229,6 +263,21 @@ export const HolographicOverlay = ({
         }}
         transition={{ type: "spring", stiffness: 90, damping: 18 }}
       />
+
+      {mobileGyroActive && (
+        <motion.div
+          className="absolute inset-[-45%]"
+          style={{
+            backgroundImage: mobileSweepGradient,
+            backgroundSize: "240% 240%",
+            backgroundPosition: mobileSweepPosition,
+            backgroundRepeat: "no-repeat",
+            mixBlendMode: "color-dodge",
+            opacity: mobileSweepOpacity,
+            filter: mobileSweepFilter,
+          }}
+        />
+      )}
 
       {desktopSweep && !mobileInteractive && (
         <motion.div
