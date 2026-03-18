@@ -2,9 +2,7 @@ type MuseumPlaqueProps = {
   className?: string;
 };
 
-export const MuseumPlaque = ({
-  className = "mt-5",
-}: MuseumPlaqueProps) => (
+export const MuseumPlaque = ({ className = "mt-5" }: MuseumPlaqueProps) => (
   <div className={`${className} flex justify-center`}>
     <div
       className="w-full rounded-[1.35rem] p-[6px]"
@@ -26,7 +24,7 @@ export const MuseumPlaque = ({
               "inset 0 1px 0 rgba(255, 247, 235, 0.32), inset 0 -8px 14px rgba(75, 51, 28, 0.14)",
           }}
         >
-          <h3 className="mt-2 text-2xl font-semibold tracking-[0.02em]">
+          <h3 className="text-lg font-semibold tracking-[0.02em]">
             Birthday Banquet
           </h3>
           <p className="mt-2 text-sm tracking-[0.12em] text-[#6f5130]">
