@@ -179,13 +179,6 @@ const requestSensorPermission = async () => {
   }
 };
 
-const getNodeEnv = () =>
-  (
-    globalThis as typeof globalThis & {
-      process?: { env?: { NODE_ENV?: string } };
-    }
-  ).process?.env?.NODE_ENV;
-
 const createInterlockingPath = (
   edges: PuzzlePiece["edgeTypes"],
   padding: PiecePadding,
@@ -963,7 +956,6 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   const completionMetaTriggeredRef = useRef(false);
   const { token } = useAuthStore();
   const { addToast } = useToastStore();
-  const isDevelopment = getNodeEnv() === "development" || import.meta.env.DEV;
   const isCoarsePointerDevice =
     typeof window !== "undefined" &&
     window.matchMedia("(pointer: coarse)").matches;
@@ -1590,7 +1582,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
           </div>
         </div>
 
-        {isDevelopment && !completed && (
+        {!completed && (
           <div className="fixed right-4 top-[max(1rem,env(safe-area-inset-top))] z-[120] flex justify-end px-0">
             <button
               type="button"
