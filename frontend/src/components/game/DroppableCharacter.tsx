@@ -1,41 +1,10 @@
 import React from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { motion } from "framer-motion";
-
-export interface CodyItem {
-  id: string;
-  category:
-    | "hair_front"
-    | "hair_back"
-    | "clothes"
-    | "clothes_back"
-    | "hair_acc"
-    | "clothes_acc"
-    | "hand_acc"
-    | "shoes"
-    | "accessories";
-  label?: string;
-  layerPriority?: number;
-  isOnePiece?: boolean;
-  layers: {
-    front?: string;
-    back?: string;
-    main?: string;
-  };
-}
+import type { CodyItem, EquippedState, EquipmentSlot } from "./codyTypes";
 
 interface DroppableCharacterProps {
-  equippedIds: {
-    hair_front: string | null;
-    hair_back: string | null;
-    clothes: string | null;
-    clothes_back: string | null;
-    hair_acc: string | null;
-    clothes_acc: string | null;
-    hand_acc: string | null;
-    shoes: string | null;
-    accessories: string | null;
-  };
+  equippedIds: EquippedState;
   activeId: string | null;
   isFinished?: boolean;
   resultImage?: string | null;
@@ -55,28 +24,33 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
 }) => {
   const { setNodeRef } = useDroppable({
     id: "character-zone",
+    disabled: isMobile,
   });
 
   const overlayStyle =
     "absolute inset-0 w-full h-full object-contain pointer-events-none select-none";
-  const zIndexMap: Partial<Record<CodyItem["category"], number>> = {
-    clothes_back: 15,
+  const zIndexMap: Partial<Record<EquipmentSlot, number>> = {
     shoes: 20,
-    clothes: 25,
-    hand_acc: 26,
-    clothes_acc: 27,
-    hair_acc: 28,
-    accessories: 50,
+    skirt: 22,
+    top: 24,
+    dress: 24,
+    jacket: 26,
+    deco_1: 45,
+    deco_2: 34,
+    deco_3: 45,
+    deco_4: 34,
+    deco_5: 45,
+    deco_6: 21,
   };
 
-  const getItem = (category: keyof DroppableCharacterProps["equippedIds"]) => {
-    const id = equippedIds[category];
+  const getItem = (slot: EquipmentSlot) => {
+    const id = equippedIds[slot];
     if (!id) return null;
     return availableItems.find((i) => i.id === id) ?? null;
   };
 
   const renderHairBackLayer = () => {
-    const item = getItem("hair_front");
+    const item = getItem("hair");
     if (!item?.layers.back || activeId === item.id) return null;
     return (
       <div
@@ -95,7 +69,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
   };
 
   const renderHairFrontLayer = () => {
-    const item = getItem("hair_front");
+    const item = getItem("hair");
     if (!item?.layers.front || activeId === item.id) return null;
     return (
       <div
@@ -113,21 +87,17 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
     );
   };
 
-  const renderItemLayer = (
-    category: keyof DroppableCharacterProps["equippedIds"],
-    zIndex?: number,
-  ) => {
-    if (category === "hair_front" || category === "hair_back") return null;
-    const id = equippedIds[category];
+  const renderItemLayer = (slot: EquipmentSlot, zIndex?: number) => {
+    if (slot === "hair") return null;
+    const id = equippedIds[slot];
     if (!id) return null;
     const item = availableItems.find((i) => i.id === id);
     if (!item) return null;
-    const itemZIndex =
-      zIndex ?? item.layerPriority ?? zIndexMap[item.category] ?? 30;
+    const itemZIndex = zIndex ?? item.layerPriority ?? zIndexMap[slot] ?? 30;
 
     return (
       <div
-        key={category}
+        key={slot}
         className="absolute inset-0 pointer-events-none"
         style={{ zIndex: itemZIndex }}
       >
@@ -202,27 +172,33 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
           />
         )}
 
-        {/* Drop Zone */}
-        <div
-          ref={setNodeRef}
-          className="absolute z-10 pointer-events-auto bg-transparent"
-          style={{
-            width: "180px",
-            height: isMobile ? "350px" : "450px",
-            left: "50%",
-            top: "50%",
-            transform: "translate(-50%, -50%)",
-          }}
-        />
+        {!isMobile && (
+          <div
+            ref={setNodeRef}
+            className="absolute z-10 pointer-events-auto"
+            style={{
+              width: "200px",
+              height: "450px",
+              left: "50%",
+              top: "50%",
+              transform: "translate(-50%, -50%)",
+              backgroundColor: "rgba(204, 204, 255, 0.5)",
+            }}
+          />
+        )}
 
-        {renderItemLayer("clothes_back")}
         {renderItemLayer("shoes")}
-        {renderItemLayer("clothes")}
-        {renderItemLayer("hand_acc")}
-        {renderItemLayer("clothes_acc")}
-        {renderItemLayer("hair_acc")}
+        {renderItemLayer("deco_6")}
+        {renderItemLayer("skirt")}
+        {renderItemLayer("top")}
+        {renderItemLayer("dress")}
+        {renderItemLayer("jacket")}
+        {renderItemLayer("deco_2")}
+        {renderItemLayer("deco_4")}
         {renderHairFrontLayer()}
-        {renderItemLayer("accessories", 50)}
+        {renderItemLayer("deco_1")}
+        {renderItemLayer("deco_3")}
+        {renderItemLayer("deco_5")}
       </div>
     </div>
   );

@@ -9,7 +9,12 @@ import {
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core";
 import { DraggableItem } from "../components/game/DraggableItem";
 import { DroppableCharacter } from "../components/game/DroppableCharacter";
-import type { CodyItem } from "../components/game/DroppableCharacter";
+import type {
+  CodyItem,
+  EquippedState,
+  EquipmentSlot,
+  MobileTabId,
+} from "../components/game/codyTypes";
 import { GameContainer } from "../components/common/GameContainer";
 import type { TutorialSlide } from "../components/common/TutorialBanner";
 
@@ -19,105 +24,158 @@ import {
 } from "../components/game/SpringFestivalBackground";
 import { FireflyBackground } from "../components/game/FireflyBackground";
 import { PolaroidFrame } from "../components/game/PolaroidFrame";
+import { getInventoryPreviewLayout } from "../components/game/codyInventoryPreviewLayout";
 import { domToJpeg } from "modern-screenshot";
 
-type MobileTabId = "hair" | "clothes" | "shoes" | "hair_acc" | "body_acc";
-type EquippedState = {
-  hair_front: string | null;
-  hair_back: string | null;
-  clothes: string | null;
-  clothes_back: string | null;
-  hair_acc: string | null;
-  clothes_acc: string | null;
-  hand_acc: string | null;
-  shoes: string | null;
-  accessories: string | null;
-};
 type ShareNavigator = Navigator & {
   canShare?: (data?: ShareData) => boolean;
 };
 
 const EMPTY_EQUIPMENT: EquippedState = {
-  hair_front: null,
-  hair_back: null,
-  clothes: null,
-  clothes_back: null,
-  hair_acc: null,
-  clothes_acc: null,
-  hand_acc: null,
+  hair: null,
+  top: null,
+  skirt: null,
+  dress: null,
+  jacket: null,
   shoes: null,
-  accessories: null,
+  deco_1: null,
+  deco_2: null,
+  deco_3: null,
+  deco_4: null,
+  deco_5: null,
+  deco_6: null,
 };
 
-const ONE_PIECE_IDS = new Set(["1-3", "2-3", "4-3"]);
-const RIBBON_ACCESSORY_IDS = new Set(["3-10", "4-5"]);
 const INVALID_POLAROID_SCALE = 0.5;
 const VALID_POLAROID_SCALE = 1;
+const PNG_ASSET = (name: string) => `/assets/codygame/${name}.png`;
 
-const INVENTORY_PREVIEW_LAYOUT: Record<
-  CodyItem["category"],
+const HAIR_PAIRINGS: Array<[string, string]> = [
+  ["hair_1-1", "hair_2-1"],
+  ["hair_1-2", "hair_2-1"],
+  ["hair_1-3", "hair_2-2"],
+  ["hair_1-4", "hair_2-1"],
+  ["hair_1-5", "hair_2-3"],
+  ["hair_1-6", "hair_2-1"],
+];
+
+const DECO_ITEMS: Array<{
+  id: string;
+  slot: EquipmentSlot;
+  layerPriority: number;
+}> = [
+  { id: "deco_1-1", slot: "deco_1", layerPriority: 45 },
+  { id: "deco_1-2", slot: "deco_1", layerPriority: 45 },
+  { id: "deco_2-1", slot: "deco_2", layerPriority: 34 },
+  { id: "deco_2-2", slot: "deco_2", layerPriority: 34 },
+  { id: "deco_3-1", slot: "deco_3", layerPriority: 29 },
+  { id: "deco_3-2", slot: "deco_3", layerPriority: 45 },
+  { id: "deco_3-3", slot: "deco_3", layerPriority: 45 },
+  { id: "deco_4-1", slot: "deco_4", layerPriority: 34 },
+  { id: "deco_4-2", slot: "deco_4", layerPriority: 26 },
+  { id: "deco_5-1", slot: "deco_5", layerPriority: 27 },
+  { id: "deco_6-1", slot: "deco_6", layerPriority: 21 },
+];
+
+const AVAILABLE_ITEMS: CodyItem[] = [
+  ...HAIR_PAIRINGS.map(([front, back]) => ({
+    id: front,
+    category: "hair" as const,
+    slot: "hair" as const,
+    layers: {
+      front: PNG_ASSET(front),
+      back: PNG_ASSET(back),
+    },
+  })),
   {
-    mobileCard: string;
-    desktopCard: string;
-    mobileOffset: string;
-    desktopOffset: string;
-  }
-> = {
-  hair_front: {
-    mobileCard: "w-28 h-40",
-    desktopCard: "w-60 h-60",
-    mobileOffset: "-150px",
-    desktopOffset: "-40px",
+    id: "top_1",
+    category: "top",
+    slot: "top",
+    layerPriority: 28,
+    layers: { main: PNG_ASSET("top_1") },
   },
-  hair_back: {
-    mobileCard: "w-28 h-40",
-    desktopCard: "w-60 h-60",
-    mobileOffset: "-150px",
-    desktopOffset: "-40px",
+  {
+    id: "skirt_1",
+    category: "skirt",
+    slot: "skirt",
+    layers: { main: PNG_ASSET("skirt_1") },
   },
-  clothes: {
-    mobileCard: "w-32 h-48",
-    desktopCard: "w-72 h-[36rem]",
-    mobileOffset: "-200px",
-    desktopOffset: "-120px",
+  ...["dress_1", "dress_2", "dress_3", "dress_4", "dress_5"].map((id) => ({
+    id,
+    category: "dress" as const,
+    slot: "dress" as const,
+    layers: { main: PNG_ASSET(id) },
+  })),
+  {
+    id: "jacket_1",
+    category: "jacket",
+    slot: "jacket",
+    layerPriority: 32,
+    layers: { main: PNG_ASSET("jacket_1") },
   },
-  clothes_back: {
-    mobileCard: "w-32 h-48",
-    desktopCard: "w-72 h-[36rem]",
-    mobileOffset: "-220px",
-    desktopOffset: "-132px",
-  },
-  hair_acc: {
-    mobileCard: "w-28 h-40",
-    desktopCard: "w-60 h-60",
-    mobileOffset: "-138px",
-    desktopOffset: "-34px",
-  },
-  clothes_acc: {
-    mobileCard: "w-28 h-40",
-    desktopCard: "w-60 h-60",
-    mobileOffset: "-160px",
-    desktopOffset: "-48px",
-  },
-  hand_acc: {
-    mobileCard: "w-28 h-40",
-    desktopCard: "w-60 h-60",
-    mobileOffset: "-168px",
-    desktopOffset: "-56px",
-  },
-  shoes: {
-    mobileCard: "w-28 h-28",
-    desktopCard: "w-52 h-52",
-    mobileOffset: "-288px",
-    desktopOffset: "-148px",
-  },
-  accessories: {
-    mobileCard: "w-28 h-40",
-    desktopCard: "w-60 h-60",
-    mobileOffset: "-160px",
-    desktopOffset: "-48px",
-  },
+  ...["shoes_1", "shoes_2", "shoes_3", "shoes_4", "shoes_5"].map((id) => ({
+    id,
+    category: "shoes" as const,
+    slot: "shoes" as const,
+    layers: { main: PNG_ASSET(id) },
+  })),
+  ...DECO_ITEMS.map(({ id, slot, layerPriority }) => ({
+    id,
+    category: "deco" as const,
+    slot,
+    layerPriority,
+    layers: { main: PNG_ASSET(id) },
+  })),
+];
+
+type Combination = {
+  name: string;
+  requiredItems: string[];
+  backgroundClass?: string;
+  backgroundUrl?: string;
 };
+
+const combinations: Combination[] = [
+  {
+    name: "beer",
+    requiredItems: ["deco_1-1", "deco_2-1", "dress_1", "hair_1-2", "shoes_4"],
+    backgroundClass: "beer",
+  },
+  {
+    name: "hanbok",
+    requiredItems: [
+      "deco_1-2",
+      "deco_3-1",
+      "deco_4-2",
+      "deco_5-1",
+      "hair_1-3",
+      "shoes_5",
+      "skirt_1",
+      "top_1",
+    ],
+    backgroundClass: "oriental",
+  },
+  {
+    name: "spring",
+    requiredItems: ["deco_2-2", "deco_3-3", "dress_3", "hair_1-4", "shoes_1"],
+    backgroundClass: "spring",
+  },
+  {
+    name: "rain",
+    requiredItems: ["deco_3-2", "dress_2", "hair_1-1", "jacket_1", "shoes_4"],
+    backgroundClass: "rain",
+  },
+  {
+    name: "knight",
+    requiredItems: ["deco_1-1", "deco_4-1", "dress_4", "hair_1-2", "shoes_3"],
+    backgroundClass: "knight",
+  },
+  {
+    name: "training",
+    requiredItems: ["deco_6-1", "dress_5", "hair_1-5", "shoes_2"],
+    backgroundClass: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+  },
+];
 
 const CODY_TUTORIAL_SLIDES: TutorialSlide[] = [
   {
@@ -139,8 +197,11 @@ const CODY_TUTORIAL_SLIDES: TutorialSlide[] = [
     showArrows: false,
   },
   {
-    title: "특별한 조합이 있어",
-    lines: ["모든 조합을 찾으면 좋은 일이 생길지도?"],
+    title: "장착 규칙 확인",
+    lines: [
+      "dress는 top, skirt와 함께 입을 수 없어.",
+      "deco는 같은 번호끼리만 서로 교체돼.",
+    ],
     showArrows: false,
   },
 ];
@@ -188,151 +249,7 @@ const CodyGame: React.FC = () => {
   const isMobile = windowWidth < 768;
   const characterScale = isMobile ? 1.1 : windowWidth > 1440 ? 1.3 : 1.1;
 
-  const availableItems: CodyItem[] = [
-    // --- Training (1) ---
-    {
-      id: "1-1",
-      category: "hair_front",
-      layers: {
-        front: "/assets/codygame/training_1-1.png",
-        back: "/assets/codygame/training_1-2.png",
-      },
-    },
-    {
-      id: "1-3",
-      category: "clothes",
-      isOnePiece: true,
-      layers: { main: "/assets/codygame/training_1-3.png" },
-    },
-    {
-      id: "1-4",
-      category: "shoes",
-      layers: { main: "/assets/codygame/training_1-4.png" },
-    },
-
-    // --- Peasant Dress (2) ---
-    {
-      id: "2-1",
-      category: "hair_front",
-      layers: {
-        front: "/assets/codygame/peasantdress_2-1.png",
-        back: "/assets/codygame/peasantdress_2-2.png",
-      },
-    },
-    {
-      id: "2-3",
-      category: "clothes",
-      isOnePiece: true,
-      layers: { main: "/assets/codygame/peasantdress_2-3.png" },
-    },
-    {
-      id: "2-4",
-      category: "shoes",
-      layers: { main: "/assets/codygame/peasantdress_2-4.png" },
-    },
-    {
-      id: "2-5",
-      category: "hair_acc",
-      layerPriority: 35,
-      layers: { front: "/assets/codygame/peasantdress_2-5.png" },
-    },
-    {
-      id: "2-6",
-      category: "accessories",
-      layers: { main: "/assets/codygame/peasantdress_2-6.png" },
-    },
-
-    // --- Hanbok / Rain (3) ---
-    {
-      id: "3-1",
-      category: "hair_front",
-      layers: {
-        front: "/assets/codygame/hanbok_3-1.png",
-        back: "/assets/codygame/hanbok_3-2.png",
-      },
-    },
-    {
-      id: "3-3",
-      category: "clothes",
-      layers: { main: "/assets/codygame/hanbok_3-3.png" },
-    },
-    {
-      id: "3-4",
-      category: "clothes_back",
-      layers: { back: "/assets/codygame/hanbok_3-4.png" },
-    },
-    {
-      id: "3-5",
-      category: "shoes",
-      layers: { back: "/assets/codygame/hanbok_3-5.png" },
-    },
-    {
-      id: "3-6",
-      category: "hair_acc",
-      layers: { main: "/assets/codygame/hanbok_3-6.png" },
-    },
-    {
-      id: "3-7",
-      category: "hand_acc",
-      layerPriority: 24,
-      layers: { back: "/assets/codygame/hanbok_3-7.png" },
-    },
-    {
-      id: "3-8",
-      category: "hand_acc",
-      layers: { main: "/assets/codygame/hanbok_3-8.png" },
-    },
-    {
-      id: "3-10",
-      category: "clothes_acc",
-      layerPriority: 31,
-      layers: { main: "/assets/codygame/hanbok_3-10.png" },
-    },
-
-    // --- Beer / Knight (4) ---
-    {
-      id: "4-1",
-      category: "hair_front",
-      layers: {
-        front: "/assets/codygame/beer_4-1.png",
-        back: "/assets/codygame/beer_4-2.png",
-      },
-    },
-    {
-      id: "4-3",
-      category: "clothes",
-      isOnePiece: true,
-      layers: { main: "/assets/codygame/beer_4-3.png" },
-    },
-    {
-      id: "4-4",
-      category: "shoes",
-      layers: { back: "/assets/codygame/beer_4-4.png" },
-    },
-    {
-      id: "4-5",
-      category: "clothes_acc",
-      layerPriority: 31,
-      layers: { main: "/assets/codygame/beer_4-5.png" },
-    },
-    {
-      id: "4-6",
-      category: "hand_acc",
-      layers: { back: "/assets/codygame/beer_4-6.png" },
-    },
-    {
-      id: "4-7",
-      category: "accessories",
-      layers: { main: "/assets/codygame/beer_4-7.png" },
-    },
-
-    // --- Others ---
-    {
-      id: "0-1",
-      category: "hair_front",
-      layers: { front: "/assets/codygame/others_0-1.png" },
-    },
-  ];
+  const availableItems = AVAILABLE_ITEMS;
 
   const applyItemToEquipment = (
     prev: EquippedState,
@@ -340,36 +257,17 @@ const CodyGame: React.FC = () => {
   ): EquippedState => {
     const nextState: EquippedState = { ...prev };
 
-    if (item.id === "2-6") {
-      nextState.clothes_acc = null;
-      nextState.hand_acc = null;
-    } else if (["clothes_acc", "hand_acc"].includes(item.category)) {
-      nextState.accessories = null;
+    if (item.category === "dress") {
+      nextState.top = null;
+      nextState.skirt = null;
     }
 
-    if (RIBBON_ACCESSORY_IDS.has(item.id)) {
-      nextState.clothes_acc = null;
+    if (item.category === "top" || item.category === "skirt") {
+      nextState.dress = null;
     }
 
-    if (item.isOnePiece) {
-      nextState.clothes_back = null;
-    }
-
-    if (
-      item.category === "clothes_back" &&
-      nextState.clothes &&
-      ONE_PIECE_IDS.has(nextState.clothes)
-    ) {
-      nextState.clothes = null;
-    }
-
-    if (item.category === "hair_front") {
-      nextState.hair_front = item.id;
-      nextState.hair_back = item.id;
-      return nextState;
-    }
-
-    return { ...nextState, [item.category]: item.id };
+    nextState[item.slot] = item.id;
+    return nextState;
   };
 
   const isItemDisabled = (_item: CodyItem) => {
@@ -377,54 +275,12 @@ const CodyGame: React.FC = () => {
     return false;
   };
 
-  // Combination logic for background changes
-  type Combination = {
-    name: string;
-    requiredItems: string[];
-    backgroundClass?: string;
-    backgroundUrl?: string;
-  };
-
-  const combinations: Combination[] = [
-    {
-      name: "training",
-      requiredItems: ["1-1", "1-3", "1-4"],
-      backgroundClass: "bg-[#f0fdf4]",
-    },
-    {
-      name: "peasantdress",
-      requiredItems: ["2-1", "2-3", "2-4", "2-5", "2-6"],
-      backgroundClass: "spring",
-    },
-    {
-      name: "hanbok",
-      requiredItems: ["3-1", "3-3", "3-4", "3-5", "3-6", "3-7"],
-      backgroundClass: "oriental",
-    },
-    {
-      name: "rain",
-      requiredItems: ["3-1", "3-3"],
-      backgroundClass: "rain",
-    },
-    {
-      name: "beer",
-      requiredItems: ["4-1", "4-3", "4-4", "4-5", "4-6", "4-7"],
-      backgroundClass: "beer",
-    },
-    {
-      name: "knight",
-      requiredItems: ["4-1", "4-3"],
-      backgroundClass: "knight",
-    },
-  ];
-
-  const sensors = useSensors(
+  const desktopSensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: isMobile
-        ? { delay: 250, tolerance: 5 } // hold for 250ms to drag on mobile (allows scroll)
-        : { distance: 8 },
+      activationConstraint: { distance: 8 },
     }),
   );
+  const sensors = isMobile ? [] : desktopSensors;
 
   const handleReset = () => {
     if (isFinished) {
@@ -474,6 +330,59 @@ const CodyGame: React.FC = () => {
   const activeItem = activeId
     ? availableItems.find((i) => i.id === activeId)
     : null;
+
+  const getInventoryPreviewStyles = (itemId: string) => {
+    const layout = getInventoryPreviewLayout(itemId);
+
+    return {
+      cardSize: isMobile ? layout.mobileCard : layout.desktopCard,
+      previewOffset: isMobile ? layout.mobileOffset : layout.desktopOffset,
+      previewLeftOffset: isMobile
+        ? layout.mobileLeftOffset
+        : layout.desktopLeftOffset,
+      previewScale: isMobile ? characterScale * 0.75 : characterScale,
+    };
+  };
+
+  const renderInventoryPreview = (item: CodyItem) => {
+    const { previewOffset, previewLeftOffset, previewScale } =
+      getInventoryPreviewStyles(item.id);
+
+    return (
+      <div
+        className="pointer-events-none absolute w-[384px] h-[700px]"
+        style={{
+          top: previewOffset,
+          left: "50%",
+          transform: `translateX(calc(-50% + ${previewLeftOffset})) scale(${previewScale})`,
+        }}
+      >
+        {item.layers.back && (
+          <img
+            src={item.layers.back}
+            alt={`${item.category}-back`}
+            className="absolute inset-0 h-full w-full object-contain pointer-events-none"
+            style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.05))" }}
+          />
+        )}
+        {item.layers.main && (
+          <img
+            src={item.layers.main}
+            alt={`${item.category}-main`}
+            className="absolute inset-0 h-full w-full object-contain pointer-events-none"
+          />
+        )}
+        {item.layers.front && (
+          <img
+            src={item.layers.front}
+            alt={`${item.category}-front`}
+            className="absolute inset-0 h-full w-full object-contain pointer-events-none"
+            style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.05))" }}
+          />
+        )}
+      </div>
+    );
+  };
 
   const getPolaroidCharacterOffset = () => {
     if (activeBackground?.startsWith("linear-gradient")) {
@@ -850,8 +759,7 @@ const CodyGame: React.FC = () => {
                   { id: "hair", label: "헤어" },
                   { id: "clothes", label: "의상" },
                   { id: "shoes", label: "신발" },
-                  { id: "hair_acc", label: "헤어 액세서리" },
-                  { id: "body_acc", label: "액세서리" },
+                  { id: "deco", label: "장식" },
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -877,32 +785,23 @@ const CodyGame: React.FC = () => {
                 {
                   id: "hair",
                   label: "헤어",
-                  filter: (i: any) =>
-                    ["hair_front", "hair_back"].includes(i.category),
+                  filter: (i: CodyItem) => i.category === "hair",
                 },
                 {
                   id: "clothes",
                   label: "의상",
-                  filter: (i: any) =>
-                    ["clothes", "clothes_back"].includes(i.category),
+                  filter: (i: CodyItem) =>
+                    ["top", "skirt", "dress", "jacket"].includes(i.category),
                 },
                 {
                   id: "shoes",
                   label: "신발",
-                  filter: (i: any) => ["shoes"].includes(i.category),
+                  filter: (i: CodyItem) => i.category === "shoes",
                 },
                 {
-                  id: "hair_acc",
-                  label: "헤어 액세서리",
-                  filter: (i: any) => ["hair_acc"].includes(i.category),
-                },
-                {
-                  id: "body_acc",
-                  label: "액세서리",
-                  filter: (i: any) =>
-                    ["accessories", "clothes_acc", "hand_acc"].includes(
-                      i.category,
-                    ),
+                  id: "deco",
+                  label: "장식",
+                  filter: (i: CodyItem) => i.category === "deco",
                 },
               ]
                 .filter((section) => !isMobile || activeTab === section.id)
@@ -915,7 +814,7 @@ const CodyGame: React.FC = () => {
                         const isEquipped = Object.values(equippedIds).includes(
                           item.id,
                         );
-                        const isDragging = activeId === item.id;
+                        const isDragging = !isMobile && activeId === item.id;
                         const isDisabled = isItemDisabled(item);
                         const handleClick = () => {
                           // 모바일이 아닌 경우(PC 환경) 클릭으로 장착하지 않음
@@ -928,46 +827,30 @@ const CodyGame: React.FC = () => {
                           }
                         };
 
-                        // 모바일 인벤토리 전용 스케일 적용
-                        const inventoryScale = isMobile
-                          ? characterScale * 0.75
-                          : characterScale;
-
-                        const layout = INVENTORY_PREVIEW_LAYOUT[item.category];
-                        const cardSize = isMobile
-                          ? layout.mobileCard
-                          : layout.desktopCard;
-                        const previewOffset = isMobile
-                          ? layout.mobileOffset
-                          : layout.desktopOffset;
+                        const { cardSize } = getInventoryPreviewStyles(item.id);
 
                         return (
                           <div
                             key={item.id}
                             onClick={handleClick}
-                            className={`relative ${cardSize} overflow-hidden border-2 border-dashed rounded-3xl flex-shrink-0 bg-[#FDFBF7]/50 transition-all group shadow-sm ${
+                            className={`relative ${cardSize} overflow-visible border-2 border-dashed rounded-3xl flex-shrink-0 bg-[#FDFBF7]/50 transition-all group shadow-sm ${
                               isDisabled
                                 ? "border-[#166D77]/10 opacity-45 cursor-not-allowed"
-                                : "border-[#166D77]/30 hover:border-[#D46A6A]/50 hover:bg-pale-custard/80 active:scale-95"
+                                : `border-[#166D77]/30 hover:border-[#D46A6A]/50 hover:bg-pale-custard/80 active:scale-95 ${!isMobile ? "cursor-grab active:cursor-grabbing" : ""}`
                             }`}
                           >
                             {!isEquipped && !isDragging && (
                               <>
-                                <div
-                                  className={`absolute w-[384px] h-[700px] ${isDisabled ? "pointer-events-none" : "cursor-grab active:cursor-grabbing"}`}
-                                  style={{
-                                    top: previewOffset,
-                                    left: "50%",
-                                    transform: `translateX(-50%) scale(${inventoryScale})`,
-                                  }}
-                                >
+                                {renderInventoryPreview(item)}
+                                {!isMobile && !isDisabled && (
                                   <DraggableItem
                                     id={item.id}
                                     layers={item.layers}
                                     category={item.category}
-                                    className="w-full h-full p-0"
+                                    className="absolute inset-0 z-10 cursor-grab active:cursor-grabbing"
+                                    renderPreview={false}
                                   />
-                                </div>
+                                )}
                               </>
                             )}
 
@@ -989,51 +872,19 @@ const CodyGame: React.FC = () => {
         </div>
       </GameContainer>
 
-      <DragOverlay>
-        {activeItem ? (
-          <div style={{ zIndex: 99999, pointerEvents: "none" }}>
-            <div
-              className="relative"
-              style={{
-                width: 384 * characterScale,
-                height: 700 * characterScale,
-              }}
-            >
+      {!isMobile && (
+        <DragOverlay>
+          {activeItem ? (
+            <div style={{ zIndex: 99999, pointerEvents: "none" }}>
               <div
-                className="absolute inset-0 origin-top-left"
-                style={{ transform: `scale(${characterScale})` }}
+                className={`relative ${getInventoryPreviewStyles(activeItem.id).cardSize} overflow-visible`}
               >
-                {/* Back Layer - BEHIND mannequin theoretically, but handled by order in overlay */}
-                {activeItem.layers.back && (
-                  <img
-                    src={activeItem.layers.back}
-                    alt={`${activeItem.category}-back`}
-                    className="absolute inset-0 w-[384px] h-[700px] object-contain z-0"
-                  />
-                )}
-
-                {/* Main Layer (z-50) */}
-                {activeItem.layers.main && (
-                  <img
-                    src={activeItem.layers.main}
-                    alt={`${activeItem.category}-main`}
-                    className="absolute inset-0 w-[384px] h-[700px] object-contain z-40"
-                  />
-                )}
-
-                {/* Front Layer (z-50) */}
-                {activeItem.layers.front && (
-                  <img
-                    src={activeItem.layers.front}
-                    alt={`${activeItem.category}-front`}
-                    className="absolute inset-0 w-[384px] h-[700px] object-contain z-50"
-                  />
-                )}
+                {renderInventoryPreview(activeItem)}
               </div>
             </div>
-          </div>
-        ) : null}
-      </DragOverlay>
+          ) : null}
+        </DragOverlay>
+      )}
     </DndContext>
   );
 };
