@@ -22,7 +22,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
   isMobile = false,
   availableItems = [],
 }) => {
-  const { setNodeRef } = useDroppable({
+  const { setNodeRef, isOver } = useDroppable({
     id: "character-zone",
     disabled: isMobile,
   });
@@ -175,14 +175,15 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
         {!isMobile && (
           <div
             ref={setNodeRef}
-            className="absolute z-10 pointer-events-auto"
+            className="absolute z-10 cursor-pointer pointer-events-auto"
             style={{
-              width: "200px",
+              width: "250px",
               height: "450px",
-              left: "50%",
-              top: "50%",
-              transform: "translate(-50%, -50%)",
-              backgroundColor: "rgba(204, 204, 255, 0.5)",
+              left: "calc(50% - 125px)",
+              top: "calc(50% - 225px)",
+              backgroundColor: isOver
+                ? "rgba(204, 204, 255, 0.65)"
+                : "rgba(204, 204, 255, 0.5)",
             }}
           />
         )}

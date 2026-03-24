@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  pointerWithin,
   DndContext,
   DragOverlay,
   PointerSensor,
@@ -384,6 +385,134 @@ const CodyGame: React.FC = () => {
     );
   };
 
+  const hairDecoIds = new Set(["deco_3-1", "deco_3-2", "deco_3-3"]);
+  const swordDecoIds = new Set(["deco_4-1", "deco_4-2"]);
+  const topSkirtIds = new Set(["top_1", "skirt_1"]);
+
+  const getCardWidth = (itemId: string) => {
+    const { cardSize } = getInventoryPreviewStyles(itemId);
+    const widthMatch = cardSize.match(/(?:^|\s)w-(\d+)(?:\s|$)/);
+    return widthMatch ? Number(widthMatch[1]) : 0;
+  };
+
+  const inventorySections: Array<{
+    id: string;
+    tab: MobileTabId;
+    overlap: boolean;
+    mobileOverlapClass?: string;
+    desktopOverlapClass?: string;
+    filter: (item: CodyItem) => boolean;
+  }> = [
+    {
+      id: "hair",
+      tab: "hair",
+      overlap: true,
+      mobileOverlapClass: "-ml-4",
+      desktopOverlapClass: "-ml-6",
+      filter: (item) => item.category === "hair",
+    },
+    {
+      id: "hair-deco",
+      tab: "hair",
+      overlap: false,
+      filter: (item) => hairDecoIds.has(item.id),
+    },
+    {
+      id: "dress",
+      tab: "clothes",
+      overlap: true,
+      mobileOverlapClass: "-ml-12",
+      desktopOverlapClass: "-ml-30",
+      filter: (item) => item.category === "dress" || item.category === "jacket",
+    },
+    {
+      id: "sword",
+      tab: "deco",
+      overlap: true,
+      mobileOverlapClass: "-ml-4",
+      desktopOverlapClass: "-ml-6",
+      filter: (item) => swordDecoIds.has(item.id),
+    },
+    {
+      id: "deco",
+      tab: "deco",
+      overlap: false,
+      filter: (item) =>
+        item.category === "deco" &&
+        !hairDecoIds.has(item.id) &&
+        !swordDecoIds.has(item.id),
+    },
+    {
+      id: "shoes",
+      tab: "shoes",
+      overlap: true,
+      mobileOverlapClass: "-ml-4",
+      desktopOverlapClass: "-ml-6",
+      filter: (item) => item.category === "shoes",
+    },
+  ];
+
+  const renderInventoryCard = (
+    item: CodyItem,
+    index: number,
+    total: number,
+    overlapClass = "",
+    offsetClass = "",
+  ) => {
+    const isEquipped = Object.values(equippedIds).includes(item.id);
+    const isDragging = !isMobile && activeId === item.id;
+    const isDisabled = isItemDisabled(item);
+    const handleClick = () => {
+      if (!isMobile) return;
+
+      if (!isEquipped && !isDisabled) {
+        setEquippedItems((prev) => applyItemToEquipment(prev, item));
+      }
+    };
+
+    const { cardSize } = getInventoryPreviewStyles(item.id);
+
+    return (
+      <div
+        key={item.id}
+        onClick={handleClick}
+        className={`relative ${cardSize} overflow-visible border-2 border-dashed rounded-3xl flex-shrink-0 bg-[#FDFBF7]/50 transition-all group shadow-sm ${
+          item.category === "shoes" ? "self-end" : ""
+        } ${offsetClass} ${index > 0 ? overlapClass : ""} ${
+          isDisabled
+            ? "border-[#166D77]/10 opacity-45 cursor-not-allowed"
+            : `border-[#166D77]/30 hover:z-20 hover:border-[#D46A6A]/50 hover:bg-pale-custard/80 active:scale-95 ${!isMobile ? "cursor-grab active:cursor-grabbing" : ""}`
+        }`}
+        style={{
+          zIndex: isDragging || isEquipped ? total + 1 : total - index,
+        }}
+      >
+        {!isEquipped && !isDragging && (
+          <>
+            {renderInventoryPreview(item)}
+            {!isMobile && !isDisabled && (
+              <DraggableItem
+                id={item.id}
+                layers={item.layers}
+                category={item.category}
+                className="absolute inset-0 z-10 cursor-grab active:cursor-grabbing"
+                renderPreview={false}
+              />
+            )}
+          </>
+        )}
+
+        {isEquipped && (
+          <div className="absolute inset-0 bg-[#166D77]/10 backdrop-blur-[2px] flex items-center justify-center">
+            <span className="bg-pale-custard/90 text-[#166D77] px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+              장착 중 ✨
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const getPolaroidCharacterOffset = () => {
     if (activeBackground?.startsWith("linear-gradient")) {
       return { x: 0, y: 72 };
@@ -454,6 +583,7 @@ const CodyGame: React.FC = () => {
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={pointerWithin}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
@@ -781,92 +911,91 @@ const CodyGame: React.FC = () => {
             <div
               className={`flex-1 ${isMobile ? "pb-40" : "overflow-y-auto custom-scrollbar px-6 pb-20"} transition-opacity ${isFinished ? "opacity-30 pointer-events-none" : ""}`}
             >
-              {[
-                {
-                  id: "hair",
-                  label: "헤어",
-                  filter: (i: CodyItem) => i.category === "hair",
-                },
-                {
-                  id: "clothes",
-                  label: "의상",
-                  filter: (i: CodyItem) =>
-                    ["top", "skirt", "dress", "jacket"].includes(i.category),
-                },
-                {
-                  id: "shoes",
-                  label: "신발",
-                  filter: (i: CodyItem) => i.category === "shoes",
-                },
-                {
-                  id: "deco",
-                  label: "장식",
-                  filter: (i: CodyItem) => i.category === "deco",
-                },
-              ]
-                .filter((section) => !isMobile || activeTab === section.id)
-                .map((section) => (
-                  <div key={section.id} className="mb-0">
-                    <div
-                      className={`flex ${isMobile ? "overflow-x-auto" : "flex-wrap justify-start"}`}
-                    >
-                      {availableItems.filter(section.filter).map((item) => {
-                        const isEquipped = Object.values(equippedIds).includes(
-                          item.id,
-                        );
-                        const isDragging = !isMobile && activeId === item.id;
-                        const isDisabled = isItemDisabled(item);
-                        const handleClick = () => {
-                          // 모바일이 아닌 경우(PC 환경) 클릭으로 장착하지 않음
-                          if (!isMobile) return;
+              {inventorySections
+                .filter((section) => !isMobile || activeTab === section.tab)
+                .map((section) => {
+                  const sectionItems = availableItems
+                    .filter(section.filter)
+                    .sort((a, b) => {
+                      const widthDiff = getCardWidth(a.id) - getCardWidth(b.id);
+                      if (widthDiff !== 0) return widthDiff;
+                      return a.id.localeCompare(b.id);
+                    });
+                  const topSkirtItems =
+                    section.id === "dress"
+                      ? availableItems.filter((item) =>
+                          topSkirtIds.has(item.id),
+                        )
+                      : [];
 
-                          if (!isEquipped && !isDisabled) {
-                            setEquippedItems((prev) =>
-                              applyItemToEquipment(prev, item),
-                            );
-                          }
-                        };
+                  return (
+                    <div key={section.id} className="mb-0">
+                      <div
+                        className={`${
+                          section.id === "dress"
+                            ? "flex items-end overflow-visible px-4 pb-4"
+                            : `flex ${
+                                section.overlap
+                                  ? "overflow-visible flex-nowrap px-4 pb-4"
+                                  : "flex-wrap justify-start"
+                              }`
+                        }`}
+                      >
+                        <div
+                          className={`${
+                            section.id === "dress" ? "relative z-10 " : ""
+                          }flex ${
+                            section.overlap
+                              ? `${section.id === "shoes" ? "items-end " : ""}overflow-visible flex-nowrap`
+                              : "flex-wrap justify-start"
+                          }`}
+                        >
+                          {sectionItems.map((item, index) =>
+                            renderInventoryCard(
+                              item,
+                              index,
+                              sectionItems.length,
+                              section.overlap
+                                ? isMobile
+                                  ? section.mobileOverlapClass || "-ml-8"
+                                  : section.desktopOverlapClass || "-ml-12"
+                                : "",
+                            ),
+                          )}
+                        </div>
 
-                        const { cardSize } = getInventoryPreviewStyles(item.id);
-
-                        return (
+                        {section.id === "dress" && topSkirtItems.length > 0 && (
                           <div
-                            key={item.id}
-                            onClick={handleClick}
-                            className={`relative ${cardSize} overflow-visible border-2 border-dashed rounded-3xl flex-shrink-0 bg-[#FDFBF7]/50 transition-all group shadow-sm ${
-                              isDisabled
-                                ? "border-[#166D77]/10 opacity-45 cursor-not-allowed"
-                                : `border-[#166D77]/30 hover:border-[#D46A6A]/50 hover:bg-pale-custard/80 active:scale-95 ${!isMobile ? "cursor-grab active:cursor-grabbing" : ""}`
+                            className={`relative flex shrink-0 self-end flex-col overflow-visible pb-2 ${
+                              section.overlap
+                                ? isMobile
+                                  ? section.mobileOverlapClass || "-ml-8"
+                                  : section.desktopOverlapClass || "-ml-12"
+                                : ""
                             }`}
+                            style={{ zIndex: 0 }}
                           >
-                            {!isEquipped && !isDragging && (
-                              <>
-                                {renderInventoryPreview(item)}
-                                {!isMobile && !isDisabled && (
-                                  <DraggableItem
-                                    id={item.id}
-                                    layers={item.layers}
-                                    category={item.category}
-                                    className="absolute inset-0 z-10 cursor-grab active:cursor-grabbing"
-                                    renderPreview={false}
-                                  />
-                                )}
-                              </>
-                            )}
-
-                            {isEquipped && (
-                              <div className="absolute inset-0 bg-[#166D77]/10 backdrop-blur-[2px] flex items-center justify-center">
-                                <span className="bg-pale-custard/90 text-[#166D77] px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-                                  장착 중 ✨
-                                </span>
-                              </div>
+                            {topSkirtItems.map((item, index) =>
+                              renderInventoryCard(
+                                item,
+                                index,
+                                topSkirtItems.length,
+                                isMobile ? "-mt-12" : "-mt-16",
+                                item.id === "top_1"
+                                  ? isMobile
+                                    ? "-ml-1"
+                                    : "-ml-5"
+                                  : isMobile
+                                    ? "ml-2"
+                                    : "ml-5",
+                              ),
                             )}
                           </div>
-                        );
-                      })}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
             </div>
           </div>
         </div>
