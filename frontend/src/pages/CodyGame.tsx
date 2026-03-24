@@ -484,7 +484,7 @@ const CodyGame: React.FC = () => {
             : `border-[#166D77]/30 hover:z-20 hover:border-[#D46A6A]/50 hover:bg-pale-custard/80 active:scale-95 ${!isMobile ? "cursor-grab active:cursor-grabbing" : ""}`
         }`}
         style={{
-          zIndex: isDragging || isEquipped ? total + 1 : total - index,
+          zIndex: isDragging ? total + 1 : isEquipped ? 0 : total - index,
         }}
       >
         {!isEquipped && !isDragging && (
