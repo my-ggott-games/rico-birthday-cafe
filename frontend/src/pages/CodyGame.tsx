@@ -25,6 +25,7 @@ import {
 } from "../components/game/SpringFestivalBackground";
 import { FireflyBackground } from "../components/game/FireflyBackground";
 import { PolaroidFrame } from "../components/game/PolaroidFrame";
+import { RainEffect } from "../components/game/RainEffect";
 import { getInventoryPreviewLayout } from "../components/game/codyInventoryPreviewLayout";
 import { domToJpeg } from "modern-screenshot";
 
@@ -668,6 +669,13 @@ const CodyGame: React.FC = () => {
                             />
                           </div>
                         )}
+                    </>
+                  }
+                  underlayContent={
+                    <>
+                      {!isCapturing && activeBackground === "rain" && (
+                        <RainEffect />
+                      )}
                     </>
                   }
                   overlayContent={

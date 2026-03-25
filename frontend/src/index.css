@@ -89,6 +89,7 @@ a:hover {
 }
 
 @media (min-width: 768px) {
+
   .btn-primary,
   .btn-secondary,
   .btn-disabled {
@@ -136,8 +137,7 @@ button {
 
 @font-face {
   font-family: "OneStoreMobilePop";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-POP.woff")
-    format("woff");
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-POP.woff") format("woff");
   font-weight: normal;
   font-display: swap;
 }
@@ -152,7 +152,159 @@ button {
   }
 }
 
+@keyframes drop {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  38% {
+    transform: translate3d(var(--drop-mid-drift, -2px),
+        /* --drop-travel은 JS에서 calc(100% + 82px) 등 px 기반으로 전달됨 */
+        calc(var(--drop-travel, 110vh) * 0.38),
+        0);
+  }
+
+  100% {
+    transform: translate3d(var(--drop-end-drift, -6px),
+        var(--drop-travel, 110vh),
+        0);
+  }
+}
+
+@keyframes stem {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.25);
+  }
+
+  18% {
+    opacity: 0.95;
+  }
+
+  82% {
+    opacity: 0.95;
+    transform: scaleY(1);
+  }
+
+  100% {
+    opacity: 0.95;
+    transform: scaleY(0.55);
+  }
+}
+
+@keyframes splat {
+
+  0%,
+  78% {
+    opacity: 0;
+    transform: scale(0);
+  }
+
+  88% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+
+  96% {
+    opacity: 0.45;
+    transform: scale(1.35);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
+.rain-wrapper {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* contain:paint로 box-shadow glow가 컨테이너 밖으로 나가지 않도록 */
+  contain: paint;
+}
+
+.rain {
+  position: absolute;
+  inset: 0;
+}
+
+.front-row {
+  z-index: 1;
+  opacity: 0.5;
+}
+
+.back-row {
+  z-index: 0;
+  opacity: 0.22;
+  filter: blur(0.6px);
+}
+
+.drop {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 16px;
+}
+
+.drop-body {
+  position: absolute;
+  top: var(--drop-start-top, -10%);
+  left: 0;
+  width: 16px;
+  height: 78px;
+  overflow: hidden;
+  contain: paint; /* filter 있는 자식도 overflow:hidden 영역 밖으로 나가지 않도록 강제 클립 */
+  animation-name: drop;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+/* drop-body의 % top은 부모(.drop)의 height(=컨테이너 full height) 기준이므로 정상 */
+
+.stem {
+  position: absolute;
+  top: var(--stem-top, 12px);
+  left: var(--stem-offset, 7.5px);
+  width: 1.5px;
+  height: var(--stem-height, 80px);
+  transform-origin: top center;
+  background: linear-gradient(to bottom,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, var(--stem-opacity, 0.95)));
+  /* filter 제거 — filter가 있으면 부모의 overflow:hidden 무시됨 */
+  animation-name: stem;
+  animation-duration: var(--stem-duration, 0.45s);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+
+.splat {
+  position: absolute;
+  left: 50%;
+  bottom: 3px;
+  display: none;
+  width: 15px;
+  height: 10px;
+  border-top: 2px dotted rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  translate: -50% 0;
+  transform: scale(0);
+  transform-origin: center;
+  /* glow를 조금 더 선명하게: opacity 조절 */
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.15);
+  animation-name: splat;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.splat-toggle .splat {
+  display: block;
+}
+
 /* 로비 슬로건 border 오버라이드 */
-.slogan-lobby .k-celebrate-slogan-container > div {
+.slogan-lobby .k-celebrate-slogan-container>div {
   border-color: rgba(0, 0, 0, 0.05);
 }

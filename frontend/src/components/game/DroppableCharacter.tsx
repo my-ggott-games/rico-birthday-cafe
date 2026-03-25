@@ -24,7 +24,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
 }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: "character-zone",
-    disabled: isMobile,
+    disabled: isMobile || isFinished,
   });
 
   const overlayStyle =
@@ -181,9 +181,12 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
               height: "450px",
               left: "calc(50% - 125px)",
               top: "calc(50% - 225px)",
-              backgroundColor: isOver
-                ? "rgba(204, 204, 255, 0.65)"
-                : "rgba(204, 204, 255, 0.5)",
+              backgroundColor: isFinished
+                ? "transparent"
+                : isOver
+                  ? "rgba(204, 204, 255, 0.65)"
+                  : "rgba(204, 204, 255, 0.5)",
+              pointerEvents: isFinished ? "none" : "auto",
             }}
           />
         )}

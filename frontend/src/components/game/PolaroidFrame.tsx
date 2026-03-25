@@ -5,6 +5,7 @@ interface PolaroidFrameProps {
   isFlyAway?: boolean;
   activeBackground?: string | null;
   backgroundContent?: React.ReactNode;
+  underlayContent?: React.ReactNode;
   overlayContent?: React.ReactNode;
   children?: React.ReactNode;
   characterOffset?: { x?: number; y?: number };
@@ -16,6 +17,7 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
   isFlyAway,
   activeBackground,
   backgroundContent,
+  underlayContent,
   overlayContent,
   children,
   characterOffset,
@@ -93,6 +95,12 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
           >
             {backgroundContent}
           </motion.div>
+
+          {!hideAnimations && underlayContent && (
+            <div className="absolute inset-0 z-[5] pointer-events-none overflow-hidden">
+              {underlayContent}
+            </div>
+          )}
 
           {/* Character and Shadow */}
           <div
