@@ -254,7 +254,8 @@ button {
   width: 16px;
   height: 78px;
   overflow: hidden;
-  contain: paint; /* filter 있는 자식도 overflow:hidden 영역 밖으로 나가지 않도록 강제 클립 */
+  contain: paint;
+  /* filter 있는 자식도 overflow:hidden 영역 밖으로 나가지 않도록 강제 클립 */
   animation-name: drop;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
@@ -307,4 +308,141 @@ button {
 /* 로비 슬로건 border 오버라이드 */
 .slogan-lobby .k-celebrate-slogan-container>div {
   border-color: rgba(0, 0, 0, 0.05);
+}
+
+/* ─── Butterfly Effect (knight combination) ─────────────────────────── */
+
+.bf-wrapper {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  contain: paint;
+}
+
+/* Butterfly container - overall scale applied inline */
+.bf-butterfly {
+  position: absolute;
+  /* 2D only — no 3D transforms on this element */
+  overflow: visible;
+  animation: bf-hover 800ms ease-in-out infinite alternate;
+}
+
+.bf-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  translate: -50% -50%;
+  border-radius: 999px;
+  z-index: 0;
+  background: radial-gradient(
+    circle,
+    #f0f8ff 0%,
+    rgba(240, 248, 255, 0.78) 34%,
+    rgba(240, 248, 255, 0.34) 62%,
+    rgba(240, 248, 255, 0) 100%
+  );
+  filter: blur(3px);
+}
+
+
+/* ── Wing containers — hinge at body spine ── */
+.bf-wing {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  z-index: 1;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  animation-fill-mode: both;
+}
+
+/* Left wing: pivot on the RIGHT edge */
+.bf-wing--left {
+  right: 50%;
+  transform-origin: right center;
+  animation-name: bf-flap-left;
+}
+
+/* Right wing: pivot on the LEFT edge */
+.bf-wing--right {
+  left: 50%;
+  transform-origin: left center;
+  animation-name: bf-flap-right;
+}
+
+/* ── Bits: 3:1 elongated ellipses ── */
+
+/* Left wing bits: attached at the RIGHT edge (spine) */
+.bf-wing--left .bf-bit {
+  position: absolute;
+  right: 0;
+  border-radius: 50%;
+  background: rgba(180, 218, 255, 0.94);
+  transform-origin: 100% 50%;
+}
+
+/* Right wing bits: mirror — attached at the LEFT edge (spine) */
+.bf-wing--right .bf-bit {
+  position: absolute;
+  left: 0;
+  border-radius: 50%;
+  background: rgba(180, 218, 255, 0.94);
+  transform-origin: 0% 50%;
+  /* pivot at left center */
+}
+
+/* Upper wing: Shifted DOWN to criss-cross with lower wing */
+.bf-bit--upper {
+  width: 42px;
+  height: 14px;
+  top: -3px; /* was -7px, so pushed 4px down */
+  transform: rotate(25deg);
+}
+
+/* Right wing upper: mirror angle */
+.bf-wing--right .bf-bit--upper {
+  transform: rotate(-25deg);
+}
+
+/* Lower wing: Shifted UP to criss-cross with upper wing */
+.bf-bit--lower {
+  width: 30px;
+  height: 10px;
+  top: -7px; /* was -6px, so pushed 1px up from center, crossing upper */
+  transform: rotate(-25deg);
+}
+
+/* Right wing lower: mirror angle */
+.bf-wing--right .bf-bit--lower {
+  transform: rotate(25deg);
+}
+
+.bf-bit::after {
+  content: none;
+}
+
+/* ── Keyframes ── */
+@keyframes bf-hover {
+  0% {
+    translate: 0 0;
+  }
+
+  100% {
+    translate: 0 -2px;
+  }
+}
+
+/* Flap the wings by compressing them horizontally toward the body spine. */
+@keyframes bf-flap-left {
+  0%   { transform: scaleX(0.5); }
+  100% { transform: scaleX(0.15); }
+}
+
+@keyframes bf-flap-right {
+  0%   { transform: scaleX(0.5); }
+  100% { transform: scaleX(0.15); }
 }

@@ -20,12 +20,13 @@ import { GameContainer } from "../components/common/GameContainer";
 import type { TutorialSlide } from "../components/common/TutorialBanner";
 
 import {
-  SpringFestivalBackground,
+  SpringEffect,
   SpringFestivalPetals,
-} from "../components/game/SpringFestivalBackground";
-import { FireflyBackground } from "../components/game/FireflyBackground";
+} from "../components/game/SpringEffect";
+import { FireflyEffect } from "../components/game/FireflyEffect";
 import { PolaroidFrame } from "../components/game/PolaroidFrame";
 import { RainEffect } from "../components/game/RainEffect";
+import { ButterflyEffect } from "../components/game/ButterflyEffect";
 import { getInventoryPreviewLayout } from "../components/game/codyInventoryPreviewLayout";
 import { domToJpeg } from "modern-screenshot";
 
@@ -599,8 +600,8 @@ const CodyGame: React.FC = () => {
       >
         {activeBackground === "spring" && !isFinished && (
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-            <SpringFestivalBackground isFinished={false} />
-            <FireflyBackground isFinished={false} />
+            <SpringEffect isFinished={false} />
+            <FireflyEffect isFinished={false} />
           </div>
         )}
 
@@ -681,7 +682,10 @@ const CodyGame: React.FC = () => {
                   overlayContent={
                     <>
                       {!isCapturing && activeBackground === "spring" && (
-                        <FireflyBackground isFinished={true} />
+                        <FireflyEffect isFinished={true} />
+                      )}
+                      {!isCapturing && activeBackground === "knight" && (
+                        <ButterflyEffect />
                       )}
                       {!isCapturing && activeBackground === "oriental" && (
                         <SpringFestivalPetals

@@ -11,7 +11,7 @@ interface Firefly {
   opacitySpeed: number;
 }
 
-export const FireflyBackground: React.FC<{ isFinished?: boolean }> = ({
+export const FireflyEffect: React.FC<{ isFinished?: boolean }> = ({
   isFinished,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);

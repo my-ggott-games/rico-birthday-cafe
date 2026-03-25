@@ -121,7 +121,7 @@ const randomBgId =
   AVAILABLE_BGS[Math.floor(Math.random() * AVAILABLE_BGS.length)];
 const cachedRandomBg = `/assets/codygame/background_${randomBgId}.jpg`;
 
-export const SpringFestivalBackground: React.FC<{ isFinished?: boolean }> = ({
+export const SpringEffect: React.FC<{ isFinished?: boolean }> = ({
   isFinished,
 }) => {
   if (!isFinished) {
