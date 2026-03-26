@@ -543,7 +543,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
           addToast({
             title: "퍼즐 완성",
             description: "퍼즐을 처음으로 완성했다!",
-            icon: "🧩",
+            icon: "Puzzle",
           });
         }
       } catch (error) {

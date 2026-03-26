@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ActionButton } from "./ActionButton";
 import type { ActionButtonSize, ActionButtonVariant } from "./ActionButton";
+import { AppIcon } from "./AppIcon";
 
 interface ReturnButtonProps {
   className?: string;
@@ -83,7 +84,9 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({
                 className="bg-[#FFFFF8] p-6 rounded-[2rem] shadow-2xl z-10 max-w-sm w-full border-4 border-[#D6C0B0] text-center select-none"
                 draggable={false}
               >
-                <span className="text-4xl block mb-3">🚪</span>
+                <span className="mb-3 inline-flex rounded-full bg-[#eefaf3] p-3 text-[#166D77] shadow-sm">
+                  <AppIcon name="DoorOpen" size={32} />
+                </span>
                 <h3
                   className="text-[#166D77] font-black text-xl mb-6 select-none"
                   draggable={false}

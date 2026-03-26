@@ -12,7 +12,7 @@
 - **Routing:** React Router v6
 - **State Management:** Zustand (`useAuthStore`)
 - **Styling:** Tailwind CSS, Framer Motion
-- **Libraries:** `dnd-kit` (드래그 앤 드롭), `modern-screenshot` (이미지 캡처), `canvas-confetti`, `k-celebrate-slogan`
+- **Libraries:** `dnd-kit` (드래그 앤 드롭), `modern-screenshot` (이미지 캡처), `canvas-confetti`, `k-celebrate-slogan`, `lucide-react`
 
 ### Backend
 - **Framework:** Spring Boot 3.x (Java 17)
@@ -36,6 +36,16 @@
 | `ReturnButton` | `components/common/ReturnButton.tsx` | 로비 복귀 버튼 |
 | `GameContainer` | `components/common/GameContainer.tsx` | 모든 게임 페이지 공통 레이아웃: 타이틀, 튜토리얼, 로비 복귀 버튼, 모바일/데스크탑 도움말 슬롯과 섹션별 `mainClassName`/`showDesktopHelp` 제어 |
 | `GlobalLoading` | `components/common/GlobalLoading.tsx` | 전역 로딩 인디케이터 |
+
+---
+
+## 2.1. 아이콘/그래픽 규칙 (Iconography Rules)
+
+- **이모지 사용 금지:** UI 아이콘, 게임 타일, 클릭 이펙트, 상태 표시용 그래픽에는 이모지를 사용하지 않는다.
+- **기본 아이콘 시스템:** 모든 아이콘성 표현은 `lucide-react`를 사용한다.
+- **적용 방식:** 아이콘 이름은 상수나 매핑 객체로 관리하고, 화면 렌더링 시 Lucide 컴포넌트로 변환한다.
+- **일관성:** 동일한 의미의 오브젝트는 페이지별로 다른 이모지/아이콘을 섞지 않고, 하나의 Lucide 아이콘 체계로 통일한다.
+- **효과 연출:** 커서 클릭 파티클처럼 장식적 요소도 Lucide 아이콘을 기반으로 만들고, 색상/글로우/모션으로 분위기를 조정한다.
 
 ---
 
@@ -81,12 +91,19 @@
 - 조작: 키보드 방향키 / 화살표 버튼 / 모바일 스와이프
 - 아이템(비료): **되돌리기** 3회, **타일 바꾸기** 3회
 - 타일 테마: 씨앗 → 새싹 → ... → 성검(2048)
+- 타일 비주얼: 각 단계는 이모지 대신 `lucide-react` 아이콘(`Sprout`, `Leaf`, `Crown`, `Sword` 등)으로 렌더링
 - 고득점 백엔드 동기화 (`/api/asparagus/score`)
 - 2048 달성 시 업적 `ASPARAGUS_EXCALIBUR` 자동 부여
 - **모바일 수정:** 보드 최대 너비 `min(500px, 100vw - 3rem)`, 타일 gap `clamp()` 적용
 - `GameHelp` 공통 컴포넌트로 튜토리얼 제공 (모바일: 모달 토글, 데스크탑: 왼쪽 사이드 패널)
 - `GameContainer`을 통해 타이틀/튜토리얼/리턴 버튼/데스크탑 도움말을 공유하며, 헤더 우측에 점수/베스트 블록을 고정
 - 보드 컨테이너는 `clamp()` 기반 `padding`, `borderRadius`, `gap`으로 모바일에서 폭 500px를 넘기지 않고 자연스럽게 축소되는 반응형 설정
+
+### 3.6.a. 전역 커서 클릭 이펙트
+- 구현 위치: `frontend/src/components/game/CursorManager.tsx`
+- 클릭 시 여러 개의 `Clover` Lucide 아이콘이 방사형으로 퍼지는 버스트 애니메이션 사용
+- 각 파티클은 서로 다른 초록/연두 계열 색상을 사용하고, 중앙에 연한 연두색 glow를 가진다
+- 이모지 기반 커서/클릭 파티클은 사용하지 않는다
 
 ### 3.7. [Special] Who made this?! (/credits)
 - 기능: 제작진 목록 송출 및 엔딩 감상 업적 부여.

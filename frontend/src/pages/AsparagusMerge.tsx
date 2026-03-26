@@ -7,6 +7,29 @@ import { GameContainer } from "../components/common/GameContainer";
 import { useAsparagusGame } from "../hooks/useAsparagusGame";
 import { type Direction } from "../components/asparagus/types";
 import { TUTORIAL_SLIDES } from "../components/asparagus/constants";
+import { AppIcon } from "../components/common/AppIcon";
+
+const ScoreCard = ({
+  label,
+  value,
+  background,
+  textColor,
+}: {
+  label: string;
+  value: number;
+  background: string;
+  textColor: string;
+}) => (
+  <div
+    className="flex min-w-[7rem] flex-1 flex-col items-center rounded-2xl px-4 py-2 sm:flex-none"
+    style={{ background, color: textColor }}
+  >
+    <span className="text-[10px] font-bold uppercase tracking-tighter opacity-70">
+      {label}
+    </span>
+    <span className="text-xl font-black leading-tight">{value}</span>
+  </div>
+);
 
 const AsparagusMerge: React.FC = () => {
   const {
@@ -79,41 +102,26 @@ const AsparagusMerge: React.FC = () => {
       gameName="아스파라거스 키우기"
       helpSlides={TUTORIAL_SLIDES}
       className="select-none"
-      headerRight={
-        <>
-          <div
-            className="flex flex-col items-center px-4 py-2 rounded-2xl"
-            style={{
-              background: "#166D77",
-              color: "#FFFFF8",
-              minWidth: "85px",
-            }}
-          >
-            <span className="text-[10px] font-bold opacity-70 uppercase tracking-tighter">
-              Score
-            </span>
-            <span className="font-black text-xl leading-tight">
-              {debugMode ? 0 : score}
-            </span>
-          </div>
-          <div
-            className="flex flex-col items-center px-4 py-2 rounded-2xl"
-            style={{
-              background: "#2d6a4f",
-              color: "#bef264",
-              minWidth: "85px",
-            }}
-          >
-            <span className="text-[10px] font-bold opacity-70 uppercase tracking-tighter">
-              Best
-            </span>
-            <span className="font-black text-xl leading-tight">{best}</span>
-          </div>
-        </>
-      }
     >
+      <div className="flex w-full justify-center px-4 pt-2 sm:px-6 lg:px-10">
+        <div className="flex w-full max-w-md items-center gap-3">
+          <ScoreCard
+            label="Score"
+            value={debugMode ? 0 : score}
+            background="#166D77"
+            textColor="#FFFFF8"
+          />
+          <ScoreCard
+            label="Best"
+            value={best}
+            background="#2d6a4f"
+            textColor="#bef264"
+          />
+        </div>
+      </div>
+
       {/* ─── Main Content: Horizontal 3 DIV ─── */}
-      <div className="flex-1 w-full grid grid-cols-1 gap-6 px-4 pb-12 sm:px-6 lg:grid-cols-[1fr_0.8fr] lg:gap-8 lg:px-10">
+      <div className="flex-1 w-full grid grid-cols-1 gap-6 px-4 pb-12 pt-4 sm:px-6 lg:grid-cols-[1fr_0.8fr] lg:gap-8 lg:px-10">
         {/* [Center] Board: swipe only on the board element */}
         <div className="flex min-h-0 flex-col items-center justify-center lg:min-h-[calc(100dvh-260px)]">
           <Board
@@ -168,14 +176,14 @@ const AsparagusMerge: React.FC = () => {
                 boxShadow: "0 0 40px rgba(255,200,0,0.4)",
               }}
             >
-              <div style={{ fontSize: 64 }}>⚔️</div>
+              <AppIcon name="Sword" size={56} className="text-[#166D77]" />
               <h2 className="font-black text-2xl" style={{ color: "#166D77" }}>
                 성검 완성!
               </h2>
               <p className="text-sm font-bold" style={{ color: "#b45309" }}>
                 축하합니다!
                 <br />
-                성검을 획득하셨습니다! 🎉
+                성검을 획득하셨습니다!
               </p>
               <p
                 className="text-xs font-bold px-3 py-1.5 rounded-xl"
@@ -225,7 +233,7 @@ const AsparagusMerge: React.FC = () => {
                 boxShadow: "0 8px 40px rgba(0,0,0,0.2)",
               }}
             >
-              <div style={{ fontSize: 56 }}>🥀</div>
+              <AppIcon name="Flower2" size={50} className="text-[#9ca3af]" />
               <h2 className="font-black text-2xl" style={{ color: "#166D77" }}>
                 아스파라거스가 시들었어
               </h2>

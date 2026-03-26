@@ -1,10 +1,11 @@
 import { create } from "zustand";
+import type { AppIconName } from "../components/common/AppIcon";
 
 export interface ToastMessage {
   id: string;
   title: string;
   description: string;
-  icon?: string;
+  icon?: AppIconName;
 }
 
 interface ToastState {

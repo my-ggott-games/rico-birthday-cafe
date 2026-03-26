@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { TutorialSlide } from "../components/common/TutorialBanner";
+import type { AppIconName } from "../components/common/AppIcon";
 import { type AdventureModalAction } from "../components/game/AdventureModal";
 import { BASE_URL } from "../utils/api";
 import { useAuthStore } from "../store/useAuthStore";
@@ -597,7 +598,7 @@ export default function AdventureGame() {
       code: string,
       title: string,
       description: string,
-      icon: string,
+      icon: AppIconName,
     ) => {
       if (awardedCodesRef.current.has(code)) {
         return;
@@ -630,13 +631,13 @@ export default function AdventureGame() {
       "LEGEND-HERO",
       "레전드 용사",
       "마왕을 물리치고 긴 여정을 끝마쳤다.",
-      "⚔️",
+      "Sword",
     );
     void award(
       "R-GEND-HERO",
       "R전드 용사",
       "단 한 번의 실패 없이 여정을 끝마쳤다.",
-      "👑",
+      "Crown",
     );
   }, [addToast, runState, token]);
 

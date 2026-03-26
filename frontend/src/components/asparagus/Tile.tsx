@@ -1,5 +1,20 @@
 import React from "react";
 import { motion } from "framer-motion";
+import type { LucideIcon } from "lucide-react";
+import {
+  ArrowUpToLine,
+  CalendarCheck,
+  CalendarDays,
+  CircleDot,
+  Crown,
+  Flower2,
+  Leaf,
+  Sprout,
+  Sword,
+  Trees,
+  TrendingUp,
+  Utensils,
+} from "lucide-react";
 import { STAGES, WIN_VALUE } from "./constants";
 
 interface TileProps {
@@ -7,6 +22,21 @@ interface TileProps {
   isSelected?: boolean;
   onClick?: () => void;
 }
+
+const STAGE_ICONS: Record<string, LucideIcon> = {
+  Sprout,
+  ArrowUpToLine,
+  TrendingUp,
+  Leaf,
+  Trees,
+  Flower2,
+  CircleDot,
+  CalendarDays,
+  CalendarCheck,
+  Utensils,
+  Crown,
+  Sword,
+};
 
 export const Tile: React.FC<TileProps> = ({ value, isSelected, onClick }) => {
   if (!value) {
@@ -28,10 +58,11 @@ export const Tile: React.FC<TileProps> = ({ value, isSelected, onClick }) => {
   }
   const stage = STAGES[value] ?? {
     name: String(value),
-    emoji: "🌿",
+    icon: "Leaf",
     bg: "#2d6a4f",
     text: "#FFFFF8",
   };
+  const StageIcon = STAGE_ICONS[stage.icon] ?? Leaf;
   const isGradient = stage.bg.includes("gradient");
   const words = stage.name.split(/\s+/);
   const lines =
@@ -51,6 +82,11 @@ export const Tile: React.FC<TileProps> = ({ value, isSelected, onClick }) => {
         color: stage.text,
         width: "100%",
         height: "100%",
+        minWidth: 0,
+        minHeight: 0,
+        padding: "clamp(4px, 1.2vw, 10px)",
+        boxSizing: "border-box",
+        overflow: "hidden",
         borderRadius: "var(--cell-radius, 16px)",
         boxShadow:
           value === WIN_VALUE
@@ -65,16 +101,24 @@ export const Tile: React.FC<TileProps> = ({ value, isSelected, onClick }) => {
         filter: isSelected ? "brightness(1.1) saturate(1.2)" : "none",
       }}
     >
-      <span style={{ fontSize: "clamp(20px, 5vw, 42px)", lineHeight: 1 }}>
-        {stage.emoji}
-      </span>
+      <StageIcon
+        aria-hidden
+        strokeWidth={2.2}
+        style={{
+          width: "clamp(18px, 4.2vw, 36px)",
+          height: "clamp(18px, 4.2vw, 36px)",
+          flexShrink: 0,
+        }}
+      />
       <span
         className="font-black text-center leading-tight"
         style={{
-          fontSize: "clamp(11px, 3.2vw, 15px)",
-          marginTop: 4,
+          fontSize: "clamp(9px, 2.1vw, 13px)",
+          marginTop: 3,
           opacity: 0.85,
           padding: "0 2px",
+          maxWidth: "100%",
+          wordBreak: "keep-all",
         }}
       >
         {lines.map((line, index) => (

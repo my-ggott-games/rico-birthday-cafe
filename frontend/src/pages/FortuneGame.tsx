@@ -5,6 +5,7 @@ import type { TutorialSlide } from "../components/common/TutorialBanner";
 import { useAuthStore } from "../store/useAuthStore";
 import { BASE_URL } from "../utils/api";
 import { useToastStore } from "../store/useToastStore";
+import { AppIcon } from "../components/common/AppIcon";
 
 // ---------------------------------------------------------
 // Types & Data
@@ -21,42 +22,42 @@ type FortuneResult = {
 const FORTUNE_DATA: FortuneResult[] = [
   {
     rank: "대길",
-    message: "오늘 하루는 리코짱 파워로 완벽할 거야! ✨",
+    message: "오늘 하루는 리코짱 파워로 완벽할 거야!",
     bgColor: "bg-gradient-to-br from-yellow-300 to-yellow-500",
     textColor: "text-yellow-900",
     isGreatLuck: true,
   },
   {
     rank: "길",
-    message: "소소한 행운이 찾아올지도? 기분 좋은 하루! 🌸",
+    message: "소소한 행운이 찾아올지도? 기분 좋은 하루!",
     bgColor: "bg-gradient-to-br from-pink-300 to-pink-500",
     textColor: "text-pink-900",
     isGreatLuck: false,
   },
   {
     rank: "중길",
-    message: "평범한 게 제일 좋은 법! 무난한 하루가 될 거야. 🌿",
+    message: "평범한 게 제일 좋은 법! 무난한 하루가 될 거야.",
     bgColor: "bg-gradient-to-br from-green-300 to-green-500",
     textColor: "text-green-900",
     isGreatLuck: false,
   },
   {
     rank: "소길",
-    message: "작은 미소가 지어지는 일이 생길지도? 😊",
+    message: "작은 미소가 지어지는 일이 생길지도?",
     bgColor: "bg-gradient-to-br from-blue-300 to-blue-500",
     textColor: "text-blue-900",
     isGreatLuck: false,
   },
   {
     rank: "흉",
-    message: "조금 아쉬운 하루? 하지만 리코가 응원할게! 파이팅! 💪",
+    message: "조금 아쉬운 하루? 하지만 리코가 응원할게! 파이팅!",
     bgColor: "bg-gradient-to-br from-purple-300 to-purple-500",
     textColor: "text-purple-900",
     isGreatLuck: false,
   },
   {
     rank: "대흉",
-    message: "앗... 오늘은 조금 조심하는 게 좋겠어. 💦",
+    message: "앗... 오늘은 조금 조심하는 게 좋겠어.",
     bgColor: "bg-gradient-to-br from-gray-300 to-gray-500",
     textColor: "text-gray-900",
     isGreatLuck: false,
@@ -65,12 +66,14 @@ const FORTUNE_DATA: FortuneResult[] = [
 
 const FORTUNE_TUTORIAL_SLIDES: TutorialSlide[] = [
   {
-    title: "🎋 오늘의 운세",
+    title: "오늘의 운세",
+    titleIcon: "ScrollText",
     lines: ["통을 클릭하거나 버튼을 눌러 운세를 뽑아보세요."],
     showArrows: false,
   },
   {
-    title: "🥠 대길 업적",
+    title: "대길 업적",
+    titleIcon: "Sparkles",
     lines: [
       "대길을 뽑으면 업적이 지급돼요.",
       "원할 때 다시 뽑아서 오늘의 기분을 확인해요.",
@@ -116,7 +119,7 @@ export default function FortuneGame() {
       addToast({
         title: "대길 (Great Luck)",
         description: "오늘의 리코 운세에서 대길을 뽑았다!",
-        icon: "🥠",
+        icon: "ScrollText",
       });
     } catch (error) {
       console.error("Failed to claim achievement", error);
@@ -168,7 +171,7 @@ export default function FortuneGame() {
               <p className="font-bold text-[#166D77] text-xl text-center">
                 {gameState === "idle"
                   ? "통을 클릭하거나 버튼을 눌러봐!"
-                  : "운세 뽑는 중... 🎋"}
+                  : "운세를 뽑는 중입니다..."}
               </p>
 
               {/* Omikuji Cylinder */}
@@ -249,7 +252,7 @@ export default function FortuneGame() {
                       transition={{ delay: 0.5, type: "spring" }}
                       className="mt-4 bg-white px-4 py-2 rounded-full shadow-md flex items-center gap-2"
                     >
-                      <span>🥠</span>
+                      <AppIcon name="ScrollText" size={16} className="text-yellow-600" />
                       <span className="font-bold text-yellow-600 text-sm">
                         대길 뽑기 업적 달성!
                       </span>

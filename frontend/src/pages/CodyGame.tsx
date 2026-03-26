@@ -29,6 +29,8 @@ import { RainEffect } from "../components/game/RainEffect";
 import { ButterflyEffect } from "../components/game/ButterflyEffect";
 import { getInventoryPreviewLayout } from "../components/game/codyInventoryPreviewLayout";
 import { domToJpeg } from "modern-screenshot";
+import { startCodyAssetPreload } from "../utils/codyAssetPreload";
+import { AppIcon } from "../components/common/AppIcon";
 
 type ShareNavigator = Navigator & {
   canShare?: (data?: ShareData) => boolean;
@@ -230,21 +232,7 @@ const CodyGame: React.FC = () => {
   React.useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
-
-    // Optimization: Pre-load results and character bodies
-    const imagesToPreload = [
-      "/assets/codygame/riko_body_smile.png",
-      "/assets/codygame/riko_body_wink.png",
-      "/assets/codygame/riko_body_default.png",
-      "/assets/codygame/background_1-1.jpg",
-      "/assets/codygame/background_2-1.jpg",
-      "/assets/codygame/background_3-1.jpg",
-    ];
-    // Add all category items to preload if needed, but keeping it small for now.
-    imagesToPreload.forEach((src) => {
-      const img = new Image();
-      img.src = src;
-    });
+    startCodyAssetPreload();
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -507,7 +495,10 @@ const CodyGame: React.FC = () => {
         {isEquipped && (
           <div className="absolute inset-0 bg-[#166D77]/10 backdrop-blur-[2px] flex items-center justify-center">
             <span className="bg-pale-custard/90 text-[#166D77] px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-              장착 중 ✨
+              <span className="inline-flex items-center gap-1">
+                <AppIcon name="Sparkles" size={12} />
+                장착 중
+              </span>
             </span>
           </div>
         )}
@@ -563,7 +554,7 @@ const CodyGame: React.FC = () => {
         ) {
           await shareNavigator.share({
             title: "유즈하 리코 생일 기념 코디 게임",
-            text: "나만의 리코를 코디해봤어요! 여러분도 함께 축하해주세요 🎀",
+            text: "나만의 리코를 코디해봤어요! 여러분도 함께 축하해주세요.",
             files: [file],
           });
           return;
@@ -856,8 +847,8 @@ const CodyGame: React.FC = () => {
                 {isCapturing
                   ? "작업 중..."
                   : isFinished
-                    ? "이미지 저장 📸"
-                    : "코디 끝!✨"}
+                    ? "이미지 저장"
+                    : "코디 끝!"}
               </button>
 
               {isFinished && (
@@ -865,7 +856,7 @@ const CodyGame: React.FC = () => {
                   onClick={() => {
                     const shareData = {
                       title: "유즈하 리코 생일 기념 코디 게임",
-                      text: "나만의 리코를 코디해봤어요! 여러분도 함께 축하해주세요 🎀",
+                      text: "나만의 리코를 코디해봤어요! 여러분도 함께 축하해주세요.",
                       url: window.location.origin,
                     };
 
@@ -884,7 +875,10 @@ const CodyGame: React.FC = () => {
                   }}
                   className="btn-secondary"
                 >
-                  공유하기 🔗
+                  <span className="inline-flex items-center gap-2">
+                    <AppIcon name="Share2" size={16} />
+                    공유하기
+                  </span>
                 </button>
               )}
             </div>

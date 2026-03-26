@@ -4,6 +4,8 @@ import { useAuthStore } from "../store/useAuthStore";
 import { BASE_URL } from "../utils/api";
 import { GameContainer } from "../components/common/GameContainer";
 import type { TutorialSlide } from "../components/common/TutorialBanner";
+import { AchievementIcon } from "../components/common/AchievementIcon";
+import { AppIcon } from "../components/common/AppIcon";
 
 // ---------------------------------------------------------
 // Typings
@@ -29,7 +31,8 @@ interface PlacedBadge {
 
 const ITABAG_TUTORIAL_SLIDES: TutorialSlide[] = [
   {
-    title: "🎀 이타백 꾸미기",
+    title: "이타백 꾸미기",
+    titleIcon: "Ribbon",
     lines: [
       "아래 뱃지를 눌러 가방에 추가해요.",
       "드래그해서 원하는 위치로 이동해요.",
@@ -37,7 +40,8 @@ const ITABAG_TUTORIAL_SLIDES: TutorialSlide[] = [
     showArrows: false,
   },
   {
-    title: "🪄 배치 편집",
+    title: "배치 편집",
+    titleIcon: "WandSparkles",
     lines: [
       "탭하면 회전하고, 더블탭하면 삭제해요.",
       "완성 후 저장 버튼으로 레이아웃을 보관해요.",
@@ -240,7 +244,7 @@ export default function ItabagGame() {
                   style={{ touchAction: "none" }}
                   title="드래그로 이동, 탭으로 회전, 더블 탭으로 삭제"
                 >
-                  {badge.iconUrl}
+                  <AchievementIcon code={badge.code} iconUrl={badge.iconUrl} size={34} />
                 </motion.div>
               ))}
 
@@ -266,7 +270,7 @@ export default function ItabagGame() {
         <div className="w-full lg:w-80 flex flex-col gap-4 z-20">
           <div className="bg-pale-custard rounded-3xl p-6 border-4 border-[#D6C0B0] flex flex-col h-full max-h-[400px] lg:max-h-none shadow-xl">
             <div className="font-black text-xl text-[#166D77] mb-4 flex items-center gap-2 shrink-0">
-              <span>🏅</span> 내 뱃지 보관함
+              <AppIcon name="Medal" size={20} /> 내 뱃지 보관함
             </div>
 
             {/* Inventory Scroll Area */}
@@ -285,7 +289,7 @@ export default function ItabagGame() {
                     className="w-14 h-14 bg-white rounded-full border-2 border-[#166D77] flex items-center justify-center text-3xl shadow-sm hover:scale-105 active:scale-95 transition-transform shrink-0"
                     title={badge.title}
                   >
-                    {badge.iconUrl}
+                    <AchievementIcon code={badge.code} iconUrl={badge.iconUrl} size={32} />
                   </button>
                 ))
               )}
@@ -299,7 +303,10 @@ export default function ItabagGame() {
                 onClick={handleSave}
                 className="w-full py-3 bg-[#5EC7A5] text-[#166D77] font-black rounded-xl border-2 border-[#166D77] shadow-[2px_2px_0_#166D77] hover:shadow-[1px_1px_0_#166D77] hover:translate-x-[1px] hover:translate-y-[1px] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {saving ? "저장 중..." : "💽 가방 레이아웃 저장하기"}
+                <span className="inline-flex items-center gap-2">
+                  <AppIcon name="Save" size={16} />
+                  {saving ? "저장 중..." : "가방 레이아웃 저장하기"}
+                </span>
               </motion.button>
               {saveMessage && (
                 <p className="text-center text-sm font-bold mt-2 text-[#5EC7A5] absolute w-full">

@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
 import { BASE_URL } from "../utils/api";
+import { playDiriringSfx, preloadDiriringSfx } from "../utils/soundEffects";
 import { type Grid, type Direction } from "../components/asparagus/types";
 import {
   createEmptyGrid,
@@ -101,6 +102,10 @@ export const useAsparagusGame = () => {
     startGame();
   }, [startGame]);
 
+  useEffect(() => {
+    preloadDiriringSfx();
+  }, []);
+
   const triggerConfetti = () => {
     confetti({
       particleCount: 150,
@@ -173,6 +178,7 @@ export const useAsparagusGame = () => {
       const didWin = !continueAfterWin && checkWin(nextGrid);
       if (didWin) {
         setWon(true);
+        void playDiriringSfx();
         setTimeout(triggerConfetti, 200);
         setTimeout(() => {
           confetti({

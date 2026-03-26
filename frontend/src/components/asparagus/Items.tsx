@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { AppIcon } from "../common/AppIcon";
 
 interface ItemsProps {
   undoCount: number;
@@ -44,7 +45,7 @@ export const Items: React.FC<ItemsProps> = ({
               : "bg-gray-200 text-gray-400 border-gray-300 opacity-50 cursor-not-allowed"
           }`}
         >
-          <span className="text-2xl mb-0.5">🔙</span>
+          <AppIcon name="RotateCcw" size={24} className="mb-1" />
           <span className="text-[9px] opacity-50 uppercase tracking-tighter">
             Undo
           </span>
@@ -68,7 +69,7 @@ export const Items: React.FC<ItemsProps> = ({
               : "bg-gray-200 text-gray-400 border-gray-300 opacity-50 cursor-not-allowed"
           }`}
         >
-          <span className="text-2xl mb-0.5">🔄</span>
+          <AppIcon name="ArrowLeftRight" size={24} className="mb-1" />
           <span className="text-[9px] opacity-50 uppercase tracking-tighter">
             Swap
           </span>
@@ -85,7 +86,7 @@ export const Items: React.FC<ItemsProps> = ({
           onClick={onRestart}
           className={`${BTN_BASE} bg-[#166D77] text-white shadow-md border-white/20 hover:bg-[#2d6a4f]`}
         >
-          <span className="text-2xl mb-0.5">🔁</span>
+          <AppIcon name="RefreshCw" size={24} className="mb-1" />
           <span className="text-[9px] opacity-50 uppercase tracking-tighter">
             Restart
           </span>
@@ -102,7 +103,7 @@ export const Items: React.FC<ItemsProps> = ({
           onClick={onDebugStart}
           className={`${BTN_BASE} ${debugMode ? "bg-[#f59e0b] text-[#1f2937] border-[#92400e]" : "bg-[#fff7db] text-[#166D77] border-[#f59e0b] shadow-lg"}`}
         >
-          <span className="text-2xl mb-0.5">🛠️</span>
+          <AppIcon name="Wrench" size={24} className="mb-1" />
           <span className="text-[9px] opacity-50 uppercase tracking-tighter">
             Debug
           </span>

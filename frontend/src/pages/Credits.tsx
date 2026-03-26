@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { BASE_URL } from "../utils/api";
 import { ReturnButton } from "../components/common/ReturnButton";
+import { AppIcon } from "../components/common/AppIcon";
 
 const CREDITS_SECTIONS = [
   {
@@ -12,7 +13,7 @@ const CREDITS_SECTIONS = [
     names: [
       "Planning: G. Minho",
       "Illustration: Sie, Rico Archive, Community Artists",
-      "BGM: 꽃하나",
+      "BGM: 밤바밤바",
     ],
   },
   {
@@ -59,7 +60,7 @@ const ILLUSTRATION_IMAGES = [
   "/assets/illustration2.png",
 ];
 
-const BGM_SRC = encodeURI("/꽃하나.m4a");
+const BGM_SRC = encodeURI("/밤바밤바.m4a");
 const CLAIM_ALERT_THRESHOLD = 0.33;
 const CREDITS_BOTTOM_PADDING = 140;
 const CREDITS_SCROLL_SPEED_PX = 22;
@@ -382,7 +383,7 @@ export default function Credits() {
                     borderColor: "#5EC7A5",
                   }}
                 >
-                  <span className="text-2xl">🎬</span>
+                  <AppIcon name="Clapperboard" size={24} />
                   {loading ? "기록 중..." : "엔딩 크레딧 시청 완료 배지 받기"}
                 </motion.button>
               ) : (
@@ -391,7 +392,7 @@ export default function Credits() {
                   animate={{ scale: 1, opacity: 1 }}
                   className="px-8 py-4 rounded-full font-black text-lg bg-[#5EC7A5] text-[#166D77] flex items-center gap-2"
                 >
-                  <span className="text-xl">✨</span> 감사합니다! 배지가
+                  <AppIcon name="BadgeCheck" size={20} /> 감사합니다! 배지가
                   지급되었습니다.
                 </motion.div>
               )}

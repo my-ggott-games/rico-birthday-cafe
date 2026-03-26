@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import Lobby from "./pages/Lobby";
@@ -7,6 +7,7 @@ import { CursorManager } from "./components/game/CursorManager";
 import GlobalLoading from "./components/common/GlobalLoading";
 import { AchievementToast } from "./components/common/AchievementToast";
 import NotFound from "./pages/NotFound";
+import { startCodyAssetPreload } from "./utils/codyAssetPreload";
 // import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 const CodyGame = lazy(() => import("./pages/CodyGame"));
@@ -21,6 +22,10 @@ const AsparagusMerge = lazy(() => import("./pages/AsparagusMerge"));
 const Credits = lazy(() => import("./pages/Credits"));
 
 function App() {
+  useEffect(() => {
+    startCodyAssetPreload();
+  }, []);
+
   return (
     <div>
       <AchievementToast />

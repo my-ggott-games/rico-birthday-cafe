@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 // import { useAuthStore } from '../store/useAuthStore';
 import { AuthModal } from "../components/auth/AuthModal";
+import { AppIcon } from "../components/common/AppIcon";
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -47,8 +48,10 @@ const LandingPage: React.FC = () => {
             <h1 className="text-5xl md:text-7xl text-[#166D77] font-black tracking-tight drop-shadow-sm rotate-[-2deg]">
               유즈하 리코 생일카페
             </h1>
-            <p className="mt-2 text-xl text-[#5EC7A5] font-bold tracking-widest uppercase">
-              🎉 2026.04.13 Open! 🎉
+            <p className="mt-2 flex items-center justify-center gap-2 text-xl font-bold uppercase tracking-widest text-[#5EC7A5]">
+              <AppIcon name="PartyPopper" size={18} />
+              <span>2026.04.13 Open!</span>
+              <AppIcon name="PartyPopper" size={18} />
             </p>
           </div>
           {/* Hanging chaos strings */}

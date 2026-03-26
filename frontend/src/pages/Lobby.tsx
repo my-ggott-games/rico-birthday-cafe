@@ -9,6 +9,7 @@ import {
   PUZZLE_MUSEUM_UNLOCK_EVENT,
   PUZZLE_MUSEUM_UNLOCK_KEY,
 } from "../constants/puzzle";
+import { AppIcon } from "../components/common/AppIcon";
 
 const Lobby: React.FC = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -65,9 +66,10 @@ const Lobby: React.FC = () => {
           className={`flex ${isMobile ? "flex-col items-center gap-2" : "justify-between items-center"} ${isMobile ? "mb-3" : "mb-6"}`}
         >
           <h2
-            className={`${isMobile ? "text-2xl" : "text-4xl"} font-black text-[#166D77] drop-shadow-sm rotate-[-1deg]`}
+            className={`${isMobile ? "text-2xl" : "text-4xl"} flex items-center gap-2 font-black text-[#166D77] drop-shadow-sm rotate-[-1deg]`}
           >
-            ☕ Main Hall
+            <AppIcon name="Coffee" size={isMobile ? 24 : 34} />
+            Main Hall
           </h2>
           <div
             className={`flex ${isMobile ? "flex-wrap justify-center" : ""} gap-2`}
@@ -76,14 +78,14 @@ const Lobby: React.FC = () => {
               to="/credits"
               className={`${isMobile ? "px-3 py-1 text-sm" : "px-6 py-2"} bg-black rounded-full border-2 border-gray-700 shadow-sm font-black text-gray-300 hover:bg-gray-800 hover:text-white transition-colors flex items-center gap-1.5`}
             >
-              <span className="drop-shadow-sm text-base">🎬</span> Who Made
+              <AppIcon name="Clapperboard" size={16} /> Who Made
               This?!
             </Link>
             <button
               onClick={() => setIsAchievementOpen(true)}
               className={`${isMobile ? "px-3 py-1 text-sm" : "px-6 py-2"} bg-cream rounded-full border-2 border-[#5EC7A5] shadow-sm font-black text-[#5EC7A5] hover:bg-[#5EC7A5] hover:text-pale-custard transition-colors flex items-center gap-1.5`}
             >
-              <span className="drop-shadow-sm text-base">🪪</span> 프로필
+              <AppIcon name="IdCardLanyard" size={16} /> 프로필
             </button>
             <button
               onClick={() => setIsAdminOpen(true)}
@@ -138,11 +140,11 @@ const Lobby: React.FC = () => {
                   }}
                 />
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                  <span
-                    className={`${isMobile ? "text-2xl" : "text-4xl"} filter drop-shadow-sm`}
-                  >
-                    ✂️
-                  </span>
+                  <AppIcon
+                    name="Scissors"
+                    size={isMobile ? 28 : 40}
+                    className="text-[#166D77] drop-shadow-sm"
+                  />
                   <span
                     className={`bg-[#5EC7A5] text-pale-custard ${isMobile ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm"} font-black rotate-[-5deg] shadow-md border-2 border-pale-custard`}
                   >
@@ -178,11 +180,11 @@ const Lobby: React.FC = () => {
               >
                 {/* Tablecloth */}
                 <div className="absolute top-0 w-full h-4 bg-[#fef2f2]" />
-                <div
-                  className={`${isMobile ? "text-4xl" : "text-5xl"} drop-shadow-md`}
-                >
-                  🎒
-                </div>
+                <AppIcon
+                  name="Backpack"
+                  size={isMobile ? 38 : 54}
+                  className="text-[#166D77] drop-shadow-md"
+                />
               </div>
               <div
                 className={`mt-2 bg-pale-custard ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-2"} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#5EC7A5] group-hover:text-pale-custard transition-colors`}
@@ -219,11 +221,11 @@ const Lobby: React.FC = () => {
                     className="aspect-square h-full w-full object-cover"
                   />
                 ) : (
-                  <div
-                    className={`${isMobile ? "text-3xl" : "text-6xl"} drop-shadow-md`}
-                  >
-                    🧩
-                  </div>
+                  <AppIcon
+                    name="Puzzle"
+                    size={isMobile ? 34 : 58}
+                    className="text-[#166D77] drop-shadow-md"
+                  />
                 )}
               </div>
               <div
@@ -252,16 +254,26 @@ const Lobby: React.FC = () => {
               >
                 {/* Asparagus tile grid preview */}
                 <div className="grid grid-cols-3 gap-1 p-2">
-                  {["🌱", "🌿", "🥬", "🌾", "💎", "⚔️"].map((e, i) => (
+                  {[
+                    "Sprout",
+                    "TrendingUp",
+                    "Leaf",
+                    "Flower2",
+                    "CircleDot",
+                    "Sword",
+                  ].map((iconName, i) => (
                     <div
                       key={i}
                       className="w-7 h-7 rounded-lg flex items-center justify-center text-sm"
                       style={{
                         background: "#2d6a4f",
-                        fontSize: isMobile ? 12 : 14,
                       }}
                     >
-                      {e}
+                      <AppIcon
+                        name={iconName as Parameters<typeof AppIcon>[0]["name"]}
+                        size={isMobile ? 12 : 14}
+                        className="text-[#f8fff0]"
+                      />
                     </div>
                   ))}
                 </div>
@@ -291,11 +303,11 @@ const Lobby: React.FC = () => {
                 className={`relative ${isMobile ? "w-[5.5rem] h-28" : "w-32 h-44"} bg-[#D6C0B0] rounded-b-[2rem] rounded-t-lg border-4 border-[#8B5A2B] shadow-xl flex flex-col items-center justify-center`}
               >
                 <div className={`absolute top-0 w-3/4 h-2 bg-[#8B5A2B]`} />
-                <div
-                  className={`${isMobile ? "text-4xl" : "text-5xl"} drop-shadow-md`}
-                >
-                  🥠
-                </div>
+                <AppIcon
+                  name="ScrollText"
+                  size={isMobile ? 36 : 48}
+                  className="text-[#8B5A2B] drop-shadow-md"
+                />
                 <div className="absolute inset-x-0 bottom-4 flex justify-center">
                   <div className="w-4/5 h-1 bg-[#8B5A2B] opacity-30" />
                 </div>
@@ -324,11 +336,11 @@ const Lobby: React.FC = () => {
                 className={`relative ${isMobile ? "w-36 h-20" : "w-56 h-28"} overflow-hidden rounded-[1.75rem] border-4 border-[#102542] bg-[linear-gradient(135deg,#102542_0%,#365486_55%,#f5e6ca_100%)] shadow-xl`}
               >
                 <div className="absolute inset-x-0 bottom-0 h-10 bg-[#345b48]" />
-                <div className="absolute left-5 bottom-6 text-2xl drop-shadow-md">
-                  🦸‍♀️
+                <div className="absolute left-5 bottom-6 text-2xl drop-shadow-md text-white">
+                  <AppIcon name="Shield" size={isMobile ? 20 : 28} />
                 </div>
-                <div className="absolute right-5 top-4 text-3xl drop-shadow-md">
-                  👑
+                <div className="absolute right-5 top-4 text-3xl drop-shadow-md text-[#ffe08a]">
+                  <AppIcon name="Crown" size={isMobile ? 24 : 30} />
                 </div>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.35),transparent_30%)]" />
               </div>

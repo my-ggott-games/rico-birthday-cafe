@@ -53,19 +53,20 @@ export const Board: React.FC<BoardProps> = ({
   onTouchStart,
   onTouchEnd,
 }) => {
-  const boardPadding = "clamp(8px, 2vw, 18px)";
+  const boardPadding = "clamp(10px, 2.4vw, 20px)";
   const cellRadius = "clamp(12px, 2.8vw, 20px)";
   const boardRadius = "calc(var(--cell-radius) + var(--board-padding))";
+  const boardSize = "min(100%, clamp(340px, 92vw, 520px))";
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-full">
       <div
-        className="w-full aspect-square flex items-center justify-center"
+        className="aspect-square flex items-center justify-center"
         style={
           {
             "--board-padding": boardPadding,
             "--cell-radius": cellRadius,
-            maxWidth: "min(400px, 70vw)",
+            width: boardSize,
             background: "#166D77",
             borderRadius: boardRadius,
             padding: "var(--board-padding)",
@@ -82,7 +83,7 @@ export const Board: React.FC<BoardProps> = ({
             display: "grid",
             gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
             gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`,
-            gap: "clamp(6px, 1.8vw, 18px)",
+            gap: "clamp(8px, 2.2vw, 18px)",
             width: "100%",
             height: "100%",
           }}
@@ -96,6 +97,7 @@ export const Board: React.FC<BoardProps> = ({
                   width: "100%",
                   height: "100%",
                   aspectRatio: "1 / 1",
+                  overflow: "hidden",
                 }}
               >
                 <div

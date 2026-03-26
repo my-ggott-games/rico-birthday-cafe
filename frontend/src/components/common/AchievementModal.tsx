@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../../store/useAuthStore";
 import { BASE_URL } from "../../utils/api";
+import { AchievementIcon } from "./AchievementIcon";
+import { AppIcon } from "./AppIcon";
 
 interface Achievement {
   code: string;
@@ -108,8 +110,8 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
 
           {/* Header */}
           <div className="text-center mb-5 shrink-0">
-            <span className="text-5xl drop-shadow-md mb-2 inline-block">
-              🪪
+            <span className="mb-2 inline-flex rounded-full bg-[#e9fff0] p-3 text-[#166D77] shadow-sm">
+              <AppIcon name="IdCardLanyard" size={34} />
             </span>
             <h2 className="text-4xl font-black text-[#166D77] uppercase tracking-wider">
               프로필
@@ -151,7 +153,10 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
           {/* Achievements Section Header */}
           <div className="shrink-0 mb-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-black text-lg text-[#166D77]">🏆 업적</h3>
+              <h3 className="flex items-center gap-2 font-black text-lg text-[#166D77]">
+                <AppIcon name="Trophy" size={18} />
+                업적
+              </h3>
               <span className="text-sm font-bold text-[#5EC7A5]">
                 {earnedCount} / {achievements.length} 달성
               </span>
@@ -166,8 +171,8 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
               </div>
             ) : !token ? (
               <div className="text-center py-10 bg-pale-custard rounded-3xl border-4 border-dashed border-[#D6C0B0]">
-                <span className="text-5xl grayscale opacity-40 block mb-3">
-                  🔒
+                <span className="mb-3 inline-flex text-[#166D77]/40">
+                  <AppIcon name="Lock" size={42} />
                 </span>
                 <p className="text-[#166D77] font-bold">
                   로그인 후 업적을 확인하세요!
@@ -175,8 +180,8 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
               </div>
             ) : achievements.length === 0 ? (
               <div className="text-center py-10 bg-pale-custard rounded-3xl border-4 border-dashed border-[#D6C0B0]">
-                <span className="text-6xl grayscale opacity-50 block mb-4">
-                  🎖️
+                <span className="mb-4 inline-flex text-[#166D77]/50">
+                  <AppIcon name="Medal" size={48} />
                 </span>
                 <p className="text-[#166D77] font-bold text-xl">
                   아직 업적이 없어요.
@@ -195,7 +200,7 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
                       className="bg-pale-custard p-4 rounded-2xl border-2 border-[#5EC7A5]/20 shadow-sm flex items-center gap-4 hover:border-[#5EC7A5] hover:-translate-y-0.5 transition-all"
                     >
                       <div className="w-14 h-14 bg-[#FFE4E6] rounded-full flex items-center justify-center text-2xl shrink-0 border-2 border-[#5EC7A5]">
-                        {ach.iconUrl || "⭐"}
+                        <AchievementIcon code={ach.code} iconUrl={ach.iconUrl} />
                       </div>
                       <div className="min-w-0 flex-1">
                         <h4 className="font-black text-[#166D77] text-base truncate">
@@ -219,7 +224,7 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
                       className="bg-[#f3f4f6] p-4 rounded-2xl border-2 border-[#D6C0B0]/40 shadow-sm flex items-center gap-4 opacity-60 select-none"
                     >
                       <div className="w-14 h-14 bg-[#e5e7eb] rounded-full flex items-center justify-center text-2xl shrink-0 border-2 border-[#D6C0B0] grayscale">
-                        🔒
+                        <AppIcon name="Lock" size={26} className="text-[#9ca3af]" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <h4 className="font-black text-[#9ca3af] text-base">

@@ -107,7 +107,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
           addToast({
             title: "관리자 권한에 접근한 자",
             description: "정답은 리코 데뷔 날짜였습니다~",
-            icon: "👀",
+            icon: "Eye",
           });
 
           setTimeout(() => {
@@ -122,7 +122,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
         addToast({
           title: "시스템 권한 획득",
           description: "관리자 모드로 입장합니다.",
-          icon: "🔑",
+          icon: "KeyRound",
         });
 
         setTimeout(() => {
@@ -358,8 +358,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                 ))}
               </div>
 
-              <div className="text-pale-custard/10 text-xl sm:text-2xl font-black mb-2 flex items-end">
-                _
+              <div className="mb-2 flex h-14 items-center text-xl font-black text-pale-custard/10 sm:h-16 sm:text-2xl">
+                <span className="flex h-full items-center leading-none">_</span>
               </div>
 
               <div className="flex gap-1.5 sm:gap-2">

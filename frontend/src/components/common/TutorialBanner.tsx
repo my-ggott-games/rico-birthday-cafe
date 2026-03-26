@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { AppIcon, type AppIconName } from "./AppIcon";
 
 export type Direction = "up" | "down" | "left" | "right";
 
 export interface TutorialSlide {
   title: string;
+  titleIcon?: AppIconName;
   lines: string[];
   showArrows?: boolean;
   highlight?: {
@@ -84,8 +86,16 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({
           }}
           className="absolute inset-0 w-full h-full rounded-[24px] px-4 pt-3 pb-3 flex flex-col shadow-[0_8px_24px_rgba(74,59,50,0.2)] bg-[#166D77] text-pale-custard"
         >
-          <div className="font-black text-lg md:text-xl mb-1 text-center leading-snug">
-            {s.title}
+          <div className="mb-1 flex items-center justify-center gap-2 text-center font-black text-lg leading-snug md:text-xl">
+            {s.titleIcon && (
+              <AppIcon
+                name={s.titleIcon}
+                size={22}
+                className="shrink-0"
+                style={{ color: "#bef264" }}
+              />
+            )}
+            <span>{s.title}</span>
           </div>
 
           <div className="flex-1 flex flex-col justify-center items-center gap-2 text-center">
