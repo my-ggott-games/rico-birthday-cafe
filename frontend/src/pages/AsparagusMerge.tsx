@@ -103,27 +103,26 @@ const AsparagusMerge: React.FC = () => {
       helpSlides={TUTORIAL_SLIDES}
       className="select-none"
     >
-      <div className="flex w-full justify-center px-4 pt-2 sm:px-6 lg:px-10">
-        <div className="flex w-full max-w-md items-center gap-3">
-          <ScoreCard
-            label="Score"
-            value={debugMode ? 0 : score}
-            background="#166D77"
-            textColor="#FFFFF8"
-          />
-          <ScoreCard
-            label="Best"
-            value={best}
-            background="#2d6a4f"
-            textColor="#bef264"
-          />
-        </div>
-      </div>
-
       {/* ─── Main Content: Horizontal 3 DIV ─── */}
       <div className="flex-1 w-full grid grid-cols-1 gap-6 px-4 pb-12 pt-4 sm:px-6 lg:grid-cols-[1fr_0.8fr] lg:gap-8 lg:px-10">
         {/* [Center] Board: swipe only on the board element */}
-        <div className="flex min-h-0 flex-col items-center justify-center lg:min-h-[calc(100dvh-260px)]">
+        <div className="flex min-h-0 flex-col items-center justify-center gap-4 lg:min-h-[calc(100dvh-260px)]">
+          <div className="flex w-full justify-center lg:justify-center">
+            <div className="flex w-full max-w-[min(100%,520px)] items-end justify-end gap-3">
+              <ScoreCard
+                label="Score"
+                value={debugMode ? 0 : score}
+                background="#166D77"
+                textColor="#FFFFF8"
+              />
+              <ScoreCard
+                label="Best"
+                value={best}
+                background="#2d6a4f"
+                textColor="#bef264"
+              />
+            </div>
+          </div>
           <Board
             grid={grid}
             selection={selection}

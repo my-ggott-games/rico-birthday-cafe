@@ -67,10 +67,13 @@ export const Board: React.FC<BoardProps> = ({
             "--board-padding": boardPadding,
             "--cell-radius": cellRadius,
             width: boardSize,
-            background: "#166D77",
+            background:
+              "linear-gradient(145deg, #1c7a83 0%, #166D77 48%, #0f525a 100%)",
             borderRadius: boardRadius,
             padding: "var(--board-padding)",
-            boxShadow: "0 30px 80px rgba(22, 109, 119, 0.3)",
+            border: "3px solid rgba(255,255,255,0.26)",
+            boxShadow:
+              "0 30px 80px rgba(22, 109, 119, 0.3), inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -14px 30px rgba(0,0,0,0.14)",
             touchAction: "none", // Prevents body scrolling when swiping inside the board
             marginInline: "auto",
           } as React.CSSProperties
@@ -78,6 +81,16 @@ export const Board: React.FC<BoardProps> = ({
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
+        <div
+          className="pointer-events-none absolute"
+          style={{
+            inset: "calc(var(--board-padding) * 0.55)",
+            borderRadius: "calc(var(--cell-radius) + 6px)",
+            border: "2px solid rgba(255,255,255,0.16)",
+            boxShadow:
+              "inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -10px 20px rgba(0,0,0,0.1)",
+          }}
+        />
         <div
           style={{
             display: "grid",
@@ -103,8 +116,10 @@ export const Board: React.FC<BoardProps> = ({
                 <div
                   className="absolute inset-0"
                   style={{
-                    background: "rgba(255,255,255,0.08)",
+                    background:
+                      "linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.05) 100%)",
                     borderRadius: "var(--cell-radius)",
+                    border: "1px solid rgba(8, 73, 79, 0.34)",
                   }}
                 />
                 <AnimatePresence mode="popLayout">

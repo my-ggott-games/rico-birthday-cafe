@@ -7,6 +7,7 @@ import {
   CalendarDays,
   CircleDot,
   Crown,
+  Feather,
   Flower2,
   Leaf,
   Sprout,
@@ -33,6 +34,7 @@ const STAGE_ICONS: Record<string, LucideIcon> = {
   CircleDot,
   CalendarDays,
   CalendarCheck,
+  Feather,
   Utensils,
   Crown,
   Sword,
@@ -61,14 +63,12 @@ export const Tile: React.FC<TileProps> = ({ value, isSelected, onClick }) => {
     icon: "Leaf",
     bg: "#2d6a4f",
     text: "#FFFFF8",
+    iconColor: "#FFFFF8",
   };
   const StageIcon = STAGE_ICONS[stage.icon] ?? Leaf;
   const isGradient = stage.bg.includes("gradient");
-  const words = stage.name.split(/\s+/);
   const lines =
-    words.length <= 2
-      ? words
-      : [words.slice(0, 2).join(" "), words.slice(2).join(" ")];
+    value >= 128 ? stage.name.split(/\s+/) : [stage.name];
   return (
     <motion.div
       key={value}
@@ -88,19 +88,47 @@ export const Tile: React.FC<TileProps> = ({ value, isSelected, onClick }) => {
         boxSizing: "border-box",
         overflow: "hidden",
         borderRadius: "var(--cell-radius, 16px)",
+        position: "relative",
         boxShadow:
           value === WIN_VALUE
-            ? "0 0 24px 6px rgba(255,200,0,0.4)"
-            : "0 2px 8px rgba(0,0,0,0.10)",
+            ? "0 0 24px 6px rgba(255,200,0,0.4), inset 0 1px 0 rgba(255,255,255,0.65)"
+            : "0 6px 14px rgba(10,75,82,0.08), inset 0 1px 0 rgba(255,255,255,0.2)",
         border:
           value === WIN_VALUE
             ? "3px solid #ffd700"
             : isSelected
-              ? "3px solid #5EC7A5"
-              : "none",
-        filter: isSelected ? "brightness(1.1) saturate(1.2)" : "none",
+              ? "3px solid #2da487"
+              : "1px solid rgba(9,73,79,0.38)",
+        filter: isSelected ? "brightness(1.08) saturate(1.16)" : "none",
       }}
     >
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          borderRadius: "var(--cell-radius, 16px)",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.24) 0%, rgba(255,255,255,0.06) 38%, rgba(255,255,255,0) 60%)",
+        }}
+      />
+      <div
+        className="pointer-events-none absolute inset-[2px]"
+        style={{
+          borderRadius: "calc(var(--cell-radius, 16px) - 3px)",
+          border: "1px solid rgba(8,73,79,0.18)",
+        }}
+      />
+      <div
+        className="pointer-events-none absolute left-1/2 top-[20%]"
+        style={{
+          width: "56%",
+          height: "34%",
+          transform: "translateX(-50%)",
+          borderRadius: "9999px",
+          background: "rgba(255,255,255,0.16)",
+          filter: "blur(10px)",
+          opacity: value >= 512 ? 0.32 : 0.2,
+        }}
+      />
       <StageIcon
         aria-hidden
         strokeWidth={2.2}
@@ -108,17 +136,23 @@ export const Tile: React.FC<TileProps> = ({ value, isSelected, onClick }) => {
           width: "clamp(18px, 4.2vw, 36px)",
           height: "clamp(18px, 4.2vw, 36px)",
           flexShrink: 0,
+          color: stage.iconColor,
+          filter:
+            value === WIN_VALUE
+              ? "drop-shadow(0 0 12px rgba(255,255,255,0.7))"
+              : "drop-shadow(0 2px 8px rgba(0,0,0,0.14))",
         }}
       />
       <span
         className="font-black text-center leading-tight"
         style={{
           fontSize: "clamp(9px, 2.1vw, 13px)",
-          marginTop: 3,
-          opacity: 0.85,
+          marginTop: 4,
+          opacity: 0.92,
           padding: "0 2px",
           maxWidth: "100%",
           wordBreak: "keep-all",
+          textShadow: "0 1px 2px rgba(0,0,0,0.12)",
         }}
       >
         {lines.map((line, index) => (

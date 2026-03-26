@@ -5,11 +5,12 @@ import { KCelebrateSlogan } from "k-celebrate-slogan";
 import { AchievementModal } from "../components/common/AchievementModal";
 import { AdminModal } from "../components/auth/AdminModal";
 import {
-  PUZZLE_IMAGE_URL,
   PUZZLE_MUSEUM_UNLOCK_EVENT,
   PUZZLE_MUSEUM_UNLOCK_KEY,
 } from "../constants/puzzle";
 import { AppIcon } from "../components/common/AppIcon";
+
+const CIRCLE_DOT_RED = "#ef4444";
 
 const Lobby: React.FC = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -78,8 +79,7 @@ const Lobby: React.FC = () => {
               to="/credits"
               className={`${isMobile ? "px-3 py-1 text-sm" : "px-6 py-2"} bg-black rounded-full border-2 border-gray-700 shadow-sm font-black text-gray-300 hover:bg-gray-800 hover:text-white transition-colors flex items-center gap-1.5`}
             >
-              <AppIcon name="Clapperboard" size={16} /> Who Made
-              This?!
+              <AppIcon name="Clapperboard" size={16} /> Who Made This?!
             </Link>
             <button
               onClick={() => setIsAchievementOpen(true)}
@@ -181,7 +181,7 @@ const Lobby: React.FC = () => {
                 {/* Tablecloth */}
                 <div className="absolute top-0 w-full h-4 bg-[#fef2f2]" />
                 <AppIcon
-                  name="Backpack"
+                  name="Handbag"
                   size={isMobile ? 38 : 54}
                   className="text-[#166D77] drop-shadow-md"
                 />
@@ -214,19 +214,11 @@ const Lobby: React.FC = () => {
                     : "bg-[#a3e635] p-4"
                 }`}
               >
-                {isPuzzleMuseumUnlocked ? (
-                  <img
-                    src={PUZZLE_IMAGE_URL}
-                    alt="Birthday Banquet"
-                    className="aspect-square h-full w-full object-cover"
-                  />
-                ) : (
-                  <AppIcon
-                    name="Puzzle"
-                    size={isMobile ? 34 : 58}
-                    className="text-[#166D77] drop-shadow-md"
-                  />
-                )}
+                <AppIcon
+                  name="Puzzle"
+                  size={isMobile ? 34 : 58}
+                  className="text-[#166D77] drop-shadow-md"
+                />
               </div>
               <div
                 className={`mt-2 bg-pale-custard ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-2"} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#5EC7A5] group-hover:text-pale-custard transition-colors`}
@@ -273,6 +265,11 @@ const Lobby: React.FC = () => {
                         name={iconName as Parameters<typeof AppIcon>[0]["name"]}
                         size={isMobile ? 12 : 14}
                         className="text-[#f8fff0]"
+                        style={
+                          iconName === "CircleDot"
+                            ? { color: CIRCLE_DOT_RED }
+                            : undefined
+                        }
                       />
                     </div>
                   ))}
