@@ -14,6 +14,7 @@ import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { BASE_URL } from "../utils/api";
+import { playDiriringSfx, preloadDiriringSfx } from "../utils/soundEffects";
 import { useAuthStore } from "../store/useAuthStore";
 import { useToastStore } from "../store/useToastStore";
 import { HolographicOverlay } from "../components/game/HolographicOverlay";
@@ -495,8 +496,13 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   };
 
   useEffect(() => {
+    preloadDiriringSfx();
+  }, []);
+
+  useEffect(() => {
     if (completed) {
       triggerFireworks();
+      void playDiriringSfx();
     }
   }, [completed]);
 

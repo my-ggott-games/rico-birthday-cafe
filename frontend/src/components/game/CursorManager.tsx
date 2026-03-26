@@ -70,7 +70,7 @@ export const CursorManager: React.FC = () => {
           y: clickY,
           ...cloverPalette[Math.floor(Math.random() * cloverPalette.length)],
           angle: (Math.PI * 2 * i) / particleCount + Math.random() * 0.5,
-          velocity: 34 + Math.random() * 52,
+          velocity: 72 + Math.random() * 68,
           size: 22 + Math.random() * 12,
           rotation: Math.random() * 360,
         }),
@@ -83,7 +83,7 @@ export const CursorManager: React.FC = () => {
         setParticles((prev) =>
           prev.filter((p) => !newParticles.find((np) => np.id === p.id)),
         );
-      }, 1400);
+      }, 850);
     };
     window.addEventListener("click", handleClick);
 
@@ -130,7 +130,7 @@ export const CursorManager: React.FC = () => {
               opacity: 0,
               rotate: p.rotation + 120,
             }}
-            transition={{ duration: 1.15, ease: "easeOut" }}
+            transition={{ duration: 0.62, ease: "easeOut" }}
             className="fixed select-none"
             style={{
               width: p.size * 2.8,

@@ -193,7 +193,7 @@ export default function ItabagGame() {
     <GameContainer
       title="Itabag Decoration"
       desc="나만의 이타백 꾸미기"
-      gameName="로비"
+      gameName="이타백 꾸미기"
       helpSlides={ITABAG_TUTORIAL_SLIDES}
       className="bg-cream font-pretendard"
       mainClassName="overflow-hidden"
@@ -244,7 +244,11 @@ export default function ItabagGame() {
                   style={{ touchAction: "none" }}
                   title="드래그로 이동, 탭으로 회전, 더블 탭으로 삭제"
                 >
-                  <AchievementIcon code={badge.code} iconUrl={badge.iconUrl} size={34} />
+                  <AchievementIcon
+                    code={badge.code}
+                    iconUrl={badge.iconUrl}
+                    size={34}
+                  />
                 </motion.div>
               ))}
 
@@ -289,7 +293,11 @@ export default function ItabagGame() {
                     className="w-14 h-14 bg-white rounded-full border-2 border-[#166D77] flex items-center justify-center text-3xl shadow-sm hover:scale-105 active:scale-95 transition-transform shrink-0"
                     title={badge.title}
                   >
-                    <AchievementIcon code={badge.code} iconUrl={badge.iconUrl} size={32} />
+                    <AchievementIcon
+                      code={badge.code}
+                      iconUrl={badge.iconUrl}
+                      size={32}
+                    />
                   </button>
                 ))
               )}

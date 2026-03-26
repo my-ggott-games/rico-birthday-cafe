@@ -8,9 +8,41 @@ import {
   PUZZLE_MUSEUM_UNLOCK_EVENT,
   PUZZLE_MUSEUM_UNLOCK_KEY,
 } from "../constants/puzzle";
-import { AppIcon } from "../components/common/AppIcon";
+import {
+  AppIcon,
+  type AppIconName,
+} from "../components/common/AppIcon";
 
-const CIRCLE_DOT_RED = "#ef4444";
+const LobbyIconTile = ({
+  name,
+  icon,
+  isMobile,
+  className,
+  iconClassName,
+}: {
+  name: string;
+  icon: AppIconName;
+  isMobile: boolean;
+  className: string;
+  iconClassName?: string;
+}) => (
+  <div className="flex flex-col items-center">
+    <div
+      className={`flex items-center justify-center rounded-[1.35rem] border-4 shadow-xl transition-transform group-hover:-translate-y-0.5 ${isMobile ? "h-20 w-20" : "h-24 w-24"} ${className}`}
+    >
+      <AppIcon
+        name={icon}
+        size={isMobile ? 28 : 34}
+        className={iconClassName}
+      />
+    </div>
+    <div
+      className={`mt-2 bg-pale-custard ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-2"} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] transition-colors`}
+    >
+      {name}
+    </div>
+  </div>
+);
 
 const Lobby: React.FC = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -125,40 +157,15 @@ const Lobby: React.FC = () => {
           >
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="flex flex-col items-center"
+              className="group"
             >
-              <div
-                className={`relative ${isMobile ? "w-28 h-40" : "w-48 h-64"} bg-[#FFE4E6] rounded-[20px] border-4 border-[#166D77] shadow-xl overflow-hidden flex items-center justify-center rotate-[-2deg] hover:rotate-0 transition-transform`}
-              >
-                {/* Paper Texture bg */}
-                <div
-                  className="absolute inset-0 bg-pale-custard"
-                  style={{
-                    backgroundImage:
-                      "radial-gradient(#eee 2px, transparent 2px)",
-                    backgroundSize: "10px 10px",
-                  }}
-                />
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                  <AppIcon
-                    name="Scissors"
-                    size={isMobile ? 28 : 40}
-                    className="text-[#166D77] drop-shadow-sm"
-                  />
-                  <span
-                    className={`bg-[#5EC7A5] text-pale-custard ${isMobile ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm"} font-black rotate-[-5deg] shadow-md border-2 border-pale-custard`}
-                  >
-                    PAPER
-                    <br />
-                    DOLL
-                  </span>
-                </div>
-              </div>
-              <div
-                className={`mt-2 bg-pale-custard ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-2"} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#5EC7A5] group-hover:text-pale-custard transition-colors`}
-              >
-                리코 옷입히기
-              </div>
+              <LobbyIconTile
+                name="리코 옷입히기"
+                icon="Scissors"
+                isMobile={isMobile}
+                className="border-[#166D77] bg-[#FFE4E6]"
+                iconClassName="text-[#166D77]"
+              />
             </motion.div>
           </Link>
 
@@ -173,24 +180,15 @@ const Lobby: React.FC = () => {
           >
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="flex flex-col items-center"
+              className="group"
             >
-              <div
-                className={`relative ${isMobile ? "w-36 h-20" : "w-64 h-32"} bg-pale-custard rounded-xl border-4 border-[#166D77] shadow-xl flex items-center justify-center overflow-visible`}
-              >
-                {/* Tablecloth */}
-                <div className="absolute top-0 w-full h-4 bg-[#fef2f2]" />
-                <AppIcon
-                  name="Handbag"
-                  size={isMobile ? 38 : 54}
-                  className="text-[#166D77] drop-shadow-md"
-                />
-              </div>
-              <div
-                className={`mt-2 bg-pale-custard ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-2"} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#5EC7A5] group-hover:text-pale-custard transition-colors`}
-              >
-                이타백 꾸미기
-              </div>
+              <LobbyIconTile
+                name="이타백 꾸미기"
+                icon="Handbag"
+                isMobile={isMobile}
+                className="border-[#166D77] bg-[#fff8e8]"
+                iconClassName="text-[#166D77]"
+              />
             </motion.div>
           </Link>
 
@@ -205,26 +203,19 @@ const Lobby: React.FC = () => {
           >
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="flex flex-col items-center"
+              className="group"
             >
-              <div
-                className={`relative overflow-hidden ${isMobile ? "w-24 h-24" : "w-40 h-40"} rounded-[1.75rem] border-4 border-[#166D77] shadow-xl flex items-center justify-center ${
+              <LobbyIconTile
+                name="퍼즐 맞추기"
+                icon="Puzzle"
+                isMobile={isMobile}
+                className={
                   isPuzzleMuseumUnlocked
-                    ? "bg-[#f5ecdd] p-[0.34rem]"
-                    : "bg-[#a3e635] p-4"
-                }`}
-              >
-                <AppIcon
-                  name="Puzzle"
-                  size={isMobile ? 34 : 58}
-                  className="text-[#166D77] drop-shadow-md"
-                />
-              </div>
-              <div
-                className={`mt-2 bg-pale-custard ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-2"} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#5EC7A5] group-hover:text-pale-custard transition-colors`}
-              >
-                퍼즐 맞추기
-              </div>
+                    ? "border-[#166D77] bg-[#f5ecdd]"
+                    : "border-[#166D77] bg-[#a3e635]"
+                }
+                iconClassName="text-[#166D77]"
+              />
             </motion.div>
           </Link>
 
@@ -239,47 +230,15 @@ const Lobby: React.FC = () => {
           >
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="flex flex-col items-center"
+              className="group"
             >
-              <div
-                className={`relative ${isMobile ? "w-28 h-20" : "w-52 h-32"} bg-[#d4edda] rounded-2xl border-4 border-[#166D77] shadow-xl flex flex-col items-center justify-center gap-1`}
-              >
-                {/* Asparagus tile grid preview */}
-                <div className="grid grid-cols-3 gap-1 p-2">
-                  {[
-                    "Sprout",
-                    "TrendingUp",
-                    "Leaf",
-                    "Flower2",
-                    "CircleDot",
-                    "Sword",
-                  ].map((iconName, i) => (
-                    <div
-                      key={i}
-                      className="w-7 h-7 rounded-lg flex items-center justify-center text-sm"
-                      style={{
-                        background: "#2d6a4f",
-                      }}
-                    >
-                      <AppIcon
-                        name={iconName as Parameters<typeof AppIcon>[0]["name"]}
-                        size={isMobile ? 12 : 14}
-                        className="text-[#f8fff0]"
-                        style={
-                          iconName === "CircleDot"
-                            ? { color: CIRCLE_DOT_RED }
-                            : undefined
-                        }
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div
-                className={`mt-2 bg-pale-custard ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-2"} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#5EC7A5] group-hover:text-pale-custard transition-colors`}
-              >
-                아스파라거스 키우기
-              </div>
+              <LobbyIconTile
+                name="아스파라거스 키우기"
+                icon="Sprout"
+                isMobile={isMobile}
+                className="border-[#166D77] bg-[#d4edda]"
+                iconClassName="text-[#2d6a4f]"
+              />
             </motion.div>
           </Link>
 
@@ -294,26 +253,15 @@ const Lobby: React.FC = () => {
           >
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="flex flex-col items-center"
+              className="group"
             >
-              <div
-                className={`relative ${isMobile ? "w-[5.5rem] h-28" : "w-32 h-44"} bg-[#D6C0B0] rounded-b-[2rem] rounded-t-lg border-4 border-[#8B5A2B] shadow-xl flex flex-col items-center justify-center`}
-              >
-                <div className={`absolute top-0 w-3/4 h-2 bg-[#8B5A2B]`} />
-                <AppIcon
-                  name="ScrollText"
-                  size={isMobile ? 36 : 48}
-                  className="text-[#8B5A2B] drop-shadow-md"
-                />
-                <div className="absolute inset-x-0 bottom-4 flex justify-center">
-                  <div className="w-4/5 h-1 bg-[#8B5A2B] opacity-30" />
-                </div>
-              </div>
-              <div
-                className={`mt-2 bg-pale-custard ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-2"} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#5EC7A5] group-hover:text-pale-custard transition-colors`}
-              >
-                오늘의 운세
-              </div>
+              <LobbyIconTile
+                name="오늘의 운세"
+                icon="ScrollText"
+                isMobile={isMobile}
+                className="border-[#8B5A2B] bg-[#D6C0B0]"
+                iconClassName="text-[#8B5A2B]"
+              />
             </motion.div>
           </Link>
 
@@ -327,25 +275,15 @@ const Lobby: React.FC = () => {
           >
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="flex flex-col items-center"
+              className="group"
             >
-              <div
-                className={`relative ${isMobile ? "w-36 h-20" : "w-56 h-28"} overflow-hidden rounded-[1.75rem] border-4 border-[#102542] bg-[linear-gradient(135deg,#102542_0%,#365486_55%,#f5e6ca_100%)] shadow-xl`}
-              >
-                <div className="absolute inset-x-0 bottom-0 h-10 bg-[#345b48]" />
-                <div className="absolute left-5 bottom-6 text-2xl drop-shadow-md text-white">
-                  <AppIcon name="Shield" size={isMobile ? 20 : 28} />
-                </div>
-                <div className="absolute right-5 top-4 text-3xl drop-shadow-md text-[#ffe08a]">
-                  <AppIcon name="Crown" size={isMobile ? 24 : 30} />
-                </div>
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.35),transparent_30%)]" />
-              </div>
-              <div
-                className={`mt-2 bg-pale-custard ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-2"} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] group-hover:bg-[#102542] group-hover:text-white transition-colors`}
-              >
-                용사 리코 이야기
-              </div>
+              <LobbyIconTile
+                name="용사 리코 이야기"
+                icon="Sword"
+                isMobile={isMobile}
+                className="border-[#102542] bg-[#d8e4f7]"
+                iconClassName="text-[#102542]"
+              />
             </motion.div>
           </Link>
         </div>

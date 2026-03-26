@@ -759,7 +759,7 @@ export default function AdventureSample() {
   return (
     <>
       <GameContainer
-        title="리코의 생일 질주"
+        title="용사 리코 이야기"
         desc="Birthday Cafe 톤으로 다시 꾸민 Pixi 러너 샘플"
         gameName="용사 리코 이야기"
         helpSlides={HELP_SLIDES}
