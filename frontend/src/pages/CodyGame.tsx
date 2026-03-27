@@ -28,6 +28,8 @@ import { PolaroidFrame } from "../components/game/PolaroidFrame";
 import { RainEffect } from "../components/game/RainEffect";
 import { ButterflyEffect } from "../components/game/ButterflyEffect";
 import { getInventoryPreviewLayout } from "../components/game/codyInventoryPreviewLayout";
+import { CodyActionBar } from "../components/game/CodyActionBar";
+import { CodyInventoryPanel } from "../components/game/CodyInventoryPanel";
 import { domToJpeg } from "modern-screenshot";
 import { startCodyAssetPreload } from "../utils/codyAssetPreload";
 import { AppIcon } from "../components/common/AppIcon";
@@ -721,289 +723,155 @@ const CodyGame: React.FC = () => {
               )}
             </div>
 
-            <div
-              className={`z-[100] flex gap-4 transition-opacity duration-1000 ${!showButtons ? "opacity-0 pointer-events-none" : "opacity-100"} ${isMobile ? "fixed bottom-4 left-0 right-0 justify-center" : "relative mt-8"}`}
-            >
-              <button onClick={handleReset} className="btn-secondary">
-                다시하기
-              </button>
+            <CodyActionBar
+              isFinished={isFinished}
+              isCapturing={isCapturing}
+              isMobile={isMobile}
+              showButtons={showButtons}
+              onReset={handleReset}
+              onPrimaryAction={() => {
+                if (!isFinished) {
+                  // Check for active combinations first
+                  const equippedIdsList = Object.values(equippedIds).filter(
+                    Boolean,
+                  ) as string[];
+                  const matchedCombo = combinations.find((combo) => {
+                    const hasAllRequired = combo.requiredItems.every((reqId) =>
+                      equippedIdsList.includes(reqId),
+                    );
+                    const hasNoExtras = equippedIdsList.every((eqId) =>
+                      combo.requiredItems.includes(eqId),
+                    );
+                    return hasAllRequired && hasNoExtras;
+                  });
 
-              <button
-                onClick={() => {
-                  if (!isFinished) {
-                    // Check for active combinations first
-                    const equippedIdsList = Object.values(equippedIds).filter(
-                      Boolean,
-                    ) as string[];
-                    const matchedCombo = combinations.find((combo) => {
-                      const hasAllRequired = combo.requiredItems.every(
-                        (reqId) => equippedIdsList.includes(reqId),
-                      );
-                      const hasNoExtras = equippedIdsList.every((eqId) =>
-                        combo.requiredItems.includes(eqId),
-                      );
-                      return hasAllRequired && hasNoExtras;
-                    });
-
-                    if (matchedCombo) {
-                      setTimeout(() => {
-                        setIsFinished(true);
-                        setResultImage(
-                          [
-                            "/assets/codygame/riko_body_smile.png",
-                            "/assets/codygame/riko_body_wink.png",
-                          ][Math.floor(Math.random() * 2)],
-                        );
-                        setActiveBackground(
-                          matchedCombo.backgroundClass ||
-                            matchedCombo.backgroundUrl ||
-                            null,
-                        );
-
-                        if (matchedCombo.backgroundClass === "oriental") {
-                          setOrientalBgUrl(
-                            [
-                              "/assets/codygame/background_2-1.jpg",
-                              "/assets/codygame/background_2-2.jpg",
-                              "/assets/codygame/background_2-3.jpg",
-                            ][Math.floor(Math.random() * 3)],
-                          );
-                        } else if (matchedCombo.backgroundClass === "spring") {
-                          setSpringFestivalBgUrl(
-                            [
-                              "/assets/codygame/background_1-1.jpg",
-                              "/assets/codygame/background_1-2.jpg",
-                              "/assets/codygame/background_1-3.jpg",
-                            ][Math.floor(Math.random() * 3)],
-                          );
-                        } else if (matchedCombo.backgroundClass === "rain") {
-                          setOrientalBgUrl(
-                            [
-                              "/assets/codygame/background_3-1.jpg",
-                              "/assets/codygame/background_3-2.jpg",
-                              "/assets/codygame/background_3-3.jpg",
-                            ][Math.floor(Math.random() * 3)],
-                          );
-                        } else if (matchedCombo.backgroundClass === "beer") {
-                          setOrientalBgUrl(
-                            [
-                              "/assets/codygame/background_4-1.jpg",
-                              "/assets/codygame/background_4-2.jpg",
-                              "/assets/codygame/background_4-3.jpg",
-                            ][Math.floor(Math.random() * 3)],
-                          );
-                        } else if (matchedCombo.backgroundClass === "knight") {
-                          setOrientalBgUrl(
-                            [
-                              "/assets/codygame/background_4-1.jpg",
-                              "/assets/codygame/background_4-2.jpg",
-                              "/assets/codygame/background_4-3.jpg",
-                            ][Math.floor(Math.random() * 3)],
-                          );
-                        }
-
-                        setShowInventory(false);
-                        setShowButtons(false);
-
-                        // 슬로우 페이드 인 (총 약 7.5~8초 소요)
-                        setTimeout(() => {
-                          setContentVisible(true);
-                          setTimeout(() => setShowButtons(true), 7500); // 애니메이션 끝난 후 버튼 표시
-                        }, 800);
-                      }, 100);
-                    } else {
-                      // No combo matched (그라데이션 배경)
+                  if (matchedCombo) {
+                    setTimeout(() => {
                       setIsFinished(true);
-                      setResultImage("/assets/codygame/riko_body_default.png");
+                      setResultImage(
+                        [
+                          "/assets/codygame/riko_body_smile.png",
+                          "/assets/codygame/riko_body_wink.png",
+                        ][Math.floor(Math.random() * 2)],
+                      );
+                      setActiveBackground(
+                        matchedCombo.backgroundClass ||
+                          matchedCombo.backgroundUrl ||
+                          null,
+                      );
 
-                      const gradients = [
-                        "linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)",
-                        "linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)",
-                        "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
-                        "linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)",
-                        "linear-gradient(135deg, #fdcbf1 0%, #e6dee9 100%)",
-                        "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
-                      ];
-
-                      const randomGradient =
-                        gradients[Math.floor(Math.random() * gradients.length)];
-                      setActiveBackground(randomGradient);
+                      if (matchedCombo.backgroundClass === "oriental") {
+                        setOrientalBgUrl(
+                          [
+                            "/assets/codygame/background_2-1.jpg",
+                            "/assets/codygame/background_2-2.jpg",
+                            "/assets/codygame/background_2-3.jpg",
+                          ][Math.floor(Math.random() * 3)],
+                        );
+                      } else if (matchedCombo.backgroundClass === "spring") {
+                        setSpringFestivalBgUrl(
+                          [
+                            "/assets/codygame/background_1-1.jpg",
+                            "/assets/codygame/background_1-2.jpg",
+                            "/assets/codygame/background_1-3.jpg",
+                          ][Math.floor(Math.random() * 3)],
+                        );
+                      } else if (matchedCombo.backgroundClass === "rain") {
+                        setOrientalBgUrl(
+                          [
+                            "/assets/codygame/background_3-1.jpg",
+                            "/assets/codygame/background_3-2.jpg",
+                            "/assets/codygame/background_3-3.jpg",
+                          ][Math.floor(Math.random() * 3)],
+                        );
+                      } else if (matchedCombo.backgroundClass === "beer") {
+                        setOrientalBgUrl(
+                          [
+                            "/assets/codygame/background_4-1.jpg",
+                            "/assets/codygame/background_4-2.jpg",
+                            "/assets/codygame/background_4-3.jpg",
+                          ][Math.floor(Math.random() * 3)],
+                        );
+                      } else if (matchedCombo.backgroundClass === "knight") {
+                        setOrientalBgUrl(
+                          [
+                            "/assets/codygame/background_4-1.jpg",
+                            "/assets/codygame/background_4-2.jpg",
+                            "/assets/codygame/background_4-3.jpg",
+                          ][Math.floor(Math.random() * 3)],
+                        );
+                      }
 
                       setShowInventory(false);
                       setShowButtons(false);
 
-                      // 패스트 페이드 인 (총 약 1.7~2초 소요)
                       setTimeout(() => {
                         setContentVisible(true);
-                        setTimeout(() => setShowButtons(true), 1500); // 빠른 연출 후 버튼 표시
-                      }, 400);
-                    }
+                        setTimeout(() => setShowButtons(true), 7500);
+                      }, 800);
+                    }, 100);
                   } else {
-                    void capturePolaroid();
+                    setIsFinished(true);
+                    setResultImage("/assets/codygame/riko_body_default.png");
+
+                    const gradients = [
+                      "linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)",
+                      "linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)",
+                      "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
+                      "linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)",
+                      "linear-gradient(135deg, #fdcbf1 0%, #e6dee9 100%)",
+                      "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+                    ];
+
+                    const randomGradient =
+                      gradients[Math.floor(Math.random() * gradients.length)];
+                    setActiveBackground(randomGradient);
+
+                    setShowInventory(false);
+                    setShowButtons(false);
+
+                    setTimeout(() => {
+                      setContentVisible(true);
+                      setTimeout(() => setShowButtons(true), 1500);
+                    }, 400);
                   }
-                }}
-                className={isCapturing ? "btn-disabled" : "btn-primary"}
-              >
-                {isCapturing
-                  ? "작업 중..."
-                  : isFinished
-                    ? "이미지 저장"
-                    : "코디 끝!"}
-              </button>
+                } else {
+                  void capturePolaroid();
+                }
+              }}
+              onShare={() => {
+                const shareData = {
+                  title: "유즈하 리코 생일 기념 코디 게임",
+                  text: "나만의 리코를 코디해봤어요! 여러분도 함께 축하해주세요.",
+                  url: window.location.origin,
+                };
 
-              {isFinished && (
-                <button
-                  onClick={() => {
-                    const shareData = {
-                      title: "유즈하 리코 생일 기념 코디 게임",
-                      text: "나만의 리코를 코디해봤어요! 여러분도 함께 축하해주세요.",
-                      url: window.location.origin,
-                    };
-
-                    if (navigator.share) {
-                      navigator
-                        .share(shareData)
-                        .catch((err) => console.log("Error sharing:", err));
-                    } else {
-                      navigator.clipboard
-                        .writeText(window.location.origin)
-                        .then(() =>
-                          alert("공유 링크가 클립보드에 복사되었습니다!"),
-                        )
-                        .catch(() => alert("공유 링크 복사에 실패했습니다."));
-                    }
-                  }}
-                  className="btn-secondary"
-                >
-                  <span className="inline-flex items-center gap-2">
-                    <AppIcon name="Share2" size={16} />
-                    공유하기
-                  </span>
-                </button>
-              )}
-            </div>
+                if (navigator.share) {
+                  navigator
+                    .share(shareData)
+                    .catch((err) => console.log("Error sharing:", err));
+                } else {
+                  navigator.clipboard
+                    .writeText(window.location.origin)
+                    .then(() => alert("공유 링크가 클립보드에 복사되었습니다!"))
+                    .catch(() => alert("공유 링크 복사에 실패했습니다."));
+                }
+              }}
+            />
           </div>
 
-          {/* Background/Right: Wardrobe */}
-          <div
-            className={`${isMobile ? `w-full ${showInventory ? "px-4" : "h-0 p-0"}` : "w-[65%] h-full"} flex flex-col transition-all duration-1000 ${showInventory ? "opacity-100" : "opacity-0 w-[0%] overflow-hidden pointer-events-none"}`}
-          >
-            {/* Mobile Tab UI - PC는 탭 없이 통합 뷰 제공 */}
-            {isMobile && !isFinished && (
-              <div className="relative z-50 flex mb-6 mt-4 mx-4 overflow-x-auto overflow-y-hidden gap-2 bg-transparent border-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {[
-                  { id: "hair", label: "헤어" },
-                  { id: "clothes", label: "의상" },
-                  { id: "shoes", label: "신발" },
-                  { id: "deco", label: "장식" },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={() => setActiveTab(tab.id as MobileTabId)}
-                    className={`relative z-50 shrink-0 whitespace-nowrap py-3 px-3 rounded-xl text-sm font-black transition-colors ${
-                      activeTab === tab.id
-                        ? "bg-[#166D77] text-pale-custard shadow-md"
-                        : "text-[#166D77]/60 hover:bg-pale-custard/50"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div
-              className={`flex-1 ${isMobile ? "pb-40" : "overflow-y-auto custom-scrollbar px-6 pb-20"} transition-opacity ${isFinished ? "opacity-30 pointer-events-none" : ""}`}
-            >
-              {inventorySections
-                .filter((section) => !isMobile || activeTab === section.tab)
-                .map((section) => {
-                  const sectionItems = availableItems
-                    .filter(section.filter)
-                    .sort((a, b) => {
-                      const widthDiff = getCardWidth(a.id) - getCardWidth(b.id);
-                      if (widthDiff !== 0) return widthDiff;
-                      return a.id.localeCompare(b.id);
-                    });
-                  const topSkirtItems =
-                    section.id === "dress"
-                      ? availableItems.filter((item) =>
-                          topSkirtIds.has(item.id),
-                        )
-                      : [];
-
-                  return (
-                    <div key={section.id} className="mb-0">
-                      <div
-                        className={`${
-                          section.id === "dress"
-                            ? "flex items-end overflow-visible px-4 pb-4"
-                            : `flex ${
-                                section.overlap
-                                  ? "overflow-visible flex-nowrap px-4 pb-4"
-                                  : "flex-wrap justify-start"
-                              }`
-                        }`}
-                      >
-                        <div
-                          className={`${
-                            section.id === "dress" ? "relative z-10 " : ""
-                          }flex ${
-                            section.overlap
-                              ? `${section.id === "shoes" ? "items-end " : ""}overflow-visible flex-nowrap`
-                              : "flex-wrap justify-start"
-                          }`}
-                        >
-                          {sectionItems.map((item, index) =>
-                            renderInventoryCard(
-                              item,
-                              index,
-                              sectionItems.length,
-                              section.overlap
-                                ? isMobile
-                                  ? section.mobileOverlapClass || "-ml-8"
-                                  : section.desktopOverlapClass || "-ml-12"
-                                : "",
-                            ),
-                          )}
-                        </div>
-
-                        {section.id === "dress" && topSkirtItems.length > 0 && (
-                          <div
-                            className={`relative flex shrink-0 self-end flex-col overflow-visible pb-2 ${
-                              section.overlap
-                                ? isMobile
-                                  ? section.mobileOverlapClass || "-ml-8"
-                                  : section.desktopOverlapClass || "-ml-12"
-                                : ""
-                            }`}
-                            style={{ zIndex: 0 }}
-                          >
-                            {topSkirtItems.map((item, index) =>
-                              renderInventoryCard(
-                                item,
-                                index,
-                                topSkirtItems.length,
-                                isMobile ? "-mt-12" : "-mt-16",
-                                item.id === "top_1"
-                                  ? isMobile
-                                    ? "-ml-1"
-                                    : "-ml-5"
-                                  : isMobile
-                                    ? "ml-2"
-                                    : "ml-5",
-                              ),
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
+          <CodyInventoryPanel
+            availableItems={availableItems}
+            activeTab={activeTab}
+            isFinished={isFinished}
+            isMobile={isMobile}
+            showInventory={showInventory}
+            sections={inventorySections}
+            topSkirtIds={topSkirtIds}
+            getCardWidth={getCardWidth}
+            renderInventoryCard={renderInventoryCard}
+            onTabChange={setActiveTab}
+          />
         </div>
       </GameContainer>
 

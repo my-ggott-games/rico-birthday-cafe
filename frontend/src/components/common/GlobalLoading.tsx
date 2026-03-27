@@ -50,10 +50,11 @@ const GlobalLoading: React.FC = () => {
     const types: ("rotate" | "zoom" | "bob")[] = ["rotate", "zoom", "bob"];
     setAnimationType(types[Math.floor(Math.random() * types.length)]);
 
-    // Choose a random loading message
-    const randomMsg =
-      LOADING_MESSAGES[Math.floor(Math.random() * LOADING_MESSAGES.length)];
-    setMessage(randomMsg);
+    const isLandingToLobby = prevPath === "/" && location.pathname === "/lobby";
+    const nextMessage = isLandingToLobby
+      ? LOADING_MESSAGES[0]
+      : LOADING_MESSAGES[Math.floor(Math.random() * LOADING_MESSAGES.length)];
+    setMessage(nextMessage);
 
     // Random duration between 3000ms (3s) and 5000ms (5s)
     const duration = Math.floor(Math.random() * 2000) + 3000;
