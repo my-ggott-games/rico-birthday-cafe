@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TutorialBanner } from "../common/TutorialBanner";
-import { TUTORIAL_SLIDES } from "./constants";
+import { ASPARAGUS_TUTORIAL_SLIDES } from "../../constants/tutorialSlides";
 
 export const TutorialModal: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -62,7 +62,7 @@ export const TutorialModal: React.FC = () => {
                 </button>
               </div>
               <TutorialBanner
-                slides={TUTORIAL_SLIDES}
+                slides={ASPARAGUS_TUTORIAL_SLIDES}
                 className="min-h-[300px] shadow-2xl rounded-3xl"
               />
             </motion.div>
@@ -79,7 +79,7 @@ export const Tutorial: React.FC = () => {
     <div className="flex flex-col items-center justify-center w-full h-full">
       <div className="w-full max-w-[400px]">
         <TutorialBanner
-          slides={TUTORIAL_SLIDES}
+          slides={ASPARAGUS_TUTORIAL_SLIDES}
           className="min-h-[300px] shadow-xl rounded-3xl"
         />
       </div>

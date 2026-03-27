@@ -1,5 +1,3 @@
-import { type TutorialSlide } from "../common/TutorialBanner";
-
 export const GRID_SIZE = 4;
 export const WIN_VALUE = 2048;
 
@@ -93,36 +91,3 @@ export const STAGES: Record<
     iconColor: "#ffffff",
   },
 };
-
-export const TUTORIAL_SLIDES: TutorialSlide[] = [
-  {
-    title: "아스파라거스를 키워보자",
-    titleIcon: "Sprout",
-    lines: ["화살표 버튼, 키보드, 모바일 스와이프 모두 OK!"],
-    showArrows: true,
-  },
-  {
-    title: "같은 단계를 합치면 성장해",
-    titleIcon: "Leaf",
-    lines: ["무럭무럭 잘 자란다구!"],
-    highlight: { a: "새싹", b: "새싹", result: "아기 순" },
-    showArrows: false,
-  },
-  {
-    title: "아스파라거스를 키우기 힘들다면...",
-    titleIcon: "Wrench",
-    lines: [
-      "비료를 사용해봐, 얼마 없으니 아껴써야 해!",
-      "되돌리기: 시간을 되돌려요.",
-      "바꾸기: 두 타일의 위치를 바꿔요.",
-    ],
-    showArrows: false,
-  },
-  {
-    title: "여기 아스파라거스 씨앗, 잘 부탁해!",
-    titleIcon: "Sprout",
-    lines: ["아스파라거스를 끝까지 키우면 좋은 일이 생길지도?"],
-    highlight: null,
-    showArrows: false,
-  },
-];

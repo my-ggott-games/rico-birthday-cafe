@@ -47,6 +47,7 @@ export function AdventureModal({
             <button
               key={action.label}
               type="button"
+              data-ui-control="true"
               onClick={action.onClick}
               className={`rounded-[1.2rem] px-5 py-4 text-sm font-black transition-transform hover:scale-[1.01] ${
                 action.tone === "secondary"

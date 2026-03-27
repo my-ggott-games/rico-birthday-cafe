@@ -42,6 +42,8 @@ import {
   TrendingUp,
   Trophy,
   Utensils,
+  Volume2,
+  VolumeX,
   WandSparkles,
   Wrench,
 } from "lucide-react";
@@ -88,6 +90,8 @@ const APP_ICONS = {
   TrendingUp,
   Trophy,
   Utensils,
+  Volume2,
+  VolumeX,
   WandSparkles,
   Wrench,
 };

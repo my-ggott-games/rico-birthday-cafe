@@ -54,12 +54,6 @@ const CREDITS_SECTIONS = [
   },
 ];
 
-// Placeholder illustrations to cycle on PC
-const ILLUSTRATION_IMAGES = [
-  "/assets/illustration1.png", // Replace with actual paths if available
-  "/assets/illustration2.png",
-];
-
 const BGM_SRC = encodeURI("/밤바밤바.m4a");
 const CLAIM_ALERT_THRESHOLD = 0.33;
 const CREDITS_BOTTOM_PADDING = 140;
@@ -70,7 +64,6 @@ export default function Credits() {
   const { token } = useAuthStore();
   const [claimed, setClaimed] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
   const [needsManualStart, setNeedsManualStart] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -84,16 +77,6 @@ export default function Credits() {
   const claimButtonRef = useRef<HTMLButtonElement>(null);
   const creditsViewportRef = useRef<HTMLDivElement>(null);
   const creditsTrackRef = useRef<HTMLDivElement>(null);
-
-  // Swap illustration every 8 seconds (slowed down for gentler pacing)
-  useEffect(() => {
-    if (!hasStarted) return;
-
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % ILLUSTRATION_IMAGES.length);
-    }, 8000);
-    return () => clearInterval(interval);
-  }, [hasStarted]);
 
   useEffect(() => {
     setNeedsManualStart(true);
@@ -120,10 +103,12 @@ export default function Credits() {
         creditsViewportRef.current?.clientHeight ?? window.innerHeight;
       const trackHeight =
         creditsTrackRef.current?.scrollHeight ?? viewportHeight;
-      const travelDistance = viewportHeight + trackHeight + CREDITS_BOTTOM_PADDING;
+      const startOffset = Math.min(viewportHeight * 0.38, 280);
+      const travelDistance =
+        startOffset + trackHeight + CREDITS_BOTTOM_PADDING;
 
       setCreditsMotion({
-        startY: viewportHeight,
+        startY: startOffset,
         endY: -trackHeight - CREDITS_BOTTOM_PADDING,
         duration: Math.max(travelDistance / CREDITS_SCROLL_SPEED_PX, 45),
       });
@@ -251,10 +236,10 @@ export default function Credits() {
       <style>{`
         @keyframes credits-roll {
           from {
-            transform: translate3d(-50%, var(--credits-start-y), 0);
+            transform: translate3d(0, var(--credits-start-y), 0);
           }
           to {
-            transform: translate3d(-50%, var(--credits-end-y), 0);
+            transform: translate3d(0, var(--credits-end-y), 0);
           }
         }
       `}</style>
@@ -274,51 +259,30 @@ export default function Credits() {
           className="absolute right-4 top-4 z-50 flex items-center gap-2 rounded-xl border-2 border-[#5EC7A5] bg-white/90 px-4 py-2 text-sm font-bold text-[#166D77] shadow-[0_10px_30px_rgba(22,109,119,0.14)]"
           aria-label={isMuted ? "Unmute credits music" : "Mute credits music"}
         >
-          <span className="text-base">{isMuted ? "🔇" : "🔊"}</span>
+          <AppIcon
+            name={isMuted ? "VolumeX" : "Volume2"}
+            size={18}
+            strokeWidth={2.2}
+          />
           <span>{isMuted ? "Unmute" : "Mute"}</span>
         </button>
       )}
 
-      <div className="flex-1 flex flex-col md:flex-row h-screen">
-        {/* Visual Pane (PC only) */}
-        <div className="relative hidden h-full w-1/2 items-center justify-center border-r border-[#166D77]/10 bg-[linear-gradient(180deg,#fff7db_0%,#e5fff5_100%)] p-10 md:flex">
-          {/* Placeholder image cycling */}
-          <motion.div
-            key={currentImageIndex}
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.5 }}
-            className="w-full h-full bg-contain bg-center bg-no-repeat"
-            style={{
-              // Just a visual placeholder until actual assets are provided
-              backgroundImage: `linear-gradient(to bottom right, #fef3c7, #cffafe)`,
-            }}
-          >
-            <div className="flex h-full w-full items-center justify-center text-4xl font-bold text-[#166D77]/30">
-              Illustration {currentImageIndex + 1}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Credits Scroll Pane */}
-        {/* Container masks the scroll. */}
+      <div className="flex h-screen flex-1">
         <div
           ref={creditsViewportRef}
-          className="relative flex h-full w-full justify-center overflow-hidden md:w-1/2"
+          className="relative flex h-full w-full justify-center overflow-hidden"
         >
-          {/* Mobile background (dimmed) */}
-          <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#fef3c7]/60 via-[#f0fdf4] to-[#e0f2fe] md:hidden" />
+          <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#fef3c7]/45 via-[#f0fdf4] to-[#e0f2fe]" />
 
           <div
-            ref={creditsTrackRef}
             key={`${hasStarted}-${creditsMotion.startY}-${creditsMotion.endY}-${creditsMotion.duration}`}
-            className="absolute left-1/2 top-0 z-10 flex w-full max-w-lg -translate-x-1/2 flex-col items-center px-8 text-center"
+            className="absolute inset-x-0 top-0 z-10 flex justify-center px-3 sm:px-6"
             style={
               {
                 "--credits-start-y": `${creditsMotion.startY}px`,
                 "--credits-end-y": `${creditsMotion.endY}px`,
-                transform: `translate3d(-50%, ${creditsMotion.startY}px, 0)`,
+                transform: `translate3d(0, ${creditsMotion.startY}px, 0)`,
                 animation: hasStarted
                   ? `credits-roll ${creditsMotion.duration}s linear forwards`
                   : "none",
@@ -326,76 +290,81 @@ export default function Credits() {
               } as CSSProperties
             }
           >
-            {/* Title Space */}
-            <div className="pt-32 pb-40">
-              <h1 className="mb-4 text-4xl font-black text-[#166D77] md:text-5xl">
-                THANK YOU
-              </h1>
-              <p className="font-bold tracking-widest text-[#2a9d8f]">
-                FOR COMING TO RICO'S BIRTHDAY CAFE
-              </p>
-            </div>
-
-            {/* Sections */}
-            {CREDITS_SECTIONS.map((section, idx) => (
-              <div key={idx} className="mb-24 w-full">
-                <h2 className="mb-6 text-xl font-bold uppercase tracking-wider text-[#2a9d8f] md:text-2xl">
-                  {section.title}
-                </h2>
-                <div className="flex flex-col gap-4">
-                  {section.names.map((name, i) => (
-                    <p
-                      key={i}
-                      className="text-lg font-medium text-[#365486] md:text-xl"
-                    >
-                      {name}
-                    </p>
-                  ))}
-                </div>
+            <div
+              ref={creditsTrackRef}
+              className="flex w-full max-w-4xl flex-col items-center text-center"
+            >
+              {/* Title Space */}
+              <div className="pb-40 pt-32">
+                <h1 className="mb-4 text-4xl font-black text-[#166D77] md:text-5xl">
+                  THANK YOU
+                </h1>
+                <p className="font-bold tracking-widest text-[#2a9d8f]">
+                  FOR COMING TO RICO'S BIRTHDAY CAFE
+                </p>
               </div>
-            ))}
 
-            {/* Final message & Achievement Button */}
-            <div className="pt-32 pb-[50vh] flex flex-col items-center">
-              <h2 className="mb-10 text-3xl font-black text-[#102542]">And You</h2>
+              {/* Sections */}
+              {CREDITS_SECTIONS.map((section, idx) => (
+                <div key={idx} className="mb-24 w-full">
+                  <h2 className="mb-6 text-xl font-bold uppercase tracking-wider text-[#2a9d8f] md:text-2xl">
+                    {section.title}
+                  </h2>
+                  <div className="flex flex-col items-center gap-4">
+                    {section.names.map((name, i) => (
+                      <p
+                        key={i}
+                        className="mx-auto max-w-full text-lg font-medium text-[#365486] md:text-xl"
+                      >
+                        {name}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              ))}
 
-              {!claimed ? (
-                <motion.button
-                  ref={claimButtonRef}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  animate={
-                    highlightClaim
-                      ? { x: [0, -6, 6, -5, 5, -3, 3, 0] }
-                      : { x: 0 }
-                  }
-                  transition={
-                    highlightClaim
-                      ? { duration: 0.55, repeat: Infinity, ease: "easeInOut" }
-                      : { duration: 0.2 }
-                  }
-                  onClick={awardAchievement}
-                  disabled={loading}
-                  className="flex items-center gap-3 px-8 py-4 rounded-full font-black text-lg shadow-[0_0_30px_rgba(94,199,165,0.4)] border-2 transition-all hover:bg-[#5EC7A5] hover:text-[#166D77]"
-                  style={{
-                    background: "rgba(255,255,255,0.9)",
-                    color: "#166D77",
-                    borderColor: "#5EC7A5",
-                  }}
-                >
-                  <AppIcon name="Clapperboard" size={24} />
-                  {loading ? "기록 중..." : "엔딩 크레딧 시청 완료 배지 받기"}
-                </motion.button>
-              ) : (
-                <motion.div
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="px-8 py-4 rounded-full font-black text-lg bg-[#5EC7A5] text-[#166D77] flex items-center gap-2"
-                >
-                  <AppIcon name="BadgeCheck" size={20} /> 감사합니다! 배지가
-                  지급되었습니다.
-                </motion.div>
-              )}
+              {/* Final message & Achievement Button */}
+              <div className="flex flex-col items-center pt-32 pb-[50vh]">
+                <h2 className="mb-10 text-3xl font-black text-[#102542]">And You</h2>
+
+                {!claimed ? (
+                  <motion.button
+                    ref={claimButtonRef}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    animate={
+                      highlightClaim
+                        ? { x: [0, -6, 6, -5, 5, -3, 3, 0] }
+                        : { x: 0 }
+                    }
+                    transition={
+                      highlightClaim
+                        ? { duration: 0.55, repeat: Infinity, ease: "easeInOut" }
+                        : { duration: 0.2 }
+                    }
+                    onClick={awardAchievement}
+                    disabled={loading}
+                    className="flex items-center gap-3 rounded-full border-2 px-8 py-4 text-lg font-black shadow-[0_0_30px_rgba(94,199,165,0.4)] transition-all hover:bg-[#5EC7A5] hover:text-[#166D77]"
+                    style={{
+                      background: "rgba(255,255,255,0.9)",
+                      color: "#166D77",
+                      borderColor: "#5EC7A5",
+                    }}
+                  >
+                    <AppIcon name="Clapperboard" size={24} />
+                    {loading ? "기록 중..." : "엔딩 크레딧 시청 완료 배지 받기"}
+                  </motion.button>
+                ) : (
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="flex items-center gap-2 rounded-full bg-[#5EC7A5] px-8 py-4 text-lg font-black text-[#166D77]"
+                  >
+                    <AppIcon name="BadgeCheck" size={20} /> 감사합니다! 배지가
+                    지급되었습니다.
+                  </motion.div>
+                )}
+              </div>
             </div>
           </div>
         </div>

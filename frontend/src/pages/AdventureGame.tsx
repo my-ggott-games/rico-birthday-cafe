@@ -8,7 +8,43 @@ import { useToastStore } from "../store/useToastStore";
 import type { Phase, PositionedHole, RunState, Hole } from "../types/adventure";
 import { AdventureGameView } from "../components/game/AdventureGameView";
 
+declare global {
+  interface Window {
+    YT?: YouTubeNamespace;
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
+
+type PlayerInstance = {
+  destroy: () => void;
+  pauseVideo: () => void;
+  playVideo: () => void;
+  seekTo: (seconds: number, allowSeekAhead?: boolean) => void;
+};
+
+type PlayerStateValue = -1 | 0 | 1 | 2 | 3 | 5;
+
+type YouTubeNamespace = {
+  Player: new (
+    elementId: string,
+    config: {
+      height?: number | string;
+      width?: number | string;
+      videoId: string;
+      playerVars?: Record<string, number | string>;
+      events?: {
+        onReady?: (event: { target: PlayerInstance }) => void;
+        onStateChange?: (event: {
+          data: PlayerStateValue;
+          target: PlayerInstance;
+        }) => void;
+      };
+    },
+  ) => PlayerInstance;
+};
+
 const BEST_SCORE_KEY = "rico-adventure-best-score";
+const YOUTUBE_VIDEO_ID = "J3B0k47f0Fs";
 const COURSE_LENGTH = 440;
 const PLAYER_X = 72;
 const PIXELS_PER_SECOND = 160;
@@ -387,6 +423,7 @@ const getStageSpeedMultiplier = (phaseId: number): number =>
 export default function AdventureGame() {
   const { token } = useAuthStore();
   const { addToast } = useToastStore();
+  const musicPlayerRef = useRef<PlayerInstance | null>(null);
   const rafRef = useRef<number | null>(null);
   const lastFrameTsRef = useRef<number | null>(null);
   const lastHudUpdateRef = useRef(0);
@@ -398,7 +435,12 @@ export default function AdventureGame() {
   const fallingHoleKeyRef = useRef<string | null>(null);
   const runStateRef = useRef<RunState>("ready");
   const courseTimeRef = useRef(0);
+  const pendingMusicStartRef = useRef(false);
+  const pendingMusicStartTimeRef = useRef(0);
+  const intentionalMusicPauseRef = useRef(false);
 
+  const [apiReady, setApiReady] = useState(false);
+  const [playerReady, setPlayerReady] = useState(false);
   const [runState, setRunState] = useState<RunState>("ready");
   const [hudCourseTime, setHudCourseTime] = useState(0);
   const [bestScore, setBestScore] = useState(() => getSavedBestScore());
@@ -445,6 +487,98 @@ export default function AdventureGame() {
   useEffect(() => {
     runStateRef.current = runState;
   }, [runState]);
+
+  useEffect(() => {
+    if (window.YT?.Player) {
+      setApiReady(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://www.youtube.com/iframe_api";
+    script.async = true;
+
+    const previousHandler = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      previousHandler?.();
+      setApiReady(true);
+    };
+
+    document.body.appendChild(script);
+
+    return () => {
+      window.onYouTubeIframeAPIReady = previousHandler;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!apiReady || musicPlayerRef.current || !window.YT?.Player) {
+      return;
+    }
+
+    musicPlayerRef.current = new window.YT.Player("rico-adventure-player", {
+      height: 1,
+      width: 1,
+      videoId: YOUTUBE_VIDEO_ID,
+      playerVars: {
+        autoplay: 0,
+        controls: 0,
+        disablekb: 1,
+        fs: 0,
+        iv_load_policy: 3,
+        rel: 0,
+        modestbranding: 1,
+        playsinline: 1,
+        enablejsapi: 1,
+        origin: window.location.origin,
+      },
+      events: {
+        onReady: (event) => {
+          setPlayerReady(true);
+
+          if (pendingMusicStartRef.current) {
+            event.target.seekTo(pendingMusicStartTimeRef.current, true);
+            event.target.playVideo();
+            pendingMusicStartRef.current = false;
+          }
+        },
+        onStateChange: (event) => {
+          if (
+            event.data === 2 &&
+            runStateRef.current === "running" &&
+            !intentionalMusicPauseRef.current
+          ) {
+            event.target.playVideo();
+          }
+        },
+      },
+    });
+
+    return () => {
+      musicPlayerRef.current?.destroy();
+      musicPlayerRef.current = null;
+    };
+  }, [apiReady]);
+
+  const playMusicFromTime = (time: number) => {
+    pendingMusicStartRef.current = true;
+    pendingMusicStartTimeRef.current = Math.max(0, time);
+    intentionalMusicPauseRef.current = false;
+
+    if (!playerReady || !musicPlayerRef.current) {
+      return;
+    }
+
+    musicPlayerRef.current.seekTo(pendingMusicStartTimeRef.current, true);
+    musicPlayerRef.current.playVideo();
+    pendingMusicStartRef.current = false;
+  };
+
+  const pauseMusic = () => {
+    pendingMusicStartRef.current = false;
+    intentionalMusicPauseRef.current = true;
+    musicPlayerRef.current?.pauseVideo();
+  };
 
   useEffect(() => {
     if (runState !== "running") {
@@ -641,6 +775,12 @@ export default function AdventureGame() {
     );
   }, [addToast, runState, token]);
 
+  useEffect(() => {
+    if (runState === "gameover" || runState === "completed") {
+      pauseMusic();
+    }
+  }, [runState]);
+
   const resetRun = () => {
     const nextHoles = buildHoleCourse();
 
@@ -688,11 +828,13 @@ export default function AdventureGame() {
     setHudCourseTime(time);
     setDeathMessage(DEFAULT_DEATH_MESSAGE);
     courseTimeRef.current = time;
+    playMusicFromTime(time);
     setRunState("running");
   };
 
   const handleStart = () => {
     resetRun();
+    playMusicFromTime(0);
     setRunState("running");
   };
 
@@ -703,12 +845,14 @@ export default function AdventureGame() {
 
   const handlePauseToggle = () => {
     if (runState === "running") {
+      pauseMusic();
       setRunState("paused");
       return;
     }
 
     if (runState === "paused") {
       lastFrameTsRef.current = null;
+      playMusicFromTime(courseTimeRef.current);
       setRunState("running");
     }
   };
@@ -773,32 +917,39 @@ export default function AdventureGame() {
             : "Ready";
 
   return (
-    <AdventureGameView
-      statusLabel={statusLabel}
-      bestScore={bestScore}
-      currentScore={currentScore}
-      hudCourseTime={hudCourseTime}
-      totalDuration={PHASES[PHASES.length - 1].end}
-      courseLength={COURSE_LENGTH}
-      phase={phase}
-      overallCourseProgress={overallCourseProgress}
-      runState={runState}
-      pauseModalActions={pauseModalActions}
-      gameOverModalActions={gameOverModalActions}
-      onPauseToggle={handlePauseToggle}
-      onJumpInput={handleJumpInput}
-      onStart={handleStart}
-      deathMessage={deathMessage}
-      holes={holesWithPosition}
-      courseTimeRef={courseTimeRef}
-      playerYRef={playerYRef}
-      phaseProgress={phaseProgress}
-      helpSlides={ADVENTURE_TUTORIAL_SLIDES}
-      formatTime={formatTime}
-      playerX={PLAYER_X}
-      pixelsPerSecond={PIXELS_PER_SECOND}
-      phases={PHASES}
-      unlockedPhaseId={unlockedPhaseId}
-    />
+    <>
+      <AdventureGameView
+        statusLabel={statusLabel}
+        bestScore={bestScore}
+        currentScore={currentScore}
+        hudCourseTime={hudCourseTime}
+        totalDuration={PHASES[PHASES.length - 1].end}
+        courseLength={COURSE_LENGTH}
+        phase={phase}
+        overallCourseProgress={overallCourseProgress}
+        runState={runState}
+        pauseModalActions={pauseModalActions}
+        gameOverModalActions={gameOverModalActions}
+        onPauseToggle={handlePauseToggle}
+        onJumpInput={handleJumpInput}
+        onStart={handleStart}
+        deathMessage={deathMessage}
+        holes={holesWithPosition}
+        courseTimeRef={courseTimeRef}
+        playerYRef={playerYRef}
+        phaseProgress={phaseProgress}
+        helpSlides={ADVENTURE_TUTORIAL_SLIDES}
+        formatTime={formatTime}
+        playerX={PLAYER_X}
+        pixelsPerSecond={PIXELS_PER_SECOND}
+        phases={PHASES}
+        unlockedPhaseId={unlockedPhaseId}
+      />
+      <div
+        id="rico-adventure-player"
+        aria-hidden="true"
+        className="pointer-events-none fixed -left-[9999px] top-0 h-px w-px overflow-hidden opacity-0"
+      />
+    </>
   );
 }

@@ -6,8 +6,8 @@ import { Items } from "../components/asparagus/Items";
 import { GameContainer } from "../components/common/GameContainer";
 import { useAsparagusGame } from "../hooks/useAsparagusGame";
 import { type Direction } from "../components/asparagus/types";
-import { TUTORIAL_SLIDES } from "../components/asparagus/constants";
 import { AppIcon } from "../components/common/AppIcon";
+import { ASPARAGUS_TUTORIAL_SLIDES } from "../constants/tutorialSlides";
 
 const ScoreCard = ({
   label,
@@ -100,7 +100,7 @@ const AsparagusMerge: React.FC = () => {
       title="아스파라거스 키우기"
       desc="아스파라거스도 리코도 건강만 해다오"
       gameName="아스파라거스 키우기"
-      helpSlides={TUTORIAL_SLIDES}
+      helpSlides={ASPARAGUS_TUTORIAL_SLIDES}
       className="select-none"
     >
       {/* ─── Main Content: Horizontal 3 DIV ─── */}

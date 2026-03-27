@@ -17,8 +17,6 @@ import type {
   MobileTabId,
 } from "../components/game/codyTypes";
 import { GameContainer } from "../components/common/GameContainer";
-import type { TutorialSlide } from "../components/common/TutorialBanner";
-
 import {
   SpringEffect,
   SpringFestivalPetals,
@@ -33,6 +31,7 @@ import { CodyInventoryPanel } from "../components/game/CodyInventoryPanel";
 import { domToJpeg } from "modern-screenshot";
 import { startCodyAssetPreload } from "../utils/codyAssetPreload";
 import { AppIcon } from "../components/common/AppIcon";
+import { CODY_TUTORIAL_SLIDES } from "../constants/tutorialSlides";
 
 type ShareNavigator = Navigator & {
   canShare?: (data?: ShareData) => boolean;
@@ -181,35 +180,6 @@ const combinations: Combination[] = [
     name: "training",
     requiredItems: ["deco_6-1", "dress_5", "hair_1-5", "shoes_2"],
     backgroundClass: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
-  },
-];
-
-const CODY_TUTORIAL_SLIDES: TutorialSlide[] = [
-  {
-    title: "옷을 고르자!",
-    lines: [
-      "PC: 아이템을 드래그해서 코디 존에 넣어봐!",
-      "모바일: 아이템을 탭해봐!",
-    ],
-    showArrows: false,
-  },
-  {
-    title: "코디가 끝났다면",
-    lines: ['"코디 끝!" 버튼을 눌러줘.', "사진을 찍어줄게!"],
-    showArrows: false,
-  },
-  {
-    title: "사진을 저장하자!",
-    lines: ["코디가 끝나면 이미지 저장 버튼으로", "추억을 남기자!"],
-    showArrows: false,
-  },
-  {
-    title: "장착 규칙 확인",
-    lines: [
-      "dress는 top, skirt와 함께 입을 수 없어.",
-      "deco는 같은 번호끼리만 서로 교체돼.",
-    ],
-    showArrows: false,
   },
 ];
 

@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GameContainer } from "../components/common/GameContainer";
-import type { TutorialSlide } from "../components/common/TutorialBanner";
 import { useAuthStore } from "../store/useAuthStore";
 import { BASE_URL } from "../utils/api";
 import { useToastStore } from "../store/useToastStore";
 import { AppIcon } from "../components/common/AppIcon";
+import { FORTUNE_TUTORIAL_SLIDES } from "../constants/tutorialSlides";
 
 // ---------------------------------------------------------
 // Types & Data
@@ -61,24 +61,6 @@ const FORTUNE_DATA: FortuneResult[] = [
     bgColor: "bg-gradient-to-br from-gray-300 to-gray-500",
     textColor: "text-gray-900",
     isGreatLuck: false,
-  },
-];
-
-const FORTUNE_TUTORIAL_SLIDES: TutorialSlide[] = [
-  {
-    title: "오늘의 운세",
-    titleIcon: "ScrollText",
-    lines: ["통을 클릭하거나 버튼을 눌러 운세를 뽑아보세요."],
-    showArrows: false,
-  },
-  {
-    title: "대길 업적",
-    titleIcon: "Sparkles",
-    lines: [
-      "대길을 뽑으면 업적이 지급돼요.",
-      "원할 때 다시 뽑아서 오늘의 기분을 확인해요.",
-    ],
-    showArrows: false,
   },
 ];
 

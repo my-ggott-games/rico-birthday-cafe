@@ -43,7 +43,6 @@ function App() {
             <Route path="/sample/cody" element={<CodySample />} />
             <Route path="/game/itabag" element={<ItabagGame />} />
             <Route path="/game/fortune" element={<FortuneGame />} />
-            {/* <Route path="/game/adventure" element={<AdventureGame />} /> */}
             <Route path="/game/adventure" element={<AdventureSample />} />
             <Route path="/sample/adventure" element={<AdventureSample />} />
             <Route path="/game/puzzle" element={<PuzzleGame />} />

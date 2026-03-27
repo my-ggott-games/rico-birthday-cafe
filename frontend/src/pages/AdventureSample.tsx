@@ -11,13 +11,45 @@ import {
   Assets,
   Container as PixiContainer,
   Graphics as PixiGraphics,
+  Rectangle,
   Sprite as PixiSprite,
   Text as PixiText,
   Texture,
   Ticker,
 } from "pixi.js";
 import { GameContainer } from "../components/common/GameContainer";
-import type { TutorialSlide } from "../components/common/TutorialBanner";
+import {
+  AdventureModal,
+  type AdventureModalAction,
+} from "../components/game/AdventureModal";
+import { ADVENTURE_SAMPLE_HELP_SLIDES } from "../constants/tutorialSlides";
+
+type SamplePlayerInstance = {
+  destroy: () => void;
+  pauseVideo: () => void;
+  playVideo: () => void;
+  seekTo: (seconds: number, allowSeekAhead?: boolean) => void;
+};
+
+type SampleYouTubeNamespace = {
+  Player: new (
+    elementId: string,
+    config: {
+      height?: number | string;
+      width?: number | string;
+      videoId: string;
+      playerVars?: Record<string, number | string>;
+      events?: {
+        onReady?: (event: { target: SamplePlayerInstance }) => void;
+      };
+    },
+  ) => SamplePlayerInstance;
+};
+
+type SampleYouTubeWindow = Window & {
+  YT?: SampleYouTubeNamespace;
+  onYouTubeIframeAPIReady?: () => void;
+};
 
 extend({
   Container: PixiContainer,
@@ -30,12 +62,16 @@ const STAGE_WIDTH = 800;
 const STAGE_HEIGHT = 400;
 const GROUND_Y = 318;
 const PLAYER_X = 138;
-const PLAYER_SIZE = 64;
 const GRAVITY = 2200;
-const JUMP_FORCE = 860;
+const JUMP_FORCES = [650, 530, 450];
 const MAX_JUMPS = 2;
 const COYOTE_TIME_SECONDS = 0.12;
-const PLAYER_IMAGE = "/assets/adventure_character_sample.png";
+const PLAYER_SPRITE_SHEET_PATH = "/assets/adventuregame/1172-Sheet.png";
+const PLAYER_FRAME_SIZE = 2000;
+const PLAYER_FRAME_COUNT = 6;
+const PLAYER_ANIMATION_FPS = 10;
+const PLAYER_RENDER_SIZE = 156;
+const PLAYER_RENDER_SCALE = PLAYER_RENDER_SIZE / PLAYER_FRAME_SIZE;
 const SCROLL_SPEED = 330;
 const HOLE_MIN_WIDTH = 144;
 const HOLE_MAX_WIDTH = 220;
@@ -44,6 +80,17 @@ const FALL_OUT_THRESHOLD = 240;
 const SCORE_TICK_INTERVAL_SECONDS = 1;
 const SCORE_STEP = 10;
 const BEST_SCORE_KEY = "birthday-cafe-adventure-sample-best";
+const YOUTUBE_VIDEO_ID = "J3B0k47f0Fs";
+
+const SAMPLE_PHASES = [
+  { id: 1, title: "1장 - 용사 리코 이야기", start: 0, end: 39, theme: "서막" },
+  { id: 2, title: "2장 - 모험의 시작", start: 39, end: 121, theme: "모험의 시작" },
+  { id: 3, title: "3장", start: 121, end: 214, theme: "숲" },
+  { id: 4, title: "4장", start: 214, end: 282, theme: "던전" },
+  { id: 5, title: "5장", start: 282, end: 310, theme: "결투" },
+  { id: 6, title: "6장", start: 310, end: 388, theme: "승리" },
+  { id: 7, title: "7장", start: 388, end: 433, theme: "엔딩" },
+];
 
 type Hole = {
   id: number;
@@ -53,35 +100,26 @@ type Hole = {
 
 type RunState = "ready" | "running" | "paused" | "gameover";
 
-const HELP_SLIDES: TutorialSlide[] = [
-  {
-    title: "용사 리코 이야기",
-    lines: [
-      "이세계 용사 리코와 함께 모험을 떠나자!",
-      "화면을 탭하면 점프 할 수 있어",
-    ],
-    showArrows: false,
-  },
-  {
-    title: "함정에 빠지지 않게 조심해!",
-    lines: [
-      "함정에 빠지면 우리의 모험이 끝나버려...",
-      "함정을 잘 피해서 달려보자!",
-    ],
-    showArrows: false,
-  },
-  {
-    title: "점프는 2번까지 할 수 있어",
-    lines: ["힘내서 마왕을 무찌르자!"],
-    showArrows: false,
-  },
-];
-
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
 
 const randomBetween = (min: number, max: number) =>
   min + Math.random() * (max - min);
+
+const formatTime = (seconds: number): string => {
+  const safeSeconds = Math.max(0, Math.floor(seconds));
+  const minutes = Math.floor(safeSeconds / 60);
+  const remain = safeSeconds % 60;
+  return `${minutes}:${remain.toString().padStart(2, "0")}`;
+};
+
+const getJumpForce = (jumpCount: number) =>
+  JUMP_FORCES[jumpCount - 1] ??
+  Math.max(
+    380,
+    JUMP_FORCES[JUMP_FORCES.length - 1] -
+      (jumpCount - JUMP_FORCES.length) * 55,
+  );
 
 const isPlayerOverHole = (holes: Hole[]) =>
   holes.some((hole) => hole.x < PLAYER_X && PLAYER_X < hole.x + hole.width);
@@ -91,6 +129,22 @@ const createHole = (id: number, startX: number): Hole => ({
   x: startX,
   width: Math.round(randomBetween(HOLE_MIN_WIDTH, HOLE_MAX_WIDTH)),
 });
+
+const buildPlayerFrames = (sheetTexture: Texture): Texture[] =>
+  Array.from({ length: PLAYER_FRAME_COUNT }, (_, index) => {
+    const frame = new Rectangle(
+      index * PLAYER_FRAME_SIZE,
+      0,
+      PLAYER_FRAME_SIZE,
+      PLAYER_FRAME_SIZE,
+    );
+
+    return new Texture({
+      source: sheetTexture.source,
+      frame,
+      orig: new Rectangle(0, 0, PLAYER_FRAME_SIZE, PLAYER_FRAME_SIZE),
+    });
+  });
 
 type RunnerSceneProps = {
   runState: RunState;
@@ -107,7 +161,7 @@ function RunnerScene({
   onScoreChange,
   onGameOver,
 }: RunnerSceneProps) {
-  const [texture, setTexture] = useState<Texture | null>(null);
+  const [playerFrames, setPlayerFrames] = useState<Texture[]>([]);
   const worldRef = useRef<PixiGraphics | null>(null);
   const shadowRef = useRef<PixiGraphics | null>(null);
   const playerRef = useRef<PixiSprite | null>(null);
@@ -124,13 +178,14 @@ function RunnerScene({
   const scoreRef = useRef(0);
   const scoreTickTimerRef = useRef(0);
   const gameOverSentRef = useRef(false);
+  const animationElapsedRef = useRef(0);
 
   useEffect(() => {
     let mounted = true;
 
-    void Assets.load<Texture>(PLAYER_IMAGE).then((loadedTexture) => {
+    void Assets.load<Texture>(PLAYER_SPRITE_SHEET_PATH).then((sheetTexture) => {
       if (mounted) {
-        setTexture(loadedTexture);
+        setPlayerFrames(buildPlayerFrames(sheetTexture));
       }
     });
 
@@ -267,18 +322,12 @@ function RunnerScene({
     player.x = PLAYER_X;
     player.y = GROUND_Y - playerYRef.current;
     player.rotation = rotationRef.current;
-
-    const stretch = clamp(1 + velocityRef.current / 2400, 0.9, 1.06);
-    player.scale.x =
-      playerYRef.current <= 0.1
-        ? 1.02
-        : clamp(1 - rotationRef.current * 0.08, 0.92, 1.08);
-    player.scale.y = stretch;
+    player.scale.set(PLAYER_RENDER_SCALE, PLAYER_RENDER_SCALE);
 
     const shadowScale = clamp(
-      1 - Math.max(playerYRef.current, 0) / 190,
-      0.46,
-      1,
+      0.82 - Math.max(playerYRef.current, 0) / 220,
+      0.34,
+      0.82,
     );
     const shadowAlpha =
       isPlayerOverHole(holesRef.current) && playerYRef.current < -12
@@ -287,7 +336,7 @@ function RunnerScene({
 
     shadow.clear();
     shadow
-      .ellipse(PLAYER_X, GROUND_Y + 9, 36 * shadowScale, 12 * shadowScale)
+      .ellipse(PLAYER_X, GROUND_Y + 9, 34 * shadowScale, 10 * shadowScale)
       .fill({
         color: 0x102542,
         alpha: shadowAlpha,
@@ -303,6 +352,7 @@ function RunnerScene({
     scoreRef.current = 0;
     scoreTickTimerRef.current = 0;
     gameOverSentRef.current = false;
+    animationElapsedRef.current = 0;
     nextHoleIdRef.current = 2;
     holesRef.current = [createHole(1, STAGE_WIDTH + 240)];
     updateHudText(0);
@@ -331,35 +381,56 @@ function RunnerScene({
       return;
     }
 
-    jumpCountRef.current += 1;
+    const nextJumpCount = jumpCountRef.current + 1;
+    jumpCountRef.current = nextJumpCount;
     coyoteTimeRef.current = 0;
-    velocityRef.current = JUMP_FORCE;
-    rotationRef.current = jumpCountRef.current > 1 ? -0.34 : -0.18;
-    updateHintText(jumpCountRef.current > 1 ? "Air jump!" : "Jump!");
+    velocityRef.current = getJumpForce(nextJumpCount);
+    rotationRef.current = nextJumpCount > 1 ? -0.34 : -0.18;
+    updateHintText(nextJumpCount > 1 ? "Air jump!" : "Jump!");
     syncPlayerVisuals();
   }, [syncPlayerVisuals, updateHintText]);
 
   useEffect(() => {
-    if (!texture) {
+    if (playerFrames.length === 0) {
       return;
     }
 
     resetScene();
-  }, [texture, restartNonce, resetScene]);
+  }, [playerFrames, restartNonce, resetScene]);
 
   useEffect(() => {
-    if (!texture || runState !== "running") {
+    if (playerFrames.length === 0 || runState !== "running") {
       return;
     }
 
     tryJump();
-  }, [jumpNonce, runState, texture, tryJump]);
+  }, [jumpNonce, playerFrames, runState, tryJump]);
 
   useTick(
     useCallback(
       (ticker: Ticker) => {
-        if (!texture) {
+        if (playerFrames.length === 0) {
           return;
+        }
+
+        const player = playerRef.current;
+        if (player) {
+          if (runState === "running") {
+            animationElapsedRef.current += ticker.deltaMS / 1000;
+          } else if (runState !== "paused") {
+            animationElapsedRef.current = 0;
+          }
+
+          const frameIndex =
+            runState === "running"
+              ? Math.floor(animationElapsedRef.current * PLAYER_ANIMATION_FPS) %
+                playerFrames.length
+              : 0;
+          const nextTexture = playerFrames[frameIndex];
+
+          if (player.texture !== nextTexture) {
+            player.texture = nextTexture;
+          }
         }
 
         if (runState !== "running") {
@@ -454,7 +525,7 @@ function RunnerScene({
         onScoreChange,
         runState,
         syncPlayerVisuals,
-        texture,
+        playerFrames,
         updateHintText,
         updateHudText,
       ],
@@ -466,15 +537,15 @@ function RunnerScene({
       <pixiGraphics ref={worldRef} draw={() => undefined} />
       <pixiGraphics ref={shadowRef} draw={() => undefined} />
 
-      {texture ? (
+      {playerFrames[0] ? (
         <pixiSprite
           ref={playerRef}
-          texture={texture}
+          texture={playerFrames[0]}
           x={PLAYER_X}
           y={GROUND_Y}
           anchor={{ x: 0.5, y: 1 }}
-          width={PLAYER_SIZE}
-          height={PLAYER_SIZE}
+          width={PLAYER_RENDER_SIZE}
+          height={PLAYER_RENDER_SIZE}
         />
       ) : null}
 
@@ -504,7 +575,7 @@ function RunnerScene({
         }}
       />
 
-      {!texture ? (
+      {playerFrames.length === 0 ? (
         <pixiText
           text="Loading runner..."
           x={STAGE_WIDTH / 2}
@@ -522,68 +593,21 @@ function RunnerScene({
   );
 }
 
-type OverlayAction = {
-  label: string;
-  onClick: () => void;
-  tone?: "primary" | "secondary";
-};
-
-type StageOverlayProps = {
-  eyebrow: string;
-  title: string;
-  description: string;
-  actions: OverlayAction[];
-};
-
-function StageOverlay({
-  eyebrow,
-  title,
-  description,
-  actions,
-}: StageOverlayProps) {
-  return (
-    <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#fffaf2]/70 p-4 backdrop-blur-[3px]">
-      <div className="w-full max-w-sm rounded-[2rem] border-4 border-[#D6C0B0] bg-[#FFFFF8]/95 p-6 text-center shadow-[0_28px_60px_rgba(17,24,39,0.18)]">
-        <p className="text-xs font-black uppercase tracking-[0.28em] text-[#5EC7A5]">
-          {eyebrow}
-        </p>
-        <h3 className="mt-2 font-handwriting text-4xl text-[#166D77]">
-          {title}
-        </h3>
-        <p className="mt-3 text-sm font-bold leading-relaxed text-[#365486]">
-          {description}
-        </p>
-
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          {actions.map((action) => (
-            <button
-              key={action.label}
-              type="button"
-              data-ui-control="true"
-              onClick={action.onClick}
-              className={`rounded-2xl px-5 py-3 text-sm font-black transition-transform active:scale-95 ${
-                action.tone === "secondary"
-                  ? "border-2 border-[#166D77] bg-white text-[#166D77]"
-                  : "border-2 border-[#166D77] bg-[#5EC7A5] text-[#FFFFF8] shadow-[0_6px_0_rgba(22,109,119,0.16)]"
-              }`}
-            >
-              {action.label}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function AdventureSample() {
+  const musicPlayerRef = useRef<SamplePlayerInstance | null>(null);
+  const pendingMusicStartRef = useRef(false);
   const [runState, setRunState] = useState<RunState>("ready");
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
   const [finalScore, setFinalScore] = useState(0);
   const [jumpNonce, setJumpNonce] = useState(0);
   const [restartNonce, setRestartNonce] = useState(0);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [isMobilePortrait, setIsMobilePortrait] = useState(false);
+  const [apiReady, setApiReady] = useState(false);
+  const [playerReady, setPlayerReady] = useState(false);
+  const youtubeWindow =
+    typeof window === "undefined" ? undefined : (window as SampleYouTubeWindow);
 
   const resolution = useMemo(
     () =>
@@ -613,20 +637,91 @@ export default function AdventureSample() {
     window.localStorage.setItem(BEST_SCORE_KEY, String(bestScore));
   }, [bestScore]);
 
-  const attemptLandscapeLock = useCallback(() => {
-    if (typeof window === "undefined" || typeof screen === "undefined") {
+  useEffect(() => {
+    if (youtubeWindow?.YT?.Player) {
+      setApiReady(true);
       return;
     }
 
-    const orientation = screen.orientation as
-      | (ScreenOrientation & {
-          lock?: (orientation: "landscape") => Promise<void>;
-        })
-      | undefined;
+    const script = document.createElement("script");
+    script.src = "https://www.youtube.com/iframe_api";
+    script.async = true;
 
-    if (orientation?.lock) {
-      void orientation.lock("landscape").catch(() => undefined);
+    const previousHandler = youtubeWindow?.onYouTubeIframeAPIReady;
+    if (!youtubeWindow) {
+      return;
     }
+
+    youtubeWindow.onYouTubeIframeAPIReady = () => {
+      previousHandler?.();
+      setApiReady(true);
+    };
+
+    document.body.appendChild(script);
+
+    return () => {
+      youtubeWindow.onYouTubeIframeAPIReady = previousHandler;
+    };
+  }, [youtubeWindow]);
+
+  useEffect(() => {
+    if (!apiReady || musicPlayerRef.current || !youtubeWindow?.YT?.Player) {
+      return;
+    }
+
+    musicPlayerRef.current = new youtubeWindow.YT.Player(
+      "rico-adventure-sample-player",
+      {
+        height: 1,
+        width: 1,
+        videoId: YOUTUBE_VIDEO_ID,
+        playerVars: {
+          autoplay: 0,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          iv_load_policy: 3,
+          rel: 0,
+          modestbranding: 1,
+          playsinline: 1,
+          enablejsapi: 1,
+          origin: window.location.origin,
+        },
+        events: {
+          onReady: (event) => {
+            setPlayerReady(true);
+
+            if (pendingMusicStartRef.current) {
+              event.target.seekTo(0, true);
+              event.target.playVideo();
+              pendingMusicStartRef.current = false;
+            }
+          },
+        },
+      },
+    );
+
+    return () => {
+      musicPlayerRef.current?.destroy();
+      musicPlayerRef.current = null;
+    };
+  }, [apiReady, youtubeWindow]);
+
+  const playMusicFromStart = useCallback(() => {
+    pendingMusicStartRef.current = true;
+
+    if (!playerReady || !musicPlayerRef.current) {
+      return;
+    }
+
+    musicPlayerRef.current.seekTo(0, true);
+    musicPlayerRef.current.playVideo();
+    pendingMusicStartRef.current = false;
+  }, [playerReady]);
+
+  const pauseMusic = useCallback(() => {
+    pendingMusicStartRef.current = false;
+    musicPlayerRef.current?.pauseVideo();
   }, []);
 
   useEffect(() => {
@@ -638,6 +733,7 @@ export default function AdventureSample() {
       const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
       const isSmallViewport = window.innerWidth < 1024;
       const isMobile = coarsePointer || isSmallViewport;
+      setIsMobileViewport(isMobile);
       setIsMobilePortrait(isMobile && window.innerHeight > window.innerWidth);
     };
 
@@ -652,41 +748,83 @@ export default function AdventureSample() {
   }, []);
 
   const startGame = useCallback(() => {
-    attemptLandscapeLock();
     setScore(0);
     setFinalScore(0);
     setRestartNonce((value) => value + 1);
+    playMusicFromStart();
     setRunState("running");
-  }, [attemptLandscapeLock]);
+  }, [playMusicFromStart]);
 
   const handlePauseToggle = useCallback(() => {
     setRunState((current) => {
       if (current === "running") {
+        pauseMusic();
         return "paused";
       }
       if (current === "paused") {
-        attemptLandscapeLock();
+        musicPlayerRef.current?.playVideo();
         return "running";
       }
       return current;
     });
-  }, [attemptLandscapeLock]);
+  }, [pauseMusic]);
 
   const handleScoreChange = useCallback((nextScore: number) => {
     setScore((current) => (current === nextScore ? current : nextScore));
     setBestScore((current) => Math.max(current, nextScore));
   }, []);
 
-  const handleGameOver = useCallback((endedScore: number) => {
-    setFinalScore(endedScore);
-    setScore(endedScore);
-    setBestScore((current) => Math.max(current, endedScore));
-    setRunState("gameover");
-  }, []);
+  const handleGameOver = useCallback(
+    (endedScore: number) => {
+      pauseMusic();
+      setFinalScore(endedScore);
+      setScore(endedScore);
+      setBestScore((current) => Math.max(current, endedScore));
+      setRunState("gameover");
+    },
+    [pauseMusic],
+  );
+
+  useEffect(() => {
+    if (runState === "ready") {
+      pauseMusic();
+    }
+  }, [pauseMusic, runState]);
 
   const triggerJump = useCallback(() => {
     setJumpNonce((value) => value + 1);
   }, []);
+
+  const readyModalActions: AdventureModalAction[] = [
+    {
+      label: "Start Game",
+      onClick: startGame,
+    },
+  ];
+
+  const pauseModalActions: AdventureModalAction[] = [
+    {
+      label: "Resume",
+      onClick: handlePauseToggle,
+    },
+    {
+      label: "Restart",
+      onClick: startGame,
+      tone: "secondary",
+    },
+  ];
+
+  const gameOverModalActions: AdventureModalAction[] = [
+    {
+      label: "Retry",
+      onClick: startGame,
+    },
+    {
+      label: "Keep Browsing",
+      onClick: () => setRunState("ready"),
+      tone: "secondary",
+    },
+  ];
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -725,10 +863,6 @@ export default function AdventureSample() {
 
   const handleStagePointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
-      if (isMobilePortrait) {
-        return;
-      }
-
       const target = event.target;
       if (
         target instanceof HTMLElement &&
@@ -738,13 +872,12 @@ export default function AdventureSample() {
       }
 
       event.preventDefault();
-      attemptLandscapeLock();
 
       if (runState === "running") {
         triggerJump();
       }
     },
-    [attemptLandscapeLock, isMobilePortrait, runState, triggerJump],
+    [runState, triggerJump],
   );
 
   const statusLabel =
@@ -755,51 +888,77 @@ export default function AdventureSample() {
         : runState === "gameover"
           ? "Game Over"
           : "Ready";
+  const activePhaseId = 1;
+  const unlockedPhaseId = 1;
 
   return (
     <>
       <GameContainer
         title="용사 리코 이야기"
-        desc="Birthday Cafe 톤으로 다시 꾸민 Pixi 러너 샘플"
+        desc="라떼는 말이야 검 하나로 마왕을 잡았다고"
         gameName="용사 리코 이야기"
-        helpSlides={HELP_SLIDES}
+        helpSlides={ADVENTURE_SAMPLE_HELP_SLIDES}
         className="relative overflow-hidden bg-[#f7f2e8] text-[#1d3557] select-none"
-        mainClassName="px-4 pb-8 sm:px-6 lg:px-8"
+        mainClassName={
+          isMobileViewport ? "px-3 pb-6 sm:px-4" : "px-4 pb-8 sm:px-6 lg:px-8"
+        }
         headerRight={
           <>
             <div
-              className="flex min-w-[88px] flex-col items-center rounded-2xl px-4 py-2"
+              className={`flex flex-col items-center rounded-2xl px-4 py-2 ${
+                isMobileViewport ? "min-w-[76px]" : "min-w-[88px]"
+              }`}
               style={{ background: "#102542", color: "#FFFFF8" }}
             >
               <span className="text-[10px] font-bold uppercase tracking-[0.22em] opacity-70">
                 Score
               </span>
-              <span className="text-xl font-black leading-tight">{score}</span>
+              <span
+                className={`font-black leading-tight ${
+                  isMobileViewport ? "text-lg" : "text-xl"
+                }`}
+              >
+                {score}
+              </span>
             </div>
             <div
-              className="flex min-w-[88px] flex-col items-center rounded-2xl px-4 py-2"
+              className={`flex flex-col items-center rounded-2xl px-4 py-2 ${
+                isMobileViewport ? "min-w-[76px]" : "min-w-[88px]"
+              }`}
               style={{ background: "#5EC7A5", color: "#FFFFF8" }}
             >
               <span className="text-[10px] font-bold uppercase tracking-[0.22em] opacity-80">
                 Best
               </span>
-              <span className="text-xl font-black leading-tight">
+              <span
+                className={`font-black leading-tight ${
+                  isMobileViewport ? "text-lg" : "text-xl"
+                }`}
+              >
                 {bestScore}
               </span>
             </div>
           </>
         }
       >
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+        <div
+          className={`mx-auto flex w-full flex-col ${
+            isMobileViewport ? "max-w-[23rem] gap-4" : "max-w-6xl gap-6"
+          }`}
+        >
           <section className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.75fr)]">
-            <section className="rounded-[2rem] border-4 border-white/70 bg-white/80 p-4 shadow-[0_24px_60px_rgba(17,24,39,0.12)] sm:p-5">
+            <section
+              className={`rounded-[2rem] border-4 border-white/70 bg-white/80 shadow-[0_24px_60px_rgba(17,24,39,0.12)] ${
+                isMobileViewport ? "p-3.5" : "p-4 sm:p-5"
+              }`}
+            >
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-black uppercase tracking-[0.3em] text-[#5EC7A5]">
-                    Birthday Cafe Runner
+                    1장 - 용사 리코 이야기
                   </p>
                   <h2 className="font-handwriting text-4xl leading-none text-[#166D77] sm:text-5xl">
-                    Rico&apos;s Gap Dash
+                    옛날옛날 아주 먼 옛날에...
                   </h2>
                 </div>
                 <div className="rounded-full bg-[#102542] px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-white">
@@ -812,7 +971,11 @@ export default function AdventureSample() {
                 onPointerDown={handleStagePointerDown}
                 style={{ touchAction: "none" }}
               >
-                <div className="aspect-[2/1] w-full touch-none overscroll-none">
+                <div
+                  className={`w-full touch-none overscroll-none ${
+                    isMobilePortrait ? "aspect-[9/10]" : "aspect-[2/1]"
+                  }`}
+                >
                   <Application
                     width={STAGE_WIDTH}
                     height={STAGE_HEIGHT}
@@ -845,54 +1008,32 @@ export default function AdventureSample() {
                 )}
 
                 {runState === "ready" && (
-                  <StageOverlay
-                    eyebrow="Ready"
-                    title="Start Game"
-                    description="Tap the button to begin. Score rises by exactly 10 points every second while you survive."
-                    actions={[
-                      {
-                        label: "Start Game",
-                        onClick: startGame,
-                      },
-                    ]}
+                  <AdventureModal
+                    embedded
+                    title="이야기 시작"
+                    status="준비 됐어?"
+                    description="모험을 떠나볼까?"
+                    actions={readyModalActions}
                   />
                 )}
 
                 {runState === "paused" && (
-                  <StageOverlay
-                    eyebrow="Pause"
-                    title="용사에게도 휴식이 필요해"
+                  <AdventureModal
+                    embedded
+                    title="1 - 용사 리코 이야기"
+                    status="용사에게도 휴식이 필요해"
                     description="다시 마왕을 무찌르러 가볼까?"
-                    actions={[
-                      {
-                        label: "Resume",
-                        onClick: handlePauseToggle,
-                      },
-                      {
-                        label: "Restart",
-                        onClick: startGame,
-                        tone: "secondary",
-                      },
-                    ]}
+                    actions={pauseModalActions}
                   />
                 )}
 
                 {runState === "gameover" && (
-                  <StageOverlay
-                    eyebrow="Game Over"
-                    title="Fell Into A Gap"
-                    description={`Final score ${finalScore}. Try another run and beat your best cafe record.`}
-                    actions={[
-                      {
-                        label: "Retry",
-                        onClick: startGame,
-                      },
-                      {
-                        label: "Keep Browsing",
-                        onClick: () => setRunState("ready"),
-                        tone: "secondary",
-                      },
-                    ]}
+                  <AdventureModal
+                    embedded
+                    status="1장 - 용사 리코 이야기"
+                    title="함정에 빠졌어..."
+                    description="거기 누구 없어요? 도와주세요!!"
+                    actions={gameOverModalActions}
                   />
                 )}
               </div>
@@ -910,13 +1051,14 @@ export default function AdventureSample() {
                 </div>
                 <div className="space-y-3 text-sm font-bold leading-relaxed text-[#365486]">
                   <div className="rounded-[1.2rem] border border-[#102542]/10 bg-[#fffaf2] px-4 py-3">
-                    Landscape mode is preferred on mobile. Portrait opens a
-                    rotate-your-device overlay before play continues.
+                    Mobile is now tuned for portrait play. The stage and side
+                    panels shrink into a narrower vertical layout instead of
+                    asking for landscape.
                   </div>
                   <div className="rounded-[1.2rem] border border-[#102542]/10 bg-[#fffaf2] px-4 py-3">
                     The stage uses Pixi at a fixed 800x400 logical size and
-                    scales inside a responsive 2:1 frame without browser
-                    gestures getting in the way.
+                    scales into a portrait-friendly frame on phones while
+                    keeping the same collision and jump timing.
                   </div>
                   <div className="rounded-[1.2rem] border border-[#102542]/10 bg-[#fffaf2] px-4 py-3">
                     Space, W, Up Arrow or tap to jump. Press P or use the pause
@@ -926,9 +1068,49 @@ export default function AdventureSample() {
               </section>
 
               <section className="rounded-[2rem] border-4 border-[#102542]/10 bg-white/80 p-5 shadow-[0_18px_40px_rgba(17,24,39,0.08)]">
-                <h3 className="text-lg font-black text-[#102542]">
-                  Current HUD
-                </h3>
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h3 className="text-lg font-black text-[#102542]">
+                    Phase Preview
+                  </h3>
+                  <span className="rounded-full bg-[#2a9d8f] px-3 py-1 text-xs font-black uppercase tracking-[0.2em] text-white">
+                    1 / {SAMPLE_PHASES.length}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {SAMPLE_PHASES.map((item) => {
+                    const active = item.id === activePhaseId;
+                    const unlocked = item.id <= unlockedPhaseId;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className={`w-full rounded-[1.2rem] border px-4 py-3 ${
+                          active
+                            ? "border-[#102542] bg-[#102542] text-white"
+                            : unlocked
+                              ? "border-[#102542]/10 bg-[#fffaf2] text-[#102542]"
+                              : "border-[#9ca3af]/40 bg-[#e5e7eb] text-[#6b7280]"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-black uppercase tracking-[0.22em] opacity-70">
+                              {item.title}
+                            </p>
+                            <p className="text-base font-black">{item.theme}</p>
+                          </div>
+                          <p className="text-sm font-bold">
+                            {formatTime(item.start)} - {formatTime(item.end)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+
+              <section className="rounded-[2rem] border-4 border-[#102542]/10 bg-white/80 p-5 shadow-[0_18px_40px_rgba(17,24,39,0.08)]">
+                <h3 className="text-lg font-black text-[#102542]">Current HUD</h3>
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   <div className="rounded-[1.2rem] bg-[#102542] px-4 py-3 text-white">
                     <p className="text-[10px] font-bold uppercase tracking-[0.22em] opacity-70">
@@ -948,24 +1130,11 @@ export default function AdventureSample() {
           </section>
         </div>
       </GameContainer>
-
-      {isMobilePortrait && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#fffaf2]/95 px-6 backdrop-blur-md lg:hidden">
-          <div className="w-full max-w-sm rounded-[2rem] border-4 border-[#D6C0B0] bg-[#FFFFF8] p-6 text-center shadow-[0_28px_60px_rgba(17,24,39,0.18)]">
-            <p className="text-xs font-black uppercase tracking-[0.3em] text-[#5EC7A5]">
-              Landscape Only
-            </p>
-            <div className="mt-3 text-5xl text-[#166D77]">⟲</div>
-            <h3 className="mt-3 font-handwriting text-4xl text-[#166D77]">
-              Please rotate your device
-            </h3>
-            <p className="mt-3 text-sm font-bold leading-relaxed text-[#365486]">
-              The runner uses a wide 2:1 stage. Rotate to landscape so the Pixi
-              canvas can fill the frame cleanly without being cut off.
-            </p>
-          </div>
-        </div>
-      )}
+      <div
+        id="rico-adventure-sample-player"
+        aria-hidden="true"
+        className="pointer-events-none fixed -left-[9999px] top-0 h-px w-px overflow-hidden opacity-0"
+      />
     </>
   );
 }

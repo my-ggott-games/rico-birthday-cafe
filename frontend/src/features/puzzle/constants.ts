@@ -1,25 +1,3 @@
-import type { TutorialSlide } from "../../components/common/TutorialBanner";
-
-export const PUZZLE_TUTORIAL_SLIDES: TutorialSlide[] = [
-  {
-    title: "퍼즐 맞추기",
-    titleIcon: "Puzzle",
-    lines: ["조각을 꾸~욱 눌러 퍼즐을 맞추자", "알맞은 위치에 놓아줘!"],
-    showArrows: false,
-  },
-  {
-    title: "탭하면 회전",
-    titleIcon: "RefreshCw",
-    lines: ["조각을 탭해서 올바른 방향으로 바꾸자"],
-    showArrows: false,
-  },
-  {
-    title: "어떤 그림일까?",
-    lines: ["제한 시간은 없으니", "여유롭게 즐겨줘!"],
-    showArrows: false,
-  },
-];
-
 export const ROWS = 10;
 export const COLS = 10;
 export const PIECE_SIZE = 100;

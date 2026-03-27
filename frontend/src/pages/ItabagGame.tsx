@@ -3,9 +3,9 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "../store/useAuthStore";
 import { BASE_URL } from "../utils/api";
 import { GameContainer } from "../components/common/GameContainer";
-import type { TutorialSlide } from "../components/common/TutorialBanner";
 import { AchievementIcon } from "../components/common/AchievementIcon";
 import { AppIcon } from "../components/common/AppIcon";
+import { ITABAG_TUTORIAL_SLIDES } from "../constants/tutorialSlides";
 
 // ---------------------------------------------------------
 // Typings
@@ -28,27 +28,6 @@ interface PlacedBadge {
   y: number;
   rotation: number;
 }
-
-const ITABAG_TUTORIAL_SLIDES: TutorialSlide[] = [
-  {
-    title: "이타백 꾸미기",
-    titleIcon: "Ribbon",
-    lines: [
-      "아래 뱃지를 눌러 가방에 추가해요.",
-      "드래그해서 원하는 위치로 이동해요.",
-    ],
-    showArrows: false,
-  },
-  {
-    title: "배치 편집",
-    titleIcon: "WandSparkles",
-    lines: [
-      "탭하면 회전하고, 더블탭하면 삭제해요.",
-      "완성 후 저장 버튼으로 레이아웃을 보관해요.",
-    ],
-    showArrows: false,
-  },
-];
 
 // ---------------------------------------------------------
 // Component

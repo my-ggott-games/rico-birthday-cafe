@@ -33,12 +33,12 @@ import {
 import {
   COLS,
   PIECE_SIZE,
-  PUZZLE_TUTORIAL_SLIDES,
   ROWS,
   MOUSE_DRAG_DISTANCE_PX,
   TOUCH_DRAG_ACTIVATION_DELAY_MS,
   TOUCH_DRAG_TOLERANCE_PX,
 } from "../features/puzzle/constants";
+import { PUZZLE_TUTORIAL_SLIDES } from "../constants/tutorialSlides";
 import {
   assignSpawnPositions,
   clamp,

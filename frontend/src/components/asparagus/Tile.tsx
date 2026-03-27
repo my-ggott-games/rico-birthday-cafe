@@ -8,10 +8,12 @@ import {
   CircleDot,
   Crown,
   Feather,
-  Flower2,
+  Flower,
   Leaf,
   Sprout,
   Sword,
+  TreeDeciduous,
+  TreePine,
   Trees,
   TrendingUp,
   Utensils,
@@ -30,11 +32,13 @@ const STAGE_ICONS: Record<string, LucideIcon> = {
   TrendingUp,
   Leaf,
   Trees,
-  Flower2,
+  Flower: Flower,
   CircleDot,
   CalendarDays,
   CalendarCheck,
   Feather,
+  TreeDeciduous,
+  TreePine,
   Utensils,
   Crown,
   Sword,
@@ -67,8 +71,7 @@ export const Tile: React.FC<TileProps> = ({ value, isSelected, onClick }) => {
   };
   const StageIcon = STAGE_ICONS[stage.icon] ?? Leaf;
   const isGradient = stage.bg.includes("gradient");
-  const lines =
-    value >= 128 ? stage.name.split(/\s+/) : [stage.name];
+  const lines = value >= 128 ? stage.name.split(/\s+/) : [stage.name];
   return (
     <motion.div
       key={value}

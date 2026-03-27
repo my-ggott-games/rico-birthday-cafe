@@ -1,9 +1,16 @@
 import { Application, extend, useTick } from "@pixi/react";
-import { Container, Graphics, Sprite, Texture } from "pixi.js";
+import {
+  Assets,
+  Container,
+  Graphics,
+  Rectangle,
+  Sprite,
+  Texture,
+  Ticker,
+} from "pixi.js";
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type MutableRefObject,
@@ -15,7 +22,14 @@ extend({ Sprite });
 
 const GROUND_RATIO = 0.9;
 const PLAYER_CENTER_X = 32;
-const PLAYER_SPRITE_PATH = "/assets/adventure_character_sample.png";
+const PLAYER_SPRITE_SHEET_PATH = "/assets/adventuregame/1172-Sheet.png";
+const PLAYER_FRAME_SIZE = 2000;
+const PLAYER_FRAME_COUNT = 6;
+const PLAYER_ANIMATION_FPS = 10;
+const PLAYER_SPRITE_WIDTH = 84;
+const PLAYER_SPRITE_HEIGHT = 84;
+const PLAYER_SPRITE_OFFSET_X = 34;
+const PLAYER_SPRITE_OFFSET_Y = 64;
 
 type AdventurePixiSceneProps = {
   phase: Phase;
@@ -33,11 +47,26 @@ type Size = {
   height: number;
 };
 
-type StageProps = Omit<AdventurePixiSceneProps, "onJumpInput" | "runState"> &
-  Size;
+type StageProps = Omit<AdventurePixiSceneProps, "onJumpInput"> & Size;
 
 const colorToNumber = (color: string): number =>
   Number.parseInt(color.replace("#", ""), 16);
+
+const buildPlayerFrames = (sheetTexture: Texture): Texture[] =>
+  Array.from({ length: PLAYER_FRAME_COUNT }, (_, index) => {
+    const frame = new Rectangle(
+      index * PLAYER_FRAME_SIZE,
+      0,
+      PLAYER_FRAME_SIZE,
+      PLAYER_FRAME_SIZE,
+    );
+
+    return new Texture({
+      source: sheetTexture.source,
+      frame,
+      orig: new Rectangle(0, 0, PLAYER_FRAME_SIZE, PLAYER_FRAME_SIZE),
+    });
+  });
 
 function useElementSize() {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -77,6 +106,7 @@ function AdventurePixiStage({
   height,
   phase,
   holes,
+  runState,
   playerX,
   pixelsPerSecond,
   courseTimeRef,
@@ -84,9 +114,25 @@ function AdventurePixiStage({
 }: StageProps) {
   const groundRef = useRef<Graphics | null>(null);
   const playerContainerRef = useRef<Container | null>(null);
+  const playerSpriteRef = useRef<Sprite | null>(null);
   const shadowRef = useRef<Graphics | null>(null);
-  const playerTexture = useMemo(() => Texture.from(PLAYER_SPRITE_PATH), []);
+  const animationElapsedRef = useRef(0);
+  const [playerFrames, setPlayerFrames] = useState<Texture[]>([]);
   const groundY = height * GROUND_RATIO;
+
+  useEffect(() => {
+    let mounted = true;
+
+    void Assets.load<Texture>(PLAYER_SPRITE_SHEET_PATH).then((sheetTexture) => {
+      if (mounted) {
+        setPlayerFrames(buildPlayerFrames(sheetTexture));
+      }
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const redrawGround = useCallback(() => {
     const graphics = groundRef.current;
@@ -241,21 +287,53 @@ function AdventurePixiStage({
     syncScene();
   }, [syncScene]);
 
-  useTick(syncScene);
+  useTick(
+    useCallback(
+      (ticker: Ticker) => {
+        const sprite = playerSpriteRef.current;
+
+        if (sprite && playerFrames.length > 0) {
+          if (runState === "running") {
+            animationElapsedRef.current += ticker.deltaMS / 1000;
+          } else if (runState !== "paused") {
+            animationElapsedRef.current = 0;
+          }
+
+          const frameIndex =
+            runState === "running"
+              ? Math.floor(
+                  animationElapsedRef.current * PLAYER_ANIMATION_FPS,
+                ) % playerFrames.length
+              : 0;
+          const nextTexture = playerFrames[frameIndex];
+
+          if (sprite.texture !== nextTexture) {
+            sprite.texture = nextTexture;
+          }
+        }
+
+        syncScene();
+      },
+      [playerFrames, runState, syncScene],
+    ),
+  );
 
   return (
     <>
       <pixiGraphics ref={groundRef} draw={drawGroundPlaceholder} />
       <pixiGraphics ref={shadowRef} draw={drawShadow} />
       <pixiContainer ref={playerContainerRef}>
-        <pixiSprite
-          texture={playerTexture}
-          x={40}
-          y={76}
-          width={112}
-          height={112}
-          anchor={{ x: 0.5, y: 1 }}
-        />
+        {playerFrames[0] ? (
+          <pixiSprite
+            ref={playerSpriteRef}
+            texture={playerFrames[0]}
+            x={PLAYER_SPRITE_OFFSET_X}
+            y={PLAYER_SPRITE_OFFSET_Y}
+            width={PLAYER_SPRITE_WIDTH}
+            height={PLAYER_SPRITE_HEIGHT}
+            anchor={{ x: 0.5, y: 1 }}
+          />
+        ) : null}
       </pixiContainer>
     </>
   );
@@ -294,6 +372,7 @@ export function AdventurePixiScene({
           height={size.height}
           phase={phase}
           holes={holes}
+          runState={runState}
           playerX={playerX}
           pixelsPerSecond={pixelsPerSecond}
           courseTimeRef={courseTimeRef}
