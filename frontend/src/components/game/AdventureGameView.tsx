@@ -70,10 +70,15 @@ export function AdventureGameView({
       mainClassName="px-4 pb-10 sm:px-8"
       showDesktopHelp
       headerRight={
-        <>
+        <div className="flex -translate-y-1 items-center gap-3">
           <div
-            className="flex min-w-[92px] flex-col items-center rounded-2xl px-4 py-2"
-            style={{ background: "#102542", color: "#FFFFF8" }}
+            className="flex min-w-[92px] flex-col items-center rounded-2xl border-2 px-4 py-2 shadow-[0_10px_24px_rgba(16,37,66,0.16)]"
+            style={{
+              background: "#102542",
+              color: "#FFFFF8",
+              borderColor: "var(--color-pale-custard)",
+              fontFamily: "OneStoreMobilePop",
+            }}
           >
             <span className="text-[10px] font-bold uppercase tracking-tighter opacity-70">
               Score
@@ -83,8 +88,13 @@ export function AdventureGameView({
             </span>
           </div>
           <div
-            className="flex min-w-[92px] flex-col items-center rounded-2xl px-4 py-2"
-            style={{ background: "#2a9d8f", color: "#fefae0" }}
+            className="flex min-w-[92px] flex-col items-center rounded-2xl border-2 px-4 py-2 shadow-[0_10px_24px_rgba(16,37,66,0.16)]"
+            style={{
+              background: "#2a9d8f",
+              color: "#fefae0",
+              borderColor: "var(--color-pale-custard)",
+              fontFamily: "OneStoreMobilePop",
+            }}
           >
             <span className="text-[10px] font-bold uppercase tracking-tighter opacity-80">
               Best
@@ -93,7 +103,7 @@ export function AdventureGameView({
               {bestScore}
             </span>
           </div>
-        </>
+        </div>
       }
     >
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">

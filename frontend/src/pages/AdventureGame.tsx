@@ -131,7 +131,7 @@ const PHASES: Phase[] = [
     id: 3,
     title: "3장",
     start: 121,
-    end: 214,
+    end: 224,
     theme: "숲",
     skyColor: "#bfd4ad",
     hazeColor: "#eaf2d0",
@@ -144,7 +144,7 @@ const PHASES: Phase[] = [
   {
     id: 4,
     title: "4장",
-    start: 214,
+    start: 224,
     end: 282,
     theme: "던전",
     skyColor: "#434a5f",

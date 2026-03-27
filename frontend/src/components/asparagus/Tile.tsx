@@ -149,7 +149,7 @@ export const Tile: React.FC<TileProps> = ({ value, isSelected, onClick }) => {
       <span
         className="font-black text-center leading-tight"
         style={{
-          fontSize: "clamp(9px, 2.1vw, 13px)",
+          fontSize: "clamp(10px, 2.5vw, 14px)",
           marginTop: 4,
           opacity: 0.92,
           padding: "0 2px",

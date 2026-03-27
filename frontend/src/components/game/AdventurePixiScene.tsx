@@ -256,7 +256,7 @@ function AdventurePixiStage({
 
   const drawShadow = useCallback((graphics: Graphics) => {
     graphics.clear();
-    graphics.ellipse(0, 0, 24, 8).fill({ color: 0x000000, alpha: 0.2 });
+    graphics.ellipse(0, 0, 20, 6).fill({ color: 0x000000, alpha: 0.2 });
   }, []);
   const drawGroundPlaceholder = useCallback((graphics: Graphics) => {
     graphics.clear();
@@ -274,10 +274,10 @@ function AdventurePixiStage({
 
     if (shadowRef.current) {
       const airborneDistance = Math.max(playerYRef.current, 0);
-      const scaleX = Math.max(0.52, 1 - airborneDistance / 240);
-      const scaleY = Math.max(0.42, 1 - airborneDistance / 320);
+      const scaleX = Math.max(0.48, 0.92 - airborneDistance / 260);
+      const scaleY = Math.max(0.38, 0.88 - airborneDistance / 340);
       shadowRef.current.x = playerX + PLAYER_CENTER_X;
-      shadowRef.current.y = groundY + 11;
+      shadowRef.current.y = groundY + 7;
       shadowRef.current.alpha = Math.max(0.08, 0.22 - airborneDistance / 1400);
       shadowRef.current.scale.set(scaleX, scaleY);
     }

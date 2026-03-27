@@ -22,7 +22,11 @@ export const ADVENTURE_SAMPLE_HELP_SLIDES: TutorialSlide[] = [
   },
   {
     title: "함정에 빠지지 않게 조심해!",
-    lines: ["함정에 빠지면 이야기가 끝나버려...", "함정을 잘 피해서 달려보자!"],
+    lines: [
+      "함정에 빠지면 이야기가 끝나버려...",
+      "함정을 잘 피해서 달려보자!",
+      "힘들면 P 키를 눌러 잠시 쉴 수 있어",
+    ],
     showArrows: false,
   },
 ];

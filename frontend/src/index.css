@@ -216,6 +216,59 @@ button {
   }
 }
 
+@keyframes phase-transition-wash {
+  0% {
+    opacity: 0;
+  }
+
+  28% {
+    opacity: 1;
+  }
+
+  56% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes phase-transition-card {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.92);
+    filter: blur(8px);
+  }
+
+  24% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+
+  64% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-14px) scale(1.04);
+    filter: blur(2px);
+  }
+}
+
+.phase-transition-blackout {
+  background: #000;
+  animation: phase-transition-wash 3.4s ease-in-out forwards;
+}
+
+.phase-transition-card {
+  animation: phase-transition-card 3.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 .rain-wrapper {
   position: absolute;
   inset: 0;
