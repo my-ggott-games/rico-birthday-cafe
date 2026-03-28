@@ -279,7 +279,7 @@ const Lobby: React.FC = () => {
             >
               <LobbyIconTile
                 name="용사 리코 이야기"
-                icon="Sword"
+                icon="Swords"
                 isMobile={isMobile}
                 className="border-[#102542] bg-[#d8e4f7]"
                 iconClassName="text-[#102542]"
