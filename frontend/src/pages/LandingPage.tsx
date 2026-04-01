@@ -1,22 +1,27 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-// import { useAuthStore } from '../store/useAuthStore';
+import { useAuthStore } from "../store/useAuthStore";
 import { AuthModal } from "../components/auth/AuthModal";
-import { AppIcon } from "../components/common/AppIcon";
+import ProgressiveBackground from "../components/common/ProgressiveBackground";
+import ProgressiveImage from "../components/common/ProgressiveImage";
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  // const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
+  const preventDrag = (event: React.DragEvent<HTMLElement>) => {
+    event.preventDefault();
+  };
 
   const handleEnter = () => {
-    // if (isAuthenticated) {
-    triggerEnterAnimation();
-    // } else {
-    //     setIsAuthModalOpen(true);
-    // }
+    if (isAuthenticated) {
+      triggerEnterAnimation();
+      return;
+    }
+
+    setIsAuthModalOpen(true);
   };
 
   const triggerEnterAnimation = () => {
@@ -28,15 +33,19 @@ const LandingPage: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center">
+    <div
+      className="relative isolate flex min-h-screen h-dvh w-full select-none flex-col items-center justify-center overflow-hidden"
+      onDragStart={preventDrag}
+    >
       {/* Background Layers */}
-      <div className="absolute inset-0 bg-[#FFFFF8] z-0" />
+      <ProgressiveBackground
+        thumbnailSrc="/assets/landing_sample_thumb.jpg"
+        fullSrc="/assets/landing_sample.jpeg"
+        className="z-0"
+        overlayClassName="bg-black/28"
+      />
 
-      {/* Striped Awning Effect at top */}
-      <div className="absolute top-0 w-full h-24 bg-[repeating-linear-gradient(45deg,#5EC7A5,#5EC7A5_20px,#FFFFF8_20px,#FFFFF8_40px)] shadow-lg z-10" />
-      <div className="absolute top-24 w-full h-4 bg-pale-custard/20 z-10 rounded-b-xl" />
-
-      <div className="relative z-10 flex flex-col items-center">
+      <div className="relative z-20 flex flex-col items-center px-6">
         {/* Cafe Sign */}
         <motion.div
           initial={{ y: -50, opacity: 0 }}
@@ -44,19 +53,18 @@ const LandingPage: React.FC = () => {
           transition={{ type: "spring", bounce: 0.5 }}
           className="mb-12 text-center"
         >
-          <div className="bg-pale-custard px-8 py-6 rounded-[2rem] border-4 border-[#5EC7A5] shadow-[0_8px_0_rgba(0,0,0,0.1)]">
-            <h1 className="text-5xl md:text-7xl text-[#166D77] font-black tracking-tight drop-shadow-sm rotate-[-2deg]">
-              유즈하 리코 생일카페
-            </h1>
-            <p className="mt-2 flex items-center justify-center gap-2 text-xl font-bold uppercase tracking-widest text-[#5EC7A5]">
-              <AppIcon name="PartyPopper" size={18} />
-              <span>2026.04.13 Open!</span>
-              <AppIcon name="PartyPopper" size={18} />
-            </p>
+          <div className="rounded-[2rem] border-4 border-white/70 bg-white/22 p-3 shadow-[0_10px_30px_rgba(0,0,0,0.22)] backdrop-blur-md">
+            <ProgressiveImage
+              thumbnailSrc="/landing_slogan_thumb.jpg"
+              fullSrc="/landing_slogan.jpg"
+              alt="유즈하 리코 생일카페 배너"
+              className="aspect-[2419/907] w-[min(86vw,860px)] rounded-[1.4rem]"
+              imageClassName="object-cover"
+            />
           </div>
-          {/* Hanging chaos strings */}
-          <div className="absolute -top-12 left-10 w-1 h-12 bg-[#d1d5db] z-[-1]" />
-          <div className="absolute -top-12 right-10 w-1 h-12 bg-[#d1d5db] z-[-1]" />
+          <p className="mt-4 inline-flex rounded-full border border-white/55 bg-white/24 px-5 py-2 text-sm font-black tracking-[0.28em] text-pale-custard shadow-lg backdrop-blur-sm md:text-base">
+            2026.04.13 OPEN
+          </p>
         </motion.div>
 
         {/* Door / Entrance */}
@@ -67,33 +75,12 @@ const LandingPage: React.FC = () => {
           whileHover={{ scale: 1.05 }}
           transition={{ duration: 0.8, ease: "easeInOut" }}
         >
-          <div className="relative bg-pale-custard p-4 rounded-t-full border-4 border-[#166D77] shadow-2xl">
-            {/* Glass reflection effect */}
-            <div className="absolute top-20 left-4 w-full h-full bg-gradient-to-br from-pale-custard/40 to-transparent rounded-t-full pointer-events-none z-20" />
-
-            <img
-              src="/assets/landing_door.png"
-              alt="Door to Cafe"
-              className="w-64 md:w-80 h-auto rounded-t-full"
-            />
-
-            {/* Door Handle / Open Sign */}
-            <motion.div
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ repeat: Infinity, duration: 4 }}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 bg-[#5EC7A5] text-pale-custard px-4 py-1 rounded-lg font-bold shadow-md border-2 border-pale-custard transform rotate-12"
-            >
-              OPEN
-            </motion.div>
+          <div className="flex h-28 w-64 items-center justify-center rounded-[1.75rem] border border-white/70 bg-white/50 shadow-[0_12px_30px_rgba(0,0,0,0.16)] backdrop-blur-sm transition-all duration-300 group-hover:bg-white/60 group-hover:shadow-[0_16px_36px_rgba(0,0,0,0.2)] md:h-32 md:w-80">
+            <span className="text-xl font-black tracking-[0.24em] text-[#166D77] md:text-2xl">
+              ENTER
+            </span>
           </div>
-
-          {/* Welcome Mat */}
-          <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-[120%] h-8 bg-[#166D77] rounded-[50%] opacity-20 blur-sm scale-y-50 group-hover:scale-110 transition-transform" />
         </motion.div>
-
-        <p className="mt-12 text-[#166D77]/60 font-bold animate-bounce">
-          Click the door to enter!
-        </p>
       </div>
 
       <AuthModal

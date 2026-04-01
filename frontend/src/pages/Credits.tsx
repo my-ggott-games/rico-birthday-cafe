@@ -3,71 +3,86 @@ import type { CSSProperties } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
+import { useToastStore } from "../store/useToastStore";
 import { BASE_URL } from "../utils/api";
 import { ReturnButton } from "../components/common/ReturnButton";
 import { AppIcon } from "../components/common/AppIcon";
+import { playDiriringSfx, preloadDiriringSfx } from "../utils/soundEffects";
 
 const CREDITS_SECTIONS = [
   {
-    title: "Project Overview",
+    title: "프로젝트 총괄",
+    names: ["전체 기획 및 컨셉: (이름 미정)", "경험 설계: (이름 미정)"],
+  },
+  {
+    title: "개발",
     names: [
-      "Planning: G. Minho",
-      "Illustration: Sie, Rico Archive, Community Artists",
-      "BGM: 밤바밤바",
+      "프론트엔드 개발: (이름 미정)",
+      "백엔드 개발: (이름 미정)",
+      "데이터베이스 설계: (이름 미정)",
+      "배포 환경 구성: (이름 미정)",
+      "인터랙션 및 애니메이션: (이름 미정)",
     ],
   },
   {
-    title: "Resources & Tools",
+    title: "음악",
     names: [
-      "React, Vite, TypeScript, Tailwind CSS, Framer Motion",
-      "dnd-kit, canvas-confetti, modern-screenshot, Zustand",
-      "OpenAI Codex, GitHub, Figma references, community asset archives",
+      "「감자튀김 옴뇸뇸」: U+003AU+27B4 / 편곡: (이름 미정)",
+      "「밤바밤바」: U+003AU+27B4 / 편곡: (이름 미정)",
+      "「그 날, 감자튀김」: U+003AU+27B4 / 편곡: (이름 미정)",
+      "「diriring」 효과음: U+003AU+27B4",
+      "",
+      "용사 리코 이야기 BGM:",
+      "Exodus (Arr. A. Reed)",
+      "작곡: Ernest Gold",
+      "편곡: Alfred Reed",
+      "연주: Japan Air Self-Defense Force Western Air Band",
+      "지휘: Hiroyuki Kayo",
+      "℗ 2018 CAFUA",
     ],
   },
   {
-    title: "Cody Game",
+    title: "리코의 외출",
+    names: ["코디 아이템 및 캐릭터 디자인: Sie", "맵 모델링: (이름 미정)"],
+  },
+  {
+    title: "퍼즐 놀이",
+    names: ["일러스트: 상승새"],
+  },
+  {
+    title: "용사 리코 이야기",
     names: [
-      "Planning: G. Minho",
-      "Art Assets: Rico Archive",
-      "Implementation: Codex + Frontend Codebase",
+      "도트 아트: 당근오이",
+      "시나리오: (이름 미정)",
+      "맵 디자인: (이름 미정)",
     ],
   },
   {
-    title: "Puzzle Game",
-    names: [
-      "Planning: G. Minho",
-      "Sample Illustration: Rico Archive",
-      "Puzzle Logic & UI: Frontend Team",
-    ],
-  },
-  {
-    title: "Adventure / Fortune / Itabag / Asparagus",
-    names: [
-      "Design Direction: G. Minho",
-      "Interactive Implementation: Frontend Team",
-      "Testing & Feedback: Rico Birthday Cafe Attendees",
-    ],
+    title: "QA 및 피드백",
+    names: ["플레이테스트 및 피드백: Sie, (이름 미정)"],
   },
   {
     title: "Special Thanks",
-    names: ["Yuzuha Rico", "Rico Fans", "Everyone who participated"],
+    names: ["유즈하 리코", "스텔라이브", "파스텔"],
   },
 ];
 
-const BGM_SRC = encodeURI("/밤바밤바.m4a");
+const BGM_SRC = encodeURI("/sound/밤바밤바.m4a");
 const CLAIM_ALERT_THRESHOLD = 0.33;
 const CREDITS_BOTTOM_PADDING = 140;
-const CREDITS_SCROLL_SPEED_PX = 22;
+const CREDITS_SCROLL_SPEED_PX = 24;
 
 export default function Credits() {
   const navigate = useNavigate();
   const { token } = useAuthStore();
+  const { addToast } = useToastStore();
   const [claimed, setClaimed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [needsManualStart, setNeedsManualStart] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [highlightClaim, setHighlightClaim] = useState(false);
+  const [manualScrollEnabled, setManualScrollEnabled] = useState(false);
   const [creditsMotion, setCreditsMotion] = useState({
     startY: window.innerHeight,
     endY: -window.innerHeight,
@@ -76,6 +91,7 @@ export default function Credits() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const claimButtonRef = useRef<HTMLButtonElement>(null);
   const creditsViewportRef = useRef<HTMLDivElement>(null);
+  const creditsScrollRef = useRef<HTMLDivElement>(null);
   const creditsTrackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -88,6 +104,7 @@ export default function Credits() {
 
     audio.preload = "auto";
     audio.load();
+    preloadDiriringSfx();
   }, []);
 
   useEffect(() => {
@@ -104,8 +121,7 @@ export default function Credits() {
       const trackHeight =
         creditsTrackRef.current?.scrollHeight ?? viewportHeight;
       const startOffset = Math.min(viewportHeight * 0.38, 280);
-      const travelDistance =
-        startOffset + trackHeight + CREDITS_BOTTOM_PADDING;
+      const travelDistance = startOffset + trackHeight + CREDITS_BOTTOM_PADDING;
 
       setCreditsMotion({
         startY: startOffset,
@@ -138,6 +154,14 @@ export default function Credits() {
     observer.observe(button);
     return () => observer.disconnect();
   }, [claimed, hasStarted]);
+
+  useEffect(() => {
+    if (!manualScrollEnabled) {
+      return;
+    }
+
+    creditsScrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
+  }, [manualScrollEnabled]);
 
   const handleStart = async () => {
     const audio = audioRef.current;
@@ -216,6 +240,14 @@ export default function Credits() {
       });
       if (res.ok) {
         setClaimed(true);
+        setManualScrollEnabled(true);
+        setHighlightClaim(false);
+        void playDiriringSfx();
+        addToast({
+          title: "엔딩 크레딧 시청 완료",
+          description: "THANK_YOU_ALL 업적이 추가되었어요.",
+          icon: "BadgeCheck",
+        });
       } else {
         console.error("Failed to claim achievement");
       }
@@ -226,9 +258,104 @@ export default function Credits() {
     }
   };
 
+  const renderCreditsContent = (showClaimButton: boolean) => (
+    <div
+      ref={creditsTrackRef}
+      className="flex w-full max-w-4xl flex-col items-center text-center"
+    >
+      <div className="pb-40 pt-32">
+        <h1 className="mb-4 text-4xl font-black text-[#166D77] md:text-5xl">
+          THANK YOU
+        </h1>
+        <p className="font-bold tracking-widest text-[#2a9d8f]">
+          생일 카페를 빛낸 모두를 소개할게
+        </p>
+      </div>
+
+      {CREDITS_SECTIONS.map((section, idx) => (
+        <div key={idx} className="mb-24 w-full">
+          <h2 className="mb-6 text-xl font-bold uppercase tracking-wider text-[#2a9d8f] md:text-2xl">
+            {section.title}
+          </h2>
+          <div className="flex flex-col items-center gap-4">
+            {section.names.map((name, i) =>
+              (() => {
+                const separatorIndex = name.indexOf(": ");
+
+                if (separatorIndex === -1) {
+                  return (
+                    <p
+                      key={i}
+                      className="mx-auto max-w-full text-lg font-medium text-[#365486] md:text-xl"
+                    >
+                      {name}
+                    </p>
+                  );
+                }
+
+                const label = name.slice(0, separatorIndex);
+                const value = name.slice(separatorIndex + 2);
+
+                return (
+                  <div key={i} className="mx-auto max-w-full text-center">
+                    <p className="text-lg font-semibold text-[#365486] md:text-xl">
+                      {label}
+                    </p>
+                    <p className="text-base font-normal text-[#365486]/78 md:text-lg">
+                      {value}
+                    </p>
+                  </div>
+                );
+              })(),
+            )}
+          </div>
+        </div>
+      ))}
+
+      <div className="flex flex-col items-center pt-32 pb-[50vh]">
+        <h2 className="mb-10 text-3xl font-black text-[#102542]">And You</h2>
+
+        {showClaimButton ? (
+          <motion.button
+            ref={claimButtonRef}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            animate={
+              highlightClaim ? { x: [0, -6, 6, -5, 5, -3, 3, 0] } : { x: 0 }
+            }
+            transition={
+              highlightClaim
+                ? { duration: 0.55, repeat: Infinity, ease: "easeInOut" }
+                : { duration: 0.2 }
+            }
+            onClick={awardAchievement}
+            disabled={loading}
+            className="flex items-center gap-3 rounded-full border-2 px-8 py-4 text-lg font-black shadow-[0_0_30px_rgba(94,199,165,0.4)] transition-all hover:bg-[#5EC7A5] hover:text-[#166D77]"
+            style={{
+              background: "rgba(255,255,255,0.9)",
+              color: "#166D77",
+              borderColor: "#5EC7A5",
+            }}
+          >
+            <AppIcon name="Clapperboard" size={24} />
+            {loading ? "기록 중..." : "엔딩 크레딧 시청 완료 배지 받기"}
+          </motion.button>
+        ) : (
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="flex items-center gap-2 rounded-full bg-[#5EC7A5] px-8 py-4 text-lg font-black text-[#166D77]"
+          >
+            <AppIcon name="BadgeCheck" size={20} /> 배지 획득 완료
+          </motion.div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div
-      className="relative flex min-h-screen flex-col overflow-hidden bg-[linear-gradient(180deg,#fffdf4_0%,#f4fff6_52%,#eefafc_100%)] text-[#102542] select-none"
+      className="relative flex h-dvh min-h-screen flex-col overflow-hidden bg-[linear-gradient(180deg,#fffdf4_0%,#f4fff6_52%,#eefafc_100%)] text-[#102542] select-none"
       onCopy={(e) => e.preventDefault()}
       onCut={(e) => e.preventDefault()}
       onContextMenu={(e) => e.preventDefault()}
@@ -275,98 +402,34 @@ export default function Credits() {
         >
           <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#fef3c7]/45 via-[#f0fdf4] to-[#e0f2fe]" />
 
-          <div
-            key={`${hasStarted}-${creditsMotion.startY}-${creditsMotion.endY}-${creditsMotion.duration}`}
-            className="absolute inset-x-0 top-0 z-10 flex justify-center px-3 sm:px-6"
-            style={
-              {
-                "--credits-start-y": `${creditsMotion.startY}px`,
-                "--credits-end-y": `${creditsMotion.endY}px`,
-                transform: `translate3d(0, ${creditsMotion.startY}px, 0)`,
-                animation: hasStarted
-                  ? `credits-roll ${creditsMotion.duration}s linear forwards`
-                  : "none",
-                willChange: "transform",
-              } as CSSProperties
-            }
-          >
+          {manualScrollEnabled ? (
             <div
-              ref={creditsTrackRef}
-              className="flex w-full max-w-4xl flex-col items-center text-center"
+              ref={creditsScrollRef}
+              className="absolute inset-0 z-10 overflow-y-auto overflow-x-hidden"
             >
-              {/* Title Space */}
-              <div className="pb-40 pt-32">
-                <h1 className="mb-4 text-4xl font-black text-[#166D77] md:text-5xl">
-                  THANK YOU
-                </h1>
-                <p className="font-bold tracking-widest text-[#2a9d8f]">
-                  FOR COMING TO RICO'S BIRTHDAY CAFE
-                </p>
-              </div>
-
-              {/* Sections */}
-              {CREDITS_SECTIONS.map((section, idx) => (
-                <div key={idx} className="mb-24 w-full">
-                  <h2 className="mb-6 text-xl font-bold uppercase tracking-wider text-[#2a9d8f] md:text-2xl">
-                    {section.title}
-                  </h2>
-                  <div className="flex flex-col items-center gap-4">
-                    {section.names.map((name, i) => (
-                      <p
-                        key={i}
-                        className="mx-auto max-w-full text-lg font-medium text-[#365486] md:text-xl"
-                      >
-                        {name}
-                      </p>
-                    ))}
-                  </div>
-                </div>
-              ))}
-
-              {/* Final message & Achievement Button */}
-              <div className="flex flex-col items-center pt-32 pb-[50vh]">
-                <h2 className="mb-10 text-3xl font-black text-[#102542]">And You</h2>
-
-                {!claimed ? (
-                  <motion.button
-                    ref={claimButtonRef}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    animate={
-                      highlightClaim
-                        ? { x: [0, -6, 6, -5, 5, -3, 3, 0] }
-                        : { x: 0 }
-                    }
-                    transition={
-                      highlightClaim
-                        ? { duration: 0.55, repeat: Infinity, ease: "easeInOut" }
-                        : { duration: 0.2 }
-                    }
-                    onClick={awardAchievement}
-                    disabled={loading}
-                    className="flex items-center gap-3 rounded-full border-2 px-8 py-4 text-lg font-black shadow-[0_0_30px_rgba(94,199,165,0.4)] transition-all hover:bg-[#5EC7A5] hover:text-[#166D77]"
-                    style={{
-                      background: "rgba(255,255,255,0.9)",
-                      color: "#166D77",
-                      borderColor: "#5EC7A5",
-                    }}
-                  >
-                    <AppIcon name="Clapperboard" size={24} />
-                    {loading ? "기록 중..." : "엔딩 크레딧 시청 완료 배지 받기"}
-                  </motion.button>
-                ) : (
-                  <motion.div
-                    initial={{ scale: 0.5, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="flex items-center gap-2 rounded-full bg-[#5EC7A5] px-8 py-4 text-lg font-black text-[#166D77]"
-                  >
-                    <AppIcon name="BadgeCheck" size={20} /> 감사합니다! 배지가
-                    지급되었습니다.
-                  </motion.div>
-                )}
+              <div className="flex min-h-full justify-center px-3 py-12 sm:px-6">
+                {renderCreditsContent(false)}
               </div>
             </div>
-          </div>
+          ) : (
+            <div
+              key={`${hasStarted}-${creditsMotion.startY}-${creditsMotion.endY}-${creditsMotion.duration}`}
+              className="absolute inset-x-0 top-0 z-10 flex justify-center px-3 sm:px-6"
+              style={
+                {
+                  "--credits-start-y": `${creditsMotion.startY}px`,
+                  "--credits-end-y": `${creditsMotion.endY}px`,
+                  transform: `translate3d(0, ${creditsMotion.startY}px, 0)`,
+                  animation: hasStarted
+                    ? `credits-roll ${creditsMotion.duration}s linear forwards`
+                    : "none",
+                  willChange: "transform",
+                } as CSSProperties
+              }
+            >
+              {renderCreditsContent(true)}
+            </div>
+          )}
         </div>
       </div>
 
@@ -377,7 +440,7 @@ export default function Credits() {
               다들 와줘서 고마워!
             </p>
             <p className="mb-6 text-xl text-[#365486]">
-              생일 카페 제작에 도움을 준 사람들을 소개할게
+              생일 카페를 빛낸 모두를 소개할게
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
               <button

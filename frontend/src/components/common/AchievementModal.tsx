@@ -121,7 +121,7 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
           {/* UID Section */}
           <div className="mb-5 shrink-0 bg-pale-custard rounded-2xl border-2 border-[#D6C0B0] p-4">
             <p className="text-xs font-bold uppercase tracking-widest text-[#166D77]/50 mb-2">
-              내 디바이스 ID
+              내 번호표
             </p>
             <div className="flex items-center gap-3">
               <code className="flex-1 font-mono font-bold text-[#166D77] text-base tracking-widest bg-white px-3 py-2 rounded-xl border border-[#D6C0B0] truncate">
@@ -200,7 +200,10 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
                       className="bg-pale-custard p-4 rounded-2xl border-2 border-[#5EC7A5]/20 shadow-sm flex items-center gap-4 hover:border-[#5EC7A5] hover:-translate-y-0.5 transition-all"
                     >
                       <div className="w-14 h-14 bg-[#FFE4E6] rounded-full flex items-center justify-center text-2xl shrink-0 border-2 border-[#5EC7A5]">
-                        <AchievementIcon code={ach.code} iconUrl={ach.iconUrl} />
+                        <AchievementIcon
+                          code={ach.code}
+                          iconUrl={ach.iconUrl}
+                        />
                       </div>
                       <div className="min-w-0 flex-1">
                         <h4 className="font-black text-[#166D77] text-base truncate">
@@ -224,7 +227,11 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
                       className="bg-[#f3f4f6] p-4 rounded-2xl border-2 border-[#D6C0B0]/40 shadow-sm flex items-center gap-4 opacity-60 select-none"
                     >
                       <div className="w-14 h-14 bg-[#e5e7eb] rounded-full flex items-center justify-center text-2xl shrink-0 border-2 border-[#D6C0B0] grayscale">
-                        <AppIcon name="Lock" size={26} className="text-[#9ca3af]" />
+                        <AppIcon
+                          name="Lock"
+                          size={26}
+                          className="text-[#9ca3af]"
+                        />
                       </div>
                       <div className="min-w-0 flex-1">
                         <h4 className="font-black text-[#9ca3af] text-base">

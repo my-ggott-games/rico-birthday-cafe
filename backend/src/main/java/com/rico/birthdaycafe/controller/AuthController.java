@@ -1,13 +1,11 @@
 package com.rico.birthdaycafe.controller;
 
 import com.rico.birthdaycafe.dto.AdminAuthRequest;
-import com.rico.birthdaycafe.dto.AuthRequest;
 import com.rico.birthdaycafe.dto.AuthResponse;
+import com.rico.birthdaycafe.dto.UidLoginRequest;
 import com.rico.birthdaycafe.service.AuthService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,46 +16,21 @@ public class AuthController {
 
     private final AuthService authService;
 
-    // Registration endpoint is disabled for UID-only flow
-    /*
-     * @PostMapping("/register")
-     * ...
-     */
-
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody AuthRequest request) {
-        // We reuse AuthRequest, but only the username (UID) is expected/required
-        try {
-            AuthResponse response = authService.login(request.getUsername());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new AuthResponse(null, "Invalid UID", null));
-        }
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody UidLoginRequest request) {
+        AuthResponse response = authService.login(request.getUsername());
+        return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/guest")
-    public ResponseEntity<?> guestLogin() {
-        AuthResponse response = authService.registerGuest();
+    @PostMapping("/issue-uid")
+    public ResponseEntity<AuthResponse> issueUid() {
+        AuthResponse response = authService.issueUid();
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/admin")
-    public ResponseEntity<?> adminLogin(@Valid @RequestBody AdminAuthRequest request) {
-        try {
-            AuthResponse response = authService.loginAdmin(request.getPasscode());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new AuthResponse(null, "Access denied", null));
-        }
-    }
-
-    private String getClientIp(HttpServletRequest request) {
-        String xfHeader = request.getHeader("X-Forwarded-For");
-        if (xfHeader == null || xfHeader.isEmpty() || !xfHeader.contains(request.getRemoteAddr())) {
-            return request.getRemoteAddr();
-        }
-        return xfHeader.split(",")[0];
+    public ResponseEntity<AuthResponse> adminLogin(@Valid @RequestBody AdminAuthRequest request) {
+        AuthResponse response = authService.loginAdmin(request.getPasscode());
+        return ResponseEntity.ok(response);
     }
 }

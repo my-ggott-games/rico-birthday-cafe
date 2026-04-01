@@ -374,7 +374,7 @@ function RunnerScene({
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [runState]);
 
   useEffect(() => {
     courseTimeRef.current = currentCourseTime;
@@ -384,7 +384,7 @@ function RunnerScene({
     if (scoreTextRef.current) {
       scoreTextRef.current.text = `Score ${score}`;
     }
-  }, []);
+  }, [runState]);
 
   const drawWorld = useCallback(() => {
     const graphics = worldRef.current;
@@ -754,7 +754,7 @@ function RunnerScene({
         color: 0x102542,
         alpha: shadowAlpha,
       });
-  }, []);
+  }, [runState]);
 
   const resetScene = useCallback(() => {
     playerYRef.current = 0;

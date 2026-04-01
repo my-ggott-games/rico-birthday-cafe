@@ -21,8 +21,13 @@ const ScoreCard = ({
   textColor: string;
 }) => (
   <div
-    className="flex min-w-[7rem] flex-1 flex-col items-center rounded-2xl px-4 py-2 sm:flex-none"
-    style={{ background, color: textColor }}
+    className="flex min-w-[7rem] flex-1 flex-col items-center rounded-2xl border-2 px-4 py-2 shadow-sm sm:flex-none"
+    style={{
+      background,
+      color: textColor,
+      borderColor: "rgba(255,255,255,0.38)",
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.18)",
+    }}
   >
     <span className="text-[10px] font-bold uppercase tracking-tighter opacity-70">
       {label}
@@ -148,7 +153,7 @@ const AsparagusMerge: React.FC = () => {
                 setIsSwapMode(!isSwapMode);
                 setSelection(null);
               }}
-              onRestart={startGame}
+              onRestart={() => startGame()}
               onDebugStart={startDebugGame}
             />
           </div>

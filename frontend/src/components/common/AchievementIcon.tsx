@@ -1,20 +1,8 @@
-import { AppIcon, type AppIconName } from "./AppIcon";
-
-const ACHIEVEMENT_ICONS: Record<string, AppIconName> = {
-  ASPARAGUS_EXCALIBUR: "Sword",
-  FIRST_PUZZLE: "Puzzle",
-  "LEGEND-HERO": "Sword",
-  "R-GEND-HERO": "Crown",
-  LUCKY_RICO_MOMENT: "ScrollText",
-  RICO_DEBUT_DATE: "Eye",
-  THANK_YOU_ALL: "Clapperboard",
-};
+import { AppIcon } from "./AppIcon";
+import { getAchievementIconName } from "./achievementIcons";
 
 const isAssetUrl = (iconUrl?: string | null) =>
   Boolean(iconUrl && /^(https?:\/\/|\/)/.test(iconUrl));
-
-export const getAchievementIconName = (code: string): AppIconName =>
-  ACHIEVEMENT_ICONS[code] ?? "Trophy";
 
 export const AchievementIcon = ({
   code,

@@ -2,7 +2,7 @@ import React from "react";
 import { AnimatePresence } from "framer-motion";
 import { Tile } from "./Tile";
 import { type Grid, type Direction } from "./types";
-import { GRID_SIZE } from "./constants";
+import { GRID_SIZE, WIN_VALUE } from "./constants";
 
 // Responsive board geometry for mobile-safe fit.
 
@@ -61,20 +61,20 @@ export const Board: React.FC<BoardProps> = ({
   return (
     <div className="flex flex-col items-center justify-center w-full h-full">
       <div
-        className="aspect-square flex items-center justify-center"
+        className="relative aspect-square flex items-center justify-center"
         style={
           {
             "--board-padding": boardPadding,
             "--cell-radius": cellRadius,
             width: boardSize,
             background:
-              "linear-gradient(145deg, #1c7a83 0%, #166D77 48%, #0f525a 100%)",
+              "linear-gradient(135deg, #73c5a8 0%, #7fd0a9 42%, #6fcbb3 100%)",
             borderRadius: boardRadius,
             padding: "var(--board-padding)",
-            border: "3px solid rgba(255,255,255,0.26)",
+            border: "3px solid rgba(18, 94, 91, 0.72)",
             boxShadow:
-              "0 30px 80px rgba(22, 109, 119, 0.3), inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -14px 30px rgba(0,0,0,0.14)",
-            touchAction: "none", // Prevents body scrolling when swiping inside the board
+              "0 30px 80px rgba(84, 182, 160, 0.24)",
+            touchAction: "pinch-zoom", // Keep swipe interactions while allowing browser zoom gestures
             marginInline: "auto",
           } as React.CSSProperties
         }
@@ -87,8 +87,7 @@ export const Board: React.FC<BoardProps> = ({
             inset: "calc(var(--board-padding) * 0.55)",
             borderRadius: "calc(var(--cell-radius) + 6px)",
             border: "2px solid rgba(255,255,255,0.16)",
-            boxShadow:
-              "inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -10px 20px rgba(0,0,0,0.1)",
+            boxShadow: "none",
           }}
         />
         <div
@@ -110,7 +109,8 @@ export const Board: React.FC<BoardProps> = ({
                   width: "100%",
                   height: "100%",
                   aspectRatio: "1 / 1",
-                  overflow: "hidden",
+                  overflow: cell === WIN_VALUE ? "visible" : "hidden",
+                  zIndex: cell === WIN_VALUE ? 2 : 1,
                 }}
               >
                 <div
@@ -119,13 +119,14 @@ export const Board: React.FC<BoardProps> = ({
                     background:
                       "linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.05) 100%)",
                     borderRadius: "var(--cell-radius)",
-                    border: "1px solid rgba(8, 73, 79, 0.34)",
+                    border: "2px solid rgba(244,255,249,0.78)",
                   }}
                 />
                 <AnimatePresence mode="popLayout">
                   <div className="absolute inset-0">
                     <Tile
                       value={cell}
+                      isSwapMode={isSwapMode}
                       isSelected={selection?.r === r && selection?.c === c}
                       onClick={isSwapMode ? () => onTileClick(r, c) : undefined}
                     />

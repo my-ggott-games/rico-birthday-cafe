@@ -163,7 +163,7 @@ const Lobby: React.FC = () => {
                 name="리코 옷입히기"
                 icon="Scissors"
                 isMobile={isMobile}
-                className="border-[#166D77] bg-[#FFE4E6]"
+                className="border-[#e7bcc2] bg-[#FFE4E6]"
                 iconClassName="text-[#166D77]"
               />
             </motion.div>
@@ -186,7 +186,7 @@ const Lobby: React.FC = () => {
                 name="이타백 꾸미기"
                 icon="Handbag"
                 isMobile={isMobile}
-                className="border-[#166D77] bg-[#fff8e8]"
+                className="border-[#e5dcc7] bg-[#fff8e8]"
                 iconClassName="text-[#166D77]"
               />
             </motion.div>
@@ -211,8 +211,8 @@ const Lobby: React.FC = () => {
                 isMobile={isMobile}
                 className={
                   isPuzzleMuseumUnlocked
-                    ? "border-[#166D77] bg-[#f5ecdd]"
-                    : "border-[#166D77] bg-[#a3e635]"
+                    ? "border-[#ddd1bf] bg-[#f5ecdd]"
+                    : "border-[#84bf2e] bg-[#a3e635]"
                 }
                 iconClassName="text-[#166D77]"
               />
@@ -236,7 +236,7 @@ const Lobby: React.FC = () => {
                 name="아스파라거스 키우기"
                 icon="Sprout"
                 isMobile={isMobile}
-                className="border-[#166D77] bg-[#d4edda]"
+                className="border-[#aad0b2] bg-[#d4edda]"
                 iconClassName="text-[#2d6a4f]"
               />
             </motion.div>
@@ -259,7 +259,7 @@ const Lobby: React.FC = () => {
                 name="오늘의 운세"
                 icon="ScrollText"
                 isMobile={isMobile}
-                className="border-[#8B5A2B] bg-[#D6C0B0]"
+                className="border-[#b79880] bg-[#D6C0B0]"
                 iconClassName="text-[#8B5A2B]"
               />
             </motion.div>
@@ -281,7 +281,7 @@ const Lobby: React.FC = () => {
                 name="용사 리코 이야기"
                 icon="Swords"
                 isMobile={isMobile}
-                className="border-[#102542] bg-[#d8e4f7]"
+                className="border-[#aebed7] bg-[#d8e4f7]"
                 iconClassName="text-[#102542]"
               />
             </motion.div>

@@ -151,7 +151,7 @@ const GlobalLoading: React.FC = () => {
                 repeat: Infinity,
                 ease: animationType === "rotate" ? "linear" : "easeInOut",
               }}
-              className="mb-8 p-3 rounded-full bg-pale-custard border-[1px] border-pale-custard shadow-lg"
+              className="mb-8 rounded-full border-2 border-[#166D77] bg-pale-custard p-3 shadow-lg"
             >
               <img
                 src="/favicon.png"

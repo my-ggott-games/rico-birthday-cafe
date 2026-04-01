@@ -88,6 +88,6 @@ export const STAGES: Record<
     icon: "Sword",
     bg: "linear-gradient(135deg, #e0f2fe 0%, #7dd3fc 100%, #38bdf8 100%)",
     text: "#0369a1",
-    iconColor: "#ffffff",
+    iconColor: "#FFF7D6",
   },
 };

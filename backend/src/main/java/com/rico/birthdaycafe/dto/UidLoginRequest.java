@@ -1,5 +1,6 @@
 package com.rico.birthdaycafe.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,9 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponse {
-    private int code;
-    private String token;
-    private String message;
+public class UidLoginRequest {
+    @NotBlank(message = "Username cannot be blank")
     private String username;
 }

@@ -41,7 +41,7 @@ export const Items: React.FC<ItemsProps> = ({
           disabled={undoCount <= 0 || historyLength === 0}
           className={`${BTN_BASE} ${
             undoCount > 0 && historyLength > 0
-              ? "bg-white text-rico-dark-teal border-[#bef264] shadow-lg"
+              ? "bg-white text-rico-dark-teal border-[#89dccd] shadow-lg"
               : "bg-gray-200 text-gray-400 border-gray-300 opacity-50 cursor-not-allowed"
           }`}
         >
@@ -64,8 +64,8 @@ export const Items: React.FC<ItemsProps> = ({
           className={`${BTN_BASE} ${
             swapCount > 0
               ? isSwapMode
-                ? "bg-[#5EC7A5] text-white border-[#166D77] shadow-inner"
-                : "bg-white text-rico-dark-teal border-[#bef264] shadow-lg"
+                ? "bg-[#5EC7A5] text-white border-[#89dccd] shadow-inner"
+                : "bg-white text-rico-dark-teal border-[#89dccd] shadow-lg"
               : "bg-gray-200 text-gray-400 border-gray-300 opacity-50 cursor-not-allowed"
           }`}
         >
