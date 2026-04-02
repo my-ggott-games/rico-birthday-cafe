@@ -6,6 +6,13 @@ import { AuthModal } from "../components/auth/AuthModal";
 import ProgressiveBackground from "../components/common/ProgressiveBackground";
 import ProgressiveImage from "../components/common/ProgressiveImage";
 
+const LANDING_IMAGE_ASPECT = "aspect-[3847/2885]";
+const MOBILE_SLOGAN_FRAME_CLASS =
+  "absolute left-1/2 top-[10%] w-[30%] -translate-x-1/2";
+const DESKTOP_SLOGAN_FRAME_CLASS =
+  "absolute left-1/2 top-[11%] w-[30%] -translate-x-1/2";
+const ENTER_ANIMATION_DURATION_MS = 1850;
+
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -16,6 +23,10 @@ const LandingPage: React.FC = () => {
   };
 
   const handleEnter = () => {
+    if (isOpen) {
+      return;
+    }
+
     if (isAuthenticated) {
       triggerEnterAnimation();
       return;
@@ -29,7 +40,7 @@ const LandingPage: React.FC = () => {
     setIsOpen(true);
     setTimeout(() => {
       navigate("/lobby");
-    }, 1500); // Wait for animation
+    }, ENTER_ANIMATION_DURATION_MS);
   };
 
   return (
@@ -37,51 +48,128 @@ const LandingPage: React.FC = () => {
       className="relative isolate flex min-h-screen h-dvh w-full select-none flex-col items-center justify-center overflow-hidden"
       onDragStart={preventDrag}
     >
-      {/* Background Layers */}
-      <ProgressiveBackground
-        thumbnailSrc="/assets/landing_sample_thumb.jpg"
-        fullSrc="/assets/landing_sample.jpeg"
-        className="z-0"
-        overlayClassName="bg-black/28"
-      />
+      <motion.div
+        initial={false}
+        animate={
+          isOpen
+            ? { scale: 1.24, opacity: 0.98, filter: "brightness(1.04)" }
+            : { scale: 1, opacity: 1, filter: "brightness(1)" }
+        }
+        transition={{
+          duration: ENTER_ANIMATION_DURATION_MS / 1000,
+          ease: [0.22, 1, 0.36, 1],
+        }}
+        className="absolute inset-0"
+        style={{
+          transformOrigin: "center center",
+          willChange: "transform, opacity, filter",
+        }}
+      >
+        {/* Background Layers */}
+        <ProgressiveBackground
+          thumbnailSrc="/landing.jpg"
+          fullSrc="/landing.jpg"
+          className="z-0"
+          overlayClassName="bg-black/28"
+          imageClassName="object-cover object-center md:object-top"
+        />
 
-      <div className="relative z-20 flex flex-col items-center px-6">
-        {/* Cafe Sign */}
-        <motion.div
-          initial={{ y: -50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "spring", bounce: 0.5 }}
-          className="mb-12 text-center"
-        >
-          <div className="rounded-[2rem] border-4 border-white/70 bg-white/22 p-3 shadow-[0_10px_30px_rgba(0,0,0,0.22)] backdrop-blur-md">
+        <div className="pointer-events-none absolute inset-0 z-10 bg-[#05080c] md:hidden">
+          <div className="absolute left-1/2 top-1/2 h-full aspect-[3847/2885] -translate-x-1/2 -translate-y-1/2 scale-[0.75]">
             <ProgressiveImage
-              thumbnailSrc="/slogan/landing-thumb.jpg"
-              fullSrc="/slogan/landing.jpg"
-              alt="유즈하 리코 생일카페 배너"
-              className="aspect-[2419/907] w-[min(86vw,860px)] rounded-[1.4rem]"
-              imageClassName="object-cover"
+              thumbnailSrc="/landing.jpg"
+              fullSrc="/landing.jpg"
+              alt=""
+              className="h-full w-full"
+              imageClassName="object-cover object-center"
             />
-          </div>
-          <p className="mt-4 inline-flex rounded-full border border-white/55 bg-white/24 px-5 py-2 text-sm font-black tracking-[0.28em] text-pale-custard shadow-lg backdrop-blur-sm md:text-base">
-            2026.04.13 OPEN
-          </p>
-        </motion.div>
 
-        {/* Door / Entrance */}
-        <motion.div
-          onClick={handleEnter}
-          className="cursor-pointer relative group"
-          animate={isOpen ? { scale: 5, opacity: 0 } : { scale: 1, opacity: 1 }}
-          whileHover={{ scale: 1.05 }}
-          transition={{ duration: 0.8, ease: "easeInOut" }}
-        >
-          <div className="flex h-28 w-64 items-center justify-center rounded-[1.75rem] border border-white/70 bg-white/50 shadow-[0_12px_30px_rgba(0,0,0,0.16)] backdrop-blur-sm transition-all duration-300 group-hover:bg-white/60 group-hover:shadow-[0_16px_36px_rgba(0,0,0,0.2)] md:h-32 md:w-80">
-            <span className="text-xl font-black tracking-[0.24em] text-[#166D77] md:text-2xl">
-              ENTER
-            </span>
+            <motion.div
+              initial={{ y: -24, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ type: "spring", bounce: 0.35 }}
+              className={`${MOBILE_SLOGAN_FRAME_CLASS} z-20 text-center`}
+            >
+              <ProgressiveImage
+                thumbnailSrc="/slogan/landing-thumb.jpg"
+                fullSrc="/slogan/landing.jpg"
+                alt="유즈하 리코 생일카페 배너"
+                className="mx-auto aspect-[2419/907] w-full overflow-hidden rounded-[0.8rem] shadow-[0_10px_24px_rgba(0,0,0,0.26)]"
+                imageClassName="object-cover"
+              />
+              <p className="mt-3 inline-flex rounded-full border border-white/55 bg-white/24 px-4 py-2 text-xs font-black tracking-[0.24em] text-pale-custard shadow-lg backdrop-blur-sm">
+                2026.04.13 OPEN
+              </p>
+            </motion.div>
           </div>
-        </motion.div>
-      </div>
+        </div>
+
+        <div className="pointer-events-none absolute left-1/2 top-0 z-20 hidden -translate-x-1/2 md:block">
+          <div
+            className={`${LANDING_IMAGE_ASPECT} relative w-[max(100vw,calc(100dvh*3847/2885))]`}
+          >
+            <motion.div
+              initial={{ y: -24, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ type: "spring", bounce: 0.35 }}
+              className={`${DESKTOP_SLOGAN_FRAME_CLASS} text-center`}
+            >
+              <ProgressiveImage
+                thumbnailSrc="/slogan/landing-thumb.jpg"
+                fullSrc="/slogan/landing.jpg"
+                alt="유즈하 리코 생일카페 배너"
+                className="mx-auto aspect-[2419/907] w-full overflow-hidden rounded-[0.9rem] shadow-[0_12px_28px_rgba(0,0,0,0.28)]"
+                imageClassName="object-cover"
+              />
+              <p className="mt-3 inline-flex rounded-full border border-white/55 bg-white/24 px-5 py-2 text-sm font-black tracking-[0.28em] text-pale-custard shadow-lg backdrop-blur-sm">
+                2026.04.13 OPEN
+              </p>
+            </motion.div>
+          </div>
+        </div>
+
+        <div className="relative z-20 h-full w-full px-6">
+          {/* Door / Entrance */}
+          <motion.div
+            onClick={handleEnter}
+            className="group absolute left-1/2 top-[55%] z-20 -translate-x-1/2 -translate-y-1/2 cursor-pointer md:top-[75%]"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 1.05 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            <motion.div
+              className="flex h-32 w-32 items-center justify-center rounded-[1.75rem] border border-white/55 bg-[rgba(255,255,255,0.5)] shadow-[0_12px_30px_rgba(0,0,0,0.16)] md:h-56 md:w-56 md:rounded-[2.6rem] md:bg-transparent"
+              whileHover={{
+                backgroundColor: "rgba(255,255,255,0.5)",
+                boxShadow: "0 16px 36px rgba(0,0,0,0.2)",
+              }}
+              whileTap={{
+                backgroundColor: "rgba(255,255,255,0.5)",
+                boxShadow: "0 16px 36px rgba(0,0,0,0.2)",
+              }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <span
+                data-content="하이용사!"
+                className="landing-enter-text-stroke rounded-full px-3 py-2 text-xl font-black tracking-normal text-[#166D77] md:px-4 md:text-[2.6rem] md:tracking-[0.08em]"
+              >
+                하이용사!
+              </span>
+            </motion.div>
+          </motion.div>
+        </div>
+
+        <motion.div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-30 bg-[radial-gradient(circle_at_center,transparent_0%,transparent_20%,rgba(0,0,0,0.1)_42%,rgba(0,0,0,0.68)_100%)]"
+          initial={false}
+          animate={isOpen ? { opacity: 1 } : { opacity: 0 }}
+          transition={{
+            duration: ENTER_ANIMATION_DURATION_MS / 1000,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+        />
+      </motion.div>
 
       <AuthModal
         isOpen={isAuthModalOpen}

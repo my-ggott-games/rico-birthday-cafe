@@ -499,3 +499,26 @@ button {
   0%   { transform: scaleX(0.5); }
   100% { transform: scaleX(0.15); }
 }
+
+.landing-enter-text-stroke {
+  position: relative;
+  z-index: 0;
+  display: inline-block;
+}
+
+.landing-enter-text-stroke::before {
+  content: attr(data-content);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  font: inherit;
+  letter-spacing: inherit;
+  white-space: nowrap;
+  pointer-events: none;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 8px rgba(255, 252, 232, 0.92);
+}

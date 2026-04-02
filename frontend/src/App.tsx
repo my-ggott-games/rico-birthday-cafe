@@ -9,6 +9,7 @@ import { AchievementToast } from "./components/common/AchievementToast";
 import NotFound from "./pages/NotFound";
 import { startCodyAssetPreload } from "./utils/codyAssetPreload";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import LandingCompareSample from "./pages/LandingCompareSample";
 
 const CodyGame = lazy(() => import("./pages/CodyGame"));
 const ItabagGame = lazy(() => import("./pages/ItabagGame"));
@@ -37,6 +38,7 @@ function App() {
         <Suspense fallback={null}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/sample/landing-compare" element={<LandingCompareSample />} />
             <Route path="/sample/takeout-cup" element={<TakeoutCupShowcase />} />
 
             <Route element={<ProtectedRoute />}>

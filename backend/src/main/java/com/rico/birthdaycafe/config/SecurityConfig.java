@@ -16,10 +16,22 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    private static final List<String> DEFAULT_ALLOWED_ORIGINS = List.of(
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://192.168.*:*",
+            "http://10.*:*",
+            "http://172.*:*",
+            "https://dev-rico-cafe.netlify.app"
+    );
 
     private final JwtTokenProvider tokenProvider;
 
@@ -45,13 +57,16 @@ public class SecurityConfig {
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
 
-        if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
-            configuration.setAllowedOrigins(java.util.Arrays.asList(allowedOrigins.split(",")));
-        } else {
-            configuration.setAllowedOrigins(java.util.List.of("http://localhost:5173"));
-        }
-        configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(java.util.List.of("*"));
+        List<String> configuredOrigins = allowedOrigins == null
+                ? List.of()
+                : Arrays.stream(allowedOrigins.split(","))
+                        .map(String::trim)
+                        .filter(origin -> !origin.isEmpty())
+                        .toList();
+
+        configuration.setAllowedOriginPatterns(configuredOrigins.isEmpty() ? DEFAULT_ALLOWED_ORIGINS : configuredOrigins);
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
         org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

@@ -32,6 +32,10 @@ Set these in your backend host (Render/Railway/Fly/etc):
 - `ADMIN_PASSCODE_HASH`
 - `ALLOWED_ORIGINS`
 
+Example:
+
+- `ALLOWED_ORIGINS=https://<frontend-domain>,https://<dev-frontend-domain>`
+
 Notes:
 
 - App resolves datasource variables in this order:

@@ -13,7 +13,7 @@ Set these explicitly:
 - `SPRING_DATASOURCE_PASSWORD=<db-password>`
 - `JWT_SECRET=<...>`
 - `ADMIN_PASSCODE_HASH=<...>`
-- `ALLOWED_ORIGINS=https://<frontend-domain>`
+- `ALLOWED_ORIGINS=https://<frontend-domain>,https://<dev-frontend-domain>`
 
 ## Important
 

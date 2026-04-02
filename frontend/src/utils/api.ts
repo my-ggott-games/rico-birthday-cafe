@@ -1,7 +1,34 @@
 import { useAuthStore } from "../store/useAuthStore";
 
+const normalizeBaseUrl = (baseUrl?: string) => {
+  const trimmedBaseUrl = baseUrl?.trim();
+
+  if (!trimmedBaseUrl) {
+    return null;
+  }
+
+  return trimmedBaseUrl.endsWith("/")
+    ? trimmedBaseUrl.slice(0, -1)
+    : trimmedBaseUrl;
+};
+
+const getDefaultBaseUrl = () => {
+  if (typeof window === "undefined") {
+    return "/api";
+  }
+
+  const { hostname, protocol } = window.location;
+  const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
+
+  if (isLocalhost) {
+    return "/api";
+  }
+
+  return `${protocol}//${hostname}:8080/api`;
+};
+
 export const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+  normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL) || getDefaultBaseUrl();
 
 type FetchOptions = RequestInit;
 

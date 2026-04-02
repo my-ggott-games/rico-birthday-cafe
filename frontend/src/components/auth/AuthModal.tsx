@@ -17,6 +17,28 @@ type AuthApiResponse = {
   username?: string | null;
 };
 
+const getFriendlyErrorMessage = (error: unknown, fallbackMessage: string) => {
+  if (!(error instanceof Error)) {
+    return fallbackMessage;
+  }
+
+  const message = error.message.trim();
+
+  if (!message) {
+    return fallbackMessage;
+  }
+
+  if (/expected pattern|load failed|failed to fetch/i.test(message)) {
+    return fallbackMessage;
+  }
+
+  if (/[a-zA-Z]/.test(message) && !/[가-힣]/.test(message)) {
+    return fallbackMessage;
+  }
+
+  return message;
+};
+
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
@@ -109,8 +131,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       onSuccess();
     } catch (err: any) {
       setError(
-        err?.message ||
+        getFriendlyErrorMessage(
+          err,
           "번호표 기계에 문제가 생겼어요.\n잠시 후 다시 시도해주세요.",
+        ),
       );
     } finally {
       setLoading(false);
@@ -136,8 +160,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       login(data.token);
     } catch (err: any) {
       setError(
-        err?.message ||
+        getFriendlyErrorMessage(
+          err,
           "번호표 발급 중 문제가 생겼어요.\n잠시 후 다시 시도해주세요.",
+        ),
       );
     } finally {
       setLoading(false);

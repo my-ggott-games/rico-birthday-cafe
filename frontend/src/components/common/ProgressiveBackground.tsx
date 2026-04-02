@@ -6,6 +6,7 @@ type ProgressiveBackgroundProps = {
   alt?: string;
   className?: string;
   overlayClassName?: string;
+  imageClassName?: string;
 };
 
 const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
@@ -14,6 +15,7 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
   alt = "",
   className = "",
   overlayClassName = "bg-black/20",
+  imageClassName = "object-cover",
 }) => {
   const previewSrc = thumbnailSrc ?? fullSrc;
   const [isHighResReady, setIsHighResReady] = useState(false);
@@ -47,7 +49,10 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
 
     const decodeAndReveal = () => {
       if (typeof image.decode === "function") {
-        image.decode().catch(() => undefined).finally(revealHighRes);
+        image
+          .decode()
+          .catch(() => undefined)
+          .finally(revealHighRes);
         return;
       }
 
@@ -92,11 +97,12 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
         decoding="async"
         style={{ willChange: "opacity, filter, transform" }}
         className={[
-          "absolute inset-0 h-full w-full object-cover",
+          "absolute inset-0 h-full w-full",
           "transition-[opacity,filter,transform] duration-[2200ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
           isHighResVisible
-            ? "scale-[1.03] opacity-25 blur-[10px] saturate-[0.96] brightness-[0.96]"
-            : "scale-[1.12] opacity-100 blur-[22px] saturate-[1.08] brightness-[1.04]",
+            ? "scale-100 opacity-25 blur-[10px] saturate-[0.96] brightness-[0.96] md:scale-[1.03]"
+            : "scale-[1.04] opacity-100 blur-[22px] saturate-[1.08] brightness-[1.04] md:scale-[1.12]",
+          imageClassName,
         ].join(" ")}
       />
 
@@ -108,11 +114,12 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
           decoding="async"
           style={{ willChange: "opacity, filter, transform" }}
           className={[
-            "absolute inset-0 h-full w-full object-cover",
+            "absolute inset-0 h-full w-full",
             "transition-[opacity,filter,transform] duration-[1800ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
             isHighResVisible
               ? "scale-100 opacity-100 blur-0 saturate-100 brightness-100"
-              : "scale-[1.025] opacity-0 blur-[12px] saturate-[1.04] brightness-[1.03]",
+              : "scale-[1.01] opacity-0 blur-[12px] saturate-[1.04] brightness-[1.03] md:scale-[1.025]",
+            imageClassName,
           ].join(" ")}
         />
       ) : null}

@@ -26,12 +26,12 @@ logging:
 
 app:
   cors:
-    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173}
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,https://dev-rico-cafe.netlify.app}
   admin:
     # Prefer ADMIN_PASSCODE_HASH (bcrypt). ADMIN_PASSCODE is also supported as a
     # plain-text fallback for deployments where env hashing was misconfigured.
     passcode: ${ADMIN_PASSCODE:}
-    passcode-hash: ${ADMIN_PASSCODE_HASH:$2a$10$64tlOiaOJWsxVOkt5FZFee2xdOdKdukbdNsD36eUiHJLQgr43.uGy}
+    passcode-hash: ${ADMIN_PASSCODE_HASH:}
 
 management:
   endpoints:

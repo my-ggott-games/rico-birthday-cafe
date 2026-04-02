@@ -3,6 +3,9 @@
 .DS_Store
 .idea
 *.log
+.env
+.env.*
+!*.example
 
 # User requested: Ignore main assets but ALLOW codygame assets
 frontend/public/assets/*.png
