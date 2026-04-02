@@ -39,6 +39,7 @@ import {
   TOUCH_DRAG_TOLERANCE_PX,
 } from "../features/puzzle/constants";
 import { PUZZLE_TUTORIAL_SLIDES } from "../constants/tutorialSlides";
+import { usePageBgm } from "../hooks/usePageBgm";
 import {
   assignSpawnPositions,
   clamp,
@@ -47,12 +48,17 @@ import {
   getDisplayPieceSize,
 } from "../features/puzzle/helpers";
 import type { PuzzlePiece } from "../features/puzzle/types";
+import { pickRandomActivityBgm } from "../utils/bgm";
 
 type PuzzleGameProps = {
   embedInContainer?: boolean;
 };
 
 const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
+  const [bgmSrc] = useState(() => pickRandomActivityBgm());
+
+  usePageBgm(bgmSrc);
+
   const [pieces, setPieces] = useState<PuzzlePiece[]>([]);
   const [completed, setCompleted] = useState(false);
   const [photocardModeEnabled, setPhotocardModeEnabled] = useState(false);

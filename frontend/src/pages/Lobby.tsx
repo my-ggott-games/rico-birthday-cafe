@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { KCelebrateSlogan } from "k-celebrate-slogan";
 import { AchievementModal } from "../components/common/AchievementModal";
 import { AdminModal } from "../components/auth/AdminModal";
+import { usePageBgm } from "../hooks/usePageBgm";
 import {
   PUZZLE_MUSEUM_UNLOCK_EVENT,
   PUZZLE_MUSEUM_UNLOCK_KEY,
@@ -12,6 +13,7 @@ import {
   AppIcon,
   type AppIconName,
 } from "../components/common/AppIcon";
+import { LOBBY_BGM_SRC } from "../utils/bgm";
 
 const LobbyIconTile = ({
   name,
@@ -45,6 +47,8 @@ const LobbyIconTile = ({
 );
 
 const Lobby: React.FC = () => {
+  usePageBgm(LOBBY_BGM_SRC);
+
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [isAchievementOpen, setIsAchievementOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
@@ -160,7 +164,7 @@ const Lobby: React.FC = () => {
               className="group"
             >
               <LobbyIconTile
-                name="리코 옷입히기"
+                name="리코의 외출준비"
                 icon="Scissors"
                 isMobile={isMobile}
                 className="border-[#e7bcc2] bg-[#FFE4E6]"

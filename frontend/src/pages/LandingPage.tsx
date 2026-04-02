@@ -55,8 +55,8 @@ const LandingPage: React.FC = () => {
         >
           <div className="rounded-[2rem] border-4 border-white/70 bg-white/22 p-3 shadow-[0_10px_30px_rgba(0,0,0,0.22)] backdrop-blur-md">
             <ProgressiveImage
-              thumbnailSrc="/landing_slogan_thumb.jpg"
-              fullSrc="/landing_slogan.jpg"
+              thumbnailSrc="/slogan/landing-thumb.jpg"
+              fullSrc="/slogan/landing.jpg"
               alt="유즈하 리코 생일카페 배너"
               className="aspect-[2419/907] w-[min(86vw,860px)] rounded-[1.4rem]"
               imageClassName="object-cover"

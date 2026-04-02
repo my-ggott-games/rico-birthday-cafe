@@ -8,6 +8,7 @@ import { BASE_URL } from "../utils/api";
 import { ReturnButton } from "../components/common/ReturnButton";
 import { AppIcon } from "../components/common/AppIcon";
 import { playDiriringSfx, preloadDiriringSfx } from "../utils/soundEffects";
+import { pickRandomActivityBgm } from "../utils/bgm";
 
 const CREDITS_SECTIONS = [
   {
@@ -27,9 +28,9 @@ const CREDITS_SECTIONS = [
   {
     title: "음악",
     names: [
-      "「감자튀김 옴뇸뇸」: U+003AU+27B4 / 편곡: (이름 미정)",
-      "「밤바밤바」: U+003AU+27B4 / 편곡: (이름 미정)",
-      "「그 날, 감자튀김」: U+003AU+27B4 / 편곡: (이름 미정)",
+      "「감자튀김 옴뇸뇸」: U+003AU+27B4\n편곡: (이름 미정)",
+      "「밤바밤바」: U+003AU+27B4\n편곡: (이름 미정)",
+      "「그 날, 감자튀김」: U+003AU+27B4\n편곡: (이름 미정)",
       "「diriring」 효과음: U+003AU+27B4",
       "",
       "용사 리코 이야기 BGM:",
@@ -67,7 +68,6 @@ const CREDITS_SECTIONS = [
   },
 ];
 
-const BGM_SRC = encodeURI("/sound/밤바밤바.m4a");
 const CLAIM_ALERT_THRESHOLD = 0.33;
 const CREDITS_BOTTOM_PADDING = 140;
 const CREDITS_SCROLL_SPEED_PX = 24;
@@ -83,6 +83,7 @@ export default function Credits() {
   const [isMuted, setIsMuted] = useState(false);
   const [highlightClaim, setHighlightClaim] = useState(false);
   const [manualScrollEnabled, setManualScrollEnabled] = useState(false);
+  const [bgmSrc] = useState(() => pickRandomActivityBgm());
   const [creditsMotion, setCreditsMotion] = useState({
     startY: window.innerHeight,
     endY: -window.innerHeight,
@@ -301,7 +302,7 @@ export default function Credits() {
                     <p className="text-lg font-semibold text-[#365486] md:text-xl">
                       {label}
                     </p>
-                    <p className="text-base font-normal text-[#365486]/78 md:text-lg">
+                    <p className="whitespace-pre-line text-base font-normal text-[#365486]/78 md:text-lg">
                       {value}
                     </p>
                   </div>
@@ -370,7 +371,7 @@ export default function Credits() {
           }
         }
       `}</style>
-      <audio ref={audioRef} src={BGM_SRC} loop preload="auto" playsInline />
+      <audio ref={audioRef} src={bgmSrc} loop preload="auto" playsInline />
 
       {/* Fixed header buttons */}
       <div className="absolute left-4 top-4 z-50">

@@ -5,9 +5,11 @@ import { Board } from "../components/asparagus/Board";
 import { Items } from "../components/asparagus/Items";
 import { GameContainer } from "../components/common/GameContainer";
 import { useAsparagusGame } from "../hooks/useAsparagusGame";
+import { usePageBgm } from "../hooks/usePageBgm";
 import { type Direction } from "../components/asparagus/types";
 import { AppIcon } from "../components/common/AppIcon";
 import { ASPARAGUS_TUTORIAL_SLIDES } from "../constants/tutorialSlides";
+import { pickRandomActivityBgm } from "../utils/bgm";
 
 const ScoreCard = ({
   label,
@@ -37,6 +39,10 @@ const ScoreCard = ({
 );
 
 const AsparagusMerge: React.FC = () => {
+  const [bgmSrc] = React.useState(() => pickRandomActivityBgm());
+
+  usePageBgm(bgmSrc);
+
   const {
     grid,
     score,

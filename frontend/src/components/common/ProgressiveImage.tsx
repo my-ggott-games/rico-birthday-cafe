@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 type ProgressiveImageProps = {
-  thumbnailSrc: string;
+  thumbnailSrc?: string;
   fullSrc: string;
   alt: string;
   className?: string;
@@ -15,12 +15,14 @@ const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   className = "",
   imageClassName = "",
 }) => {
+  const previewSrc = thumbnailSrc ?? fullSrc;
   const [isHighResReady, setIsHighResReady] = useState(false);
   const [isHighResVisible, setIsHighResVisible] = useState(false);
 
   useEffect(() => {
     let isCancelled = false;
     let frameId: number | null = null;
+    let revealTimerId: number | null = null;
     const image = new Image();
 
     setIsHighResReady(false);
@@ -34,7 +36,11 @@ const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
       setIsHighResReady(true);
       frameId = window.requestAnimationFrame(() => {
         if (!isCancelled) {
-          setIsHighResVisible(true);
+          revealTimerId = window.setTimeout(() => {
+            if (!isCancelled) {
+              setIsHighResVisible(true);
+            }
+          }, 60);
         }
       });
     };
@@ -63,13 +69,17 @@ const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
       if (frameId !== null) {
         window.cancelAnimationFrame(frameId);
       }
+
+      if (revealTimerId !== null) {
+        window.clearTimeout(revealTimerId);
+      }
     };
   }, [fullSrc]);
 
   return (
     <div className={`relative overflow-hidden ${className}`}>
       <img
-        src={thumbnailSrc}
+        src={previewSrc}
         alt={alt}
         draggable={false}
         fetchPriority="high"
@@ -77,10 +87,10 @@ const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
         style={{ willChange: "opacity, filter, transform" }}
         className={[
           "absolute inset-0 h-full w-full",
-          "transition-[opacity,filter,transform] duration-[1400ms] ease-out",
+          "transition-[opacity,filter,transform] duration-[1600ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
           isHighResVisible
-            ? "scale-[1.02] opacity-0 blur-sm"
-            : "scale-[1.05] opacity-100 blur-xl",
+            ? "scale-[1.01] opacity-20 blur-[6px] saturate-[0.98]"
+            : "scale-[1.05] opacity-100 blur-[18px] saturate-[1.05]",
           imageClassName,
         ].join(" ")}
       />
@@ -94,10 +104,10 @@ const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
           style={{ willChange: "opacity, filter, transform" }}
           className={[
             "absolute inset-0 h-full w-full",
-            "transition-[opacity,filter,transform] duration-[1200ms] ease-out",
+            "transition-[opacity,filter,transform] duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
             isHighResVisible
-              ? "scale-100 opacity-100 blur-0"
-              : "scale-[1.02] opacity-0 blur-md",
+              ? "scale-100 opacity-100 blur-0 saturate-100"
+              : "scale-[1.015] opacity-0 blur-[10px] saturate-[1.03]",
             imageClassName,
           ].join(" ")}
         />

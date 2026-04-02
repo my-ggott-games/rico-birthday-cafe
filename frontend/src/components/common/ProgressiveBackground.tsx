@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 type ProgressiveBackgroundProps = {
-  thumbnailSrc: string;
+  thumbnailSrc?: string;
   fullSrc: string;
   alt?: string;
   className?: string;
@@ -15,12 +15,14 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
   className = "",
   overlayClassName = "bg-black/20",
 }) => {
+  const previewSrc = thumbnailSrc ?? fullSrc;
   const [isHighResReady, setIsHighResReady] = useState(false);
   const [isHighResVisible, setIsHighResVisible] = useState(false);
 
   useEffect(() => {
     let isCancelled = false;
     let frameId: number | null = null;
+    let revealTimerId: number | null = null;
     const image = new Image();
 
     setIsHighResReady(false);
@@ -34,7 +36,11 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
       setIsHighResReady(true);
       frameId = window.requestAnimationFrame(() => {
         if (!isCancelled) {
-          setIsHighResVisible(true);
+          revealTimerId = window.setTimeout(() => {
+            if (!isCancelled) {
+              setIsHighResVisible(true);
+            }
+          }, 80);
         }
       });
     };
@@ -63,6 +69,10 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
       if (frameId !== null) {
         window.cancelAnimationFrame(frameId);
       }
+
+      if (revealTimerId !== null) {
+        window.clearTimeout(revealTimerId);
+      }
     };
   }, [fullSrc]);
 
@@ -75,7 +85,7 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
       ].join(" ")}
     >
       <img
-        src={thumbnailSrc}
+        src={previewSrc}
         alt={alt}
         draggable={false}
         fetchPriority="high"
@@ -83,10 +93,10 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
         style={{ willChange: "opacity, filter, transform" }}
         className={[
           "absolute inset-0 h-full w-full object-cover",
-          "transition-[opacity,filter,transform] duration-[1600ms] ease-out",
+          "transition-[opacity,filter,transform] duration-[2200ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
           isHighResVisible
-            ? "scale-105 opacity-0 blur-sm"
-            : "scale-110 opacity-100 blur-2xl",
+            ? "scale-[1.03] opacity-25 blur-[10px] saturate-[0.96] brightness-[0.96]"
+            : "scale-[1.12] opacity-100 blur-[22px] saturate-[1.08] brightness-[1.04]",
         ].join(" ")}
       />
 
@@ -99,10 +109,10 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
           style={{ willChange: "opacity, filter, transform" }}
           className={[
             "absolute inset-0 h-full w-full object-cover",
-            "transition-[opacity,filter,transform] duration-[1400ms] ease-out",
+            "transition-[opacity,filter,transform] duration-[1800ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
             isHighResVisible
-              ? "scale-100 opacity-100 blur-0"
-              : "scale-105 opacity-0 blur-lg",
+              ? "scale-100 opacity-100 blur-0 saturate-100 brightness-100"
+              : "scale-[1.025] opacity-0 blur-[12px] saturate-[1.04] brightness-[1.03]",
           ].join(" ")}
         />
       ) : null}

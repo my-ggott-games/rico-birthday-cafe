@@ -32,6 +32,8 @@ import { domToJpeg } from "modern-screenshot";
 import { startCodyAssetPreload } from "../utils/codyAssetPreload";
 import { AppIcon } from "../components/common/AppIcon";
 import { CODY_TUTORIAL_SLIDES } from "../constants/tutorialSlides";
+import { usePageBgm } from "../hooks/usePageBgm";
+import { pickRandomActivityBgm } from "../utils/bgm";
 
 type ShareNavigator = Navigator & {
   canShare?: (data?: ShareData) => boolean;
@@ -184,6 +186,10 @@ const combinations: Combination[] = [
 ];
 
 const CodyGame: React.FC = () => {
+  const [bgmSrc] = useState(() => pickRandomActivityBgm());
+
+  usePageBgm(bgmSrc);
+
   const [activeId, setActiveId] = useState<string | null>(null);
   const [equippedIds, setEquippedItems] =
     useState<EquippedState>(EMPTY_EQUIPMENT);
@@ -525,8 +531,8 @@ const CodyGame: React.FC = () => {
           shareNavigator.canShare?.({ files: [file] })
         ) {
           await shareNavigator.share({
-            title: "유즈하 리코 생일 기념 코디 게임",
-            text: "나만의 리코를 코디해봤어요! 여러분도 함께 축하해주세요.",
+            title: "유즈하 리코 생일 기념 리코의 외출준비",
+            text: "나만의 리코 외출준비를 해봤어요! 여러분도 함께 축하해주세요.",
             files: [file],
           });
           return;
@@ -553,9 +559,9 @@ const CodyGame: React.FC = () => {
       onDragEnd={handleDragEnd}
     >
       <GameContainer
-        title="리코 옷입히기"
+        title="리코의 외출준비"
         desc="어떤 옷이 어울릴까?"
-        gameName="리코 옷입히기"
+        gameName="리코의 외출준비"
         helpSlides={CODY_TUTORIAL_SLIDES}
         className="h-screen font-sans relative select-none bg-[#FFFFF8]"
         headerHidden={!showButtons}
@@ -811,8 +817,8 @@ const CodyGame: React.FC = () => {
               }}
               onShare={() => {
                 const shareData = {
-                  title: "유즈하 리코 생일 기념 코디 게임",
-                  text: "나만의 리코를 코디해봤어요! 여러분도 함께 축하해주세요.",
+                  title: "유즈하 리코 생일 기념 리코의 외출준비",
+                  text: "나만의 리코 외출준비를 해봤어요! 여러분도 함께 축하해주세요.",
                   url: window.location.origin,
                 };
 
