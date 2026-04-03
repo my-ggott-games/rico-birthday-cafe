@@ -3,7 +3,9 @@ package com.rico.birthdaycafe.controller;
 import com.rico.birthdaycafe.dto.AsparagusScoreRequest;
 import com.rico.birthdaycafe.entity.AsparagusScore;
 import com.rico.birthdaycafe.repository.AsparagusScoreRepository;
+import com.rico.birthdaycafe.security.CustomUserDetails;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -18,16 +20,21 @@ public class AsparagusScoreController {
         this.repository = repository;
     }
 
-    @GetMapping("/score/{uid}")
-    public ResponseEntity<Integer> getBestScore(@PathVariable String uid) {
+    @GetMapping("/score")
+    public ResponseEntity<Integer> getBestScore(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        String uid = userDetails.getUsername();
         Optional<AsparagusScore> score = repository.findByUid(uid);
         return score.map(s -> ResponseEntity.ok(s.getBestScore()))
                 .orElseGet(() -> ResponseEntity.ok(0));
     }
 
     @PostMapping("/score")
-    public ResponseEntity<Void> updateBestScore(@RequestBody AsparagusScoreRequest request) {
-        Optional<AsparagusScore> existing = repository.findByUid(request.getUid());
+    public ResponseEntity<Void> updateBestScore(
+            @RequestBody AsparagusScoreRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        String uid = userDetails.getUsername();
+        Optional<AsparagusScore> existing = repository.findByUid(uid);
         if (existing.isPresent()) {
             AsparagusScore score = existing.get();
             if (request.getBestScore() > score.getBestScore()) {
@@ -35,7 +42,7 @@ public class AsparagusScoreController {
                 repository.save(score);
             }
         } else {
-            AsparagusScore newScore = new AsparagusScore(request.getUid(), request.getBestScore());
+            AsparagusScore newScore = new AsparagusScore(uid, request.getBestScore());
             repository.save(newScore);
         }
         return ResponseEntity.ok().build();

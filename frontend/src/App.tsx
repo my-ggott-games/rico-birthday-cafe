@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import Lobby from "./pages/Lobby";
@@ -8,7 +8,6 @@ import GlobalLoading from "./components/common/GlobalLoading";
 import { AchievementToast } from "./components/common/AchievementToast";
 import { GlobalAudioToggle } from "./components/common/GlobalAudioToggle";
 import NotFound from "./pages/NotFound";
-import { startCodyAssetPreload } from "./utils/codyAssetPreload";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
 import LandingCompareSample from "./pages/LandingCompareSample";
@@ -28,10 +27,6 @@ const Credits = lazy(() => import("./pages/Credits"));
 const TakeoutCupShowcase = lazy(() => import("./pages/TakeoutCupShowcase"));
 
 function App() {
-  useEffect(() => {
-    startCodyAssetPreload();
-  }, []);
-
   return (
     <div>
       <AchievementToast />

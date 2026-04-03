@@ -57,3 +57,8 @@ management:
   health:
     db:
       enabled: true
+
+jwt:
+  # JWT_SECRET must be set in the environment; no fallback — application will fail to start without it.
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION_MS:86400000}

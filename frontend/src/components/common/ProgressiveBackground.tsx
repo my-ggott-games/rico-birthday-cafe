@@ -7,6 +7,8 @@ type ProgressiveBackgroundProps = {
   className?: string;
   overlayClassName?: string;
   imageClassName?: string;
+  previewFetchPriority?: "high" | "low" | "auto";
+  showVignette?: boolean;
 };
 
 const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
@@ -16,6 +18,8 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
   className = "",
   overlayClassName = "bg-black/20",
   imageClassName = "object-cover",
+  previewFetchPriority = "auto",
+  showVignette = true,
 }) => {
   const previewSrc = thumbnailSrc ?? fullSrc;
   const [isHighResReady, setIsHighResReady] = useState(false);
@@ -93,7 +97,7 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
         src={previewSrc}
         alt={alt}
         draggable={false}
-        fetchPriority="high"
+        fetchPriority={previewFetchPriority}
         decoding="async"
         style={{ willChange: "opacity, filter, transform" }}
         className={[
@@ -125,7 +129,9 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
       ) : null}
 
       <div className={`absolute inset-0 ${overlayClassName}`} />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_15%,rgba(0,0,0,0.18)_100%)]" />
+      {showVignette ? (
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_15%,rgba(0,0,0,0.18)_100%)]" />
+      ) : null}
     </div>
   );
 };

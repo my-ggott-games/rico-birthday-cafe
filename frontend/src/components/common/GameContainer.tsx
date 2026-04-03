@@ -66,8 +66,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           <ReturnButton
             gameName={gameName}
             label="돌아가기"
-            buttonSize="sm"
-            className="min-w-[5.2rem] justify-center px-1 py-1 text-xs lg:min-w-[9.5rem] lg:px-6 lg:py-3 lg:text-base"
+            className="min-w-[5.2rem] justify-center px-2 py-2 text-xs lg:min-w-[9.5rem] lg:px-6 lg:py-3 lg:text-base"
           />
         </div>
 

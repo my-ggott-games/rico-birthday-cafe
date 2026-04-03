@@ -427,7 +427,7 @@ export default function Credits() {
       <div className="absolute left-4 top-4 z-50">
         <ReturnButton
           gameName="엔딩 크레딧"
-          className="rounded-xl border-2 border-[#5EC7A5] bg-white/90 px-4 py-2 text-sm font-bold text-[#166D77] shadow-[0_10px_30px_rgba(22,109,119,0.14)]"
+          className="px-4 py-2 text-sm"
         />
       </div>
 

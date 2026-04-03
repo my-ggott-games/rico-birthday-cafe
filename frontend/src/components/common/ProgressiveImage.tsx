@@ -6,6 +6,7 @@ type ProgressiveImageProps = {
   alt: string;
   className?: string;
   imageClassName?: string;
+  previewFetchPriority?: "high" | "low" | "auto";
 };
 
 const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
@@ -14,6 +15,7 @@ const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   alt,
   className = "",
   imageClassName = "",
+  previewFetchPriority = "auto",
 }) => {
   const previewSrc = thumbnailSrc ?? fullSrc;
   const [isHighResReady, setIsHighResReady] = useState(false);
@@ -82,7 +84,7 @@ const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
         src={previewSrc}
         alt={alt}
         draggable={false}
-        fetchPriority="high"
+        fetchPriority={previewFetchPriority}
         decoding="async"
         style={{ willChange: "opacity, filter, transform" }}
         className={[

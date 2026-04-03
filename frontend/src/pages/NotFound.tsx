@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { fetchWithAuth } from "../utils/api";
 import { useAuthStore } from "../store/useAuthStore";
 import { useToastStore } from "../store/useToastStore";
+import { PushableButton } from "../components/common/PushableButton";
 
 const NotFound: React.FC = () => {
   const navigate = useNavigate();
@@ -76,14 +77,12 @@ const NotFound: React.FC = () => {
         </p>
 
         {/* Return Button */}
-        <button
+        <PushableButton
           onClick={() => navigate("/lobby")}
-          className="relative group bg-pale-custard border-4 border-[#D6C0B0] rounded-[24px] px-8 py-4 shadow-[4px_4px_0px_0px_#D6C0B0] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all active:scale-95"
+          className="px-8 py-4 text-xl"
         >
-          <span className="text-[#166D77] font-black text-xl flex items-center gap-2 group-hover:text-[#5EC7A5] transition-colors">
-            로비로 돌아가기
-          </span>
-        </button>
+          로비로 돌아가기
+        </PushableButton>
       </motion.div>
     </div>
   );

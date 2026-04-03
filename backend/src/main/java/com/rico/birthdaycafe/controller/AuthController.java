@@ -2,6 +2,7 @@ package com.rico.birthdaycafe.controller;
 
 import com.rico.birthdaycafe.dto.AdminAuthRequest;
 import com.rico.birthdaycafe.dto.AuthResponse;
+import com.rico.birthdaycafe.dto.RegisterRequest;
 import com.rico.birthdaycafe.dto.UidLoginRequest;
 import com.rico.birthdaycafe.service.AuthService;
 import jakarta.validation.Valid;
@@ -18,7 +19,14 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody UidLoginRequest request) {
-        AuthResponse response = authService.login(request.getUsername());
+        AuthResponse response = authService.login(request.getUsername(), request.getPassword());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+        AuthResponse response = authService.register(
+                request.getUid(), request.getPassword(), request.getConfirmPassword());
         return ResponseEntity.ok(response);
     }
 

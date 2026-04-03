@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../../store/useAuthStore";
 import { BASE_URL } from "../../utils/api";
 import { AppIcon } from "../common/AppIcon";
+import { PushableButton } from "../common/PushableButton";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,6 +17,20 @@ type AuthApiResponse = {
   message?: string;
   username?: string | null;
 };
+
+type Step = "main" | "set-pin";
+
+const PIN_REGEX = /^[0-9]{4}$/;
+const MAX_PIN_LENGTH = 4;
+const PIN_NAV_KEYS = new Set([
+  "Tab",
+  "ArrowLeft",
+  "ArrowRight",
+  "ArrowUp",
+  "ArrowDown",
+  "Home",
+  "End",
+]);
 
 const getFriendlyErrorMessage = (error: unknown, fallbackMessage: string) => {
   if (!(error instanceof Error)) {
@@ -44,14 +59,80 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const [step, setStep] = useState<Step>("main");
+
+  // Main step state
   const [uidInput, setUidInput] = useState("");
+  const [pinInput, setPinInput] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // PIN setup step state (after issue-uid)
   const [issuedUid, setIssuedUid] = useState("");
+  const [newPin, setNewPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+  const [pinError, setPinError] = useState("");
   const [copied, setCopied] = useState(false);
   const copyResetTimerRef = useRef<number | null>(null);
 
   const { login } = useAuthStore();
+
+  const sanitizePin = (value: string) =>
+    value.replace(/\D/g, "").slice(0, MAX_PIN_LENGTH);
+
+  const handleMaskedPinKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement>,
+    currentValue: string,
+    setValue: React.Dispatch<React.SetStateAction<string>>,
+  ) => {
+    if (event.key === "Backspace") {
+      event.preventDefault();
+      setValue(currentValue.slice(0, -1));
+      return;
+    }
+
+    if (event.key === "Delete") {
+      event.preventDefault();
+      setValue("");
+      return;
+    }
+
+    if (/^\d$/.test(event.key)) {
+      event.preventDefault();
+      if (currentValue.length < MAX_PIN_LENGTH) {
+        setValue(`${currentValue}${event.key}`);
+      }
+      return;
+    }
+
+    if (PIN_NAV_KEYS.has(event.key)) {
+      return;
+    }
+
+    if (
+      (event.metaKey || event.ctrlKey) &&
+      ["a", "c", "v", "x"].includes(event.key.toLowerCase())
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+  };
+
+  const handleMaskedPinPaste = (
+    event: React.ClipboardEvent<HTMLInputElement>,
+    currentValue: string,
+    setValue: React.Dispatch<React.SetStateAction<string>>,
+  ) => {
+    event.preventDefault();
+    const pastedDigits = sanitizePin(event.clipboardData.getData("text"));
+
+    if (!pastedDigits) {
+      return;
+    }
+
+    setValue(`${currentValue}${pastedDigits}`.slice(0, MAX_PIN_LENGTH));
+  };
 
   const copyToClipboard = async (text: string) => {
     await navigator.clipboard.writeText(text);
@@ -72,7 +153,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       case 400:
         return "번호표를 다시 확인해주세요.";
       case 401:
-        return "그 번호는 발급된 적이 없는데...";
+        return "번호표나 비밀번호가 틀렸어요.";
       case 500:
         return "카페 문 닫았어요.\n지금은 번호표를 확인할 수 없어요.";
       default:
@@ -80,10 +161,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const handleClose = () => {
+  const resetAll = () => {
+    setStep("main");
     setError("");
+    setPinError("");
     setUidInput("");
+    setPinInput("");
     setIssuedUid("");
+    setNewPin("");
+    setConfirmPin("");
     setCopied(false);
     setLoading(false);
 
@@ -91,16 +177,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       window.clearTimeout(copyResetTimerRef.current);
       copyResetTimerRef.current = null;
     }
+  };
 
+  const handleClose = () => {
+    resetAll();
     onClose();
   };
 
+  // ── Login with existing ticket ──────────────────────────────────────────────
   const handleExistingTicketLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     if (!uidInput.trim()) {
       setError("번호표를 입력해주세요.");
+      return;
+    }
+    if (!PIN_REGEX.test(pinInput)) {
+      setError("비밀번호는 숫자 4자리여야 해요.");
       return;
     }
 
@@ -110,7 +204,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const res = await fetch(`${BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: uidInput.trim() }),
+        body: JSON.stringify({
+          username: uidInput.trim(),
+          password: pinInput,
+        }),
       });
       let data: AuthApiResponse | null = null;
       try {
@@ -120,7 +217,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }
 
       if (!res.ok) {
-        throw new Error(getLoginErrorMessage(data?.code));
+        throw new Error(getLoginErrorMessage(data?.code ?? res.status));
       }
 
       if (data?.code !== 200 || !data.token) {
@@ -129,7 +226,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       login(data.token, data.username ?? null);
       onSuccess();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(
         getFriendlyErrorMessage(
           err,
@@ -141,6 +238,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
+  // ── Step 1: Issue a new UID ─────────────────────────────────────────────────
   const handleIssueUid = async () => {
     setLoading(true);
     setError("");
@@ -151,18 +249,68 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       });
       const data = (await res.json()) as AuthApiResponse;
 
-      if (!res.ok || data.code !== 200 || !data.token || !data.username) {
+      if (!res.ok || data.code !== 200 || !data.username) {
         throw new Error(data.message || "번호표 발급 실패");
       }
 
       setIssuedUid(data.username);
       setCopied(false);
-      login(data.token, data.username);
-    } catch (err: any) {
+      setNewPin("");
+      setConfirmPin("");
+      setPinError("");
+      setStep("set-pin");
+    } catch (err: unknown) {
       setError(
         getFriendlyErrorMessage(
           err,
           "번호표 발급 중 문제가 생겼어요.\n잠시 후 다시 시도해주세요.",
+        ),
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Step 2: Set PIN for the newly issued UID ────────────────────────────────
+  const handleSetPin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPinError("");
+
+    if (!PIN_REGEX.test(newPin)) {
+      setPinError("비밀번호는 숫자 4자리여야 해요.");
+      return;
+    }
+    if (newPin !== confirmPin) {
+      setPinError("비밀번호가 일치하지 않아요.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${BASE_URL}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uid: issuedUid,
+          password: newPin,
+          confirmPassword: confirmPin,
+        }),
+      });
+      const data = (await res.json()) as AuthApiResponse;
+
+      if (!res.ok || data.code !== 200 || !data.token) {
+        throw new Error(data.message || "비밀번호 설정 실패");
+      }
+
+      login(data.token, data.username ?? null);
+      resetAll();
+      onSuccess();
+    } catch (err: unknown) {
+      setPinError(
+        getFriendlyErrorMessage(
+          err,
+          "비밀번호 설정 중 문제가 생겼어요.\n잠시 후 다시 시도해주세요.",
         ),
       );
     } finally {
@@ -193,16 +341,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               ✕
             </button>
 
-            {issuedUid ? (
-              <div className="text-center py-4">
-                <h2 className="mb-4 break-keep text-2xl font-black text-[#166D77] md:text-3xl">
+            {/* ── Step: Set PIN after new UID issued ── */}
+            {step === "set-pin" ? (
+              <div className="text-center py-2">
+                <h2 className="mb-2 break-keep text-2xl font-black text-[#166D77] md:text-3xl">
                   번호표를 발급받았어요!
                 </h2>
-                <p className="mb-6 break-keep text-sm text-[#166D77]/60 md:text-base">
-                  잃어버리면 누군지 알 수 없으니까 새로 뽑아야 해요.
+                <p className="mb-1 break-keep text-sm text-[#166D77]/60 md:text-base">
+                  잃어버리면 알 수 없으니 꼭 저장해두세요.
                 </p>
 
-                <div className="mb-6 flex flex-col gap-2 rounded-2xl border-2 border-[#5EC7A5] bg-pale-custard p-4">
+                <div className="mb-5 flex flex-col gap-2 rounded-2xl border-2 border-[#5EC7A5] bg-pale-custard p-4">
                   <span className="text-xl font-black tracking-wider text-[#5EC7A5] md:text-2xl">
                     {issuedUid}
                   </span>
@@ -219,14 +368,61 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   </button>
                 </div>
 
-                <button
-                  onClick={onSuccess}
-                  className="w-full rounded-xl border-2 border-[#3f9e80] bg-[#5EC7A5] py-4 text-base font-black text-pale-custard shadow-[0_4px_0_#3f9e80] transition-all hover:translate-y-1 hover:shadow-[0_0px_0_#3f9e80] md:text-lg"
-                >
-                  입장하기
-                </button>
+                <p className="mb-4 inline-flex items-center gap-1.5 text-sm font-bold text-[#166D77] md:text-base">
+                  <AppIcon name="LockKeyhole" size={16} />
+                  <span>비밀번호를 설정해주세요</span>
+                </p>
+
+                {pinError && (
+                  <div className="mb-4 whitespace-pre-line rounded-xl border border-[#e7c0c0] bg-[#f8e8e8] p-3 text-center text-sm font-bold text-red-700 md:text-base">
+                    {pinError}
+                  </div>
+                )}
+
+                <form onSubmit={handleSetPin} className="flex flex-col gap-3">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={MAX_PIN_LENGTH}
+                    placeholder="숫자 4자리 비밀번호"
+                    value={"*".repeat(newPin.length)}
+                    onKeyDown={(event) =>
+                      handleMaskedPinKeyDown(event, newPin, setNewPin)
+                    }
+                    onPaste={(event) =>
+                      handleMaskedPinPaste(event, newPin, setNewPin)
+                    }
+                    onChange={() => undefined}
+                    className="w-full rounded-xl border-2 border-[#166D77]/10 px-4 py-3 text-center font-bold tracking-wider text-[#166D77] outline-none focus:border-[#5EC7A5] md:text-lg"
+                    autoComplete="new-password"
+                  />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={MAX_PIN_LENGTH}
+                    placeholder="비밀번호 확인"
+                    value={"*".repeat(confirmPin.length)}
+                    onKeyDown={(event) =>
+                      handleMaskedPinKeyDown(event, confirmPin, setConfirmPin)
+                    }
+                    onPaste={(event) =>
+                      handleMaskedPinPaste(event, confirmPin, setConfirmPin)
+                    }
+                    onChange={() => undefined}
+                    className="w-full rounded-xl border-2 border-[#166D77]/10 px-4 py-3 text-center font-bold tracking-wider text-[#166D77] outline-none focus:border-[#5EC7A5] md:text-lg"
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full rounded-xl border-2 border-[#3f9e80] bg-[#5EC7A5] py-4 text-base font-black text-pale-custard shadow-[0_4px_0_#3f9e80] transition-all hover:translate-y-1 hover:shadow-[0_0px_0_#3f9e80] disabled:opacity-50 md:text-lg"
+                  >
+                    {loading ? "설정 중..." : "입장하기"}
+                  </button>
+                </form>
               </div>
             ) : (
+              /* ── Step: Main (login or issue uid) ── */
               <>
                 <h2 className="mb-4 break-keep text-center text-3xl font-black text-[#166D77] md:text-4xl">
                   번호표 보여주세요!
@@ -249,6 +445,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       value={uidInput}
                       onChange={(e) => setUidInput(e.target.value)}
                       className="w-full rounded-xl border-2 border-[#166D77]/10 px-4 py-3 text-center font-bold tracking-wider text-[#166D77] outline-none focus:border-[#5EC7A5] md:text-lg"
+                      autoComplete="username"
+                    />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={MAX_PIN_LENGTH}
+                      placeholder="비밀번호 (숫자 4자리)"
+                      value={"*".repeat(pinInput.length)}
+                      onKeyDown={(event) =>
+                        handleMaskedPinKeyDown(event, pinInput, setPinInput)
+                      }
+                      onPaste={(event) =>
+                        handleMaskedPinPaste(event, pinInput, setPinInput)
+                      }
+                      onChange={() => undefined}
+                      className="w-full rounded-xl border-2 border-[#166D77]/10 px-4 py-3 text-center font-bold tracking-wider text-[#166D77] outline-none focus:border-[#5EC7A5] md:text-lg"
+                      autoComplete="current-password"
                     />
                     <button
                       type="submit"
@@ -267,13 +480,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     <div className="flex-grow border-t border-[#166D77]/10"></div>
                   </div>
 
-                  <button
+                  <PushableButton
                     onClick={handleIssueUid}
                     disabled={loading}
-                    className="w-full rounded-2xl border-2 border-[#3f9e80] bg-[#5EC7A5] py-5 text-xl font-black text-pale-custard shadow-[0_6px_0_#3f9e80] transition-all hover:translate-y-1 hover:shadow-[0_2px_0_#3f9e80] active:translate-y-1.5 active:shadow-none disabled:opacity-50 md:text-2xl"
+                    fullWidth
+                    className="py-5 text-xl md:text-2xl"
                   >
                     {loading && !uidInput ? "잠시만요..." : "새 번호표 뽑기"}
-                  </button>
+                  </PushableButton>
                 </div>
               </>
             )}

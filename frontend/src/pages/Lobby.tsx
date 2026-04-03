@@ -47,6 +47,7 @@ const Lobby: React.FC = () => {
   usePageBgm(LOBBY_BGM_SRC);
 
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [backgroundSrc, setBackgroundSrc] = useState("/lobby-thumb.jpg");
   const [isAchievementOpen, setIsAchievementOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isPuzzleMuseumUnlocked, setIsPuzzleMuseumUnlocked] = useState(
@@ -55,18 +56,35 @@ const Lobby: React.FC = () => {
 
   useEffect(() => {
     console.log("519_2024"); // Easter Egg
+    let isCancelled = false;
 
     const handleResize = () => setWindowWidth(window.innerWidth);
     const handlePuzzleUnlock = () =>
       setIsPuzzleMuseumUnlocked(
         window.localStorage.getItem(PUZZLE_MUSEUM_UNLOCK_KEY) === "true",
       );
+    const backgroundImage = new Image();
+    backgroundImage.src = "/lobby.jpg";
+
+    const revealBackground = () => {
+      if (!isCancelled) {
+        setBackgroundSrc("/lobby.jpg");
+      }
+    };
+
+    if (backgroundImage.complete) {
+      revealBackground();
+    } else {
+      backgroundImage.onload = revealBackground;
+    }
 
     window.addEventListener("resize", handleResize);
     window.addEventListener("storage", handlePuzzleUnlock);
     window.addEventListener(PUZZLE_MUSEUM_UNLOCK_EVENT, handlePuzzleUnlock);
 
     return () => {
+      isCancelled = true;
+      backgroundImage.onload = null;
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("storage", handlePuzzleUnlock);
       window.removeEventListener(
@@ -83,7 +101,7 @@ const Lobby: React.FC = () => {
       <div
         className="absolute inset-0 pointer-events-none bg-center bg-cover bg-no-repeat"
         style={{
-          backgroundImage: "url('/lobby.jpg')",
+          backgroundImage: `url('${backgroundSrc}')`,
         }}
       />
       <div className="absolute inset-0 pointer-events-none bg-white/30" />

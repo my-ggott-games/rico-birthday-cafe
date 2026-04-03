@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ActionButton } from "./ActionButton";
-import type { ActionButtonSize, ActionButtonVariant } from "./ActionButton";
+import { PushableButton } from "./PushableButton";
 import { AppIcon } from "./AppIcon";
 
 interface ReturnButtonProps {
@@ -11,8 +11,6 @@ interface ReturnButtonProps {
   style?: React.CSSProperties;
   gameName?: string;
   label?: string;
-  buttonVariant?: ActionButtonVariant;
-  buttonSize?: ActionButtonSize;
 }
 
 const MESSAGES = [
@@ -27,8 +25,6 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({
   style,
   gameName = "게임",
   label = "← 돌아가기",
-  buttonVariant = "frame",
-  buttonSize = "sm",
 }) => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -51,15 +47,13 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        <ActionButton
+        <PushableButton
           onClick={handleOpen}
           className={className}
           style={style}
-          variant={buttonVariant}
-          size={buttonSize}
         >
           {label}
-        </ActionButton>
+        </PushableButton>
       </motion.div>
 
       {createPortal(

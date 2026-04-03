@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
-import { BASE_URL } from "../utils/api";
+import { fetchWithAuth } from "../utils/api";
 import { playDiriringSfx, preloadDiriringSfx } from "../utils/soundEffects";
 import { type Grid, type Direction } from "../components/asparagus/types";
 import {
@@ -12,11 +12,11 @@ import {
 } from "../components/asparagus/Logic";
 
 // Submit best score to server — called only on game over
-const submitBestScore = (uid: string, bestScore: number) => {
-  fetch(`${BASE_URL}/asparagus/score`, {
+const submitBestScore = (bestScore: number) => {
+  fetchWithAuth(`/asparagus/score`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ uid, bestScore }),
+    body: JSON.stringify({ bestScore }),
   }).catch((err) => console.warn("Failed to save score to DB", err));
 };
 
@@ -81,7 +81,7 @@ export const useAsparagusGame = () => {
   useEffect(() => {
     const fetchScore = async () => {
       try {
-        const res = await fetch(`${BASE_URL}/asparagus/score/${uid}`);
+        const res = await fetchWithAuth(`/asparagus/score`);
         if (res.ok) {
           const serverBest = await res.json();
           setBest((b) => {
@@ -95,7 +95,7 @@ export const useAsparagusGame = () => {
       }
     };
     fetchScore();
-  }, [uid, bestScoreKey]);
+  }, [bestScoreKey]);
 
   // Start immediately on mount
   useEffect(() => {
@@ -198,7 +198,7 @@ export const useAsparagusGame = () => {
           localStorage.setItem(bestScoreKey, String(finalBest));
         }
         if (!debugMode) {
-          submitBestScore(uid, finalBest);
+          submitBestScore(finalBest);
         }
       }
     },

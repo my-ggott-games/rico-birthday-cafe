@@ -8,10 +8,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UidLoginRequest {
-    @NotBlank(message = "Username cannot be blank")
-    private String username;
+public class RegisterRequest {
+    @NotBlank(message = "UID cannot be blank")
+    private String uid;
 
     @NotBlank(message = "Password cannot be blank")
     private String password;
+
+    @NotBlank(message = "Confirm password cannot be blank")
+    private String confirmPassword;
 }
