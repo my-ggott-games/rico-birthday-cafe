@@ -18,5 +18,6 @@ public class AchievementDto {
     private LocalDateTime unlockedAt;
     /** True if the authenticated user has earned this achievement. */
     private boolean earned;
+    /** True if this is the user's currently active achievement. */
+    private boolean active;
 }
-

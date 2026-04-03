@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../../store/useAuthStore";
-import { BASE_URL } from "../../utils/api";
+import { fetchWithAuth } from "../../utils/api";
 import { AchievementIcon } from "./AchievementIcon";
 import { AppIcon } from "./AppIcon";
 
@@ -12,6 +12,7 @@ interface Achievement {
   iconUrl: string;
   unlockedAt: string | null;
   earned: boolean;
+  active: boolean;
 }
 
 interface AchievementModalProps {
@@ -19,25 +20,17 @@ interface AchievementModalProps {
   onClose: () => void;
 }
 
-// Retrieve or create a persistent UID for this device
-const getUid = (): string => {
-  let uid = localStorage.getItem("user-uid");
-  if (!uid) {
-    uid = Math.random().toString(36).substring(2, 10);
-    localStorage.setItem("user-uid", uid);
-  }
-  return uid;
-};
-
 export const AchievementModal: React.FC<AchievementModalProps> = ({
   isOpen,
   onClose,
 }) => {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(false);
+  const [activatingCode, setActivatingCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const { token } = useAuthStore();
-  const uid = getUid();
+  const { token, uid: authUid } = useAuthStore();
+  const uid = authUid ?? "";
+  const hasUid = uid.length > 0;
 
   useEffect(() => {
     if (isOpen && token) {
@@ -48,14 +41,12 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
   const fetchAchievements = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${BASE_URL}/achievements/all`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetchWithAuth("/achievements/all");
       if (res.ok) {
         const data = await res.json();
         setAchievements(data);
+      } else {
+        setAchievements([]);
       }
     } catch (error) {
       console.error("Failed to fetch achievements", error);
@@ -65,6 +56,10 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
   };
 
   const handleCopyUid = async () => {
+    if (!hasUid) {
+      return;
+    }
+
     try {
       await navigator.clipboard.writeText(uid);
       setCopied(true);
@@ -82,9 +77,57 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
     }
   };
 
+  const handleActivateAchievement = async (code: string) => {
+    if (!token || activatingCode || loading) {
+      return;
+    }
+
+    setActivatingCode(code);
+    try {
+      const res = await fetchWithAuth(`/achievements/active/${code}`, {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        return;
+      }
+
+      const updated = await res.json();
+      if (!updated) {
+        return;
+      }
+
+      setAchievements((current) =>
+        current.map((achievement) => ({
+          ...achievement,
+          active: achievement.code === code,
+        })),
+      );
+    } catch (error) {
+      console.error("Failed to set active achievement", error);
+    } finally {
+      setActivatingCode(null);
+    }
+  };
+
   if (!isOpen) return null;
 
   const earnedCount = achievements.filter((a) => a.earned).length;
+  const sortedAchievements = [...achievements].sort((a, b) => {
+    if (a.earned !== b.earned) {
+      return a.earned ? -1 : 1;
+    }
+
+    if (a.active !== b.active) {
+      return a.active ? -1 : 1;
+    }
+
+    const aUnlocked = a.unlockedAt ? new Date(a.unlockedAt).getTime() : 0;
+    const bUnlocked = b.unlockedAt ? new Date(b.unlockedAt).getTime() : 0;
+
+    return bUnlocked - aUnlocked;
+  });
+  const maskAchievementText = (text: string) => text.replace(/[^\s.]/g, "?");
 
   return (
     <AnimatePresence>
@@ -125,11 +168,12 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
             </p>
             <div className="flex items-center gap-3">
               <code className="flex-1 font-mono font-bold text-[#166D77] text-base tracking-widest bg-white px-3 py-2 rounded-xl border border-[#D6C0B0] truncate">
-                {uid}
+                {hasUid ? uid : "번호표 정보 없음"}
               </code>
               <motion.button
                 whileTap={{ scale: 0.92 }}
                 onClick={handleCopyUid}
+                disabled={!hasUid}
                 className="shrink-0 px-4 py-2 rounded-xl font-black text-sm transition-all border-2"
                 style={
                   copied
@@ -145,7 +189,7 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
                       }
                 }
               >
-                {copied ? "✓ 복사됨" : "복사"}
+                {copied ? "✓ 복사됨" : hasUid ? "복사" : "없음"}
               </motion.button>
             </div>
           </div>
@@ -192,23 +236,42 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                {achievements.map((ach) =>
+                {sortedAchievements.map((ach) =>
                   ach.earned ? (
-                    /* ── EARNED: full colour card ── */
-                    <div
+                    <button
+                      type="button"
                       key={ach.code}
-                      className="bg-pale-custard p-4 rounded-2xl border-2 border-[#5EC7A5]/20 shadow-sm flex items-center gap-4 hover:border-[#5EC7A5] hover:-translate-y-0.5 transition-all"
+                      onClick={() => void handleActivateAchievement(ach.code)}
+                      disabled={activatingCode !== null}
+                      className={`w-full bg-pale-custard p-4 rounded-2xl border-2 shadow-sm flex items-center gap-4 text-left transition-all hover:-translate-y-0.5 ${
+                        ach.active
+                          ? "border-[#5EC7A5] ring-2 ring-[#5EC7A5]/20"
+                          : "border-[#5EC7A5]/20 hover:border-[#5EC7A5]"
+                      } ${activatingCode !== null ? "cursor-wait" : ""}`}
                     >
-                      <div className="w-14 h-14 bg-[#FFE4E6] rounded-full flex items-center justify-center text-2xl shrink-0 border-2 border-[#5EC7A5]">
+                      <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-2xl shrink-0 border-2 border-[#5EC7A5]">
                         <AchievementIcon
                           code={ach.code}
                           iconUrl={ach.iconUrl}
                         />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h4 className="font-black text-[#166D77] text-base truncate">
-                          {ach.title}
-                        </h4>
+                        <div className="flex items-center justify-between gap-3">
+                          <h4 className="font-black text-[#166D77] text-base truncate">
+                            {ach.title}
+                          </h4>
+                          {(ach.active || activatingCode === ach.code) && (
+                            <span
+                              className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${
+                                ach.active
+                                  ? "bg-[#5EC7A5] text-white"
+                                  : "bg-[#166D77]/8 text-[#166D77]/70"
+                              }`}
+                            >
+                              {ach.active ? "활성화됨" : "설정 중"}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm font-medium text-[#166D77]/70 leading-tight mt-0.5">
                           {ach.description}
                         </p>
@@ -219,7 +282,7 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
                           </p>
                         )}
                       </div>
-                    </div>
+                    </button>
                   ) : (
                     /* ── UNEARNED: greyed-out, masked ── */
                     <div
@@ -235,10 +298,10 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
                       </div>
                       <div className="min-w-0 flex-1">
                         <h4 className="font-black text-[#9ca3af] text-base">
-                          ???
+                          {maskAchievementText(ach.title)}
                         </h4>
                         <p className="text-sm font-medium text-[#9ca3af] leading-tight mt-0.5">
-                          아직 잠겨 있어요.
+                          {maskAchievementText(ach.description)}
                         </p>
                       </div>
                     </div>

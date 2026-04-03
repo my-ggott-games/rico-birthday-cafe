@@ -2,6 +2,7 @@ import React, { useState, useLayoutEffect } from "react";
 import { useLocation, matchPath } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { LOADING_MESSAGES } from "../../constants/loadingMessages";
+import { setPageTransitionLoading } from "../../utils/pageTransitionLoading";
 
 const GlobalLoading: React.FC = () => {
   const location = useLocation();
@@ -41,10 +42,12 @@ const GlobalLoading: React.FC = () => {
 
     if (!isValidRoute) {
       setLoading(false);
+      setPageTransitionLoading(false);
       return;
     }
 
     setLoading(true);
+    setPageTransitionLoading(true);
     setPercent(0);
     // Randomly choose animation type for this loading session
     const types: ("rotate" | "zoom" | "bob")[] = ["rotate", "zoom", "bob"];
@@ -97,7 +100,10 @@ const GlobalLoading: React.FC = () => {
   }, [location.pathname]);
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence
+      mode="wait"
+      onExitComplete={() => setPageTransitionLoading(false)}
+    >
       {loading && (
         <motion.div
           className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#FFFFF8]"

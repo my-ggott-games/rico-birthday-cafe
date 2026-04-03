@@ -1,6 +1,16 @@
 spring:
   application:
     name: birthday-cafe
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:.env.local[.properties]
+      - optional:file:.env.properties
+      - optional:file:.env.local.properties
+      - optional:file:../.env[.properties]
+      - optional:file:../.env.local[.properties]
+      - optional:file:../.env.properties
+      - optional:file:../.env.local.properties
   datasource:
     # Priority:
     # 1) SPRING_DATASOURCE_*
@@ -30,6 +40,9 @@ app:
   admin:
     # Prefer ADMIN_PASSCODE_HASH (bcrypt). ADMIN_PASSCODE is also supported as a
     # plain-text fallback for deployments where env hashing was misconfigured.
+    # For local dev, keep secrets out of the repo by putting either
+    # `app.admin.passcode-hash=` or `app.admin.passcode=` in an ignored
+    # `.env.local.properties` file.
     passcode: ${ADMIN_PASSCODE:}
     passcode-hash: ${ADMIN_PASSCODE_HASH:}
 

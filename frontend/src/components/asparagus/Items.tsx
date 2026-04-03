@@ -7,6 +7,7 @@ interface ItemsProps {
   swapCount: number;
   historyLength: number;
   isSwapMode: boolean;
+  isAdmin: boolean;
   debugMode: boolean;
   onUndo: () => void;
   onToggleSwapMode: () => void;
@@ -22,6 +23,7 @@ export const Items: React.FC<ItemsProps> = ({
   swapCount,
   historyLength,
   isSwapMode,
+  isAdmin,
   debugMode,
   onUndo,
   onToggleSwapMode,
@@ -97,22 +99,24 @@ export const Items: React.FC<ItemsProps> = ({
           </span>
         </motion.button>
 
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={onDebugStart}
-          className={`${BTN_BASE} ${debugMode ? "bg-[#f59e0b] text-[#1f2937] border-[#92400e]" : "bg-[#fff7db] text-[#166D77] border-[#f59e0b] shadow-lg"}`}
-        >
-          <AppIcon name="Wrench" size={24} className="mb-1" />
-          <span className="text-[9px] opacity-50 uppercase tracking-tighter">
-            Debug
-          </span>
-          <span className="text-xs mt-0.5 leading-tight text-center">
-            황금검
-            <br />
-            시작
-          </span>
-        </motion.button>
+        {isAdmin && (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onDebugStart}
+            className={`${BTN_BASE} ${debugMode ? "bg-[#f59e0b] text-[#1f2937] border-[#92400e]" : "bg-[#fff7db] text-[#166D77] border-[#f59e0b] shadow-lg"}`}
+          >
+            <AppIcon name="Wrench" size={24} className="mb-1" />
+            <span className="text-[9px] opacity-50 uppercase tracking-tighter">
+              Debug
+            </span>
+            <span className="text-xs mt-0.5 leading-tight text-center">
+              황금검
+              <br />
+              시작
+            </span>
+          </motion.button>
+        )}
       </div>
     </div>
   );

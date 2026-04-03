@@ -14,4 +14,6 @@ public interface UserAchievementRepository extends JpaRepository<UserAchievement
     List<UserAchievement> findByUserOrderByUnlockedAtDesc(User user);
 
     boolean existsByUserAndAchievement(User user, Achievement achievement);
+
+    boolean existsByUserAndAchievement_Code(User user, String code);
 }

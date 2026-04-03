@@ -15,6 +15,7 @@ import {
   Crown,
   DoorOpen,
   Eye,
+  FileQuestion,
   Flower2,
   Frown,
   Gift,
@@ -28,6 +29,7 @@ import {
   Puzzle,
   RefreshCw,
   Ribbon,
+  Rose,
   RotateCcw,
   Save,
   Scissors,
@@ -49,7 +51,7 @@ import {
   Wrench,
 } from "lucide-react";
 
-const APP_ICONS = {
+export const APP_ICONS = {
   ArrowLeftRight,
   ArrowUpToLine,
   Backpack,
@@ -64,6 +66,7 @@ const APP_ICONS = {
   Crown,
   DoorOpen,
   Eye,
+  FileQuestionMark: FileQuestion,
   Flower2,
   Frown,
   Gift,
@@ -77,6 +80,7 @@ const APP_ICONS = {
   Puzzle,
   RefreshCw,
   Ribbon,
+  Rose,
   RotateCcw,
   Save,
   Scissors,
@@ -99,6 +103,9 @@ const APP_ICONS = {
 };
 
 export type AppIconName = keyof typeof APP_ICONS;
+
+export const isAppIconName = (value: string): value is AppIconName =>
+  value in APP_ICONS;
 
 type AppIconProps = SVGProps<SVGSVGElement> & {
   name: AppIconName;

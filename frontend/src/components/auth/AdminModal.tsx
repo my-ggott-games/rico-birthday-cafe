@@ -6,15 +6,22 @@ import { BASE_URL } from "../../utils/api";
 
 const KOREAN_TO_ENGLISH_MAP: Record<string, string> = {
   ㅂ: "q",
+  ㅃ: "q",
   ㅈ: "w",
+  ㅉ: "w",
   ㄷ: "e",
+  ㄸ: "e",
   ㄱ: "r",
+  ㄲ: "r",
   ㅅ: "t",
+  ㅆ: "t",
   ㅛ: "y",
   ㅕ: "u",
   ㅑ: "i",
   ㅐ: "o",
+  ㅒ: "o",
   ㅔ: "p",
+  ㅖ: "p",
   ㅁ: "a",
   ㄴ: "s",
   ㅇ: "d",
@@ -31,13 +38,80 @@ const KOREAN_TO_ENGLISH_MAP: Record<string, string> = {
   ㅠ: "b",
   ㅜ: "n",
   ㅡ: "m",
-  ㅃ: "q",
-  ㅉ: "w",
-  ㄸ: "e",
-  ㄲ: "r",
-  ㅆ: "t",
-  ㅒ: "o",
-  ㅖ: "p",
+  ㅘ: "hk",
+  ㅙ: "ho",
+  ㅚ: "hl",
+  ㅝ: "nj",
+  ㅞ: "np",
+  ㅟ: "nl",
+  ㅢ: "ml",
+  ᄇ: "q",
+  ᄈ: "q",
+  ᄌ: "w",
+  ᄍ: "w",
+  ᄃ: "e",
+  ᄄ: "e",
+  ᄀ: "r",
+  ᄁ: "r",
+  ᄉ: "t",
+  ᄊ: "t",
+  ᄋ: "d",
+  ᄂ: "s",
+  ᄅ: "f",
+  ᄒ: "g",
+  ᄆ: "a",
+  ᄏ: "z",
+  ᄐ: "x",
+  ᄎ: "c",
+  ᄑ: "v",
+  ᅭ: "y",
+  ᅧ: "u",
+  ᅣ: "i",
+  ᅢ: "o",
+  ᅤ: "o",
+  ᅦ: "p",
+  ᅨ: "p",
+  ᅩ: "h",
+  ᅪ: "hk",
+  ᅫ: "ho",
+  ᅬ: "hl",
+  ᅥ: "j",
+  ᅡ: "k",
+  ᅵ: "l",
+  ᅮ: "n",
+  ᅯ: "nj",
+  ᅰ: "np",
+  ᅱ: "nl",
+  ᅲ: "b",
+  ᅳ: "m",
+  ᅴ: "ml",
+  ᆨ: "r",
+  ᆩ: "rr",
+  ᆪ: "rt",
+  ᆫ: "s",
+  ᆬ: "sw",
+  ᆭ: "sg",
+  ᆮ: "e",
+  ᆯ: "f",
+  ᆰ: "fr",
+  ᆱ: "fa",
+  ᆲ: "fq",
+  ᆳ: "ft",
+  ᆴ: "fx",
+  ᆵ: "fv",
+  ᆶ: "fg",
+  ᆷ: "a",
+  ᆸ: "q",
+  ᆹ: "qt",
+  ᆺ: "t",
+  ᆻ: "tt",
+  ᆼ: "d",
+  ᆽ: "w",
+  ᆾ: "c",
+  ᆿ: "z",
+  ᇀ: "x",
+  ᇁ: "v",
+  ᇂ: "g",
 };
 
 interface AdminModalProps {
@@ -61,10 +135,14 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const buildPasscode = (chars: string[]) =>
     `${chars.slice(0, 3).join("")}_${chars.slice(3).join("")}`;
-  const sanitizePasscode = (raw: string) =>
+  const normalizePasscodeInput = (raw: string) =>
     raw
+      .normalize("NFKD")
       .toLowerCase()
       .replace(/-/g, "_")
+      .split("")
+      .map((char) => KOREAN_TO_ENGLISH_MAP[char] ?? char)
+      .join("")
       .replace(/[^a-z0-9_]/g, "")
       .replace(/_+/g, "_");
 
@@ -118,12 +196,36 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
         setAuthStatus("admin");
         setFailCount(0);
-        login(data.token);
+        login(
+          data.token,
+          typeof data.username === "string" ? data.username : null,
+        );
+
+        const achievementRes = await fetch(
+          `${BASE_URL}/achievements/award/WHO_ARE_YOU`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${data.token}`,
+            },
+          },
+        );
+        const achievementAwarded = achievementRes.ok
+          ? await achievementRes.json()
+          : false;
+
         addToast({
           title: "시스템 권한 획득",
           description: "관리자 모드로 입장합니다.",
           icon: "KeyRound",
         });
+        if (achievementAwarded) {
+          addToast({
+            title: "??? 예요.",
+            description: "내 별은 영원히 너야.",
+            icon: "Rose",
+          });
+        }
 
         setTimeout(() => {
           onClose();
@@ -178,7 +280,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (loading || authStatus !== "idle") return;
-    const val = sanitizePasscode(e.target.value);
+    const val = normalizePasscodeInput(e.target.value);
     const compactValue = val.replace(/_/g, "");
     const currentLength = inputs.filter((x) => x !== "").length;
 
@@ -287,7 +389,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
               value={inputs.join("")}
               onChange={handleInputChange}
               onPaste={(e) => {
-                const pasted = sanitizePasscode(
+                const pasted = normalizePasscodeInput(
                   e.clipboardData.getData("text"),
                 );
                 const normalized = pasted.replace(/_/g, "").slice(0, 7);
@@ -308,8 +410,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                 }
               }}
               autoFocus
+              type="text"
+              inputMode="text"
               autoCapitalize="none"
               autoComplete="off"
+              autoCorrect="off"
               spellCheck="false"
             />
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1 bg-gradient-to-r from-transparent via-[#5EC7A5] to-transparent opacity-50" />

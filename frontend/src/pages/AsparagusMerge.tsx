@@ -10,6 +10,7 @@ import { type Direction } from "../components/asparagus/types";
 import { AppIcon } from "../components/common/AppIcon";
 import { ASPARAGUS_TUTORIAL_SLIDES } from "../constants/tutorialSlides";
 import { pickRandomActivityBgm } from "../utils/bgm";
+import { useAuthStore } from "../store/useAuthStore";
 
 const ScoreCard = ({
   label,
@@ -40,6 +41,7 @@ const ScoreCard = ({
 
 const AsparagusMerge: React.FC = () => {
   const [bgmSrc] = React.useState(() => pickRandomActivityBgm());
+  const isAdmin = useAuthStore((state) => state.isAdmin);
 
   usePageBgm(bgmSrc);
 
@@ -153,6 +155,7 @@ const AsparagusMerge: React.FC = () => {
               swapCount={swapCount}
               historyLength={history.length}
               isSwapMode={isSwapMode}
+              isAdmin={isAdmin}
               debugMode={debugMode}
               onUndo={handleUndo}
               onToggleSwapMode={() => {

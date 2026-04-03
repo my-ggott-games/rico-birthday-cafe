@@ -81,7 +81,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   const artworkRef = useRef<HTMLDivElement>(null);
   const puzzleAchievementAwardedRef = useRef(false);
   const completionMetaTriggeredRef = useRef(false);
-  const { token } = useAuthStore();
+  const { token, isAdmin } = useAuthStore();
   const { addToast } = useToastStore();
   const isCoarsePointerDevice =
     typeof window !== "undefined" &&
@@ -731,7 +731,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
           </div>
         </div>
 
-        {!completed && (
+        {!completed && isAdmin && (
           <div className="fixed right-4 top-[max(1rem,env(safe-area-inset-top))] z-[120] flex justify-end px-0">
             <button
               type="button"

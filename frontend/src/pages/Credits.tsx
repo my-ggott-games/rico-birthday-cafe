@@ -9,11 +9,13 @@ import { ReturnButton } from "../components/common/ReturnButton";
 import { AppIcon } from "../components/common/AppIcon";
 import { playDiriringSfx, preloadDiriringSfx } from "../utils/soundEffects";
 import { pickRandomActivityBgm } from "../utils/bgm";
+import { useAudioStore } from "../store/useAudioStore";
 
+const THANK_YOU_ALL_CODE = "THANK_YOU_ALL";
 const CREDITS_SECTIONS = [
   {
     title: "프로젝트 총괄",
-    names: ["전체 기획 및 컨셉: (이름 미정)", "경험 설계: (이름 미정)"],
+    names: ["전체 기획 및 컨셉: (이름 미정)", "Userflow 설계: (이름 미정)"],
   },
   {
     title: "개발",
@@ -80,10 +82,10 @@ export default function Credits() {
   const [loading, setLoading] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [needsManualStart, setNeedsManualStart] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
   const [highlightClaim, setHighlightClaim] = useState(false);
   const [manualScrollEnabled, setManualScrollEnabled] = useState(false);
   const [bgmSrc] = useState(() => pickRandomActivityBgm());
+  const isMuted = useAudioStore((state) => state.isMuted);
   const [creditsMotion, setCreditsMotion] = useState({
     startY: window.innerHeight,
     endY: -window.innerHeight,
@@ -100,6 +102,56 @@ export default function Credits() {
   }, []);
 
   useEffect(() => {
+    if (!token) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const bootstrapClaimedState = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/achievements/all`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok || cancelled) {
+          return;
+        }
+
+        const achievements = (await response.json()) as Array<{
+          code?: string;
+          earned?: boolean;
+        }>;
+
+        const alreadyClaimed = achievements.some(
+          (achievement) =>
+            achievement.code === THANK_YOU_ALL_CODE && achievement.earned,
+        );
+
+        if (!alreadyClaimed || cancelled) {
+          return;
+        }
+
+        setClaimed(true);
+        setManualScrollEnabled(true);
+        setHasStarted(true);
+        setNeedsManualStart(false);
+        setHighlightClaim(false);
+      } catch (error) {
+        console.error("Failed to hydrate credits achievement state", error);
+      }
+    };
+
+    void bootstrapClaimedState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -114,6 +166,17 @@ export default function Credits() {
 
     audio.muted = isMuted;
   }, [isMuted]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || isMuted || !hasStarted) {
+      return;
+    }
+
+    void audio.play().catch((error) => {
+      console.error("Failed to resume credits BGM", error);
+    });
+  }, [hasStarted, isMuted]);
 
   useEffect(() => {
     const updateCreditsMotion = () => {
@@ -175,8 +238,7 @@ export default function Credits() {
       audio.pause();
       audio.currentTime = 0;
       audio.volume = 1;
-      audio.muted = false;
-      setIsMuted(false);
+      audio.muted = isMuted;
 
       if (audio.readyState < 2) {
         await new Promise<void>((resolve) => {
@@ -194,27 +256,6 @@ export default function Credits() {
     }
   };
 
-  const handleMuteToggle = async () => {
-    const audio = audioRef.current;
-    const nextMuted = !isMuted;
-
-    if (!audio) {
-      setIsMuted(nextMuted);
-      return;
-    }
-
-    audio.muted = nextMuted;
-    setIsMuted(nextMuted);
-
-    if (!nextMuted && hasStarted) {
-      try {
-        await audio.play();
-      } catch (error) {
-        console.error("Failed to resume credits BGM", error);
-      }
-    }
-  };
-
   const handleDecline = () => {
     const audio = audioRef.current;
 
@@ -224,6 +265,15 @@ export default function Credits() {
     }
 
     navigate("/lobby");
+  };
+
+  const handleCreditsRollComplete = () => {
+    if (!hasStarted || manualScrollEnabled) {
+      return;
+    }
+
+    setManualScrollEnabled(true);
+    setHighlightClaim(false);
   };
 
   const awardAchievement = async () => {
@@ -380,21 +430,6 @@ export default function Credits() {
           className="rounded-xl border-2 border-[#5EC7A5] bg-white/90 px-4 py-2 text-sm font-bold text-[#166D77] shadow-[0_10px_30px_rgba(22,109,119,0.14)]"
         />
       </div>
-      {hasStarted && (
-        <button
-          type="button"
-          onClick={() => void handleMuteToggle()}
-          className="absolute right-4 top-4 z-50 flex items-center gap-2 rounded-xl border-2 border-[#5EC7A5] bg-white/90 px-4 py-2 text-sm font-bold text-[#166D77] shadow-[0_10px_30px_rgba(22,109,119,0.14)]"
-          aria-label={isMuted ? "Unmute credits music" : "Mute credits music"}
-        >
-          <AppIcon
-            name={isMuted ? "VolumeX" : "Volume2"}
-            size={18}
-            strokeWidth={2.2}
-          />
-          <span>{isMuted ? "Unmute" : "Mute"}</span>
-        </button>
-      )}
 
       <div className="flex h-screen flex-1">
         <div
@@ -409,13 +444,14 @@ export default function Credits() {
               className="absolute inset-0 z-10 overflow-y-auto overflow-x-hidden"
             >
               <div className="flex min-h-full justify-center px-3 py-12 sm:px-6">
-                {renderCreditsContent(false)}
+                {renderCreditsContent(!claimed)}
               </div>
             </div>
           ) : (
             <div
               key={`${hasStarted}-${creditsMotion.startY}-${creditsMotion.endY}-${creditsMotion.duration}`}
               className="absolute inset-x-0 top-0 z-10 flex justify-center px-3 sm:px-6"
+              onAnimationEnd={handleCreditsRollComplete}
               style={
                 {
                   "--credits-start-y": `${creditsMotion.startY}px`,

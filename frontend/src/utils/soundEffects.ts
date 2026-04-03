@@ -1,3 +1,5 @@
+import { useAudioStore } from "../store/useAudioStore";
+
 const DIRIRING_SRC = encodeURI("/diriring.mp3");
 
 let diriringAudio: HTMLAudioElement | null = null;
@@ -17,6 +19,10 @@ const getDiriringAudio = () => {
 };
 
 export const playDiriringSfx = async () => {
+  if (useAudioStore.getState().isMuted) {
+    return;
+  }
+
   const audio = getDiriringAudio();
   if (!audio) return;
 
@@ -30,6 +36,7 @@ export const playDiriringSfx = async () => {
   try {
     audio.pause();
     audio.currentTime = 0;
+    audio.muted = false;
     await audio.play();
   } catch (error) {
     console.warn("Failed to play diriring effect", error);

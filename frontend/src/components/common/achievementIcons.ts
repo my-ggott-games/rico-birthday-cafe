@@ -8,6 +8,8 @@ const ACHIEVEMENT_ICONS: Record<string, AppIconName> = {
   LUCKY_RICO_MOMENT: "ScrollText",
   RICO_DEBUT_DATE: "Eye",
   THANK_YOU_ALL: "Clapperboard",
+  WHO_ARE_YOU: "KeyRound",
+  LOST_IN_THE_WAY: "FileQuestionMark",
 };
 
 export const getAchievementIconName = (code: string): AppIconName =>

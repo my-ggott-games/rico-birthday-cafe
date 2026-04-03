@@ -9,10 +9,7 @@ import {
   PUZZLE_MUSEUM_UNLOCK_EVENT,
   PUZZLE_MUSEUM_UNLOCK_KEY,
 } from "../constants/puzzle";
-import {
-  AppIcon,
-  type AppIconName,
-} from "../components/common/AppIcon";
+import { AppIcon, type AppIconName } from "../components/common/AppIcon";
 import { LOBBY_BGM_SRC } from "../utils/bgm";
 
 const LobbyIconTile = ({
@@ -30,7 +27,7 @@ const LobbyIconTile = ({
 }) => (
   <div className="flex flex-col items-center">
     <div
-      className={`flex items-center justify-center rounded-[1.35rem] border-4 shadow-xl transition-transform group-hover:-translate-y-0.5 ${isMobile ? "h-20 w-20" : "h-24 w-24"} ${className}`}
+      className={`flex items-center justify-center rounded-[1.35rem] border-4 shadow-xl transition-transform transition-colors group-hover:-translate-y-0.5 ${isMobile ? "h-20 w-20" : "h-24 w-24"} ${className}`}
     >
       <AppIcon
         name={icon}
@@ -83,18 +80,13 @@ const Lobby: React.FC = () => {
 
   return (
     <div className="relative w-full min-h-screen overflow-x-hidden bg-[#FFFFF8]">
-      {/* Background: Cafe Interior */}
       <div
-        className="absolute inset-0 opacity-20 pointer-events-none"
+        className="absolute inset-0 pointer-events-none bg-center bg-cover bg-no-repeat"
         style={{
-          backgroundImage:
-            "radial-gradient(#5EC7A5 2px, transparent 2px), radial-gradient(#5EC7A5 2px, transparent 2px)",
-          backgroundSize: "40px 40px",
-          backgroundPosition: "0 0, 20px 20px",
+          backgroundImage: "url('/lobby.jpg')",
         }}
       />
-      {/* Floor */}
-      <div className="absolute bottom-0 w-full h-1/3 bg-[#f3e6d8] border-t-8 border-[#D6C0B0]" />
+      <div className="absolute inset-0 pointer-events-none bg-white/30" />
 
       <div
         className={`relative z-10 w-full min-h-screen ${isMobile ? "px-4 pt-4 pb-8" : "p-10"} flex flex-col`}
@@ -102,12 +94,6 @@ const Lobby: React.FC = () => {
         <header
           className={`flex ${isMobile ? "flex-col items-center gap-2" : "justify-between items-center"} ${isMobile ? "mb-3" : "mb-6"}`}
         >
-          <h2
-            className={`${isMobile ? "text-2xl" : "text-4xl"} flex items-center gap-2 font-black text-[#166D77] drop-shadow-sm rotate-[-1deg]`}
-          >
-            <AppIcon name="Coffee" size={isMobile ? 24 : 34} />
-            Main Hall
-          </h2>
           <div
             className={`flex ${isMobile ? "flex-wrap justify-center" : ""} gap-2`}
           >
@@ -142,8 +128,8 @@ const Lobby: React.FC = () => {
             text1="축하합니다"
             text2="유즈하 리코"
             text3="아무 이유 없음"
-            scale={isMobile ? 0.82 : 0.85}
-            emblemScale={isMobile ? 0.72 : 0.75}
+            scale={isMobile ? 0.82 : 0.8}
+            emblemScale={isMobile ? 0.72 : 0.7}
           />
         </div>
 
@@ -159,16 +145,13 @@ const Lobby: React.FC = () => {
                 : "absolute top-10 left-20 group"
             }
           >
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="group"
-            >
+            <motion.div whileHover={{ scale: 1.05 }} className="group">
               <LobbyIconTile
                 name="리코의 외출준비"
-                icon="Scissors"
+                icon="Shirt"
                 isMobile={isMobile}
-                className="border-[#e7bcc2] bg-[#FFE4E6]"
-                iconClassName="text-[#166D77]"
+                className="border-[#e7bcc2] bg-[#FFE4E6]/30 group-hover:bg-[#FFE4E6]/85"
+                iconClassName="text-[#cf9aa3]"
               />
             </motion.div>
           </Link>
@@ -182,15 +165,12 @@ const Lobby: React.FC = () => {
                 : "absolute bottom-10 right-[20%] group"
             }
           >
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="group"
-            >
+            <motion.div whileHover={{ scale: 1.05 }} className="group">
               <LobbyIconTile
                 name="이타백 꾸미기"
                 icon="Handbag"
                 isMobile={isMobile}
-                className="border-[#e5dcc7] bg-[#fff8e8]"
+                className="border-[#e5dcc7] bg-[#fff8e8]/30 group-hover:bg-[#fff8e8]/85"
                 iconClassName="text-[#166D77]"
               />
             </motion.div>
@@ -205,20 +185,19 @@ const Lobby: React.FC = () => {
                 : "absolute top-20 right-20 group"
             }
           >
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="group"
-            >
+            <motion.div whileHover={{ scale: 1.05 }} className="group">
               <LobbyIconTile
                 name="퍼즐 맞추기"
                 icon="Puzzle"
                 isMobile={isMobile}
                 className={
                   isPuzzleMuseumUnlocked
-                    ? "border-[#ddd1bf] bg-[#f5ecdd]"
-                    : "border-[#84bf2e] bg-[#a3e635]"
+                    ? "border-[#ddd1bf] bg-[#f5ecdd]/30 group-hover:bg-[#f5ecdd]/85"
+                    : "border-[#84bf2e] bg-[#a3e635]/30 group-hover:bg-[#a3e635]/85"
                 }
-                iconClassName="text-[#166D77]"
+                iconClassName={
+                  isPuzzleMuseumUnlocked ? "text-[#b9ab97]" : "text-[#6e9f23]"
+                }
               />
             </motion.div>
           </Link>
@@ -232,15 +211,12 @@ const Lobby: React.FC = () => {
                 : "absolute bottom-8 left-[24%] -translate-x-1/2 group"
             }
           >
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="group"
-            >
+            <motion.div whileHover={{ scale: 1.05 }} className="group">
               <LobbyIconTile
                 name="아스파라거스 키우기"
                 icon="Sprout"
                 isMobile={isMobile}
-                className="border-[#aad0b2] bg-[#d4edda]"
+                className="border-[#aad0b2] bg-[#d4edda]/30 group-hover:bg-[#d4edda]/85"
                 iconClassName="text-[#2d6a4f]"
               />
             </motion.div>
@@ -255,15 +231,12 @@ const Lobby: React.FC = () => {
                 : "absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 group"
             }
           >
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="group"
-            >
+            <motion.div whileHover={{ scale: 1.05 }} className="group">
               <LobbyIconTile
                 name="오늘의 운세"
                 icon="ScrollText"
                 isMobile={isMobile}
-                className="border-[#b79880] bg-[#D6C0B0]"
+                className="border-[#b79880] bg-[#D6C0B0]/30 group-hover:bg-[#D6C0B0]/85"
                 iconClassName="text-[#8B5A2B]"
               />
             </motion.div>
@@ -277,15 +250,12 @@ const Lobby: React.FC = () => {
                 : "absolute bottom-[18%] right-[42%] group"
             }
           >
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="group"
-            >
+            <motion.div whileHover={{ scale: 1.05 }} className="group">
               <LobbyIconTile
                 name="용사 리코 이야기"
                 icon="Swords"
                 isMobile={isMobile}
-                className="border-[#aebed7] bg-[#d8e4f7]"
+                className="border-[#aebed7] bg-[#d8e4f7]/30 group-hover:bg-[#d8e4f7]/85"
                 iconClassName="text-[#102542]"
               />
             </motion.div>

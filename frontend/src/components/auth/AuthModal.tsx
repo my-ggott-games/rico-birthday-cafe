@@ -127,7 +127,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         throw new Error(getLoginErrorMessage(data?.code));
       }
 
-      login(data.token);
+      login(data.token, data.username ?? null);
       onSuccess();
     } catch (err: any) {
       setError(
@@ -157,7 +157,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       setIssuedUid(data.username);
       setCopied(false);
-      login(data.token);
+      login(data.token, data.username);
     } catch (err: any) {
       setError(
         getFriendlyErrorMessage(

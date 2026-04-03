@@ -1,9 +1,51 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { fetchWithAuth } from "../utils/api";
+import { useAuthStore } from "../store/useAuthStore";
+import { useToastStore } from "../store/useToastStore";
 
 const NotFound: React.FC = () => {
   const navigate = useNavigate();
+  const token = useAuthStore((state) => state.token);
+  const addToast = useToastStore((state) => state.addToast);
+  const hasRequestedAwardRef = useRef(false);
+
+  useEffect(() => {
+    if (!token || hasRequestedAwardRef.current) {
+      return;
+    }
+
+    hasRequestedAwardRef.current = true;
+
+    const awardNotFoundAchievement = async () => {
+      try {
+        const response = await fetchWithAuth(
+          "/achievements/award/LOST_IN_THE_WAY",
+          {
+            method: "POST",
+          },
+        );
+
+        if (!response.ok) {
+          return;
+        }
+
+        const newlyAwarded = (await response.json()) === true;
+        if (newlyAwarded) {
+          addToast({
+            title: "길을 잃었다~",
+            description: "어딜 가야 할까~",
+            icon: "FileQuestionMark",
+          });
+        }
+      } catch (error) {
+        console.error("Failed to award not-found achievement", error);
+      }
+    };
+
+    void awardNotFoundAchievement();
+  }, [addToast, token]);
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-[#FFFFF8] flex flex-col items-center justify-center font-handwriting">
@@ -24,22 +66,22 @@ const NotFound: React.FC = () => {
 
         {/* Error message */}
         <div className="text-2xl md:text-3xl text-[#5EC7A5] font-bold mb-6">
-          이런! 길을 잃으셨나요?
+          길을 잃었구나!
         </div>
 
         <p className="text-[#166D77] text-lg md:text-xl font-medium mb-8 leading-relaxed">
-          요청하신 페이지를 찾을 수 없어요.
+          여긴 아무것도 없어
           <br />
-          리코의 메인 홀로 돌아가볼까요?
+          같이 로비로 돌아가자!
         </p>
 
         {/* Return Button */}
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/lobby")}
           className="relative group bg-pale-custard border-4 border-[#D6C0B0] rounded-[24px] px-8 py-4 shadow-[4px_4px_0px_0px_#D6C0B0] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all active:scale-95"
         >
           <span className="text-[#166D77] font-black text-xl flex items-center gap-2 group-hover:text-[#5EC7A5] transition-colors">
-            🏠 메인으로 돌아가기
+            로비로 돌아가기
           </span>
         </button>
       </motion.div>

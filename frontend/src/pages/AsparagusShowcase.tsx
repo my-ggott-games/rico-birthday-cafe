@@ -228,6 +228,7 @@ const AsparagusShowcase: React.FC = () => {
                   swapCount={1}
                   historyLength={1}
                   isSwapMode={isSwapMode}
+                  isAdmin
                   debugMode={false}
                   onUndo={resetPreview}
                   onToggleSwapMode={() => {

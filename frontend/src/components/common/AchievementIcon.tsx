@@ -1,4 +1,4 @@
-import { AppIcon } from "./AppIcon";
+import { AppIcon, isAppIconName } from "./AppIcon";
 import { getAchievementIconName } from "./achievementIcons";
 
 const isAssetUrl = (iconUrl?: string | null) =>
@@ -24,6 +24,10 @@ export const AchievementIcon = ({
         style={{ width: size, height: size }}
       />
     );
+  }
+
+  if (iconUrl && isAppIconName(iconUrl)) {
+    return <AppIcon name={iconUrl} size={size} className={className} />;
   }
 
   return (

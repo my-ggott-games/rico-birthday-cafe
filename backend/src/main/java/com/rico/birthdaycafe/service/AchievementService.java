@@ -7,6 +7,7 @@ import com.rico.birthdaycafe.entity.UserAchievement;
 import com.rico.birthdaycafe.event.GameCompletedEvent;
 import com.rico.birthdaycafe.repository.AchievementRepository;
 import com.rico.birthdaycafe.repository.UserAchievementRepository;
+import com.rico.birthdaycafe.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class AchievementService {
 
     private final AchievementRepository achievementRepository;
     private final UserAchievementRepository userAchievementRepository;
+    private final UserRepository userRepository;
 
     @EventListener
     @Transactional
@@ -75,13 +77,21 @@ public class AchievementService {
      */
     @Transactional(readOnly = true)
     public List<AchievementDto> getAllAchievementsWithStatus(User user) {
+        String activeAchievementCode = user.getActiveAchievementCode();
+
         if ("chiko_03240324".equals(user.getUsername())) {
             // Admin gets all achievements unlocked instantly
             java.time.LocalDateTime now = java.time.LocalDateTime.now();
             return achievementRepository.findAll()
                     .stream()
                     .map(ach -> new AchievementDto(
-                            ach.getCode(), ach.getTitle(), ach.getDescription(), ach.getIconUrl(), now, true
+                            ach.getCode(),
+                            ach.getTitle(),
+                            ach.getDescription(),
+                            ach.getIconUrl(),
+                            now,
+                            true,
+                            ach.getCode().equals(activeAchievementCode)
                     ))
                     .collect(Collectors.toList());
         }
@@ -111,9 +121,36 @@ public class AchievementService {
                             achievement.getDescription(),
                             achievement.getIconUrl(),
                             unlockedAt,
-                            earned
+                            earned,
+                            achievement.getCode().equals(activeAchievementCode)
                     );
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public boolean setActiveAchievement(User user, String achievementCode) {
+        if (achievementCode == null || achievementCode.isBlank()) {
+            user.setActiveAchievementCode(null);
+            userRepository.save(user);
+            return true;
+        }
+
+        Optional<Achievement> achievementOpt = achievementRepository.findByCode(achievementCode);
+        if (achievementOpt.isEmpty()) {
+            return false;
+        }
+
+        boolean isAdminUser = "chiko_03240324".equals(user.getUsername());
+        boolean hasEarnedAchievement =
+                isAdminUser || userAchievementRepository.existsByUserAndAchievement_Code(user, achievementCode);
+
+        if (!hasEarnedAchievement) {
+            return false;
+        }
+
+        user.setActiveAchievementCode(achievementCode);
+        userRepository.save(user);
+        return true;
     }
 }

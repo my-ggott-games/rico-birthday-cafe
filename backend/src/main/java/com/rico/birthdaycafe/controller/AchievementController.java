@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -36,7 +38,8 @@ public class AchievementController {
                 ua.getAchievement().getDescription(),
                 ua.getAchievement().getIconUrl(),
                 ua.getUnlockedAt(),
-                true  // earned = true for /mine items
+                true,  // earned = true for /mine items
+                ua.getAchievement().getCode().equals(user.getActiveAchievementCode())
         )).collect(Collectors.toList());
 
         return ResponseEntity.ok(dtos);
@@ -58,11 +61,19 @@ public class AchievementController {
      * Explicitly awards an achievement by code to the current user.
      * Service layer handles idempotency (ignores if already earned).
      */
-    @org.springframework.web.bind.annotation.PostMapping("/award/{code}")
+    @PostMapping("/award/{code}")
     public ResponseEntity<Boolean> awardAchievement(
-            @org.springframework.web.bind.annotation.PathVariable String code,
+            @PathVariable String code,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         boolean awarded = achievementService.awardAchievement(userDetails.getUser(), code);
         return ResponseEntity.ok(awarded);
+    }
+
+    @PostMapping("/active/{code}")
+    public ResponseEntity<Boolean> setActiveAchievement(
+            @PathVariable String code,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        boolean updated = achievementService.setActiveAchievement(userDetails.getUser(), code);
+        return ResponseEntity.ok(updated);
     }
 }

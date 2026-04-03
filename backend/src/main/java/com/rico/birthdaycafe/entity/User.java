@@ -31,6 +31,9 @@ public class User {
     @Column(name = "role", nullable = false)
     private String role;
 
+    @Column(name = "active_achievement_code", length = 50)
+    private String activeAchievementCode;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -40,4 +43,3 @@ public class User {
     @Builder.Default
     private List<UserAchievement> achievements = new ArrayList<>();
 }
-
