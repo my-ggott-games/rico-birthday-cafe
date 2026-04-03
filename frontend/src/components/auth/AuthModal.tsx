@@ -348,7 +348,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   번호표를 발급받았어요!
                 </h2>
                 <p className="mb-1 break-keep text-sm text-[#166D77]/60 md:text-base">
-                  잃어버리면 알 수 없으니 꼭 저장해두세요.
+                  잃어버리면 누군지 알 수 없으니 새로 뽑아야 해요.
                 </p>
 
                 <div className="mb-5 flex flex-col gap-2 rounded-2xl border-2 border-[#5EC7A5] bg-pale-custard p-4">
