@@ -17,4 +17,7 @@ public class RegisterRequest {
 
     @NotBlank(message = "Confirm password cannot be blank")
     private String confirmPassword;
+
+    @NotBlank(message = "Issue token cannot be blank")
+    private String issueToken;
 }

@@ -24,6 +24,12 @@ public class JwtTokenProvider {
     @Value("${jwt.expiration:86400000}") // 1 day in ms
     private long validityInMilliseconds;
 
+    @Value("${jwt.uid-issue-expiration-ms:300000}") // 5 minutes in ms
+    private long uidIssueValidityInMilliseconds;
+
+    private static final String UID_ISSUE_TOKEN_TYPE = "UID_ISSUE";
+    private static final String TOKEN_TYPE_CLAIM = "tokenType";
+
     private SecretKey key;
     private final UserDetailsService userDetailsService;
 
@@ -46,6 +52,32 @@ public class JwtTokenProvider {
                 .expiration(validity)
                 .signWith(key)
                 .compact();
+    }
+
+    public String createUidIssueToken(String uid) {
+        Date now = new Date();
+        Date validity = new Date(now.getTime() + uidIssueValidityInMilliseconds);
+
+        return Jwts.builder()
+                .subject(uid)
+                .claim(TOKEN_TYPE_CLAIM, UID_ISSUE_TOKEN_TYPE)
+                .issuedAt(now)
+                .expiration(validity)
+                .signWith(key)
+                .compact();
+    }
+
+    public boolean validateUidIssueToken(String uid, String token) {
+        try {
+            Claims claims = parseClaims(token);
+            String subject = claims.getSubject();
+            String tokenType = claims.get(TOKEN_TYPE_CLAIM, String.class);
+            return uid != null
+                    && uid.equals(subject)
+                    && UID_ISSUE_TOKEN_TYPE.equals(tokenType);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public Authentication getAuthentication(String token) {

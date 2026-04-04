@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../../store/useAuthStore";
 import { BASE_URL } from "../../utils/api";
@@ -23,6 +23,12 @@ type Step = "main" | "set-pin";
 const PIN_REGEX = /^[0-9]{4}$/;
 const MAX_PIN_LENGTH = 4;
 const REQUEST_TIMEOUT_MS = 15000;
+const UID_VALIDITY_MS = 5 * 60 * 1000;
+const UID_REISSUE_COOLDOWN_MS = 3 * 60 * 1000;
+const ISSUE_UID_STORAGE_KEY = "auth_issued_uid";
+const ISSUE_UID_TOKEN_STORAGE_KEY = "auth_issued_uid_token";
+const ISSUE_UID_AT_STORAGE_KEY = "auth_issued_uid_at";
+const LAST_ISSUE_AT_STORAGE_KEY = "auth_last_issue_at";
 const PIN_NAV_KEYS = new Set([
   "Tab",
   "ArrowLeft",
@@ -46,6 +52,25 @@ const fetchWithTimeout = async (
   } finally {
     window.clearTimeout(timeoutId);
   }
+};
+
+const readStoredString = (key: string) => {
+  if (typeof window === "undefined") {
+    return "";
+  }
+  return window.localStorage.getItem(key) ?? "";
+};
+
+const readStoredNumber = (key: string): number | null => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  const raw = window.localStorage.getItem(key);
+  if (!raw) {
+    return null;
+  }
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : null;
 };
 
 const getFriendlyErrorMessage = (error: unknown, fallbackMessage: string) => {
@@ -84,7 +109,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [loading, setLoading] = useState(false);
 
   // PIN setup step state (after issue-uid)
-  const [issuedUid, setIssuedUid] = useState("");
+  const [issuedUid, setIssuedUid] = useState(() =>
+    readStoredString(ISSUE_UID_STORAGE_KEY),
+  );
+  const [issuedUidToken, setIssuedUidToken] = useState(() =>
+    readStoredString(ISSUE_UID_TOKEN_STORAGE_KEY),
+  );
+  const [issuedAtMs, setIssuedAtMs] = useState<number | null>(() =>
+    readStoredNumber(ISSUE_UID_AT_STORAGE_KEY),
+  );
+  const [lastIssueAtMs, setLastIssueAtMs] = useState<number | null>(() =>
+    readStoredNumber(LAST_ISSUE_AT_STORAGE_KEY),
+  );
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const [newPin, setNewPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [pinError, setPinError] = useState("");
@@ -92,6 +129,112 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const copyResetTimerRef = useRef<number | null>(null);
 
   const { login } = useAuthStore();
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    if (issuedUid) {
+      window.localStorage.setItem(ISSUE_UID_STORAGE_KEY, issuedUid);
+    } else {
+      window.localStorage.removeItem(ISSUE_UID_STORAGE_KEY);
+    }
+  }, [issuedUid]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    if (issuedUidToken) {
+      window.localStorage.setItem(ISSUE_UID_TOKEN_STORAGE_KEY, issuedUidToken);
+    } else {
+      window.localStorage.removeItem(ISSUE_UID_TOKEN_STORAGE_KEY);
+    }
+  }, [issuedUidToken]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    if (issuedAtMs) {
+      window.localStorage.setItem(ISSUE_UID_AT_STORAGE_KEY, String(issuedAtMs));
+    } else {
+      window.localStorage.removeItem(ISSUE_UID_AT_STORAGE_KEY);
+    }
+  }, [issuedAtMs]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    if (lastIssueAtMs) {
+      window.localStorage.setItem(
+        LAST_ISSUE_AT_STORAGE_KEY,
+        String(lastIssueAtMs),
+      );
+    } else {
+      window.localStorage.removeItem(LAST_ISSUE_AT_STORAGE_KEY);
+    }
+  }, [lastIssueAtMs]);
+
+  const cooldownRemainingMs = lastIssueAtMs
+    ? Math.max(0, UID_REISSUE_COOLDOWN_MS - (nowMs - lastIssueAtMs))
+    : 0;
+  const isIssueCooldownActive = cooldownRemainingMs > 0;
+  const isIssuedUidExpired = issuedAtMs
+    ? nowMs - issuedAtMs >= UID_VALIDITY_MS
+    : false;
+
+  const formatRemainingTime = (remainingMs: number) => {
+    const totalSeconds = Math.ceil(remainingMs / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${String(seconds).padStart(2, "0")}`;
+  };
+
+  const clearIssuedUid = () => {
+    setIssuedUid("");
+    setIssuedUidToken("");
+    setIssuedAtMs(null);
+    setNewPin("");
+    setConfirmPin("");
+    setPinError("");
+  };
+
+  useEffect(() => {
+    if (step !== "set-pin" || !issuedAtMs) {
+      return;
+    }
+    if (!isIssuedUidExpired) {
+      return;
+    }
+
+    clearIssuedUid();
+    setStep("main");
+    setError("번호표 인증이 만료됐어요.\n새 번호표를 다시 뽑아주세요.");
+  }, [isIssuedUidExpired, issuedAtMs, step]);
+
+  useEffect(() => {
+    if (!issuedAtMs) {
+      return;
+    }
+    if (Date.now() - issuedAtMs >= UID_VALIDITY_MS) {
+      clearIssuedUid();
+      setStep("main");
+    }
+  }, []);
 
   const sanitizePin = (value: string) =>
     value.replace(/\D/g, "").slice(0, MAX_PIN_LENGTH);
@@ -183,9 +326,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setPinError("");
     setUidInput("");
     setPinInput("");
-    setIssuedUid("");
-    setNewPin("");
-    setConfirmPin("");
+    clearIssuedUid();
     setCopied(false);
     setLoading(false);
 
@@ -256,6 +397,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   // ── Step 1: Issue a new UID ─────────────────────────────────────────────────
   const handleIssueUid = async () => {
+    if (isIssueCooldownActive) {
+      setError(
+        `새 번호표는 ${formatRemainingTime(cooldownRemainingMs)} 후 다시 뽑을 수 있어요.`,
+      );
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -265,11 +413,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       });
       const data = (await res.json()) as AuthApiResponse;
 
-      if (!res.ok || data.code !== 200 || !data.username) {
+      if (!res.ok || data.code !== 200 || !data.username || !data.token) {
         throw new Error(data.message || "번호표 발급 실패");
       }
 
       setIssuedUid(data.username);
+      setIssuedUidToken(data.token);
+      setIssuedAtMs(Date.now());
+      setLastIssueAtMs(Date.now());
       setCopied(false);
       setNewPin("");
       setConfirmPin("");
@@ -300,6 +451,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setPinError("비밀번호가 일치하지 않아요.");
       return;
     }
+    if (isIssuedUidExpired) {
+      clearIssuedUid();
+      setStep("main");
+      setError("번호표 인증이 만료됐어요.\n새 번호표를 다시 뽑아주세요.");
+      return;
+    }
+    if (!issuedUidToken) {
+      setPinError("번호표 인증이 만료됐어요. 새 번호표를 발급받아주세요.");
+      return;
+    }
 
     setLoading(true);
 
@@ -311,12 +472,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           uid: issuedUid,
           password: newPin,
           confirmPassword: confirmPin,
+          issueToken: issuedUidToken,
         }),
       });
       const data = (await res.json()) as AuthApiResponse;
 
       if (!res.ok || data.code !== 200 || !data.token) {
-        throw new Error(data.message || "비밀번호 설정 실패");
+        throw new Error(
+          "번호표 인증이 만료됐어요.\n새 번호표를 다시 뽑아주세요.",
+        );
       }
 
       login(data.token, data.username ?? null);
@@ -498,11 +662,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
                   <PushableButton
                     onClick={handleIssueUid}
-                    disabled={loading}
+                    disabled={loading || isIssueCooldownActive}
                     fullWidth
                     className="py-5 text-xl md:text-2xl"
                   >
-                    {loading && !uidInput ? "잠시만요..." : "새 번호표 뽑기"}
+                    {loading && !uidInput
+                      ? "잠시만요..."
+                      : isIssueCooldownActive
+                        ? `새 번호표 뽑기 (${formatRemainingTime(cooldownRemainingMs)})`
+                        : "새 번호표 뽑기"}
                   </PushableButton>
                 </div>
               </>
