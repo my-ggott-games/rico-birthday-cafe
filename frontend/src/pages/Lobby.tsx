@@ -11,6 +11,7 @@ import {
 } from "../constants/puzzle";
 import { AppIcon, type AppIconName } from "../components/common/AppIcon";
 import { LOBBY_BGM_SRC } from "../utils/bgm";
+import { useAuthStore } from "../store/useAuthStore";
 
 const LobbyIconTile = ({
   name,
@@ -45,6 +46,7 @@ const LobbyIconTile = ({
 
 const Lobby: React.FC = () => {
   usePageBgm(LOBBY_BGM_SRC);
+  const isGuest = useAuthStore((state) => state.isGuest);
 
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [backgroundSrc, setBackgroundSrc] = useState("/lobby-thumb.jpg");
@@ -112,6 +114,11 @@ const Lobby: React.FC = () => {
         <header
           className={`flex ${isMobile ? "flex-col items-center gap-2" : "justify-between items-center"} ${isMobile ? "mb-3" : "mb-6"}`}
         >
+          {isGuest && (
+            <p className="rounded-full border border-[#166D77]/20 bg-[#166D77]/10 px-3 py-1 text-xs font-bold text-[#166D77]">
+              게스트 모드: 프로필/업적/기록 저장 사용 불가
+            </p>
+          )}
           <div
             className={`flex ${isMobile ? "flex-wrap justify-center" : ""} gap-2`}
           >
@@ -123,13 +130,14 @@ const Lobby: React.FC = () => {
             </Link>
             <button
               onClick={() => setIsAchievementOpen(true)}
-              className={`${isMobile ? "px-3 py-1 text-sm" : "px-6 py-2"} bg-cream rounded-full border-2 border-[#5EC7A5] shadow-sm font-black text-[#5EC7A5] hover:bg-[#5EC7A5] hover:text-pale-custard transition-colors flex items-center gap-1.5`}
+              disabled={isGuest}
+              className={`${isMobile ? "px-3 py-1 text-sm" : "px-6 py-2"} bg-cream rounded-full border-2 border-[#5EC7A5] shadow-sm font-black text-[#5EC7A5] hover:bg-[#5EC7A5] hover:text-pale-custard transition-colors flex items-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-45`}
             >
               <AppIcon name="IdCardLanyard" size={16} /> 프로필
             </button>
             <button
               onClick={() => setIsAdminOpen(true)}
-              className={`${isMobile ? "px-3 py-1 text-[10px]" : "px-5 py-2 text-xs"} bg-[#1a1a1a] text-pale-custard/40 rounded-full border border-pale-custard/10 shadow-lg font-mono tracking-tighter hover:text-pale-custard hover:border-[#5EC7A5]/50 transition-all group relative overflow-hidden`}
+              className={`${isMobile ? "px-3 py-1 text-sm" : "px-5 py-2"} bg-[#1a1a1a] text-pale-custard/40 rounded-full border border-pale-custard/10 shadow-lg font-mono tracking-tighter hover:text-pale-custard hover:border-[#5EC7A5]/50 transition-all group relative overflow-hidden`}
             >
               <span className="relative z-10 transition-transform group-hover:scale-110 inline-block">
                 who am I?

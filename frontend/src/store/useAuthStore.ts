@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 const ADMIN_UID = "chiko_03240324";
 const AUTH_UID_STORAGE_KEY = "auth_uid";
+const AUTH_GUEST_STORAGE_KEY = "auth_guest_mode";
 
 const decodeBase64Url = (value: string) => {
   const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
@@ -33,22 +34,28 @@ interface AuthState {
   uid: string | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isGuest: boolean;
   login: (token: string, uid?: string | null) => void;
+  enterGuest: () => void;
   logout: () => void;
 }
 
 const initialToken = localStorage.getItem("token");
+const initialGuest =
+  localStorage.getItem(AUTH_GUEST_STORAGE_KEY) === "true" && !initialToken;
 const initialUid =
   localStorage.getItem(AUTH_UID_STORAGE_KEY) ||
   (initialToken ? getJwtSubject(initialToken) : null);
 
 export const useAuthStore = create<AuthState>((set) => ({
   token: initialToken,
-  uid: initialUid,
-  isAuthenticated: !!initialToken,
+  uid: initialGuest ? null : initialUid,
+  isAuthenticated: !!initialToken || initialGuest,
   isAdmin: initialToken ? isAdminToken(initialToken) : false,
+  isGuest: initialGuest,
   login: (token: string, uid?: string | null) => {
     localStorage.setItem("token", token);
+    localStorage.removeItem(AUTH_GUEST_STORAGE_KEY);
     const resolvedUid = uid?.trim() || getJwtSubject(token);
     if (resolvedUid) {
       localStorage.setItem(AUTH_UID_STORAGE_KEY, resolvedUid);
@@ -61,11 +68,31 @@ export const useAuthStore = create<AuthState>((set) => ({
       uid: resolvedUid,
       isAuthenticated: true,
       isAdmin: isAdminToken(token),
+      isGuest: false,
+    });
+  },
+  enterGuest: () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem(AUTH_UID_STORAGE_KEY);
+    localStorage.setItem(AUTH_GUEST_STORAGE_KEY, "true");
+    set({
+      token: null,
+      uid: null,
+      isAuthenticated: true,
+      isAdmin: false,
+      isGuest: true,
     });
   },
   logout: () => {
     localStorage.removeItem("token");
     localStorage.removeItem(AUTH_UID_STORAGE_KEY);
-    set({ token: null, uid: null, isAuthenticated: false, isAdmin: false });
+    localStorage.removeItem(AUTH_GUEST_STORAGE_KEY);
+    set({
+      token: null,
+      uid: null,
+      isAuthenticated: false,
+      isAdmin: false,
+      isGuest: false,
+    });
   },
 }));

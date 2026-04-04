@@ -268,7 +268,7 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
                                   : "bg-[#166D77]/8 text-[#166D77]/70"
                               }`}
                             >
-                              {ach.active ? "활성화됨" : "설정 중"}
+                              {ach.active ? "대표 업적" : "설정 중"}
                             </span>
                           )}
                         </div>

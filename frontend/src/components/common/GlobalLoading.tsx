@@ -3,6 +3,7 @@ import { useLocation, matchPath } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { LOADING_MESSAGES } from "../../constants/loadingMessages";
 import { setPageTransitionLoading } from "../../utils/pageTransitionLoading";
+import { useAuthStore } from "../../store/useAuthStore";
 
 const GlobalLoading: React.FC = () => {
   const location = useLocation();
@@ -12,6 +13,7 @@ const GlobalLoading: React.FC = () => {
     "rotate",
   );
   const [message, setMessage] = useState("");
+  const isGuest = useAuthStore((state) => state.isGuest);
   // Keep track of the current path to avoid double-triggering on mount if strict mode
   const [prevPath, setPrevPath] = useState<string | null>(null);
 
@@ -169,6 +171,11 @@ const GlobalLoading: React.FC = () => {
             <h2 className="text-xl md:text-2xl font-bold text-[#166D77] mb-6 tracking-tight text-center px-4">
               {message}
             </h2>
+            {isGuest && (
+              <p className="mb-4 rounded-full border border-[#166D77]/20 bg-[#166D77]/6 px-4 py-2 text-center text-sm font-bold text-[#166D77]">
+                게스트 모드 입니다. 기록을 저장할 수 없어요.
+              </p>
+            )}
 
             <div className="relative w-72 h-8 bg-pale-custard rounded-full border-[3px] border-[#166D77] overflow-hidden mb-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
               {/* Inner fill with spring animation */}

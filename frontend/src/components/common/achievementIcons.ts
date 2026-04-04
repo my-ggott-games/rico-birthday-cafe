@@ -2,6 +2,9 @@ import type { AppIconName } from "./AppIcon";
 
 const ACHIEVEMENT_ICONS: Record<string, AppIconName> = {
   ASPARAGUS_EXCALIBUR: "Sword",
+  ASPARAGUS_GARDENER: "Sprout",
+  ASPARAGUS_GAEDENER: "Sprout",
+  SPECIAL_ASPARAGUS: "Sparkles",
   FIRST_PUZZLE: "Puzzle",
   "LEGEND-HERO": "Sword",
   "R-GEND-HERO": "Crown",

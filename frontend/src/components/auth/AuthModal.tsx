@@ -21,6 +21,8 @@ type AuthApiResponse = {
 type Step = "main" | "set-pin";
 
 const PIN_REGEX = /^[0-9]{4}$/;
+const UID_REGEX = /^chiko_[0-9a-f]{8}$/;
+const ADMIN_UID = "chiko_03240324";
 const MAX_PIN_LENGTH = 4;
 const REQUEST_TIMEOUT_MS = 15000;
 const UID_VALIDITY_MS = 5 * 60 * 1000;
@@ -78,6 +80,10 @@ const getFriendlyErrorMessage = (error: unknown, fallbackMessage: string) => {
     return fallbackMessage;
   }
 
+  if (error.name === "AbortError") {
+    return "요청이 지연되고 있어요.\n잠시 후 다시 시도해주세요.";
+  }
+
   const message = error.message.trim();
 
   if (!message) {
@@ -125,10 +131,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [newPin, setNewPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [pinError, setPinError] = useState("");
+  const [showGuestEntry, setShowGuestEntry] = useState(false);
   const [copied, setCopied] = useState(false);
   const copyResetTimerRef = useRef<number | null>(null);
 
-  const { login } = useAuthStore();
+  const { login, enterGuest } = useAuthStore();
 
   useEffect(() => {
     if (!isOpen) {
@@ -203,6 +210,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     const seconds = totalSeconds % 60;
     return `${minutes}:${String(seconds).padStart(2, "0")}`;
   };
+
+  const loadingDots = ".".repeat((Math.floor(nowMs / 500) % 3) + 1);
+
+  const renderLoadingLabel = (baseText: string) => (
+    <span className="inline-flex items-center">
+      <span>{baseText}</span>
+      <span className="inline-block w-5 text-left">{loadingDots}</span>
+    </span>
+  );
 
   const clearIssuedUid = () => {
     setIssuedUid("");
@@ -320,10 +336,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
+  const getRegisterErrorMessage = (message?: string, code?: number) => {
+    if (message?.includes("INVALID_UID_FORMAT_OR_RESERVED")) {
+      return "번호표는 chiko_ 로 시작하는데...";
+    }
+
+    if (message?.includes("UID_ISSUE_TOKEN_INVALID_OR_EXPIRED")) {
+      return "몇 번을 불렀는데 이제 오시면 어떡해요! 새 번호표를 발급받아주세요.";
+    }
+
+    if (message?.includes("PIN_FORMAT_INVALID")) {
+      return "비밀번호는 숫자 4자리인데...";
+    }
+
+    if (message?.includes("PIN_CONFIRM_MISMATCH")) {
+      return "비밀번호가 일치하지 않아요.";
+    }
+
+    if (message?.includes("UID_ALREADY_REGISTERED_OR_REPLAYED")) {
+      return "번호표 인증이 만료됐어요.\n새 번호표를 다시 뽑아주세요.";
+    }
+
+    if (code === 401) {
+      return "번호표 인증이 만료됐어요.\n새 번호표를 다시 뽑아주세요.";
+    }
+
+    return "비밀번호 설정 중 문제가 생겼어요.\n잠시 후 다시 시도해주세요.";
+  };
+
   const resetAll = () => {
     setStep("main");
     setError("");
     setPinError("");
+    setShowGuestEntry(false);
     setUidInput("");
     setPinInput("");
     clearIssuedUid();
@@ -341,17 +386,32 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     onClose();
   };
 
+  const handleEnterGuestMode = () => {
+    enterGuest();
+    resetAll();
+    onSuccess();
+  };
+
   // ── Login with existing ticket ──────────────────────────────────────────────
   const handleExistingTicketLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setShowGuestEntry(false);
 
     if (!uidInput.trim()) {
       setError("번호표를 입력해주세요.");
       return;
     }
+    if (!UID_REGEX.test(uidInput.trim())) {
+      setError("번호표는 chiko_ 로 시작하는데...");
+      return;
+    }
+    if (uidInput.trim() === ADMIN_UID) {
+      setError("이 번호표는 관리자 전용이라 여기서 로그인할 수 없어요.");
+      return;
+    }
     if (!PIN_REGEX.test(pinInput)) {
-      setError("비밀번호는 숫자 4자리여야 해요.");
+      setError("비밀번호는 숫자 4자리인데...");
       return;
     }
 
@@ -374,6 +434,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }
 
       if (!res.ok) {
+        if ((data?.code ?? res.status) === 500) {
+          setShowGuestEntry(true);
+        }
         throw new Error(getLoginErrorMessage(data?.code ?? res.status));
       }
 
@@ -442,6 +505,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleSetPin = async (e: React.FormEvent) => {
     e.preventDefault();
     setPinError("");
+    setShowGuestEntry(false);
 
     if (!PIN_REGEX.test(newPin)) {
       setPinError("비밀번호는 숫자 4자리여야 해요.");
@@ -478,8 +542,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const data = (await res.json()) as AuthApiResponse;
 
       if (!res.ok || data.code !== 200 || !data.token) {
+        if ((data.code ?? res.status) === 500) {
+          setShowGuestEntry(true);
+        }
         throw new Error(
-          "번호표 인증이 만료됐어요.\n새 번호표를 다시 뽑아주세요.",
+          getRegisterErrorMessage(data.message, data.code ?? res.status),
         );
       }
 
@@ -558,6 +625,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     {pinError}
                   </div>
                 )}
+                {showGuestEntry && (
+                  <button
+                    type="button"
+                    onClick={handleEnterGuestMode}
+                    className="mb-4 w-full rounded-xl border-2 border-[#166D77]/25 bg-[#166D77] py-3 text-sm font-black text-pale-custard transition-all hover:brightness-110 md:text-base"
+                  >
+                    게스트 모드로 입장하기
+                  </button>
+                )}
 
                 <form onSubmit={handleSetPin} className="flex flex-col gap-3">
                   <input
@@ -597,7 +673,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     disabled={loading}
                     className="w-full rounded-xl border-2 border-[#3f9e80] bg-[#5EC7A5] py-4 text-base font-black text-pale-custard shadow-[0_4px_0_#3f9e80] transition-all hover:translate-y-1 hover:shadow-[0_0px_0_#3f9e80] disabled:opacity-50 md:text-lg"
                   >
-                    {loading ? "설정 중..." : "입장하기"}
+                    {loading ? "확인 중..." : "입장하기"}
                   </button>
                 </form>
               </div>
@@ -612,6 +688,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <div className="mb-4 whitespace-pre-line rounded-xl border border-[#e7c0c0] bg-[#f8e8e8] p-3 text-center text-sm font-bold text-red-700 md:text-base">
                     {error}
                   </div>
+                )}
+                {showGuestEntry && (
+                  <button
+                    type="button"
+                    onClick={handleEnterGuestMode}
+                    className="mb-4 w-full rounded-xl border-2 border-[#166D77]/25 bg-[#166D77] py-3 text-sm font-black text-pale-custard transition-all hover:brightness-110 md:text-base"
+                  >
+                    게스트 모드로 입장하기
+                  </button>
                 )}
 
                 <div className="flex flex-col gap-4">
@@ -648,7 +733,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       disabled={loading}
                       className="w-full rounded-xl border-2 border-[#166D77]/20 bg-pale-custard py-3 text-sm font-black text-[#166D77] transition-all hover:border-[#5EC7A5] disabled:opacity-50 md:text-base"
                     >
-                      {loading && uidInput ? "확인 중..." : "여기요!"}
+                      {loading && uidInput
+                        ? renderLoadingLabel("확인 중")
+                        : "여기요!"}
                     </button>
                   </form>
 
@@ -667,11 +754,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     className="py-5 text-xl md:text-2xl"
                   >
                     {loading && !uidInput
-                      ? "잠시만요..."
+                      ? renderLoadingLabel("잠시만요")
                       : isIssueCooldownActive
                         ? `새 번호표 뽑기 (${formatRemainingTime(cooldownRemainingMs)})`
                         : "새 번호표 뽑기"}
                   </PushableButton>
+
+                  <button
+                    type="button"
+                    onClick={handleEnterGuestMode}
+                    className="w-full rounded-xl border-2 border-[#166D77]/20 bg-[#166D77]/10 py-3 text-sm font-black text-[#166D77] transition-all hover:bg-[#166D77]/15 md:text-base"
+                  >
+                    (임시) 게스트 모드로 입장
+                  </button>
                 </div>
               </>
             )}

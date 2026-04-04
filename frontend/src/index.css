@@ -520,5 +520,5 @@ button {
   white-space: nowrap;
   pointer-events: none;
   -webkit-text-fill-color: transparent;
-  -webkit-text-stroke: 8px rgba(255, 252, 232, 0.92);
+  -webkit-text-stroke: 8px rgba(255, 255, 255);
 }

@@ -38,7 +38,20 @@ export const fetchWithAuth = async (
   endpoint: string,
   options: FetchOptions = {},
 ) => {
-  const token = useAuthStore.getState().token;
+  const { token, isGuest } = useAuthStore.getState();
+
+  if (isGuest) {
+    return new Response(
+      JSON.stringify({
+        code: 403,
+        message: "GUEST_MODE_BLOCKED: this request requires an authenticated uid",
+      }),
+      {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
 
   const headers = new Headers(options.headers || {});
 
@@ -63,7 +76,7 @@ export const fetchWithAuth = async (
   const response = await fetch(`${BASE_URL}${endpoint}`, config);
 
   // Auto logout on 401 Unauthorized
-  if (response.status === 401) {
+  if (response.status === 401 && !useAuthStore.getState().isGuest) {
     useAuthStore.getState().logout();
     window.location.href = "/"; // redirect to login/landing
   }

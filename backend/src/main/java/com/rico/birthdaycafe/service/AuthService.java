@@ -58,25 +58,25 @@ public class AuthService {
   public AuthResponse register(String uid, String password, String confirmPassword, String issueToken) {
     if (uid == null || !uid.matches(UID_REGEX) || ADMIN_UID.equals(uid)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-          "유효하지 않은 번호표예요. 새 번호표를 발급받아주세요.");
+          "INVALID_UID_FORMAT_OR_RESERVED: uid must match chiko_[0-9a-f]{8} and must not be admin uid");
     }
     if (issueToken == null || issueToken.isBlank() || !tokenProvider.validateUidIssueToken(uid, issueToken)) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
-          "몇 번을 불렀는데 이제 오시면 어떡해요! 새 번호표를 발급받아주세요.");
+          "UID_ISSUE_TOKEN_INVALID_OR_EXPIRED: issueToken is missing, invalid, mismatched, or expired for this uid");
     }
 
     if (!password.matches(PIN_REGEX)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-          "비밀번호는 숫자 4자리여야 해요.");
+          "PIN_FORMAT_INVALID: password must be exactly 4 numeric digits");
     }
     if (!password.equals(confirmPassword)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-          "비밀번호가 일치하지 않아요.");
+          "PIN_CONFIRM_MISMATCH: password and confirmPassword do not match");
     }
 
     if (userRepository.existsByUsername(uid)) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
-          "몇 번을 불렀는데 이제 오시면 어떡해요! 새 번호표를 발급받아주세요.");
+          "UID_ALREADY_REGISTERED_OR_REPLAYED: uid already exists (possible duplicate submit or token replay)");
     }
 
     User user = User.builder()
