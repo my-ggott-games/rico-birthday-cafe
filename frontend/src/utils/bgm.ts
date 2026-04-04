@@ -1,8 +1,8 @@
-export const LOBBY_BGM_SRC = encodeURI("/sound/감자튀김 옴뇸뇸.m4a");
+export const LOBBY_BGM_SRC = "/sound/lobby-bgm.m4a";
 
 export const ACTIVITY_BGM_SOURCES = [
-  encodeURI("/sound/밤바밤바.m4a"),
-  encodeURI("/sound/그 날, 감자튀김.m4a"),
+  "/sound/activity-bgm-1.m4a",
+  "/sound/activity-bgm-2.m4a",
 ] as const;
 
 export const pickRandomActivityBgm = () =>

@@ -25,6 +25,13 @@ export const usePageBgm = (
     audio.preload = "auto";
     audio.muted = useAudioStore.getState().isMuted;
     audioRef.current = audio;
+    audio.addEventListener("error", () => {
+      console.error("BGM load/play error", {
+        src,
+        networkState: audio.networkState,
+        readyState: audio.readyState,
+      });
+    });
 
     let isDisposed = false;
     let unlockListenersAttached = false;
@@ -59,7 +66,8 @@ export const usePageBgm = (
       try {
         await audio.play();
         removeUnlockListeners();
-      } catch {
+      } catch (error) {
+        console.warn("BGM autoplay blocked or failed", { src, error });
         addUnlockListeners();
       }
     };

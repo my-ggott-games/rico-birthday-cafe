@@ -114,7 +114,7 @@ const Lobby: React.FC = () => {
         <header
           className={`flex ${isMobile ? "flex-col items-center gap-2" : "justify-between items-center"} ${isMobile ? "mb-3" : "mb-6"}`}
         >
-          {isGuest && (
+          {isGuest && !isMobile && (
             <p className="rounded-full border border-[#166D77]/20 bg-[#166D77]/10 px-3 py-1 text-xs font-bold text-[#166D77]">
               게스트 모드: 프로필/업적/기록 저장 사용 불가
             </p>
@@ -146,6 +146,11 @@ const Lobby: React.FC = () => {
             </button>
           </div>
         </header>
+        {isGuest && isMobile && (
+          <p className="mb-3 self-center rounded-full border border-[#166D77]/20 bg-[#166D77]/10 px-3 py-1 text-xs font-bold text-[#166D77]">
+            게스트 모드: 프로필/업적/기록 저장 사용 불가
+          </p>
+        )}
 
         {/* Slogan */}
         <div className="flex justify-center w-full shrink-0">

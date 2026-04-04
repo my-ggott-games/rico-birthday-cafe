@@ -211,7 +211,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     return `${minutes}:${String(seconds).padStart(2, "0")}`;
   };
 
-  const loadingDots = ".".repeat((Math.floor(nowMs / 500) % 3) + 1);
+  const loadingDots = ".".repeat(Math.floor(nowMs / 500) % 4);
 
   const renderLoadingLabel = (baseText: string) => (
     <span className="inline-flex items-center">

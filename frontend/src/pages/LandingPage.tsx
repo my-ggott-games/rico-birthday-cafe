@@ -111,33 +111,35 @@ const LandingPage: React.FC = () => {
               </p>
             </motion.div>
 
-            <motion.div
-              onClick={handleEnter}
-              className={MOBILE_DOOR_FRAME_CLASS}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 1.05 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-            >
+            {!isOpen && (
               <motion.div
-                className="flex h-32 w-32 items-center justify-center rounded-[1.75rem] border border-white/55 bg-[rgba(255,255,255,0.5)] shadow-[0_12px_30px_rgba(0,0,0,0.16)]"
-                whileHover={{
-                  backgroundColor: "rgba(255,255,255,0.5)",
-                  boxShadow: "0 16px 36px rgba(0,0,0,0.2)",
-                }}
-                whileTap={{
-                  backgroundColor: "rgba(255,255,255,0.5)",
-                  boxShadow: "0 16px 36px rgba(0,0,0,0.2)",
-                }}
+                onClick={handleEnter}
+                className={MOBILE_DOOR_FRAME_CLASS}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 1.05 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
               >
-                <span
-                  data-content="하이용사!"
-                  className="landing-enter-text-stroke rounded-full px-3 py-2 text-xl font-black tracking-normal text-[#166D77]"
+                <motion.div
+                  className="flex h-32 w-32 items-center justify-center rounded-[1.75rem] border border-white/55 bg-[rgba(255,255,255,0.5)] shadow-[0_12px_30px_rgba(0,0,0,0.16)]"
+                  whileHover={{
+                    backgroundColor: "rgba(255,255,255,0.5)",
+                    boxShadow: "0 16px 36px rgba(0,0,0,0.2)",
+                  }}
+                  whileTap={{
+                    backgroundColor: "rgba(255,255,255,0.5)",
+                    boxShadow: "0 16px 36px rgba(0,0,0,0.2)",
+                  }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
                 >
-                  하이용사!
-                </span>
+                  <span
+                    data-content="하이용사!"
+                    className="landing-enter-text-stroke rounded-full px-3 py-2 text-xl font-black tracking-normal text-[#166D77]"
+                  >
+                    하이용사!
+                  </span>
+                </motion.div>
               </motion.div>
-            </motion.div>
+            )}
           </div>
         </div>
 
@@ -166,33 +168,35 @@ const LandingPage: React.FC = () => {
 
         <div className="absolute left-1/2 top-0 hidden -translate-x-1/2 md:block">
           <div className={DESKTOP_LANDING_FRAME_CLASS}>
-            <motion.div
-              onClick={handleEnter}
-              className={`${DESKTOP_DOOR_FRAME_CLASS} cursor-pointer`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 1.05 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-            >
+            {!isOpen && (
               <motion.div
-                className="flex h-56 w-56 items-center justify-center rounded-[2.6rem] border border-white/55 bg-transparent shadow-[0_12px_30px_rgba(0,0,0,0.16)]"
-                whileHover={{
-                  backgroundColor: "rgba(255,255,255,0.5)",
-                  boxShadow: "0 16px 36px rgba(0,0,0,0.2)",
-                }}
-                whileTap={{
-                  backgroundColor: "rgba(255,255,255,0.5)",
-                  boxShadow: "0 16px 36px rgba(0,0,0,0.2)",
-                }}
+                onClick={handleEnter}
+                className={`${DESKTOP_DOOR_FRAME_CLASS} cursor-pointer`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 1.05 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
               >
-                <span
-                  data-content="하이용사!"
-                  className="landing-enter-text-stroke rounded-full px-4 py-2 text-[2.6rem] font-black tracking-[0.08em] text-[#166D77]"
+                <motion.div
+                  className="flex h-56 w-56 items-center justify-center rounded-[2.6rem] border border-white/55 bg-transparent shadow-[0_12px_30px_rgba(0,0,0,0.16)]"
+                  whileHover={{
+                    backgroundColor: "rgba(255,255,255,0.5)",
+                    boxShadow: "0 16px 36px rgba(0,0,0,0.2)",
+                  }}
+                  whileTap={{
+                    backgroundColor: "rgba(255,255,255,0.5)",
+                    boxShadow: "0 16px 36px rgba(0,0,0,0.2)",
+                  }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
                 >
-                  하이용사!
-                </span>
+                  <span
+                    data-content="하이용사!"
+                    className="landing-enter-text-stroke rounded-full px-4 py-2 text-[2.6rem] font-black tracking-[0.08em] text-[#166D77]"
+                  >
+                    하이용사!
+                  </span>
+                </motion.div>
               </motion.div>
-            </motion.div>
+            )}
           </div>
         </div>
 
