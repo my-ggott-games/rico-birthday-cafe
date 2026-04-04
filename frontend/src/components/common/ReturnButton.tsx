@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ActionButton } from "./ActionButton";
 import { PushableButton } from "./PushableButton";
 import { AppIcon } from "./AppIcon";
 
@@ -11,6 +10,9 @@ interface ReturnButtonProps {
   style?: React.CSSProperties;
   gameName?: string;
   label?: string;
+  variant?: "mint" | "cream";
+  confirmVariant?: "mint" | "cream";
+  cancelVariant?: "mint" | "cream";
 }
 
 const MESSAGES = [
@@ -25,6 +27,9 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({
   style,
   gameName = "게임",
   label = "← 돌아가기",
+  variant = "mint",
+  confirmVariant = "mint",
+  cancelVariant = "mint",
 }) => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -49,6 +54,7 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({
       >
         <PushableButton
           onClick={handleOpen}
+          variant={variant}
           className={className}
           style={style}
         >
@@ -75,7 +81,7 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({
                 initial={{ scale: 0.8, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.8, opacity: 0, y: 20 }}
-                className="bg-[#FFFFF8] p-6 rounded-[2rem] shadow-2xl z-10 max-w-sm w-full border-4 border-[#D6C0B0] text-center select-none"
+                className="bg-[#FFFFF8] p-6 rounded-[2rem] shadow-2xl z-10 max-w-sm w-full border-4 border-[#5EC7A5] text-center select-none"
                 draggable={false}
               >
                 <span className="mb-3 inline-flex rounded-full bg-[#eefaf3] p-3 text-[#166D77] shadow-sm">
@@ -88,22 +94,20 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({
                   {message}
                 </h3>
                 <div className="flex gap-3">
-                  <ActionButton
+                  <PushableButton
                     onClick={() => navigate("/lobby")}
+                    variant={confirmVariant}
                     className="flex-1"
-                    variant="teal"
-                    size="md"
                   >
                     응
-                  </ActionButton>
-                  <ActionButton
+                  </PushableButton>
+                  <PushableButton
                     onClick={() => setIsOpen(false)}
+                    variant={cancelVariant}
                     className="flex-1"
-                    variant="neutral"
-                    size="md"
                   >
                     아니
-                  </ActionButton>
+                  </PushableButton>
                 </div>
               </motion.div>
             </div>

@@ -14,6 +14,26 @@ const normalizeBaseUrl = (baseUrl?: string) => {
 
 const PRODUCTION_API_BASE_URL = "https://rico-birthday-cafe-api.onrender.com/api";
 
+const isPrivateIpv4Host = (hostname: string) => {
+  const match = hostname.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!match) {
+    return false;
+  }
+
+  const octets = match.slice(1).map(Number);
+  if (octets.some((octet) => octet < 0 || octet > 255)) {
+    return false;
+  }
+
+  const [a, b] = octets;
+  return (
+    a === 10 ||
+    a === 127 ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168)
+  );
+};
+
 const getDefaultBaseUrl = () => {
   if (typeof window === "undefined") {
     return "/api";
@@ -21,8 +41,9 @@ const getDefaultBaseUrl = () => {
 
   const { hostname } = window.location;
   const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
+  const isLanDevHost = isPrivateIpv4Host(hostname);
 
-  if (isLocalhost) {
+  if (isLocalhost || isLanDevHost) {
     return "/api";
   }
 

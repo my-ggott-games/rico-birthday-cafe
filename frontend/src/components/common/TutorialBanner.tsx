@@ -84,7 +84,8 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({
             x: { type: "spring", stiffness: 350, damping: 35 },
             opacity: { duration: 0.2 },
           }}
-          className="absolute inset-0 w-full h-full rounded-[24px] px-4 pt-3 pb-3 flex flex-col shadow-[0_8px_24px_rgba(74,59,50,0.2)] bg-[#166D77] text-pale-custard"
+          className="absolute inset-0 w-full h-full rounded-[24px] border-2 px-4 pt-3 pb-3 flex flex-col shadow-[0_8px_24px_rgba(22,109,119,0.18)] bg-[#FFFFF8] text-[#166D77]"
+          style={{ borderColor: "#5EC7A5" }}
         >
           <div className="mb-1 flex items-center justify-center gap-2 text-center font-black text-lg leading-snug md:text-xl">
             {s.titleIcon && (
@@ -92,7 +93,7 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({
                 name={s.titleIcon}
                 size={22}
                 className="shrink-0"
-                style={{ color: "#bef264" }}
+                style={{ color: "#5EC7A5" }}
               />
             )}
             <span>{s.title}</span>
@@ -104,7 +105,7 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({
                 <p
                   key={i}
                   className="text-sm md:text-base leading-snug font-medium"
-                  style={{ color: "rgba(255,255,255,0.95)" }}
+                  style={{ color: "rgba(22,109,119,0.9)" }}
                 >
                   {line}
                 </p>
@@ -124,7 +125,7 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({
                     <div
                       key={d}
                       className="w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl shadow-md"
-                      style={{ background: "#1a1a1a", color: "#FFFFF8" }}
+                      style={{ background: "#166D77", color: "#FFFFF8" }}
                     >
                       {icons[d]}
                     </div>
@@ -137,25 +138,25 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({
               <div className="flex items-center justify-center gap-2 flex-wrap mt-1">
                 <span
                   className="px-3 py-1.5 rounded-xl font-bold text-sm md:text-base shadow-sm"
-                  style={{ background: "#b7e4c7", color: "#1b4332" }}
+                  style={{ background: "#D9F6EA", color: "#166D77" }}
                 >
                   {s.highlight.a}
                 </span>
-                <span className="font-bold text-sm md:text-base text-pale-custard">
+                <span className="font-bold text-sm md:text-base text-[#166D77]">
                   +
                 </span>
                 <span
                   className="px-3 py-1.5 rounded-xl font-bold text-sm md:text-base shadow-sm"
-                  style={{ background: "#b7e4c7", color: "#1b4332" }}
+                  style={{ background: "#D9F6EA", color: "#166D77" }}
                 >
                   {s.highlight.b}
                 </span>
-                <span className="font-bold text-sm md:text-base text-pale-custard">
+                <span className="font-bold text-sm md:text-base text-[#166D77]">
                   →
                 </span>
                 <span
                   className="px-3 py-1.5 rounded-xl font-bold text-sm md:text-base shadow-sm"
-                  style={{ background: "#95d5b2", color: "#1b4332" }}
+                  style={{ background: "#5EC7A5", color: "#FFFFF8" }}
                 >
                   {s.highlight.result}
                 </span>
@@ -174,7 +175,7 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({
                   style={{
                     width: i === slide ? 16 : 6,
                     background:
-                      i === slide ? "#bef264" : "rgba(255,255,255,0.3)",
+                      i === slide ? "#166D77" : "rgba(22,109,119,0.24)",
                   }}
                 />
               ))}
@@ -184,10 +185,11 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({
               <button
                 onClick={() => paginate(-1)}
                 disabled={slide === 0}
-                className="px-3 py-1.5 rounded-xl font-bold text-xs transition-all active:scale-95 disabled:opacity-30 disabled:scale-100"
+                className="px-3 py-1.5 rounded-xl border-2 font-bold text-xs transition-all active:scale-95 disabled:opacity-30 disabled:scale-100"
                 style={{
-                  background: "rgba(255,255,255,0.15)",
-                  color: "#FFFFF8",
+                  background: "rgba(22,109,119,0.12)",
+                  color: "#166D77",
+                  borderColor: "#3f9e80",
                 }}
               >
                 이전
@@ -195,8 +197,12 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({
               <button
                 onClick={() => paginate(1)}
                 disabled={isLast}
-                className="px-3 py-1.5 rounded-xl font-black text-xs transition-all active:scale-95 disabled:opacity-30 disabled:scale-100"
-                style={{ background: "#bef264", color: "#1b4332" }}
+                className="px-3 py-1.5 rounded-xl border-2 font-black text-xs transition-all active:scale-95 disabled:opacity-30 disabled:scale-100"
+                style={{
+                  background: "#5EC7A5",
+                  color: "#FFFFF8",
+                  borderColor: "#3f9e80",
+                }}
               >
                 다음
               </button>

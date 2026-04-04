@@ -1,5 +1,6 @@
 import React from "react";
 import { AppIcon } from "../common/AppIcon";
+import { PushableButton } from "../common/PushableButton";
 
 type CodyActionBarProps = {
   isFinished: boolean;
@@ -22,26 +23,26 @@ export const CodyActionBar: React.FC<CodyActionBarProps> = ({
 }) => {
   return (
     <div
-      className={`z-[100] flex gap-4 transition-opacity duration-1000 ${!showButtons ? "opacity-0 pointer-events-none" : "opacity-100"} ${isMobile ? "fixed bottom-4 left-0 right-0 justify-center" : "relative mt-8"}`}
+      className={`z-[100] flex gap-4 transition-opacity duration-1000 ${!showButtons ? "opacity-0 pointer-events-none" : "opacity-100"} ${isMobile ? "relative mt-2 mb-4 justify-center" : "relative mt-8"}`}
     >
-      <button onClick={onReset} className="btn-secondary">
+      <PushableButton onClick={onReset}>
         다시하기
-      </button>
+      </PushableButton>
 
-      <button
+      <PushableButton
         onClick={onPrimaryAction}
-        className={isCapturing ? "btn-disabled" : "btn-primary"}
+        disabled={isCapturing}
       >
         {isCapturing ? "작업 중..." : isFinished ? "이미지 저장" : "코디 끝!"}
-      </button>
+      </PushableButton>
 
       {isFinished && (
-        <button onClick={onShare} className="btn-secondary">
+        <PushableButton onClick={onShare} variant="cream">
           <span className="inline-flex items-center gap-2">
             <AppIcon name="Share2" size={16} />
             공유하기
           </span>
-        </button>
+        </PushableButton>
       )}
     </div>
   );

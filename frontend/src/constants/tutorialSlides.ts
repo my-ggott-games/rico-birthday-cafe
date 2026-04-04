@@ -105,6 +105,7 @@ export const FORTUNE_TUTORIAL_SLIDES: TutorialSlide[] = [
 export const CODY_TUTORIAL_SLIDES: TutorialSlide[] = [
   {
     title: "옷을 고르자!",
+    titleIcon: "Shirt",
     lines: [
       "PC: 아이템을 드래그해서 코디 존에 넣어봐!",
       "모바일: 아이템을 탭해봐!",
@@ -113,19 +114,22 @@ export const CODY_TUTORIAL_SLIDES: TutorialSlide[] = [
   },
   {
     title: "코디가 끝났다면",
+    titleIcon: "Camera",
     lines: ['"코디 끝!" 버튼을 눌러줘.', "사진을 찍어줄게!"],
     showArrows: false,
   },
   {
     title: "사진을 저장하자!",
+    titleIcon: "Save",
     lines: ["코디가 끝나면 이미지 저장 버튼으로", "추억을 남기자!"],
     showArrows: false,
   },
   {
-    title: "장착 규칙 확인",
+    title: "특별한 조합을 찾아보자",
+    titleIcon: "Sparkles",
     lines: [
-      "dress는 top, skirt와 함께 입을 수 없어.",
-      "deco는 같은 번호끼리만 서로 교체돼.",
+      "특별한 조합은 총 5가지야.",
+      "모든 조합을 찾으면 좋은 일이 생길지도?",
     ],
     showArrows: false,
   },

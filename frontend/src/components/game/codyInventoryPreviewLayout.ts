@@ -5,7 +5,7 @@ export const INVENTORY_PREVIEW_LAYOUT: Record<string, InventoryPreviewLayout> =
     "hair_1-1": {
       mobileCard: "w-28 h-40",
       desktopCard: "w-50 h-75",
-      mobileOffset: "-148px",
+      mobileOffset: "-160px",
       desktopOffset: "-60px",
       mobileLeftOffset: "0px",
       desktopLeftOffset: "0px",
@@ -117,7 +117,7 @@ export const INVENTORY_PREVIEW_LAYOUT: Record<string, InventoryPreviewLayout> =
     shoes_1: {
       mobileCard: "w-28 h-28",
       desktopCard: "w-30 h-45",
-      mobileOffset: "-528px",
+      mobileOffset: "-425px",
       desktopOffset: "-475px",
       mobileLeftOffset: "0px",
       desktopLeftOffset: "10px",
@@ -125,7 +125,7 @@ export const INVENTORY_PREVIEW_LAYOUT: Record<string, InventoryPreviewLayout> =
     shoes_2: {
       mobileCard: "w-28 h-28",
       desktopCard: "w-25 h-35",
-      mobileOffset: "-528px",
+      mobileOffset: "-425px",
       desktopOffset: "-510px",
       mobileLeftOffset: "0px",
       desktopLeftOffset: "15px",
@@ -133,7 +133,7 @@ export const INVENTORY_PREVIEW_LAYOUT: Record<string, InventoryPreviewLayout> =
     shoes_3: {
       mobileCard: "w-28 h-28",
       desktopCard: "w-30 h-52",
-      mobileOffset: "-528px",
+      mobileOffset: "-425px",
       desktopOffset: "-450px",
       mobileLeftOffset: "0px",
       desktopLeftOffset: "5px",
@@ -141,7 +141,7 @@ export const INVENTORY_PREVIEW_LAYOUT: Record<string, InventoryPreviewLayout> =
     shoes_4: {
       mobileCard: "w-28 h-28",
       desktopCard: "w-25 h-40",
-      mobileOffset: "-528px",
+      mobileOffset: "-425px",
       desktopOffset: "-500px",
       mobileLeftOffset: "0px",
       desktopLeftOffset: "0px",
@@ -149,7 +149,7 @@ export const INVENTORY_PREVIEW_LAYOUT: Record<string, InventoryPreviewLayout> =
     shoes_5: {
       mobileCard: "w-28 h-28",
       desktopCard: "w-20 h-25",
-      mobileOffset: "-528px",
+      mobileOffset: "-425px",
       desktopOffset: "-550px",
       mobileLeftOffset: "0px",
       desktopLeftOffset: "0px",

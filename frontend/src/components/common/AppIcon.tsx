@@ -1,6 +1,10 @@
 import type { SVGProps } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
+  ArrowBigLeft,
+  ArrowBigRight,
+  ArrowLeft,
+  ArrowRight,
   ArrowLeftRight,
   ArrowUpToLine,
   Backpack,
@@ -17,6 +21,7 @@ import {
   Eye,
   FileQuestion,
   Flower2,
+  Footprints,
   Frown,
   Gift,
   Handbag,
@@ -35,6 +40,7 @@ import {
   Save,
   Scissors,
   Shirt,
+  Smile,
   ScrollText,
   Share2,
   Shield,
@@ -53,6 +59,10 @@ import {
 } from "lucide-react";
 
 export const APP_ICONS = {
+  ArrowBigLeft,
+  ArrowBigRight,
+  ArrowLeft,
+  ArrowRight,
   ArrowLeftRight,
   ArrowUpToLine,
   Backpack,
@@ -69,6 +79,7 @@ export const APP_ICONS = {
   Eye,
   FileQuestionMark: FileQuestion,
   Flower2,
+  Footprints,
   Frown,
   Gift,
   Handbag,
@@ -87,6 +98,7 @@ export const APP_ICONS = {
   Save,
   Scissors,
   Shirt,
+  Smile,
   ScrollText,
   Share2,
   Shield,

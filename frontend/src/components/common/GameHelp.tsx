@@ -59,10 +59,11 @@ export const GameHelp: React.FC<GameHelpProps> = ({
               <div className="flex justify-end mb-2">
                 <button
                   onClick={() => setOpen(false)}
-                  className="w-9 h-9 rounded-full font-black text-xl flex items-center justify-center"
+                  className="w-9 h-9 rounded-full border-2 font-black text-xl flex items-center justify-center"
                   style={{
-                    background: "rgba(255,255,255,0.15)",
+                    background: "#166D77",
                     color: "#FFFFF8",
+                    borderColor: "#5EC7A5",
                   }}
                   aria-label="닫기"
                 >

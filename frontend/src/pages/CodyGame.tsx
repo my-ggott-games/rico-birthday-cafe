@@ -374,14 +374,12 @@ const CodyGame: React.FC = () => {
     {
       id: "hair",
       tab: "hair",
-      overlap: true,
-      mobileOverlapClass: "-ml-4",
-      desktopOverlapClass: "-ml-6",
+      overlap: false,
       filter: (item) => item.category === "hair",
     },
     {
       id: "hair-deco",
-      tab: "hair",
+      tab: "deco",
       overlap: false,
       filter: (item) => hairDecoIds.has(item.id),
     },
@@ -394,14 +392,6 @@ const CodyGame: React.FC = () => {
       filter: (item) => item.category === "dress" || item.category === "jacket",
     },
     {
-      id: "sword",
-      tab: "deco",
-      overlap: true,
-      mobileOverlapClass: "-ml-4",
-      desktopOverlapClass: "-ml-6",
-      filter: (item) => swordDecoIds.has(item.id),
-    },
-    {
       id: "deco",
       tab: "deco",
       overlap: false,
@@ -411,11 +401,15 @@ const CodyGame: React.FC = () => {
         !swordDecoIds.has(item.id),
     },
     {
+      id: "sword",
+      tab: "deco",
+      overlap: false,
+      filter: (item) => swordDecoIds.has(item.id),
+    },
+    {
       id: "shoes",
       tab: "shoes",
-      overlap: true,
-      mobileOverlapClass: "-ml-4",
-      desktopOverlapClass: "-ml-6",
+      overlap: false,
       filter: (item) => item.category === "shoes",
     },
   ];
@@ -435,6 +429,9 @@ const CodyGame: React.FC = () => {
 
       if (!isEquipped && !isDisabled) {
         setEquippedItems((prev) => applyItemToEquipment(prev, item));
+        window.requestAnimationFrame(() => {
+          window.scrollTo(0, 0);
+        });
       }
     };
 
@@ -566,6 +563,9 @@ const CodyGame: React.FC = () => {
         className="h-screen font-sans relative select-none bg-[#FFFFF8]"
         headerHidden={!showButtons}
         mainClassName="relative overflow-hidden"
+        returnButtonVariant="cream"
+        returnConfirmVariant="cream"
+        returnCancelVariant="cream"
       >
         {activeBackground === "spring" && !isFinished && (
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -817,8 +817,8 @@ const CodyGame: React.FC = () => {
               }}
               onShare={() => {
                 const shareData = {
-                  title: "유즈하 리코 생일 기념 리코의 외출준비",
-                  text: "나만의 리코 외출준비를 해봤어요! 여러분도 함께 축하해주세요.",
+                  title: "팬메이드 유즈하 리코 생일카페",
+                  text: "유즈하 리코 생일카페에 초대합니다!",
                   url: window.location.origin,
                 };
 
@@ -829,8 +829,8 @@ const CodyGame: React.FC = () => {
                 } else {
                   navigator.clipboard
                     .writeText(window.location.origin)
-                    .then(() => alert("공유 링크가 클립보드에 복사되었습니다!"))
-                    .catch(() => alert("공유 링크 복사에 실패했습니다."));
+                    .then(() => alert("링크 복사 완료!"))
+                    .catch(() => alert("링크 복사 실패"));
                 }
               }}
             />

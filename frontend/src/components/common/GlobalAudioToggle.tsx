@@ -18,6 +18,7 @@ export const GlobalAudioToggle: React.FC = () => {
   const location = useLocation();
   const isMuted = useAudioStore((state) => state.isMuted);
   const toggleMuted = useAudioStore((state) => state.toggleMuted);
+  const isCodyGame = location.pathname === "/game/cody";
 
   const isVisible = AUDIO_ENABLED_ROUTES.some((route) =>
     matchPath(route, location.pathname),
@@ -31,7 +32,11 @@ export const GlobalAudioToggle: React.FC = () => {
     <button
       type="button"
       onClick={toggleMuted}
-      className="fixed bottom-4 right-4 z-[9998] flex items-center gap-2 rounded-2xl border-2 border-[#5EC7A5] bg-white/90 px-4 py-3 text-sm font-black text-[#166D77] shadow-[0_10px_30px_rgba(22,109,119,0.14)] backdrop-blur-sm transition-transform hover:-translate-y-0.5"
+      className={`fixed bottom-4 right-4 z-[9998] flex items-center gap-2 rounded-2xl border-2 px-4 py-3 text-sm font-black backdrop-blur-sm transition-transform hover:-translate-y-0.5 ${
+        isCodyGame
+          ? "border-[#D8B98C] bg-[#FFF8EA]/95 text-[#166D77] shadow-[0_10px_30px_rgba(216,185,140,0.22)]"
+          : "border-[#5EC7A5] bg-white/90 text-[#166D77] shadow-[0_10px_30px_rgba(22,109,119,0.14)]"
+      }`}
       aria-label={isMuted ? "Unmute audio" : "Mute audio"}
     >
       <AppIcon

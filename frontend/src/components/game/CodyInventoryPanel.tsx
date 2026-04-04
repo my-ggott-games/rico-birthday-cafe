@@ -41,6 +41,18 @@ export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
   renderInventoryCard,
   onTabChange,
 }) => {
+  const mobileHairOrder = [
+    "hair_1-4",
+    "hair_1-2",
+    "hair_1-6",
+    "hair_1-3",
+    "hair_1-5",
+    "hair_1-1",
+  ];
+  const mobileHairOrderMap = new Map(
+    mobileHairOrder.map((itemId, index) => [itemId, index]),
+  );
+
   return (
     <div
       className={`${isMobile ? `w-full ${showInventory ? "px-4" : "h-0 p-0"}` : "w-[65%] h-full"} flex flex-col transition-all duration-1000 ${showInventory ? "opacity-100" : "opacity-0 w-[0%] overflow-hidden pointer-events-none"}`}
@@ -76,9 +88,22 @@ export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
         {sections
           .filter((section) => !isMobile || activeTab === section.tab)
           .map((section) => {
+            const useOverlap = section.overlap && !(isMobile && section.id === "dress");
             const sectionItems = availableItems
               .filter(section.filter)
               .sort((a, b) => {
+                if (isMobile && section.id === "hair") {
+                  const aOrder = mobileHairOrderMap.get(a.id);
+                  const bOrder = mobileHairOrderMap.get(b.id);
+
+                  if (aOrder !== undefined || bOrder !== undefined) {
+                    return (
+                      (aOrder ?? Number.MAX_SAFE_INTEGER) -
+                      (bOrder ?? Number.MAX_SAFE_INTEGER)
+                    );
+                  }
+                }
+
                 const widthDiff = getCardWidth(a.id) - getCardWidth(b.id);
                 if (widthDiff !== 0) return widthDiff;
                 return a.id.localeCompare(b.id);
@@ -95,7 +120,7 @@ export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
                     section.id === "dress"
                       ? "flex items-end overflow-visible px-4 pb-4"
                       : `flex ${
-                          section.overlap
+                          useOverlap
                             ? "overflow-visible flex-nowrap px-4 pb-4"
                             : "flex-wrap justify-start"
                         }`
@@ -105,7 +130,7 @@ export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
                     className={`${
                       section.id === "dress" ? "relative z-10 " : ""
                     }flex ${
-                      section.overlap
+                      useOverlap
                         ? `${section.id === "shoes" ? "items-end " : ""}overflow-visible flex-nowrap`
                         : "flex-wrap justify-start"
                     }`}
@@ -115,7 +140,7 @@ export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
                         item,
                         index,
                         sectionItems.length,
-                        section.overlap
+                        useOverlap
                           ? isMobile
                             ? section.mobileOverlapClass || "-ml-8"
                             : section.desktopOverlapClass || "-ml-12"
@@ -127,7 +152,7 @@ export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
                   {section.id === "dress" && topSkirtItems.length > 0 && (
                     <div
                       className={`relative flex shrink-0 self-end flex-col overflow-visible pb-2 ${
-                        section.overlap
+                        useOverlap
                           ? isMobile
                             ? section.mobileOverlapClass || "-ml-8"
                             : section.desktopOverlapClass || "-ml-12"

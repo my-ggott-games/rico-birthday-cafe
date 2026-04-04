@@ -22,7 +22,7 @@ export const CommonTitle: React.FC<CommonTitleProps> = ({
     <div className="flex flex-col items-center text-center">
       <div className="flex items-center gap-2">
         <span
-          className="font-black text-[1.65rem] sm:text-3xl lg:text-4xl leading-none"
+          className="font-black text-xl sm:text-3xl lg:text-4xl leading-none whitespace-nowrap"
           style={{ color: "#166D77" }}
         >
           {title}
