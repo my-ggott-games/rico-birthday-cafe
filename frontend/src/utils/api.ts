@@ -12,19 +12,21 @@ const normalizeBaseUrl = (baseUrl?: string) => {
     : trimmedBaseUrl;
 };
 
+const PRODUCTION_API_BASE_URL = "https://rico-birthday-cafe-api.onrender.com/api";
+
 const getDefaultBaseUrl = () => {
   if (typeof window === "undefined") {
     return "/api";
   }
 
-  const { hostname, protocol } = window.location;
+  const { hostname } = window.location;
   const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
 
   if (isLocalhost) {
     return "/api";
   }
 
-  return `${protocol}//${hostname}:8080/api`;
+  return PRODUCTION_API_BASE_URL;
 };
 
 export const BASE_URL =

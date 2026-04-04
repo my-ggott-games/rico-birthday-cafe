@@ -22,6 +22,7 @@ type Step = "main" | "set-pin";
 
 const PIN_REGEX = /^[0-9]{4}$/;
 const MAX_PIN_LENGTH = 4;
+const REQUEST_TIMEOUT_MS = 15000;
 const PIN_NAV_KEYS = new Set([
   "Tab",
   "ArrowLeft",
@@ -31,6 +32,21 @@ const PIN_NAV_KEYS = new Set([
   "Home",
   "End",
 ]);
+
+const fetchWithTimeout = async (
+  input: RequestInfo | URL,
+  init: RequestInit,
+  timeoutMs = REQUEST_TIMEOUT_MS,
+) => {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+};
 
 const getFriendlyErrorMessage = (error: unknown, fallbackMessage: string) => {
   if (!(error instanceof Error)) {
@@ -201,7 +217,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setLoading(true);
 
     try {
-      const res = await fetch(`${BASE_URL}/auth/login`, {
+      const res = await fetchWithTimeout(`${BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -244,7 +260,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setError("");
 
     try {
-      const res = await fetch(`${BASE_URL}/auth/issue-uid`, {
+      const res = await fetchWithTimeout(`${BASE_URL}/auth/issue-uid`, {
         method: "POST",
       });
       const data = (await res.json()) as AuthApiResponse;
@@ -288,7 +304,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setLoading(true);
 
     try {
-      const res = await fetch(`${BASE_URL}/auth/register`, {
+      const res = await fetchWithTimeout(`${BASE_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
