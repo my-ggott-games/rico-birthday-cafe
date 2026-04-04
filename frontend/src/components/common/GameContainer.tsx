@@ -17,7 +17,6 @@ interface GameContainerProps {
   showDesktopHelp?: boolean;
   headerHidden?: boolean;
   returnButtonVariant?: "mint" | "cream";
-  returnConfirmVariant?: "mint" | "cream";
   returnCancelVariant?: "mint" | "cream";
 }
 
@@ -34,7 +33,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   showDesktopHelp: _showDesktopHelp = true,
   headerHidden = false,
   returnButtonVariant = "mint",
-  returnConfirmVariant = "mint",
   returnCancelVariant = "mint",
 }) => {
   const hiddenClass = headerHidden
@@ -71,11 +69,9 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         >
           <ReturnButton
             gameName={gameName}
-            label="돌아가기"
             variant={returnButtonVariant}
-            confirmVariant={returnConfirmVariant}
             cancelVariant={returnCancelVariant}
-            className="min-w-[5.2rem] justify-center px-2 py-2 text-xs lg:min-w-[9.5rem] lg:px-6 lg:py-3 lg:text-base"
+            className="h-10 w-10 px-0 py-0 text-xs lg:h-auto lg:w-auto lg:min-w-[9.5rem] lg:px-6 lg:py-3 lg:text-base"
           />
         </div>
 

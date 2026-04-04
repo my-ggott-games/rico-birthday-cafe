@@ -41,6 +41,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
     deco_4: 34,
     deco_5: 45,
     deco_6: 21,
+    hand_acc: 27,
   };
 
   const getItem = (slot: EquipmentSlot) => {
@@ -199,6 +200,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
         {renderItemLayer("deco_1")}
         {renderItemLayer("deco_3")}
         {renderItemLayer("deco_5")}
+        {renderItemLayer("hand_acc")}
       </div>
     </div>
   );

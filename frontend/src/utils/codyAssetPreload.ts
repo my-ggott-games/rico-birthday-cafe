@@ -40,6 +40,7 @@ const CODY_ITEM_ASSETS = [
   "deco_1-2",
   "deco_2-1",
   "deco_2-2",
+  "deco_7-1",
   "deco_3-1",
   "deco_3-2",
   "deco_3-3",

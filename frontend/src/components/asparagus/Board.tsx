@@ -3,6 +3,8 @@ import { AnimatePresence } from "framer-motion";
 import { Tile } from "./Tile";
 import { type Grid, type Direction } from "./types";
 import { GRID_SIZE, WIN_VALUE } from "./constants";
+import { AppIcon } from "../common/AppIcon";
+import { PushableButton } from "../common/PushableButton";
 
 // Responsive board geometry for mobile-safe fit.
 
@@ -23,24 +25,23 @@ const ArrowButton = ({
   dir: Direction;
   onClick: () => void;
 }) => {
-  const icons: Record<Direction, string> = {
-    up: "↑",
-    down: "↓",
-    left: "←",
-    right: "→",
+  const icons: Record<
+    Direction,
+    "ArrowBigUp" | "ArrowBigDown" | "ArrowBigLeft" | "ArrowBigRight"
+  > = {
+    up: "ArrowBigUp",
+    down: "ArrowBigDown",
+    left: "ArrowBigLeft",
+    right: "ArrowBigRight",
   };
   return (
-    <button
+    <PushableButton
       onClick={onClick}
-      className="w-12 h-12 rounded-2xl font-bold text-xl flex items-center justify-center transition-all active:scale-90 select-none"
-      style={{
-        background: "#166D77",
-        color: "#FFFFF8",
-        boxShadow: "0 3px 0 rgba(0,0,0,0.25)",
-      }}
+      className="h-16 w-16 px-0 py-0 sm:h-[4.5rem] sm:w-[4.5rem]"
+      aria-label={`${dir} 이동`}
     >
-      {icons[dir]}
-    </button>
+      <AppIcon name={icons[dir]} size={28} strokeWidth={2.6} />
+    </PushableButton>
   );
 };
 
@@ -139,16 +140,12 @@ export const Board: React.FC<BoardProps> = ({
       </div>
 
       {/* Controls */}
-      <div className="mt-8 flex flex-col items-center gap-4">
-        <div className="flex flex-col items-center gap-2">
-          <div className="flex gap-2">
-            <ArrowButton dir="up" onClick={() => onMove("up")} />
-          </div>
-          <div className="flex gap-2">
-            <ArrowButton dir="left" onClick={() => onMove("left")} />
-            <ArrowButton dir="down" onClick={() => onMove("down")} />
-            <ArrowButton dir="right" onClick={() => onMove("right")} />
-          </div>
+      <div className="mt-8 flex w-full justify-center">
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:flex-nowrap">
+          <ArrowButton dir="left" onClick={() => onMove("left")} />
+          <ArrowButton dir="up" onClick={() => onMove("up")} />
+          <ArrowButton dir="down" onClick={() => onMove("down")} />
+          <ArrowButton dir="right" onClick={() => onMove("right")} />
         </div>
       </div>
     </div>

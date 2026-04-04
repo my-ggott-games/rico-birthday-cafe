@@ -9,9 +9,7 @@ interface ReturnButtonProps {
   className?: string;
   style?: React.CSSProperties;
   gameName?: string;
-  label?: string;
   variant?: "mint" | "cream";
-  confirmVariant?: "mint" | "cream";
   cancelVariant?: "mint" | "cream";
 }
 
@@ -26,9 +24,7 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({
   className,
   style,
   gameName = "게임",
-  label = "← 돌아가기",
   variant = "mint",
-  confirmVariant = "mint",
   cancelVariant = "mint",
 }) => {
   const navigate = useNavigate();
@@ -57,8 +53,12 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({
           variant={variant}
           className={className}
           style={style}
+          aria-label="로비로 돌아가기"
         >
-          {label}
+          <span className="flex items-center justify-center lg:hidden">
+            <AppIcon name="DoorOpen" size={20} strokeWidth={2.2} />
+          </span>
+          <span className="hidden lg:inline">돌아가기</span>
         </PushableButton>
       </motion.div>
 
@@ -96,7 +96,7 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({
                 <div className="flex gap-3">
                   <PushableButton
                     onClick={() => navigate("/lobby")}
-                    variant={confirmVariant}
+                    variant="mint"
                     className="flex-1"
                   >
                     응

@@ -42,7 +42,7 @@ export const ASPARAGUS_TUTORIAL_SLIDES: TutorialSlide[] = [
     title: "같은 단계를 합치면 성장해",
     titleIcon: "Leaf",
     lines: ["무럭무럭 잘 자란다구!"],
-    highlight: { a: "새싹", b: "새싹", result: "아기 순" },
+    highlight: { a: "씨앗", b: "씨앗", result: "어린 순" },
     showArrows: false,
   },
   {

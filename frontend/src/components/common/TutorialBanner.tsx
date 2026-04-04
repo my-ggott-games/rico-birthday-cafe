@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppIcon, type AppIconName } from "./AppIcon";
+import { PushableButton } from "./PushableButton";
 
 export type Direction = "up" | "down" | "left" | "right";
 
@@ -113,22 +114,28 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({
             </div>
 
             {s.showArrows && (
-              <div className="flex gap-2 mt-1 justify-center">
+              <div className="mt-2 flex w-full items-center justify-center gap-2">
                 {(["left", "up", "down", "right"] as Direction[]).map((d) => {
-                  const icons: Record<Direction, string> = {
-                    left: "←",
-                    up: "↑",
-                    down: "↓",
-                    right: "→",
+                  const icons: Record<Direction, AppIconName> = {
+                    left: "ArrowBigLeft",
+                    up: "ArrowBigUp",
+                    down: "ArrowBigDown",
+                    right: "ArrowBigRight",
                   };
                   return (
-                    <div
+                    <PushableButton
                       key={d}
-                      className="w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl shadow-md"
-                      style={{ background: "#166D77", color: "#FFFFF8" }}
+                      className="h-14 w-14 px-0 py-0 md:h-16 md:w-16"
+                      aria-hidden="true"
+                      tabIndex={-1}
                     >
-                      {icons[d]}
-                    </div>
+                      <AppIcon
+                        name={icons[d]}
+                        size={28}
+                        strokeWidth={2.4}
+                        style={{ color: "#FFFFF8" }}
+                      />
+                    </PushableButton>
                   );
                 })}
               </div>

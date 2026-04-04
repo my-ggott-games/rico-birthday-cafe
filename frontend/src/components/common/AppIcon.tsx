@@ -2,7 +2,9 @@ import type { SVGProps } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowBigLeft,
+  ArrowBigDown,
   ArrowBigRight,
+  ArrowBigUp,
   ArrowLeft,
   ArrowRight,
   ArrowLeftRight,
@@ -60,7 +62,9 @@ import {
 
 export const APP_ICONS = {
   ArrowBigLeft,
+  ArrowBigDown,
   ArrowBigRight,
+  ArrowBigUp,
   ArrowLeft,
   ArrowRight,
   ArrowLeftRight,

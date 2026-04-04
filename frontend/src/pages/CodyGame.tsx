@@ -52,6 +52,7 @@ const EMPTY_EQUIPMENT: EquippedState = {
   deco_4: null,
   deco_5: null,
   deco_6: null,
+  hand_acc: null,
 };
 
 const INVALID_POLAROID_SCALE = 0.5;
@@ -83,6 +84,7 @@ const DECO_ITEMS: Array<{
   { id: "deco_4-2", slot: "deco_4", layerPriority: 26 },
   { id: "deco_5-1", slot: "deco_5", layerPriority: 27 },
   { id: "deco_6-1", slot: "deco_6", layerPriority: 21 },
+  { id: "deco_7-1", slot: "hand_acc", layerPriority: 27 },
 ];
 
 const AVAILABLE_ITEMS: CodyItem[] = [
@@ -165,7 +167,14 @@ const combinations: Combination[] = [
   },
   {
     name: "spring",
-    requiredItems: ["deco_2-2", "deco_3-3", "dress_3", "hair_1-4", "shoes_1"],
+    requiredItems: [
+      "deco_2-2",
+      "deco_7-1",
+      "deco_3-3",
+      "dress_3",
+      "hair_1-4",
+      "shoes_1",
+    ],
     backgroundClass: "spring",
   },
   {
@@ -254,9 +263,7 @@ const CodyGame: React.FC = () => {
   const handleReset = () => {
     if (isFinished) {
       // "Fly away" animation first
-      if (!isMobile) {
-        setIsFlyAway(true);
-      }
+      setIsFlyAway(true);
       setShowButtons(false);
 
       setTimeout(() => {
@@ -300,8 +307,14 @@ const CodyGame: React.FC = () => {
     ? availableItems.find((i) => i.id === activeId)
     : null;
 
-  const getInventoryPreviewStyles = (itemId: string) => {
+  const getInventoryPreviewStyles = (itemId: string, item?: CodyItem) => {
     const layout = getInventoryPreviewLayout(itemId);
+    const mobileOutfitScale =
+      isMobile &&
+      item &&
+      ["top", "skirt", "dress", "jacket"].includes(item.category)
+        ? 0.86
+        : 1;
 
     return {
       cardSize: isMobile ? layout.mobileCard : layout.desktopCard,
@@ -309,13 +322,15 @@ const CodyGame: React.FC = () => {
       previewLeftOffset: isMobile
         ? layout.mobileLeftOffset
         : layout.desktopLeftOffset,
-      previewScale: isMobile ? characterScale * 0.75 : characterScale,
+      previewScale: isMobile
+        ? characterScale * 0.75 * mobileOutfitScale
+        : characterScale,
     };
   };
 
   const renderInventoryPreview = (item: CodyItem) => {
     const { previewOffset, previewLeftOffset, previewScale } =
-      getInventoryPreviewStyles(item.id);
+      getInventoryPreviewStyles(item.id, item);
 
     return (
       <div
@@ -441,12 +456,12 @@ const CodyGame: React.FC = () => {
       <div
         key={item.id}
         onClick={handleClick}
-        className={`relative ${cardSize} overflow-visible border-2 border-dashed rounded-3xl flex-shrink-0 bg-[#FDFBF7]/50 transition-all group shadow-sm ${
+        className={`relative ${cardSize} overflow-visible rounded-3xl flex-shrink-0 transition-all group bg-transparent border-transparent ${
           item.category === "shoes" ? "self-end" : ""
         } ${offsetClass} ${index > 0 ? overlapClass : ""} ${
           isDisabled
-            ? "border-[#166D77]/10 opacity-45 cursor-not-allowed"
-            : `border-[#166D77]/30 hover:z-20 hover:border-[#D46A6A]/50 hover:bg-pale-custard/80 active:scale-95 ${!isMobile ? "cursor-grab active:cursor-grabbing" : ""}`
+            ? "opacity-45 cursor-not-allowed"
+            : `hover:z-20 active:scale-95 ${!isMobile ? "cursor-grab active:cursor-grabbing" : ""}`
         }`}
         style={{
           zIndex: isDragging ? total + 1 : isEquipped ? 0 : total - index,
@@ -528,8 +543,8 @@ const CodyGame: React.FC = () => {
           shareNavigator.canShare?.({ files: [file] })
         ) {
           await shareNavigator.share({
-            title: "유즈하 리코 생일 기념 리코의 외출준비",
-            text: "나만의 리코 외출준비를 해봤어요! 여러분도 함께 축하해주세요.",
+            title: "유즈하 리코 생일 기념 리코의 외출 준비",
+            text: "나만의 리코 외출 준비를 해봤어요! 여러분도 함께 축하해주세요.",
             files: [file],
           });
           return;
@@ -556,15 +571,13 @@ const CodyGame: React.FC = () => {
       onDragEnd={handleDragEnd}
     >
       <GameContainer
-        title="리코의 외출준비"
+        title="리코의 외출 준비"
         desc="어떤 옷이 어울릴까?"
-        gameName="리코의 외출준비"
+        gameName="리코의 외출 준비"
         helpSlides={CODY_TUTORIAL_SLIDES}
         className="h-screen font-sans relative select-none bg-[#FFFFF8]"
         headerHidden={!showButtons}
         mainClassName="relative overflow-hidden"
-        returnButtonVariant="cream"
-        returnConfirmVariant="cream"
         returnCancelVariant="cream"
       >
         {activeBackground === "spring" && !isFinished && (
@@ -594,7 +607,7 @@ const CodyGame: React.FC = () => {
             className={`${isMobile ? "w-full pt-8" : `${showInventory ? "w-[35%]" : "w-full"} h-full transition-all duration-1000`} flex flex-col items-center justify-center`}
           >
             <div
-              className={`relative z-10 w-full ${isMobile ? "h-[550px]" : "h-[700px]"} flex items-center justify-center`}
+              className={`relative z-10 w-full ${isMobile ? "h-[550px]" : "h-[80%]"} flex items-center justify-center`}
             >
               {isFinished ? (
                 <PolaroidFrame

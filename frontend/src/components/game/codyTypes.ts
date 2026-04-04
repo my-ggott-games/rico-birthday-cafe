@@ -19,7 +19,8 @@ export type EquipmentSlot =
   | "deco_3"
   | "deco_4"
   | "deco_5"
-  | "deco_6";
+  | "deco_6"
+  | "hand_acc";
 
 export type MobileTabId = "hair" | "clothes" | "shoes" | "deco";
 

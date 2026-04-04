@@ -45,7 +45,7 @@ const CREDITS_SECTIONS = [
     ],
   },
   {
-    title: "리코의 외출",
+    title: "리코의 외출 준비",
     names: ["코디 아이템 및 캐릭터 디자인: Sie", "맵 모델링: (이름 미정)"],
   },
   {
@@ -425,10 +425,7 @@ export default function Credits() {
 
       {/* Fixed header buttons */}
       <div className="absolute left-4 top-4 z-50">
-        <ReturnButton
-          gameName="엔딩 크레딧"
-          className="px-4 py-2 text-sm"
-        />
+        <ReturnButton gameName="엔딩 크레딧" className="px-4 py-2 text-sm" />
       </div>
 
       <div className="flex h-screen flex-1">

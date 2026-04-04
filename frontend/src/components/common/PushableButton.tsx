@@ -33,7 +33,7 @@ export const PushableButton = React.forwardRef<
       <button
         ref={ref}
         type={type}
-        className={`inline-flex items-center justify-center rounded-2xl border-2 px-6 py-3 text-sm font-black transition-all hover:translate-y-1 active:translate-y-1.5 active:shadow-none disabled:opacity-50 ${PUSHABLE_BUTTON_VARIANTS[variant]} ${fullWidth ? "w-full" : ""} ${className}`}
+        className={`inline-flex items-center justify-center rounded-2xl border-2 px-6 py-3 text-sm font-black transition-[transform,box-shadow,background-color,border-color,color] duration-150 ease-out hover:translate-y-1 active:translate-y-1.5 active:shadow-none disabled:opacity-50 disabled:hover:translate-y-0 ${PUSHABLE_BUTTON_VARIANTS[variant]} ${fullWidth ? "w-full" : ""} ${className}`}
         draggable={false}
         {...props}
       >

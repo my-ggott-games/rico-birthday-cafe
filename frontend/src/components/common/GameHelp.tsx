@@ -53,23 +53,21 @@ export const GameHelp: React.FC<GameHelpProps> = ({
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.96, opacity: 0, y: 8 }}
               transition={{ type: "spring", stiffness: 320, damping: 26 }}
-              className="w-full max-w-sm"
+              className="relative w-full max-w-sm"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-end mb-2">
-                <button
-                  onClick={() => setOpen(false)}
-                  className="w-9 h-9 rounded-full border-2 font-black text-xl flex items-center justify-center"
-                  style={{
-                    background: "#166D77",
-                    color: "#FFFFF8",
-                    borderColor: "#5EC7A5",
-                  }}
-                  aria-label="닫기"
-                >
-                  ✕
-                </button>
-              </div>
+              <button
+                onClick={() => setOpen(false)}
+                className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border-2 font-black text-xl"
+                style={{
+                  background: "#166D77",
+                  color: "#FFFFF8",
+                  borderColor: "#5EC7A5",
+                }}
+                aria-label="닫기"
+              >
+                ✕
+              </button>
               <TutorialBanner
                 slides={slides}
                 className="h-[228px] shadow-2xl rounded-3xl"

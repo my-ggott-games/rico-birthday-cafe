@@ -178,7 +178,7 @@ const Lobby: React.FC = () => {
           >
             <motion.div whileHover={{ scale: 1.05 }} className="group">
               <LobbyIconTile
-                name="리코의 외출준비"
+                name="리코의 외출 준비"
                 icon="Shirt"
                 isMobile={isMobile}
                 className="border-[#e7bcc2] bg-[#FFE4E6]/30 group-hover:bg-[#FFE4E6]/85"
