@@ -17,7 +17,6 @@ interface GameContainerProps {
   showDesktopHelp?: boolean;
   headerHidden?: boolean;
   returnButtonVariant?: "mint" | "cream";
-  returnCancelVariant?: "mint" | "cream";
 }
 
 export const GameContainer: React.FC<GameContainerProps> = ({
@@ -33,7 +32,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   showDesktopHelp: _showDesktopHelp = true,
   headerHidden = false,
   returnButtonVariant = "mint",
-  returnCancelVariant = "mint",
 }) => {
   const hiddenClass = headerHidden
     ? "opacity-0 pointer-events-none"
@@ -70,7 +68,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           <ReturnButton
             gameName={gameName}
             variant={returnButtonVariant}
-            cancelVariant={returnCancelVariant}
             className="h-10 w-10 px-0 py-0 text-xs lg:h-auto lg:w-auto lg:min-w-[9.5rem] lg:px-6 lg:py-3 lg:text-base"
           />
         </div>

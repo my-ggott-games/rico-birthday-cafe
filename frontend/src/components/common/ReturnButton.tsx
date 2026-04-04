@@ -10,7 +10,6 @@ interface ReturnButtonProps {
   style?: React.CSSProperties;
   gameName?: string;
   variant?: "mint" | "cream";
-  cancelVariant?: "mint" | "cream";
 }
 
 const MESSAGES = [
@@ -25,7 +24,6 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({
   style,
   gameName = "게임",
   variant = "mint",
-  cancelVariant = "mint",
 }) => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -103,7 +101,7 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({
                   </PushableButton>
                   <PushableButton
                     onClick={() => setIsOpen(false)}
-                    variant={cancelVariant}
+                    variant="cream"
                     className="flex-1"
                   >
                     아니

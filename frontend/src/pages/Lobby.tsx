@@ -165,16 +165,13 @@ const Lobby: React.FC = () => {
         </div>
 
         <div
-          className={`flex-1 relative ${isMobile ? "mt-2 grid grid-cols-2 gap-x-3 gap-y-4 place-items-center content-start pb-8" : "mt-4"}`}
+          className={`flex-1 relative ${isMobile ? "mt-2 grid grid-cols-2 gap-x-3 gap-y-4 place-items-center content-start pb-8" : "mt-6 flex flex-wrap justify-center items-center gap-6 pb-8"}`}
         >
           {/* Hotspot: TPO Cody (Paper Doll Table) */}
           <Link
             to="/game/cody"
-            className={
-              isMobile
-                ? "relative group w-full flex justify-center"
-                : "absolute top-10 left-20 group"
-            }
+            className="relative group w-full flex justify-center"
+            style={{ width: isMobile ? undefined : "auto" }}
           >
             <motion.div whileHover={{ scale: 1.05 }} className="group">
               <LobbyIconTile
@@ -187,14 +184,11 @@ const Lobby: React.FC = () => {
             </motion.div>
           </Link>
 
-          {/* Hotspot: Itabag (Display Table) - Positioned differently for mobile */}
+          {/* Hotspot: Itabag (Display Table) */}
           <Link
             to="/game/itabag"
-            className={
-              isMobile
-                ? "relative group w-full flex justify-center"
-                : "absolute bottom-10 right-[20%] group"
-            }
+            className="relative group w-full flex justify-center"
+            style={{ width: isMobile ? undefined : "auto" }}
           >
             <motion.div whileHover={{ scale: 1.05 }} className="group">
               <LobbyIconTile
@@ -210,11 +204,8 @@ const Lobby: React.FC = () => {
           {/* Hotspot: Mini Game (Puzzle) */}
           <Link
             to="/game/puzzle"
-            className={
-              isMobile
-                ? "relative group w-full flex justify-center"
-                : "absolute top-20 right-20 group"
-            }
+            className="relative group w-full flex justify-center"
+            style={{ width: isMobile ? undefined : "auto" }}
           >
             <motion.div whileHover={{ scale: 1.05 }} className="group">
               <LobbyIconTile
@@ -236,11 +227,8 @@ const Lobby: React.FC = () => {
           {/* Hotspot: Asparagus Merge (2048 style) */}
           <Link
             to="/game/asparagus"
-            className={
-              isMobile
-                ? "relative group w-full flex justify-center"
-                : "absolute bottom-8 left-[24%] -translate-x-1/2 group"
-            }
+            className="relative group w-full flex justify-center"
+            style={{ width: isMobile ? undefined : "auto" }}
           >
             <motion.div whileHover={{ scale: 1.05 }} className="group">
               <LobbyIconTile
@@ -256,11 +244,8 @@ const Lobby: React.FC = () => {
           {/* Hotspot: Rico's Fortune (Omikuji) */}
           <Link
             to="/game/fortune"
-            className={
-              isMobile
-                ? "relative group w-full flex justify-center"
-                : "absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 group"
-            }
+            className="relative group w-full flex justify-center"
+            style={{ width: isMobile ? undefined : "auto" }}
           >
             <motion.div whileHover={{ scale: 1.05 }} className="group">
               <LobbyIconTile
@@ -275,11 +260,8 @@ const Lobby: React.FC = () => {
 
           <Link
             to="/game/adventure"
-            className={
-              isMobile
-                ? "relative group w-full flex justify-center"
-                : "absolute bottom-[18%] right-[42%] group"
-            }
+            className="relative group w-full flex justify-center"
+            style={{ width: isMobile ? undefined : "auto" }}
           >
             <motion.div whileHover={{ scale: 1.05 }} className="group">
               <LobbyIconTile

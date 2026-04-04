@@ -34,6 +34,9 @@ import { AppIcon } from "../components/common/AppIcon";
 import { CODY_TUTORIAL_SLIDES } from "../constants/tutorialSlides";
 import { usePageBgm } from "../hooks/usePageBgm";
 import { pickRandomActivityBgm } from "../utils/bgm";
+import { BASE_URL } from "../utils/api";
+import { useAuthStore } from "../store/useAuthStore";
+import { useToastStore } from "../store/useToastStore";
 
 type ShareNavigator = Navigator & {
   canShare?: (data?: ShareData) => boolean;
@@ -58,6 +61,10 @@ const EMPTY_EQUIPMENT: EquippedState = {
 const INVALID_POLAROID_SCALE = 0.5;
 const VALID_POLAROID_SCALE = 1;
 const PNG_ASSET = (name: string) => `/assets/codygame/${name}.png`;
+
+const CODY_LEGEND_ACHIEVEMENT_CODE = "CODY_LEGEND_COORDINATOR";
+const CODY_DISCOVERED_COMBOS_KEY = "cody_discovered_combos";
+const TOTAL_VALID_COMBOS = 5; // training 제외, 유효한 조합 수
 
 const HAIR_PAIRINGS: Array<[string, string]> = [
   ["hair_1-1", "hair_2-1"],
@@ -215,6 +222,10 @@ const CodyGame: React.FC = () => {
   const polaroidRef = React.useRef<HTMLDivElement>(null);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [activeTab, setActiveTab] = useState<MobileTabId>("hair");
+  const codyAchievementAwardedRef = React.useRef(false);
+
+  const { token } = useAuthStore();
+  const { addToast } = useToastStore();
 
   React.useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -578,7 +589,6 @@ const CodyGame: React.FC = () => {
         className="h-screen font-sans relative select-none bg-[#FFFFF8]"
         headerHidden={!showButtons}
         mainClassName="relative overflow-hidden"
-        returnCancelVariant="cream"
       >
         {activeBackground === "spring" && !isFinished && (
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -793,6 +803,42 @@ const CodyGame: React.FC = () => {
 
                       setShowInventory(false);
                       setShowButtons(false);
+
+                      // 발견한 조합 누적 기록 및 5가지 달성 시 업적 해금
+                      if (matchedCombo.name !== "training") {
+                        const storedRaw = localStorage.getItem(CODY_DISCOVERED_COMBOS_KEY);
+                        const stored: string[] = storedRaw ? (JSON.parse(storedRaw) as string[]) : [];
+                        const updated = Array.from(new Set([...stored, matchedCombo.name]));
+                        localStorage.setItem(CODY_DISCOVERED_COMBOS_KEY, JSON.stringify(updated));
+
+                        if (
+                          updated.length >= TOTAL_VALID_COMBOS &&
+                          !codyAchievementAwardedRef.current &&
+                          token
+                        ) {
+                          codyAchievementAwardedRef.current = true;
+                          void (async () => {
+                            try {
+                              const res = await fetch(
+                                `${BASE_URL}/achievements/award/${CODY_LEGEND_ACHIEVEMENT_CODE}`,
+                                { method: "POST", headers: { Authorization: `Bearer ${token}` } },
+                              );
+                              if (res.ok) {
+                                const newlyAwarded = (await res.json()) === true;
+                                if (newlyAwarded) {
+                                  addToast({
+                                    title: "전설의 코디네이터",
+                                    description: "특별한 코디 조합을 전부 찾아냈다.",
+                                    icon: "Shirt",
+                                  });
+                                }
+                              }
+                            } catch {
+                              codyAchievementAwardedRef.current = false;
+                            }
+                          })();
+                        }
+                      }
 
                       setTimeout(() => {
                         setContentVisible(true);

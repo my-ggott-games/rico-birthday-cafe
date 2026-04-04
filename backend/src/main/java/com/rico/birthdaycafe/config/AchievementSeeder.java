@@ -28,10 +28,7 @@ public class AchievementSeeder implements CommandLineRunner {
     seedAchievement("RICO_DEBUT_DATE", "관리자 권한에 접근한 자", "정답은 리코 데뷔 날짜였습니다~", "Eye");
     seedAchievement("WHO_ARE_YOU", "??? 예요.", "내 별은 영원히 너야", "Rose");
     seedAchievement("LOST_IN_THE_WAY", "길을 잃었다~", "어딜 가야 할까~", "FileQuestionMark");
-
-    // One-time normalization for legacy English asparagus titles regardless of
-    // code.
-    normalizeLegacyEnglishAsparagusTitles();
+    seedAchievement("CODY_LEGEND_COORDINATOR", "전설의 코디네이터", "특별한 코디 조합을 전부 찾아냈다.", "Shirt");
   }
 
   private void seedAchievement(String code, String title, String description, String iconUrl) {
@@ -72,30 +69,5 @@ public class AchievementSeeder implements CommandLineRunner {
     System.out.println("Seeded achievement: " + title);
   }
 
-  private void normalizeLegacyEnglishAsparagusTitles() {
-    for (Achievement achievement : achievementRepository.findAll()) {
-      String title = achievement.getTitle();
-      if (title == null) {
-        continue;
-      }
-
-      boolean updated = false;
-      if ("Excalibur Asparagus".equals(title)) {
-        achievement.setTitle("성검 아스파라거스");
-        achievement.setDescription("성검 아스파라거스를 키웠다");
-        achievement.setIconUrl("Sword");
-        updated = true;
-      } else if ("Special Asparagus".equals(title)) {
-        achievement.setTitle("전설의 정원사");
-        achievement.setDescription("아이템 없이 성검 아스파라거스를 키웠다");
-        achievement.setIconUrl("Sparkles");
-        updated = true;
-      }
-
-      if (updated) {
-        achievementRepository.save(achievement);
-        System.out.println("Normalized legacy achievement title: " + title);
-      }
-    }
-  }
 }
+
