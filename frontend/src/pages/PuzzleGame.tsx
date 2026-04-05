@@ -16,7 +16,7 @@ import { playDiriringSfx, preloadDiriringSfx } from "../utils/soundEffects";
 import { useAuthStore } from "../store/useAuthStore";
 import { useToastStore } from "../store/useToastStore";
 import { HolographicOverlay } from "../components/game/HolographicOverlay";
-import { ActionButton } from "../components/common/ActionButton";
+import { PushableButton } from "../components/common/PushableButton";
 import { MuseumPlaque } from "../components/game/MuseumPlaque";
 import { MagnifyingGlass } from "../components/game/MagnifyingGlass";
 import {
@@ -634,32 +634,30 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
                   </motion.div>
                   <div className="flex w-full items-center gap-3">
                     {(isCoarsePointerDevice || isNarrowViewport) && (
-                      <ActionButton
+                      <PushableButton
                         onClick={() => void handlePhotocardMode()}
                         disabled={isOpeningPhotocard}
-                        className="flex-1 shadow-none hover:shadow-none"
-                        variant="teal"
-                        size="md"
+                        className="flex-1 justify-center"
+                        variant="mint"
                       >
                         {isOpeningPhotocard
                           ? "준비 중..."
                           : photocardModeEnabled
                             ? "홀로그램 끄기"
                             : "홀로그램 모드"}
-                      </ActionButton>
+                      </PushableButton>
                     )}
-                    <ActionButton
+                    <PushableButton
                       onClick={handleReplay}
                       className={
                         isCoarsePointerDevice || isNarrowViewport
-                          ? "flex-1 shadow-none hover:shadow-none"
-                          : "w-full shadow-none hover:shadow-none"
+                          ? "flex-1 justify-center"
+                          : "w-full justify-center"
                       }
-                      variant="sage"
-                      size="md"
+                      variant="cream"
                     >
                       다시 하기
-                    </ActionButton>
+                    </PushableButton>
                   </div>
                 </div>
               )}
@@ -682,28 +680,26 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
                     <MuseumPlaque className="mt-0" />
                   </motion.div>
                   {(isCoarsePointerDevice || isNarrowViewport) && (
-                    <ActionButton
+                    <PushableButton
                       onClick={() => void handlePhotocardMode()}
                       disabled={isOpeningPhotocard}
-                      className="w-full shadow-none hover:shadow-none"
-                      variant="teal"
-                      size="md"
+                      className="w-full justify-center"
+                      variant="mint"
                     >
                       {isOpeningPhotocard
                         ? "준비 중..."
                         : photocardModeEnabled
                           ? "홀로그램 끄기"
                           : "홀로그램 모드"}
-                    </ActionButton>
+                    </PushableButton>
                   )}
-                  <ActionButton
+                  <PushableButton
                     onClick={handleReplay}
-                    className="w-full shadow-none hover:shadow-none"
-                    variant="sage"
-                    size="md"
+                    className="w-full justify-center"
+                    variant="cream"
                   >
                     다시 하기
-                  </ActionButton>
+                  </PushableButton>
                 </div>
               </div>
             )}

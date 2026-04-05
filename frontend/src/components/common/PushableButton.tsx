@@ -1,6 +1,6 @@
 import React from "react";
 
-type PushableButtonVariant = "mint" | "cream";
+type PushableButtonVariant = "mint" | "cream" | "black";
 
 interface PushableButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -12,6 +12,8 @@ const PUSHABLE_BUTTON_VARIANTS: Record<PushableButtonVariant, string> = {
   mint: "border-[#3f9e80] bg-[#5EC7A5] text-pale-custard shadow-[0_6px_0_#3f9e80] hover:shadow-[0_2px_0_#3f9e80]",
   cream:
     "border-[#D8B98C] bg-[#FFF8EA] text-[#166D77] shadow-[0_6px_0_#D8B98C] hover:shadow-[0_2px_0_#D8B98C]",
+  black:
+    "border-[#2a2a2a] bg-[#1a1a1a] text-pale-custard shadow-[0_6px_0_#2a2a2a] hover:shadow-[0_2px_0_#2a2a2a]",
 };
 
 export const PushableButton = React.forwardRef<

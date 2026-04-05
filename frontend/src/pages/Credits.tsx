@@ -14,61 +14,144 @@ import { pickRandomActivityBgm } from "../utils/bgm";
 import { useAudioStore } from "../store/useAudioStore";
 
 const THANK_YOU_ALL_CODE = "THANK_YOU_ALL";
-const CREDITS_SECTIONS = [
+type CreditEntry = {
+  label?: string;
+  credits: Array<{
+    role: string;
+    name: string;
+  }>;
+};
+
+type CreditSection = {
+  title: string;
+  entries: CreditEntry[];
+};
+
+const CREDITS_SECTIONS: CreditSection[] = [
   {
     title: "프로젝트 총괄",
-    names: ["전체 기획 및 컨셉: CODE NAME: G", "Userflow 설계: CODE NAME: G"],
+    entries: [
+      {
+        label: "전체 기획 및 컨셉",
+        credits: [{ role: "CODE NAME: G", name: "" }],
+      },
+      {
+        label: "Userflow 설계",
+        credits: [{ role: "CODE NAME: G", name: "" }],
+      },
+    ],
+  },
+  {
+    title: "아트 & 일러스트",
+    entries: [
+      {
+        label: "리코의 외출 준비",
+        credits: [
+          { role: "코디 아이템", name: "Sie" },
+          { role: "캐릭터 디자인", name: "Sie" },
+          {
+            role: "맵 모델링\n(Animal Crossing: Pocket Camp Complete)",
+            name: "CODE NAME: G",
+          },
+        ],
+      },
+      {
+        label: "퍼즐 놀이",
+        credits: [{ role: "퍼즐 일러스트", name: "상승새" }],
+      },
+      {
+        label: "용사 리코 이야기",
+        credits: [{ role: "캐릭터 도트", name: "당근오이" }],
+      },
+      {
+        label: "브랜딩 & 공간 연출",
+        credits: [
+          { role: "배너 & 포스터 디자인", name: "CODE NAME: G" },
+          { role: "공간 섭외 & 촬영", name: "CODE NAME: G" },
+        ],
+      },
+    ],
   },
   {
     title: "개발",
-    names: [
-      "프론트엔드 개발: CODE NAME: G",
-      "백엔드 개발: CODE NAME: G",
-      "데이터베이스 설계: CODE NAME: G",
-      "배포 환경 구성: CODE NAME: G",
-      "인터랙션 및 애니메이션: CODE NAME: G",
+    entries: [
+      {
+        label: "프론트엔드 엔지니어링",
+        credits: [{ role: "", name: "CODE NAME: G" }],
+      },
+      {
+        label: "인터렉션 설계 & 애니메이션",
+        credits: [{ role: "", name: "CODE NAME: G" }],
+      },
+      {
+        label: "백엔드 & 데이터 아키텍처",
+        credits: [{ role: "", name: "CODE NAME: G" }],
+      },
+      {
+        label: "인프라 운영 & 배포",
+        credits: [{ role: "", name: "CODE NAME: G" }],
+      },
+      {
+        label: "품질 검증 & 테스트",
+        credits: [
+          { role: "", name: "Sie" },
+          { role: "", name: "미아라" },
+          { role: "", name: "CODE NAME: G" },
+        ],
+      },
     ],
   },
   {
     title: "음악",
-    names: [
-      "「감자튀김 옴뇸뇸」: U+003AU+27B4\n편곡: CODE NAME: G",
-      "「밤바밤바」: U+003AU+27B4\n편곡: CODE NAME: G",
-      "「그 날, 감자튀김」: U+003AU+27B4\n편곡: CODE NAME: G",
-      "「diriring」 효과음: U+003AU+27B4",
-      "",
-      "용사 리코 이야기 BGM:",
-      "Exodus (Arr. A. Reed)",
-      "작곡: Ernest Gold",
-      "편곡: Alfred Reed",
-      "연주: Japan Air Self-Defense Force Western Air Band",
-      "지휘: Hiroyuki Kayo",
-      "℗ 2018 CAFUA",
+    entries: [
+      {
+        label: "로비 「감자튀김 옴뇸뇸」",
+        credits: [
+          { role: "작곡", name: "U+003AU+27B4" },
+          { role: "편곡", name: "CODE NAME: G" },
+        ],
+      },
+      {
+        label: "「밤바밤바」",
+        credits: [
+          { role: "작곡", name: "U+003AU+27B4" },
+          { role: "편곡", name: "CODE NAME: G" },
+        ],
+      },
+      {
+        label: "「그 날, 감자튀김」",
+        credits: [
+          { role: "작곡", name: "U+003AU+27B4" },
+          { role: "편곡", name: "CODE NAME: G" },
+        ],
+      },
+      {
+        label: "효과음 「diriring」",
+        credits: [{ role: "작곡", name: "U+003AU+27B4" }],
+      },
+      {
+        label: "용사 리코 이야기 BGM",
+        credits: [
+          { role: "제목", name: "Exodus (Arr. A. Reed)" },
+          { role: "작곡", name: "Ernest Gold" },
+          { role: "편곡", name: "Alfred Reed" },
+          {
+            role: "연주",
+            name: "Japan Air Self-Defense Force Western Air Band",
+          },
+          { role: "지휘", name: "Hiroyuki Kayo" },
+          { role: "℗ 2018 CAFUA", name: "" },
+        ],
+      },
     ],
-  },
-  {
-    title: "리코의 외출 준비",
-    names: ["코디 아이템 및 캐릭터 디자인: Sie", "맵 모델링: CODE NAME: G"],
-  },
-  {
-    title: "퍼즐 놀이",
-    names: ["일러스트: 상승새"],
-  },
-  {
-    title: "용사 리코 이야기",
-    names: [
-      "도트 아트: 당근오이",
-      "시나리오: CODE NAME: G",
-      "맵 디자인: CODE NAME: G",
-    ],
-  },
-  {
-    title: "QA 및 피드백",
-    names: ["플레이테스트 및 피드백: Sie, CODE NAME: G"],
   },
   {
     title: "Special Thanks",
-    names: ["유즈하 리코", "스텔라이브", "파스텔"],
+    entries: [
+      { credits: [{ role: "유즈하 리코", name: "" }] },
+      { credits: [{ role: "스텔라이브", name: "" }] },
+      { credits: [{ role: "파스텔", name: "" }] },
+    ],
   },
 ];
 
@@ -94,7 +177,7 @@ export default function Credits() {
     duration: 120,
   });
   const audioRef = useRef<HTMLAudioElement>(null);
-  const claimButtonRef = useRef<HTMLButtonElement>(null);
+  const claimButtonRef = useRef<HTMLDivElement>(null);
   const creditsViewportRef = useRef<HTMLDivElement>(null);
   const creditsScrollRef = useRef<HTMLDivElement>(null);
   const creditsTrackRef = useRef<HTMLDivElement>(null);
@@ -329,49 +412,45 @@ export default function Credits() {
 
       {CREDITS_SECTIONS.map((section, idx) => (
         <div key={idx} className="mb-24 w-full">
-          <h2 className="mb-6 text-xl font-bold uppercase tracking-wider text-[#2a9d8f] md:text-2xl">
+          <h2 className="mb-6 text-xl font-bold uppercase tracking-wider text-[#166D77] md:text-2xl">
             {section.title}
           </h2>
           <div className="flex flex-col items-center gap-4">
-            {section.names.map((name, i) =>
-              (() => {
-                const separatorIndex = name.indexOf(": ");
-
-                if (separatorIndex === -1) {
-                  return (
-                    <p
-                      key={i}
-                      className="mx-auto max-w-full text-lg font-medium text-[#365486] md:text-xl"
+            {section.entries.map((entry, i) => (
+              <div key={i} className="mx-auto max-w-full text-center">
+                {entry.label ? (
+                  <p className="text-lg font-semibold text-[#365486] md:text-xl">
+                    {entry.label}
+                  </p>
+                ) : null}
+                <div className="mt-2 flex flex-col gap-1.5">
+                  {entry.credits.map((credit, creditIndex) => (
+                    <div
+                      key={creditIndex}
+                      className="flex flex-col items-center text-center"
                     >
-                      {name}
-                    </p>
-                  );
-                }
-
-                const label = name.slice(0, separatorIndex);
-                const value = name.slice(separatorIndex + 2);
-
-                return (
-                  <div key={i} className="mx-auto max-w-full text-center">
-                    <p className="text-lg font-semibold text-[#365486] md:text-xl">
-                      {label}
-                    </p>
-                    <p className="whitespace-pre-line text-base font-normal text-[#365486]/78 md:text-lg">
-                      {value}
-                    </p>
-                  </div>
-                );
-              })(),
-            )}
+                      <p className="whitespace-pre-line text-base font-black tracking-[0.08em] text-[#2a9d8f] md:text-lg">
+                        {credit.role}
+                      </p>
+                      {credit.name ? (
+                        <p className="text-sm font-semibold text-[#365486]/78 md:text-base">
+                          {credit.name}
+                        </p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       ))}
 
       <div className="flex flex-col items-center pt-32 pb-[50vh]">
-        <h2 className="mb-10 text-3xl font-black text-[#102542]">And You</h2>
+        <h2 className="mb-10 text-3xl font-black text-[#166D77]">And You</h2>
 
         {token && showClaimButton ? (
-          <motion.button
+          <motion.div
             ref={claimButtonRef}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -383,25 +462,33 @@ export default function Credits() {
                 ? { duration: 0.55, repeat: Infinity, ease: "easeInOut" }
                 : { duration: 0.2 }
             }
-            onClick={awardAchievement}
-            disabled={loading}
-            className="flex items-center gap-3 rounded-full border-2 px-8 py-4 text-lg font-black shadow-[0_0_30px_rgba(94,199,165,0.4)] transition-all hover:bg-[#5EC7A5] hover:text-[#166D77]"
-            style={{
-              background: "rgba(255,255,255,0.9)",
-              color: "#166D77",
-              borderColor: "#5EC7A5",
-            }}
           >
-            <AppIcon name="Clapperboard" size={24} />
-            {loading ? "기록 중..." : "엔딩 크레딧 시청 완료 배지 받기"}
-          </motion.button>
+            <PushableButton
+              onClick={awardAchievement}
+              disabled={loading}
+              variant="mint"
+              className="rounded-full px-8 py-4 text-lg shadow-[0_0_30px_rgba(94,199,165,0.4)]"
+            >
+              <span className="flex items-center gap-3">
+                <AppIcon name="Clapperboard" size={24} />
+                {loading ? "기록 중..." : "엔딩 크레딧 시청 완료 배지 받기"}
+              </span>
+            </PushableButton>
+          </motion.div>
         ) : token ? (
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="flex items-center gap-2 rounded-full bg-[#5EC7A5] px-8 py-4 text-lg font-black text-[#166D77]"
           >
-            <AppIcon name="BadgeCheck" size={20} /> 배지 획득 완료
+            <PushableButton
+              variant="cream"
+              disabled
+              className="rounded-full px-8 py-4 text-lg"
+            >
+              <span className="flex items-center gap-2">
+                <AppIcon name="BadgeCheck" size={20} /> 배지 획득 완료
+              </span>
+            </PushableButton>
           </motion.div>
         ) : null}
       </div>
@@ -429,7 +516,10 @@ export default function Credits() {
 
       {/* Fixed header buttons */}
       <div className="absolute left-4 top-4 z-50">
-        <ReturnButton gameName="엔딩 크레딧" className="px-4 py-2 text-sm" />
+        <ReturnButton
+          gameName="엔딩 크레딧 재생"
+          className="px-4 py-2 text-sm"
+        />
       </div>
 
       <div className="flex h-screen flex-1">

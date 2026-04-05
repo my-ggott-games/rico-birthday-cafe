@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { KCelebrateSlogan } from "k-celebrate-slogan";
 import { AchievementModal } from "../components/common/AchievementModal";
 import { AdminModal } from "../components/auth/AdminModal";
+import { PushableButton } from "../components/common/PushableButton";
 import { usePageBgm } from "../hooks/usePageBgm";
 import {
   PUZZLE_MUSEUM_UNLOCK_EVENT,
@@ -47,6 +48,7 @@ const LobbyIconTile = ({
 const Lobby: React.FC = () => {
   usePageBgm(LOBBY_BGM_SRC);
   const isGuest = useAuthStore((state) => state.isGuest);
+  const navigate = useNavigate();
 
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [backgroundSrc, setBackgroundSrc] = useState("/lobby-thumb.jpg");
@@ -122,28 +124,34 @@ const Lobby: React.FC = () => {
           <div
             className={`flex ${isMobile ? "flex-wrap justify-center" : ""} gap-2`}
           >
-            <Link
-              to="/credits"
-              className={`${isMobile ? "px-3 py-1 text-sm" : "px-6 py-2"} bg-black rounded-full border-2 border-gray-700 shadow-sm font-black text-gray-300 hover:bg-gray-800 hover:text-white transition-colors flex items-center gap-1.5`}
+            <PushableButton
+              onClick={() => navigate("/credits")}
+              variant="cream"
+              className={`${isMobile ? "px-3 py-1 text-sm" : "px-6 py-2"} rounded-full`}
             >
-              <AppIcon name="Clapperboard" size={16} /> Who Made This?!
-            </Link>
-            <button
+              <span className="flex items-center gap-1.5">
+                <AppIcon name="Clapperboard" size={16} /> Who Made This?!
+              </span>
+            </PushableButton>
+            <PushableButton
               onClick={() => setIsAchievementOpen(true)}
               disabled={isGuest}
-              className={`${isMobile ? "px-3 py-1 text-sm" : "px-6 py-2"} bg-cream rounded-full border-2 border-[#5EC7A5] shadow-sm font-black text-[#5EC7A5] hover:bg-[#5EC7A5] hover:text-pale-custard transition-colors flex items-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-45`}
+              variant="mint"
+              className={`${isMobile ? "px-3 py-1 text-sm" : "px-6 py-2"} rounded-full disabled:cursor-not-allowed`}
             >
-              <AppIcon name="IdCardLanyard" size={16} /> 프로필
-            </button>
-            <button
+              <span className="flex items-center gap-1.5">
+                <AppIcon name="IdCardLanyard" size={16} /> 프로필
+              </span>
+            </PushableButton>
+            <PushableButton
               onClick={() => setIsAdminOpen(true)}
-              className={`${isMobile ? "px-3 py-1 text-sm" : "px-5 py-2"} bg-[#1a1a1a] text-pale-custard/40 rounded-full border border-pale-custard/10 shadow-lg font-mono tracking-tighter hover:text-pale-custard hover:border-[#5EC7A5]/50 transition-all group relative overflow-hidden`}
+              variant="black"
+              className={`${isMobile ? "px-3 py-1 text-sm" : "px-5 py-2"} rounded-full font-mono tracking-tighter`}
             >
-              <span className="relative z-10 transition-transform group-hover:scale-110 inline-block">
+              <span className="inline-block">
                 who am I?
               </span>
-              <div className="absolute inset-0 bg-gradient-to-tr from-[#5EC7A5]/0 via-[#5EC7A5]/5 to-[#5EC7A5]/0 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
+            </PushableButton>
           </div>
         </header>
         {isGuest && isMobile && (
