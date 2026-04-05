@@ -14,7 +14,7 @@ const MOBILE_DOOR_FRAME_CLASS =
 const DESKTOP_SLOGAN_FRAME_CLASS = "absolute left-1/2 w-[30%] -translate-x-1/2";
 const DESKTOP_LANDING_FRAME_CLASS = `${LANDING_IMAGE_ASPECT} relative w-[max(100vw,calc(100dvh*3847/2885))]`;
 const DESKTOP_DOOR_FRAME_CLASS =
-  "absolute left-1/2 top-[56.3%] -translate-x-1/2 -translate-y-1/2";
+  "absolute left-1/2 top-[45%] -translate-x-1/2 -translate-y-1/2";
 const ENTER_ANIMATION_DURATION_MS = 1850;
 
 const LandingPage: React.FC = () => {
@@ -91,8 +91,8 @@ const LandingPage: React.FC = () => {
       >
         {/* Background Layers */}
         <ProgressiveBackground
-          thumbnailSrc="/landing-thumb.jpg"
-          fullSrc="/landing.jpg"
+          thumbnailSrc="/pages/landing/background-thumb.jpg"
+          fullSrc="/pages/landing/background.jpg"
           previewFetchPriority="high"
           className="z-0"
           overlayClassName="bg-transparent"
@@ -104,8 +104,8 @@ const LandingPage: React.FC = () => {
         <div className="pointer-events-none absolute inset-0 z-10 bg-[#05080c] md:hidden">
           <div className="absolute left-1/2 top-1/2 h-full aspect-[3847/2885] -translate-x-1/2 -translate-y-1/2 scale-[0.75]">
             <ProgressiveImage
-              thumbnailSrc="/landing-thumb.jpg"
-              fullSrc="/landing.jpg"
+              thumbnailSrc="/pages/landing/background-thumb.jpg"
+              fullSrc="/pages/landing/background.jpg"
               previewFetchPriority="low"
               alt=""
               className="h-full w-full"
@@ -142,7 +142,7 @@ const LandingPage: React.FC = () => {
                 transition={{ duration: 0.2, ease: "easeOut" }}
               >
                 <motion.div
-                  className="flex h-32 w-32 items-center justify-center rounded-[1.75rem] border border-white/55 bg-[rgba(255,255,255,0.5)] shadow-[0_12px_30px_rgba(0,0,0,0.16)]"
+                  className="landing-door-pulse flex h-32 w-32 items-center justify-center rounded-[1.75rem] border border-white/55 bg-[rgba(255,255,255,0.5)] shadow-[0_12px_30px_rgba(0,0,0,0.16)]"
                   whileHover={{
                     backgroundColor: "rgba(255,255,255,0.5)",
                     boxShadow: "0 16px 36px rgba(0,0,0,0.2)",
@@ -200,7 +200,7 @@ const LandingPage: React.FC = () => {
                 transition={{ duration: 0.2, ease: "easeOut" }}
               >
                 <motion.div
-                  className="flex h-56 w-56 items-center justify-center rounded-[2.6rem] border border-white/55 bg-transparent shadow-[0_12px_30px_rgba(0,0,0,0.16)]"
+                  className="landing-door-pulse flex h-56 w-56 items-center justify-center rounded-[2.6rem] border border-white/55 bg-transparent shadow-[0_12px_30px_rgba(0,0,0,0.16)]"
                   whileHover={{
                     backgroundColor: "rgba(255,255,255,0.5)",
                     boxShadow: "0 16px 36px rgba(0,0,0,0.2)",

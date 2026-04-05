@@ -21,7 +21,7 @@ type AuthApiResponse = {
 type Step = "main" | "set-pin";
 
 const PIN_REGEX = /^[0-9]{4}$/;
-const UID_REGEX = /^chiko_[0-9a-f]{8}$/;
+const UID_REGEX = /^chiko_[a-zA-Z0-9]{8}$/;
 const ADMIN_UID = "chiko_03240324";
 const MAX_PIN_LENGTH = 4;
 const REQUEST_TIMEOUT_MS = 15000;
@@ -211,12 +211,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     return `${minutes}:${String(seconds).padStart(2, "0")}`;
   };
 
-  const loadingDots = ".".repeat((Math.floor(nowMs / 1000) % 3) + 1);
-
   const renderLoadingLabel = (baseText: string) => (
     <span className="inline-flex items-center">
       <span>{baseText}</span>
-      <span className="inline-block w-5 text-left">{loadingDots}</span>
+      <span
+        aria-hidden="true"
+        className="ml-0.5 inline-flex min-w-[1.1em] justify-start"
+      >
+        {[0, 1, 2].map((index) => (
+          <span
+            key={index}
+            className="auth-loading-dot"
+            style={{ animationDelay: `${index * 0.18}s` }}
+          >
+            .
+          </span>
+        ))}
+      </span>
     </span>
   );
 
@@ -330,7 +341,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       case 400:
         return "번호표를 다시 확인해주세요.";
       case 401:
-        return "번호표나 비밀번호가 틀렸어요.";
+        return "번호표나 비밀번호가 일치하지 않아요.";
       case 500:
         return "카페 문 닫았어요.\n지금은 번호표를 확인할 수 없어요.";
       default:
@@ -679,7 +690,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     disabled={loading}
                     className="w-full rounded-xl border-2 border-[#3f9e80] bg-[#5EC7A5] py-4 text-base font-black text-pale-custard shadow-[0_4px_0_#3f9e80] transition-all hover:translate-y-1 hover:shadow-[0_0px_0_#3f9e80] disabled:opacity-50 md:text-lg"
                   >
-                    {loading ? "확인 중..." : "입장하기"}
+                    {loading ? renderLoadingLabel("확인 중") : "입장하기"}
                   </button>
                 </form>
               </div>

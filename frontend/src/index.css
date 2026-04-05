@@ -359,6 +359,18 @@ button {
 }
 
 /* 로비 슬로건 border 오버라이드 */
+.lobby-slogan-stage {
+  isolation: isolate;
+}
+
+.lobby-slogan-stage__concert {
+  z-index: 30;
+}
+
+.lobby-slogan-stage__banner {
+  z-index: 20;
+}
+
 .slogan-lobby .k-celebrate-slogan-container>div {
   border-color: rgba(0, 0, 0, 0.05);
 }
@@ -500,6 +512,31 @@ button {
   100% { transform: scaleX(0.15); }
 }
 
+@keyframes landing-door-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes auth-loading-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(-0.08em);
+  }
+}
+
 .landing-enter-text-stroke {
   position: relative;
   z-index: 0;
@@ -521,4 +558,27 @@ button {
   pointer-events: none;
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 8px rgba(255, 255, 255);
+}
+
+.landing-door-pulse {
+  animation: landing-door-pulse 2.4s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.auth-loading-dot {
+  display: inline-block;
+  animation: auth-loading-dot 1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-door-pulse {
+    animation: none;
+  }
+
+  .auth-loading-dot {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }

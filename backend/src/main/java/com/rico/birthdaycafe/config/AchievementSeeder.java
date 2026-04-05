@@ -29,6 +29,7 @@ public class AchievementSeeder implements CommandLineRunner {
     seedAchievement("WHO_ARE_YOU", "??? 예요.", "내 별은 영원히 너야", "Rose");
     seedAchievement("LOST_IN_THE_WAY", "길을 잃었다~", "어딜 가야 할까~", "FileQuestionMark");
     seedAchievement("CODY_LEGEND_COORDINATOR", "전설의 코디네이터", "특별한 코디 조합을 전부 찾아냈다.", "Shirt");
+    seedAchievement("SLOGAN_COLLECTOR", "슬로건을 탐낸 자", "카페 소품을 소중히 다뤄주세요!", "Hand");
   }
 
   private void seedAchievement(String code, String title, String description, String iconUrl) {
@@ -70,4 +71,3 @@ public class AchievementSeeder implements CommandLineRunner {
   }
 
 }
-

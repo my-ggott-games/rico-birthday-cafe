@@ -13,6 +13,7 @@ const ACHIEVEMENT_ICONS: Record<string, AppIconName> = {
   THANK_YOU_ALL: "Clapperboard",
   WHO_ARE_YOU: "KeyRound",
   LOST_IN_THE_WAY: "FileQuestionMark",
+  SLOGAN_COLLECTOR: "Hand",
 };
 
 export const getAchievementIconName = (code: string): AppIconName =>

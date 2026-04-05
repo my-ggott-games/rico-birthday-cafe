@@ -162,7 +162,7 @@ const GlobalLoading: React.FC = () => {
               className="mb-8 rounded-full border-2 border-[#166D77] bg-pale-custard p-3 shadow-lg"
             >
               <img
-                src="/favicon.png"
+                src="/app/favicon.png"
                 alt="Loading"
                 className="w-20 h-20 object-contain"
               />

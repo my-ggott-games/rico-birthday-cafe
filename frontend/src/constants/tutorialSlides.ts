@@ -46,7 +46,7 @@ export const ASPARAGUS_TUTORIAL_SLIDES: TutorialSlide[] = [
     showArrows: false,
   },
   {
-    title: "아스파라거스를 키우기 힘들다면...",
+    title: "처음엔 많이 어려울거야.",
     titleIcon: "Wrench",
     lines: [
       "비료를 사용해봐, 얼마 없으니 아껴써야 해!",
@@ -56,7 +56,7 @@ export const ASPARAGUS_TUTORIAL_SLIDES: TutorialSlide[] = [
     showArrows: false,
   },
   {
-    title: "여기 아스파라거스 씨앗, 잘 부탁해!",
+    title: "그럼 잘 부탁해!",
     titleIcon: "Sprout",
     lines: ["아스파라거스를 끝까지 키우면 좋은 일이 생길지도?"],
     highlight: null,

@@ -114,7 +114,7 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({
             </div>
 
             {s.showArrows && (
-              <div className="mt-2 flex w-full items-center justify-center gap-2">
+              <div className="mt-2 flex w-full items-center justify-center gap-2 md:gap-3">
                 {(["left", "up", "down", "right"] as Direction[]).map((d) => {
                   const icons: Record<Direction, AppIconName> = {
                     left: "ArrowBigLeft",
@@ -125,13 +125,13 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({
                   return (
                     <PushableButton
                       key={d}
-                      className="h-14 w-14 px-0 py-0 md:h-16 md:w-16"
+                      className="h-[60px] w-[60px] px-0 py-0 md:h-[72px] md:w-[72px]"
                       aria-hidden="true"
                       tabIndex={-1}
                     >
                       <AppIcon
                         name={icons[d]}
-                        size={28}
+                        size={40}
                         strokeWidth={2.4}
                         style={{ color: "#FFFFF8" }}
                       />

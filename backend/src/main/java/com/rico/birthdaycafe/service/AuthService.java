@@ -21,7 +21,7 @@ import java.util.UUID;
 public class AuthService {
 
   private static final String PIN_REGEX = "^[0-9]{4}$";
-  private static final String UID_REGEX = "^chiko_[0-9a-f]{8}$";
+  private static final String UID_REGEX = "^chiko_[a-zA-Z0-9]{8}$";
   private static final String ADMIN_UID = "chiko_03240324";
 
   private final UserRepository userRepository;
@@ -58,7 +58,7 @@ public class AuthService {
   public AuthResponse register(String uid, String password, String confirmPassword, String issueToken) {
     if (uid == null || !uid.matches(UID_REGEX) || ADMIN_UID.equals(uid)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-          "INVALID_UID_FORMAT_OR_RESERVED: uid must match chiko_[0-9a-f]{8} and must not be admin uid");
+          "INVALID_UID_FORMAT_OR_RESERVED: uid must match chiko_[a-zA-Z0-9]{8} and must not be admin uid");
     }
     if (issueToken == null || issueToken.isBlank() || !tokenProvider.validateUidIssueToken(uid, issueToken)) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,

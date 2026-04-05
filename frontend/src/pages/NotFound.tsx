@@ -17,9 +17,10 @@ const NotFound: React.FC = () => {
       return;
     }
 
-    hasRequestedAwardRef.current = true;
-
     const awardNotFoundAchievement = async () => {
+      if (hasRequestedAwardRef.current) return;
+      hasRequestedAwardRef.current = true;
+
       try {
         const response = await fetchWithAuth(
           "/achievements/award/LOST_IN_THE_WAY",
@@ -45,7 +46,25 @@ const NotFound: React.FC = () => {
       }
     };
 
-    void awardNotFoundAchievement();
+    // 브라우저의 오디오 자동재생(Autoplay) 정책으로 인해
+    // 화면 마운트 시점에 바로 소리를 재생하면 차단됩니다.
+    // 첫 화면 터치/클릭 등의 유저 인터랙션이 발생할 때 업적을 지급하여 효과음이 정상 재생되도록 합니다.
+    const handleInteraction = () => {
+      void awardNotFoundAchievement();
+      window.removeEventListener("click", handleInteraction);
+      window.removeEventListener("touchstart", handleInteraction);
+      window.removeEventListener("keydown", handleInteraction);
+    };
+
+    window.addEventListener("click", handleInteraction);
+    window.addEventListener("touchstart", handleInteraction);
+    window.addEventListener("keydown", handleInteraction);
+
+    return () => {
+      window.removeEventListener("click", handleInteraction);
+      window.removeEventListener("touchstart", handleInteraction);
+      window.removeEventListener("keydown", handleInteraction);
+    };
   }, [addToast, token]);
 
   return (

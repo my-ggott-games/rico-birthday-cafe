@@ -41,7 +41,7 @@ const TakeoutCupShowcase: React.FC = () => {
 
             <div className="relative flex min-h-[32rem] items-end justify-center md:min-h-[38rem]">
               <div className="w-[clamp(13rem,30vw,19rem)]">
-                <TakeoutCup holderImage="/thumbnail.jpg" />
+                <TakeoutCup holderImage="/app/og/thumbnail.jpg" />
               </div>
             </div>
           </div>
@@ -76,7 +76,7 @@ const TakeoutCupShowcase: React.FC = () => {
               </p>
               <pre className="mt-3 overflow-x-auto whitespace-pre-wrap font-mono text-[13px] leading-6 text-[#77483a]">
 {`<TakeoutCup
-  holderImage="/thumbnail.jpg"
+  holderImage="/app/og/thumbnail.jpg"
   className="drop-shadow-[0_30px_50px_rgba(0,0,0,0.18)]"
 />`}
               </pre>
