@@ -99,6 +99,38 @@ const Lobby: React.FC = () => {
   }, []);
 
   const isMobile = windowWidth < 768;
+  const profileButton = (
+    <PushableButton
+      onClick={() => setIsAchievementOpen(true)}
+      disabled={isGuest}
+      variant="mint"
+      className={`${isMobile ? "px-3 py-1 text-sm" : "px-6 py-2"} rounded-full disabled:cursor-not-allowed`}
+    >
+      <span className="flex items-center gap-1.5">
+        <AppIcon name="IdCardLanyard" size={16} /> 프로필
+      </span>
+    </PushableButton>
+  );
+  const creditsButton = (
+    <PushableButton
+      onClick={() => navigate("/credits")}
+      variant="cream"
+      className={`${isMobile ? "px-3 py-1 text-sm" : "px-6 py-2"} rounded-full`}
+    >
+      <span className="flex items-center gap-1.5">
+        <AppIcon name="Clapperboard" size={16} /> Who Made This?!
+      </span>
+    </PushableButton>
+  );
+  const adminButton = (
+    <PushableButton
+      onClick={() => setIsAdminOpen(true)}
+      variant="black"
+      className={`${isMobile ? "px-3 py-1 text-sm" : "px-5 py-2"} rounded-full font-mono tracking-tighter`}
+    >
+      <span className="inline-block">who am I?</span>
+    </PushableButton>
+  );
 
   return (
     <div className="relative w-full min-h-screen overflow-x-hidden bg-[#FFFFF8]">
@@ -114,44 +146,21 @@ const Lobby: React.FC = () => {
         className={`relative z-10 w-full min-h-screen ${isMobile ? "px-4 pt-4 pb-8" : "p-10"} flex flex-col`}
       >
         <header
-          className={`flex ${isMobile ? "flex-col items-center gap-2" : "justify-between items-center"} ${isMobile ? "mb-3" : "mb-6"}`}
+          className={`flex ${isMobile ? "justify-end items-start" : "justify-between items-center"} ${isMobile ? "mb-2" : "mb-6"}`}
         >
           {isGuest && !isMobile && (
             <p className="rounded-full border border-[#166D77]/20 bg-[#166D77]/10 px-3 py-1 text-xs font-bold text-[#166D77]">
               게스트 모드: 프로필/업적/기록 저장 사용 불가
             </p>
           )}
-          <div
-            className={`flex ${isMobile ? "flex-wrap justify-center" : ""} gap-2`}
-          >
-            <PushableButton
-              onClick={() => navigate("/credits")}
-              variant="cream"
-              className={`${isMobile ? "px-3 py-1 text-sm" : "px-6 py-2"} rounded-full`}
-            >
-              <span className="flex items-center gap-1.5">
-                <AppIcon name="Clapperboard" size={16} /> Who Made This?!
-              </span>
-            </PushableButton>
-            <PushableButton
-              onClick={() => setIsAchievementOpen(true)}
-              disabled={isGuest}
-              variant="mint"
-              className={`${isMobile ? "px-3 py-1 text-sm" : "px-6 py-2"} rounded-full disabled:cursor-not-allowed`}
-            >
-              <span className="flex items-center gap-1.5">
-                <AppIcon name="IdCardLanyard" size={16} /> 프로필
-              </span>
-            </PushableButton>
-            <PushableButton
-              onClick={() => setIsAdminOpen(true)}
-              variant="black"
-              className={`${isMobile ? "px-3 py-1 text-sm" : "px-5 py-2"} rounded-full font-mono tracking-tighter`}
-            >
-              <span className="inline-block">
-                who am I?
-              </span>
-            </PushableButton>
+          <div className={`flex ${isMobile ? "justify-end" : ""} gap-2`}>
+            {isMobile ? profileButton : (
+              <>
+                {creditsButton}
+                {profileButton}
+                {adminButton}
+              </>
+            )}
           </div>
         </header>
         {isGuest && isMobile && (
@@ -161,7 +170,9 @@ const Lobby: React.FC = () => {
         )}
 
         {/* Slogan */}
-        <div className="flex justify-center w-full shrink-0">
+        <div
+          className={`flex justify-center w-full shrink-0 ${isMobile ? "-mt-2" : ""}`}
+        >
           <KCelebrateSlogan
             className="slogan-lobby"
             text1="축하합니다"
@@ -192,7 +203,7 @@ const Lobby: React.FC = () => {
             </motion.div>
           </Link>
 
-          {/* Hotspot: Itabag (Display Table) */}
+          {/* Hotspot: Itabag (Display Table)
           <Link
             to="/game/itabag"
             className="relative group w-full flex justify-center"
@@ -208,6 +219,7 @@ const Lobby: React.FC = () => {
               />
             </motion.div>
           </Link>
+          */}
 
           {/* Hotspot: Mini Game (Puzzle) */}
           <Link
@@ -283,6 +295,13 @@ const Lobby: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {isMobile && (
+        <div className="fixed bottom-4 left-4 z-20 flex flex-col items-start gap-2">
+          {creditsButton}
+          {adminButton}
+        </div>
+      )}
 
       <AchievementModal
         isOpen={isAchievementOpen}

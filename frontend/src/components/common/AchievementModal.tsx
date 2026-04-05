@@ -4,6 +4,7 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { fetchWithAuth } from "../../utils/api";
 import { AchievementIcon } from "./AchievementIcon";
 import { AppIcon } from "./AppIcon";
+import { PushableButton } from "./PushableButton";
 
 interface Achievement {
   code: string;
@@ -170,27 +171,14 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
               <code className="flex-1 truncate rounded-xl border border-[#5EC7A5]/40 bg-white px-3 py-2 font-mono text-base font-bold tracking-widest text-[#166D77]">
                 {hasUid ? uid : "번호표 정보 없음"}
               </code>
-              <motion.button
-                whileTap={{ scale: 0.92 }}
+              <PushableButton
                 onClick={handleCopyUid}
                 disabled={!hasUid}
-                className="shrink-0 px-4 py-2 rounded-xl font-black text-sm transition-all border-2"
-                style={
-                  copied
-                    ? {
-                        background: "#5EC7A5",
-                        color: "#FFFFF8",
-                        borderColor: "#5EC7A5",
-                      }
-                    : {
-                        background: "#166D77",
-                        color: "#bef264",
-                        borderColor: "#166D77",
-                      }
-                }
+                variant="cream"
+                className="shrink-0 rounded-xl px-4 py-2 text-sm"
               >
                 {copied ? "✓ 복사됨" : hasUid ? "복사" : "없음"}
-              </motion.button>
+              </PushableButton>
             </div>
           </div>
 

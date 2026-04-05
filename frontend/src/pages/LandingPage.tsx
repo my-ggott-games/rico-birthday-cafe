@@ -8,11 +8,10 @@ import ProgressiveImage from "../components/common/ProgressiveImage";
 
 const LANDING_IMAGE_ASPECT = "aspect-[3847/2885]";
 const MOBILE_SLOGAN_FRAME_CLASS =
-  "absolute left-1/2 top-[10%] w-[30%] -translate-x-1/2";
+  "absolute left-1/2 top-[8.5%] w-[30%] -translate-x-1/2";
 const MOBILE_DOOR_FRAME_CLASS =
   "pointer-events-auto absolute left-1/2 top-[60%] -translate-x-1/2 -translate-y-1/2 cursor-pointer";
-const DESKTOP_SLOGAN_FRAME_CLASS =
-  "absolute left-1/2 top-[11%] w-[30%] -translate-x-1/2";
+const DESKTOP_SLOGAN_FRAME_CLASS = "absolute left-1/2 w-[30%] -translate-x-1/2";
 const DESKTOP_LANDING_FRAME_CLASS = `${LANDING_IMAGE_ASPECT} relative w-[max(100vw,calc(100dvh*3847/2885))]`;
 const DESKTOP_DOOR_FRAME_CLASS =
   "absolute left-1/2 top-[56.3%] -translate-x-1/2 -translate-y-1/2";
@@ -97,7 +96,7 @@ const LandingPage: React.FC = () => {
           previewFetchPriority="high"
           className="z-0"
           overlayClassName="bg-transparent"
-          imageClassName="object-cover object-center md:object-top"
+          imageClassName="object-cover object-center"
           showVignette={false}
           onHighResVisible={() => setIsBackgroundReady(true)}
         />

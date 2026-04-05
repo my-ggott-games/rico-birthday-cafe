@@ -480,7 +480,15 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
         className="w-full h-full bg-[#FFFFF8] relative overflow-hidden select-none flex flex-col"
         style={{ touchAction: "pinch-zoom" }}
       >
-        <svg style={{ width: 0, height: 0, position: "absolute", pointerEvents: "none" }} aria-hidden>
+        <svg
+          style={{
+            width: 0,
+            height: 0,
+            position: "absolute",
+            pointerEvents: "none",
+          }}
+          aria-hidden
+        >
           <defs>
             <image
               id="shared-puzzle-img"
@@ -656,7 +664,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
                       }
                       variant="cream"
                     >
-                      다시 하기
+                      다시하기
                     </PushableButton>
                   </div>
                 </div>

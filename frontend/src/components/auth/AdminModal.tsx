@@ -4,6 +4,7 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { useToastStore } from "../../store/useToastStore";
 import { BASE_URL } from "../../utils/api";
 
+const ASCII_INPUT_REGEX = /^[A-Za-z0-9]$/;
 const KOREAN_TO_ENGLISH_MAP: Record<string, string> = {
   ㅂ: "q",
   ㅃ: "q",
@@ -38,13 +39,6 @@ const KOREAN_TO_ENGLISH_MAP: Record<string, string> = {
   ㅠ: "b",
   ㅜ: "n",
   ㅡ: "m",
-  ㅘ: "hk",
-  ㅙ: "ho",
-  ㅚ: "hl",
-  ㅝ: "nj",
-  ㅞ: "np",
-  ㅟ: "nl",
-  ㅢ: "ml",
   ᄇ: "q",
   ᄈ: "q",
   ᄌ: "w",
@@ -72,39 +66,20 @@ const KOREAN_TO_ENGLISH_MAP: Record<string, string> = {
   ᅦ: "p",
   ᅨ: "p",
   ᅩ: "h",
-  ᅪ: "hk",
-  ᅫ: "ho",
-  ᅬ: "hl",
   ᅥ: "j",
   ᅡ: "k",
   ᅵ: "l",
   ᅮ: "n",
-  ᅯ: "nj",
-  ᅰ: "np",
-  ᅱ: "nl",
   ᅲ: "b",
   ᅳ: "m",
-  ᅴ: "ml",
   ᆨ: "r",
-  ᆩ: "rr",
-  ᆪ: "rt",
   ᆫ: "s",
-  ᆬ: "sw",
-  ᆭ: "sg",
   ᆮ: "e",
   ᆯ: "f",
-  ᆰ: "fr",
-  ᆱ: "fa",
-  ᆲ: "fq",
-  ᆳ: "ft",
-  ᆴ: "fx",
-  ᆵ: "fv",
-  ᆶ: "fg",
   ᆷ: "a",
   ᆸ: "q",
-  ᆹ: "qt",
   ᆺ: "t",
-  ᆻ: "tt",
+  ᆻ: "t",
   ᆼ: "d",
   ᆽ: "w",
   ᆾ: "c",
@@ -133,18 +108,14 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const { token } = useAuthStore();
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastAcceptedKeyRef = useRef<number | null>(null);
   const buildPasscode = (chars: string[]) =>
     `${chars.slice(0, 3).join("")}_${chars.slice(3).join("")}`;
-  const normalizePasscodeInput = (raw: string) =>
-    raw
-      .normalize("NFKD")
-      .toLowerCase()
-      .replace(/-/g, "_")
-      .split("")
-      .map((char) => KOREAN_TO_ENGLISH_MAP[char] ?? char)
-      .join("")
-      .replace(/[^a-z0-9_]/g, "")
-      .replace(/_+/g, "_");
+  const normalizeSingleKeyInput = (raw: string) => {
+    const normalized = raw.normalize("NFKC").toLowerCase();
+    const mapped = KOREAN_TO_ENGLISH_MAP[normalized] ?? normalized;
+    return ASCII_INPUT_REGEX.test(mapped) ? mapped : null;
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -152,9 +123,22 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       setError(false);
       setAuthStatus("idle");
       setFailCount(0);
+      lastAcceptedKeyRef.current = null;
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen]);
+
+  const shouldIgnoreRapidRepeat = useCallback(() => {
+    const now = Date.now();
+    const lastAcceptedKeyTime = lastAcceptedKeyRef.current;
+
+    if (lastAcceptedKeyTime !== null && now - lastAcceptedKeyTime < 80) {
+      return true;
+    }
+
+    lastAcceptedKeyRef.current = now;
+    return false;
+  }, []);
 
   const submitPasscode = useCallback(
     async (currentInputs: string[]) => {
@@ -280,36 +264,22 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (loading || authStatus !== "idle") return;
-    const val = normalizePasscodeInput(e.target.value);
-    const compactValue = val.replace(/_/g, "");
-    const currentLength = inputs.filter((x) => x !== "").length;
+    const rawValue = e.target.value.normalize("NFKC").replace(/-/g, "_");
+    const compactValue = rawValue.replace(/_/g, "");
+    const currentValue = inputs.join("");
+    const lengthDelta = compactValue.length - currentValue.length;
 
-    if (compactValue.length < currentLength) {
-      handleBackspace();
+    if (lengthDelta !== 1) {
       return;
-    }
-
-    if (val.includes("_")) {
-      const normalized = compactValue.slice(0, 7);
-      if (normalized.length === 7) {
-        const nextInputs = normalized.split("");
-        setInputs(nextInputs);
-        setError(false);
-        submitPasscode(nextInputs);
-        return;
-      }
     }
 
     const newChar = compactValue[compactValue.length - 1];
     if (!newChar) return;
+    if (shouldIgnoreRapidRepeat()) return;
 
-    let key = newChar;
-    if (KOREAN_TO_ENGLISH_MAP[key]) {
-      key = KOREAN_TO_ENGLISH_MAP[key];
-    }
-
-    if (/^[a-zA-Z0-9]$/.test(key)) {
-      handleKeyClick(key);
+    const normalizedChar = normalizeSingleKeyInput(newChar);
+    if (normalizedChar) {
+      handleKeyClick(normalizedChar);
     }
   };
 
@@ -322,13 +292,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       // But since the input captures onChange, we can safely ignore global A-Z keys
       // if the active element is our input to avoid double entries.
       if (document.activeElement === inputRef.current) {
-        // If it's a Backspace or letter, let onChange/onKeyDown of input handle it,
-        // OR we just use this handler. Actually, if we use handleInputChange,
-        // it's better to prevent global listener from duplicating letters.
         if (
           e.key === "Backspace" ||
-          /^[a-zA-Z0-9]$/.test(e.key) ||
-          KOREAN_TO_ENGLISH_MAP[e.key]
+          ASCII_INPUT_REGEX.test(e.key) ||
+          Boolean(normalizeSingleKeyInput(e.key))
         ) {
           return;
         }
@@ -337,13 +304,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       let key = e.key;
 
       if (key === "Backspace") {
+        if (e.repeat) {
+          e.preventDefault();
+          return;
+        }
         handleBackspace();
-        return;
-      }
-
-      if (KOREAN_TO_ENGLISH_MAP[key]) {
-        key = KOREAN_TO_ENGLISH_MAP[key];
-      } else if (key.length === 1 && /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(key)) {
         return;
       }
 
@@ -351,7 +316,13 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
         return;
       }
 
-      if (/^[a-zA-Z0-9]$/.test(key)) {
+      key = normalizeSingleKeyInput(key) ?? key;
+
+      if (ASCII_INPUT_REGEX.test(key)) {
+        if (e.repeat || shouldIgnoreRapidRepeat()) {
+          e.preventDefault();
+          return;
+        }
         e.preventDefault();
         handleKeyClick(key);
       }
@@ -359,7 +330,14 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [authStatus, handleBackspace, handleKeyClick, isOpen, loading]);
+  }, [
+    authStatus,
+    handleBackspace,
+    handleKeyClick,
+    isOpen,
+    loading,
+    shouldIgnoreRapidRepeat,
+  ]);
 
   return (
     <AnimatePresence>
@@ -388,24 +366,13 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
               className="absolute inset-0 w-full h-full opacity-0 z-50 cursor-text text-transparent bg-transparent"
               value={inputs.join("")}
               onChange={handleInputChange}
-              onPaste={(e) => {
-                const pasted = normalizePasscodeInput(
-                  e.clipboardData.getData("text"),
-                );
-                const normalized = pasted.replace(/_/g, "").slice(0, 7);
-
-                if (normalized.length !== 7) {
-                  return;
-                }
-
-                e.preventDefault();
-                const nextInputs = normalized.split("");
-                setInputs(nextInputs);
-                setError(false);
-                submitPasscode(nextInputs);
-              }}
+              onPaste={(e) => e.preventDefault()}
               onKeyDown={(e) => {
                 if (e.key === "Backspace") {
+                  e.preventDefault();
+                  if (e.repeat) {
+                    return;
+                  }
                   handleBackspace();
                 }
               }}
@@ -463,8 +430,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                 ))}
               </div>
 
-              <div className="mb-2 flex h-14 items-center text-xl font-black text-pale-custard/10 sm:h-16 sm:text-2xl">
-                <span className="flex h-full items-center leading-none">_</span>
+              <div className="flex h-14 items-end text-xl font-black text-pale-custard/10 sm:h-16 sm:text-2xl">
+                <span className="flex h-full items-end leading-none">_</span>
               </div>
 
               <div className="flex gap-1.5 sm:gap-2">
