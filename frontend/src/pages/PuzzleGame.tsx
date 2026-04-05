@@ -37,6 +37,7 @@ import {
   MOUSE_DRAG_DISTANCE_PX,
   TOUCH_DRAG_ACTIVATION_DELAY_MS,
   TOUCH_DRAG_TOLERANCE_PX,
+  BOARD_SIZE,
 } from "../features/puzzle/constants";
 import { PUZZLE_TUTORIAL_SLIDES } from "../constants/tutorialSlides";
 import { usePageBgm } from "../hooks/usePageBgm";
@@ -479,6 +480,17 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
         className="w-full h-full bg-[#FFFFF8] relative overflow-hidden select-none flex flex-col"
         style={{ touchAction: "pinch-zoom" }}
       >
+        <svg style={{ width: 0, height: 0, position: "absolute", pointerEvents: "none" }} aria-hidden>
+          <defs>
+            <image
+              id="shared-puzzle-img"
+              href={PUZZLE_IMAGE_URL}
+              width={BOARD_SIZE.width}
+              height={BOARD_SIZE.height}
+              preserveAspectRatio="none"
+            />
+          </defs>
+        </svg>
         <div className="flex w-full flex-1 overflow-hidden">
           <div
             className="flex-1 relative bg-[rgba(239,246,255,0.1)] hidden lg:block"

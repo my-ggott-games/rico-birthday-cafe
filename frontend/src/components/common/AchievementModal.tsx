@@ -138,7 +138,7 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
         exit={{ opacity: 0 }}
       >
         <motion.div
-          className="bg-[#FFFFF8] w-full max-w-2xl rounded-[3rem] border-8 border-[#D6C0B0] shadow-2xl p-6 md:p-10 relative max-h-[90vh] flex flex-col"
+          className="relative flex max-h-[90vh] w-full max-w-2xl flex-col rounded-[3rem] border-8 border-[#5EC7A5] bg-[#F7FFF9] p-6 shadow-2xl md:p-10"
           initial={{ scale: 0.9, y: 20 }}
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.9, y: 20 }}
@@ -146,7 +146,7 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
           {/* Close */}
           <button
             onClick={onClose}
-            className="absolute top-6 right-8 text-[#166D77]/60 hover:text-[#5EC7A5] font-black text-3xl transition-colors bg-pale-custard rounded-full w-12 h-12 flex items-center justify-center shadow-sm border-2 border-[#D6C0B0]"
+            className="absolute right-8 top-6 flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#5EC7A5] bg-[#ECFFF2] text-3xl font-black text-[#166D77]/70 shadow-sm transition-colors hover:text-[#5EC7A5]"
           >
             ✕
           </button>
@@ -162,12 +162,12 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
           </div>
 
           {/* UID Section */}
-          <div className="mb-5 shrink-0 bg-pale-custard rounded-2xl border-2 border-[#D6C0B0] p-4">
+          <div className="mb-5 shrink-0 rounded-2xl border-2 border-[#5EC7A5]/40 bg-[#ECFFF2] p-4">
             <p className="text-xs font-bold uppercase tracking-widest text-[#166D77]/50 mb-2">
               내 번호표
             </p>
             <div className="flex items-center gap-3">
-              <code className="flex-1 font-mono font-bold text-[#166D77] text-base tracking-widest bg-white px-3 py-2 rounded-xl border border-[#D6C0B0] truncate">
+              <code className="flex-1 truncate rounded-xl border border-[#5EC7A5]/40 bg-white px-3 py-2 font-mono text-base font-bold tracking-widest text-[#166D77]">
                 {hasUid ? uid : "번호표 정보 없음"}
               </code>
               <motion.button
@@ -214,7 +214,7 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
                 <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#5EC7A5] border-t-transparent" />
               </div>
             ) : !token ? (
-              <div className="text-center py-10 bg-pale-custard rounded-3xl border-4 border-dashed border-[#D6C0B0]">
+              <div className="rounded-3xl border-4 border-dashed border-[#5EC7A5]/40 bg-[#ECFFF2] py-10 text-center">
                 <span className="mb-3 inline-flex text-[#166D77]/40">
                   <AppIcon name="Lock" size={42} />
                 </span>
@@ -223,7 +223,7 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
                 </p>
               </div>
             ) : achievements.length === 0 ? (
-              <div className="text-center py-10 bg-pale-custard rounded-3xl border-4 border-dashed border-[#D6C0B0]">
+              <div className="rounded-3xl border-4 border-dashed border-[#5EC7A5]/40 bg-[#ECFFF2] py-10 text-center">
                 <span className="mb-4 inline-flex text-[#166D77]/50">
                   <AppIcon name="Medal" size={48} />
                 </span>
@@ -243,7 +243,7 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
                       key={ach.code}
                       onClick={() => void handleActivateAchievement(ach.code)}
                       disabled={activatingCode !== null}
-                      className={`w-full bg-pale-custard p-4 rounded-2xl border-2 shadow-sm flex items-center gap-4 text-left transition-all hover:-translate-y-0.5 ${
+                      className={`flex w-full items-center gap-4 rounded-2xl border-2 bg-[#F2FFF6] p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 ${
                         ach.active
                           ? "border-[#5EC7A5] ring-2 ring-[#5EC7A5]/20"
                           : "border-[#5EC7A5]/20 hover:border-[#5EC7A5]"
@@ -287,20 +287,20 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
                     /* ── UNEARNED: greyed-out, masked ── */
                     <div
                       key={ach.code}
-                      className="bg-[#f3f4f6] p-4 rounded-2xl border-2 border-[#D6C0B0]/40 shadow-sm flex items-center gap-4 opacity-60 select-none"
+                      className="flex select-none items-center gap-4 rounded-2xl border-2 border-[#9BD8B0]/40 bg-[#EAF8EF] p-4 opacity-70 shadow-sm"
                     >
-                      <div className="w-14 h-14 bg-[#e5e7eb] rounded-full flex items-center justify-center text-2xl shrink-0 border-2 border-[#D6C0B0] grayscale">
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-[#9BD8B0] bg-[#DDEFE4] text-2xl grayscale">
                         <AppIcon
                           name="Lock"
                           size={26}
-                          className="text-[#9ca3af]"
+                          className="text-[#7BA08A]"
                         />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h4 className="font-black text-[#9ca3af] text-base">
+                        <h4 className="text-base font-black text-[#7BA08A]">
                           {maskAchievementText(ach.title)}
                         </h4>
-                        <p className="text-sm font-medium text-[#9ca3af] leading-tight mt-0.5">
+                        <p className="mt-0.5 text-sm font-medium leading-tight text-[#7BA08A]">
                           {maskAchievementText(ach.description)}
                         </p>
                       </div>

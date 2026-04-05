@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
@@ -22,10 +22,30 @@ const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(
+    () => window.innerWidth < 768,
+  );
+  const [isBackgroundReady, setIsBackgroundReady] = useState(false);
+  const [isMobileFrameReady, setIsMobileFrameReady] = useState(false);
+  const [isSloganReady, setIsSloganReady] = useState(false);
   const { isAuthenticated } = useAuthStore();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileViewport(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const preventDrag = (event: React.DragEvent<HTMLElement>) => {
     event.preventDefault();
   };
+
+  const isEnterButtonReady = isMobileViewport
+    ? isBackgroundReady && isMobileFrameReady && isSloganReady
+    : isBackgroundReady && isSloganReady;
 
   const handleEnter = () => {
     if (isOpen) {
@@ -79,6 +99,7 @@ const LandingPage: React.FC = () => {
           overlayClassName="bg-transparent"
           imageClassName="object-cover object-center md:object-top"
           showVignette={false}
+          onHighResVisible={() => setIsBackgroundReady(true)}
         />
 
         <div className="pointer-events-none absolute inset-0 z-10 bg-[#05080c] md:hidden">
@@ -90,6 +111,7 @@ const LandingPage: React.FC = () => {
               alt=""
               className="h-full w-full"
               imageClassName="object-cover object-center"
+              onHighResVisible={() => setIsMobileFrameReady(true)}
             />
 
             <motion.div
@@ -105,13 +127,14 @@ const LandingPage: React.FC = () => {
                 alt="유즈하 리코 생일카페 배너"
                 className="mx-auto aspect-[2419/907] w-full overflow-hidden rounded-[0.8rem] shadow-[0_10px_24px_rgba(0,0,0,0.26)]"
                 imageClassName="object-cover"
+                onHighResVisible={() => setIsSloganReady(true)}
               />
               <p className="mt-3 inline-flex rounded-full border border-white/55 bg-white/24 px-4 py-2 text-xs font-black tracking-[0.24em] text-pale-custard shadow-lg backdrop-blur-sm">
                 2026.04.13 OPEN
               </p>
             </motion.div>
 
-            {!isOpen && (
+            {!isOpen && isEnterButtonReady && (
               <motion.div
                 onClick={handleEnter}
                 className={MOBILE_DOOR_FRAME_CLASS}
@@ -158,6 +181,7 @@ const LandingPage: React.FC = () => {
                 alt="유즈하 리코 생일카페 배너"
                 className="mx-auto aspect-[2419/907] w-full overflow-hidden rounded-[0.9rem] shadow-[0_12px_28px_rgba(0,0,0,0.28)]"
                 imageClassName="object-cover"
+                onHighResVisible={() => setIsSloganReady(true)}
               />
               <p className="mt-3 inline-flex rounded-full border border-white/55 bg-white/24 px-5 py-2 text-sm font-black tracking-[0.28em] text-pale-custard shadow-lg backdrop-blur-sm">
                 2026.04.13 OPEN
@@ -168,7 +192,7 @@ const LandingPage: React.FC = () => {
 
         <div className="absolute left-1/2 top-0 hidden -translate-x-1/2 md:block">
           <div className={DESKTOP_LANDING_FRAME_CLASS}>
-            {!isOpen && (
+            {!isOpen && isEnterButtonReady && (
               <motion.div
                 onClick={handleEnter}
                 className={`${DESKTOP_DOOR_FRAME_CLASS} cursor-pointer`}

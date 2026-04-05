@@ -9,6 +9,7 @@ type ProgressiveBackgroundProps = {
   imageClassName?: string;
   previewFetchPriority?: "high" | "low" | "auto";
   showVignette?: boolean;
+  onHighResVisible?: () => void;
 };
 
 const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
@@ -20,6 +21,7 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
   imageClassName = "object-cover",
   previewFetchPriority = "auto",
   showVignette = true,
+  onHighResVisible,
 }) => {
   const previewSrc = thumbnailSrc ?? fullSrc;
   const [isHighResReady, setIsHighResReady] = useState(false);
@@ -45,6 +47,7 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
           revealTimerId = window.setTimeout(() => {
             if (!isCancelled) {
               setIsHighResVisible(true);
+              onHighResVisible?.();
             }
           }, 80);
         }
@@ -83,7 +86,7 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
         window.clearTimeout(revealTimerId);
       }
     };
-  }, [fullSrc]);
+  }, [fullSrc, onHighResVisible]);
 
   return (
     <div

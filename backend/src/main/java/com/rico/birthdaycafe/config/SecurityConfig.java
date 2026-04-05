@@ -19,6 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Configuration
 @EnableWebSecurity
@@ -72,7 +73,13 @@ public class SecurityConfig {
                         .filter(origin -> !origin.isEmpty())
                         .toList();
 
-        configuration.setAllowedOriginPatterns(configuredOrigins.isEmpty() ? DEFAULT_ALLOWED_ORIGINS : configuredOrigins);
+        List<String> effectiveOriginPatterns = Stream.concat(
+                        DEFAULT_ALLOWED_ORIGINS.stream(),
+                        configuredOrigins.stream())
+                .distinct()
+                .toList();
+
+        configuration.setAllowedOriginPatterns(effectiveOriginPatterns);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

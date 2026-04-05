@@ -71,7 +71,7 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({
 
   return (
     <div
-      className={`w-full max-w-[min(400px,100vw)] mx-auto flex items-center justify-center overflow-x-hidden relative ${className}`}
+      className={`relative mx-auto flex w-full max-w-full items-center justify-center overflow-x-hidden ${className}`}
     >
       <AnimatePresence initial={false} custom={direction} mode="sync">
         <motion.div

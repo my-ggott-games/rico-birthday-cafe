@@ -37,10 +37,10 @@ const ArrowButton = ({
   return (
     <PushableButton
       onClick={onClick}
-      className="h-16 w-16 px-0 py-0 sm:h-[4.5rem] sm:w-[4.5rem]"
+      className="h-20 w-20 px-0 py-0 lg:h-[5.5rem] lg:w-[5.5rem]"
       aria-label={`${dir} 이동`}
     >
-      <AppIcon name={icons[dir]} size={28} strokeWidth={2.6} />
+      <AppIcon name={icons[dir]} size={38} strokeWidth={2.8} />
     </PushableButton>
   );
 };
@@ -140,7 +140,7 @@ export const Board: React.FC<BoardProps> = ({
       </div>
 
       {/* Controls */}
-      <div className="mt-8 flex w-full justify-center">
+      <div className="mt-8 hidden w-full justify-center md:flex">
         <div className="flex flex-wrap items-center justify-center gap-3 sm:flex-nowrap">
           <ArrowButton dir="left" onClick={() => onMove("left")} />
           <ArrowButton dir="up" onClick={() => onMove("up")} />

@@ -239,7 +239,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     clearIssuedUid();
     setStep("main");
-    setError("번호표 인증이 만료됐어요.\n새 번호표를 다시 뽑아주세요.");
+    setError(
+      "몇 번을 불렀는데 이제 오시면 어떡해요!\n다시 번호표를 뽑아주세요.",
+    );
   }, [isIssuedUidExpired, issuedAtMs, step]);
 
   useEffect(() => {
@@ -354,7 +356,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     if (message?.includes("UID_ALREADY_REGISTERED_OR_REPLAYED")) {
-      return "번호표 인증이 만료됐어요.\n새 번호표를 다시 뽑아주세요.";
+      return "몇 번을 불렀는데 이제 오시면 어떡해요!\n다시 번호표를 뽑아주세요.";
     }
 
     if (code === 401) {
@@ -403,7 +405,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
     if (!UID_REGEX.test(uidInput.trim())) {
-      setError("번호표는 chiko_ 로 시작하는데...");
+      setError("번호표는 chiko_(8글자 영문+숫자 조합)이어야 해요.");
       return;
     }
     if (uidInput.trim() === ADMIN_UID) {
@@ -518,11 +520,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     if (isIssuedUidExpired) {
       clearIssuedUid();
       setStep("main");
-      setError("번호표 인증이 만료됐어요.\n새 번호표를 다시 뽑아주세요.");
+      setError(
+        "몇 번을 불렀는데 이제 오시면 어떡해요!\n다시 번호표를 뽑아주세요.",
+      );
       return;
     }
     if (!issuedUidToken) {
-      setPinError("번호표 인증이 만료됐어요. 새 번호표를 발급받아주세요.");
+      setPinError(
+        "몇 번을 불렀는데 이제 오시면 어떡해요!\n다시 번호표를 뽑아주세요.",
+      );
       return;
     }
 

@@ -53,7 +53,7 @@ export const GameHelp: React.FC<GameHelpProps> = ({
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.96, opacity: 0, y: 8 }}
               transition={{ type: "spring", stiffness: 320, damping: 26 }}
-              className="relative w-full max-w-sm"
+              className="relative w-[92%] sm:w-[84%] lg:w-[72%] max-w-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <button

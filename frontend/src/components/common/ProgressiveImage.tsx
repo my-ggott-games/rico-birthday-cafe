@@ -7,6 +7,7 @@ type ProgressiveImageProps = {
   className?: string;
   imageClassName?: string;
   previewFetchPriority?: "high" | "low" | "auto";
+  onHighResVisible?: () => void;
 };
 
 const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
@@ -16,6 +17,7 @@ const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   className = "",
   imageClassName = "",
   previewFetchPriority = "auto",
+  onHighResVisible,
 }) => {
   const previewSrc = thumbnailSrc ?? fullSrc;
   const [isHighResReady, setIsHighResReady] = useState(false);
@@ -41,6 +43,7 @@ const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
           revealTimerId = window.setTimeout(() => {
             if (!isCancelled) {
               setIsHighResVisible(true);
+              onHighResVisible?.();
             }
           }, 60);
         }
@@ -76,7 +79,7 @@ const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
         window.clearTimeout(revealTimerId);
       }
     };
-  }, [fullSrc]);
+  }, [fullSrc, onHighResVisible]);
 
   return (
     <div className={`relative overflow-hidden ${className}`}>

@@ -48,49 +48,62 @@ const PuzzlePieceComponent = ({
       className={`flex items-center justify-center ${className || ""}`}
     >
       <svg
-        viewBox={`${-PIECE_RENDER_BLEED} ${-PIECE_RENDER_BLEED} ${piece.expandedBounds.width + PIECE_RENDER_BLEED * 2} ${piece.expandedBounds.height + PIECE_RENDER_BLEED * 2}`}
+        style={{ width: 0, height: 0, position: "absolute", pointerEvents: "none" }}
+        aria-hidden
+      >
+        <defs>
+          <clipPath id={clipId}>
+            <path
+              d={piece.shapePath}
+              transform={`translate(${bleed}, ${bleed}) scale(${scale})`}
+            />
+          </clipPath>
+        </defs>
+      </svg>
+      <div
         style={{
           position: "absolute",
           left: `${-offsetX - bleed}px`,
           top: `${-offsetY - bleed}px`,
           width: `${renderWidth}px`,
           height: `${renderHeight}px`,
-          filter: "none",
+          backgroundImage: `url(${PUZZLE_IMAGE_URL})`,
+          backgroundSize: `${BOARD_SIZE.width * scale}px ${BOARD_SIZE.height * scale}px`,
+          backgroundPosition: `${-piece.expandedBounds.x * scale + bleed}px ${-piece.expandedBounds.y * scale + bleed}px`,
+          backgroundRepeat: "no-repeat",
+          clipPath: `url(#${clipId})`,
+          WebkitClipPath: `url(#${clipId})`,
+          willChange: "transform",
         }}
-      >
-        <defs>
-          <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
-            <path d={piece.shapePath} />
-          </clipPath>
-        </defs>
-        <image
-          href={PUZZLE_IMAGE_URL}
-          x={-piece.expandedBounds.x}
-          y={-piece.expandedBounds.y}
-          width={BOARD_SIZE.width}
-          height={BOARD_SIZE.height}
-          preserveAspectRatio="none"
-          clipPath={`url(#${clipId})`}
-        />
-        {showOutline && (
-          <>
-            <path
-              d={piece.shapePath}
-              fill="none"
-              stroke="rgba(255, 255, 255, 0.88)"
-              strokeWidth={2}
-              vectorEffect="non-scaling-stroke"
-            />
-            <path
-              d={piece.shapePath}
-              fill="none"
-              stroke="rgba(22, 109, 119, 1)"
-              strokeWidth={1}
-              vectorEffect="non-scaling-stroke"
-            />
-          </>
-        )}
-      </svg>
+      />
+      {showOutline && (
+        <svg
+          viewBox={`${-PIECE_RENDER_BLEED} ${-PIECE_RENDER_BLEED} ${piece.expandedBounds.width + PIECE_RENDER_BLEED * 2} ${piece.expandedBounds.height + PIECE_RENDER_BLEED * 2}`}
+          style={{
+            position: "absolute",
+            left: `${-offsetX - bleed}px`,
+            top: `${-offsetY - bleed}px`,
+            width: `${renderWidth}px`,
+            height: `${renderHeight}px`,
+            pointerEvents: "none",
+          }}
+        >
+          <path
+            d={piece.shapePath}
+            fill="none"
+            stroke="rgba(255, 255, 255, 0.88)"
+            strokeWidth={2}
+            vectorEffect="non-scaling-stroke"
+          />
+          <path
+            d={piece.shapePath}
+            fill="none"
+            stroke="rgba(22, 109, 119, 1)"
+            strokeWidth={1}
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+      )}
     </div>
   );
 };

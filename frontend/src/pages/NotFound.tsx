@@ -71,7 +71,7 @@ const NotFound: React.FC = () => {
         </div>
 
         <p className="text-[#166D77] text-lg md:text-xl font-medium mb-8 leading-relaxed">
-          여긴 아무것도 없어
+          여긴 아무것도 없어...
           <br />
           같이 로비로 돌아가자!
         </p>

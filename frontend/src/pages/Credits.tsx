@@ -7,6 +7,8 @@ import { useToastStore } from "../store/useToastStore";
 import { BASE_URL } from "../utils/api";
 import { ReturnButton } from "../components/common/ReturnButton";
 import { AppIcon } from "../components/common/AppIcon";
+import { PushableButton } from "../components/common/PushableButton";
+import { CommonModal } from "../components/common/CommonModal";
 import { playDiriringSfx, preloadDiriringSfx } from "../utils/soundEffects";
 import { pickRandomActivityBgm } from "../utils/bgm";
 import { useAudioStore } from "../store/useAudioStore";
@@ -15,24 +17,24 @@ const THANK_YOU_ALL_CODE = "THANK_YOU_ALL";
 const CREDITS_SECTIONS = [
   {
     title: "프로젝트 총괄",
-    names: ["전체 기획 및 컨셉: (이름 미정)", "Userflow 설계: (이름 미정)"],
+    names: ["전체 기획 및 컨셉: CODE NAME: G", "Userflow 설계: CODE NAME: G"],
   },
   {
     title: "개발",
     names: [
-      "프론트엔드 개발: (이름 미정)",
-      "백엔드 개발: (이름 미정)",
-      "데이터베이스 설계: (이름 미정)",
-      "배포 환경 구성: (이름 미정)",
-      "인터랙션 및 애니메이션: (이름 미정)",
+      "프론트엔드 개발: CODE NAME: G",
+      "백엔드 개발: CODE NAME: G",
+      "데이터베이스 설계: CODE NAME: G",
+      "배포 환경 구성: CODE NAME: G",
+      "인터랙션 및 애니메이션: CODE NAME: G",
     ],
   },
   {
     title: "음악",
     names: [
-      "「감자튀김 옴뇸뇸」: U+003AU+27B4\n편곡: (이름 미정)",
-      "「밤바밤바」: U+003AU+27B4\n편곡: (이름 미정)",
-      "「그 날, 감자튀김」: U+003AU+27B4\n편곡: (이름 미정)",
+      "「감자튀김 옴뇸뇸」: U+003AU+27B4\n편곡: CODE NAME: G",
+      "「밤바밤바」: U+003AU+27B4\n편곡: CODE NAME: G",
+      "「그 날, 감자튀김」: U+003AU+27B4\n편곡: CODE NAME: G",
       "「diriring」 효과음: U+003AU+27B4",
       "",
       "용사 리코 이야기 BGM:",
@@ -46,7 +48,7 @@ const CREDITS_SECTIONS = [
   },
   {
     title: "리코의 외출 준비",
-    names: ["코디 아이템 및 캐릭터 디자인: Sie", "맵 모델링: (이름 미정)"],
+    names: ["코디 아이템 및 캐릭터 디자인: Sie", "맵 모델링: CODE NAME: G"],
   },
   {
     title: "퍼즐 놀이",
@@ -56,13 +58,13 @@ const CREDITS_SECTIONS = [
     title: "용사 리코 이야기",
     names: [
       "도트 아트: 당근오이",
-      "시나리오: (이름 미정)",
-      "맵 디자인: (이름 미정)",
+      "시나리오: CODE NAME: G",
+      "맵 디자인: CODE NAME: G",
     ],
   },
   {
     title: "QA 및 피드백",
-    names: ["플레이테스트 및 피드백: Sie, (이름 미정)"],
+    names: ["플레이테스트 및 피드백: Sie, CODE NAME: G"],
   },
   {
     title: "Special Thanks",
@@ -278,7 +280,6 @@ export default function Credits() {
 
   const awardAchievement = async () => {
     if (!token) {
-      alert("로그인이 필요합니다!");
       return;
     }
     setLoading(true);
@@ -319,6 +320,9 @@ export default function Credits() {
           THANK YOU
         </h1>
         <p className="font-bold tracking-widest text-[#2a9d8f]">
+          비공식 팬메이드 유즈하 리코 온라인 생일카페
+        </p>
+        <p className="mt-3 text-sm font-medium tracking-[0.28em] text-[#365486]/75 md:text-base">
           생일 카페를 빛낸 모두를 소개할게
         </p>
       </div>
@@ -366,7 +370,7 @@ export default function Credits() {
       <div className="flex flex-col items-center pt-32 pb-[50vh]">
         <h2 className="mb-10 text-3xl font-black text-[#102542]">And You</h2>
 
-        {showClaimButton ? (
+        {token && showClaimButton ? (
           <motion.button
             ref={claimButtonRef}
             whileHover={{ scale: 1.05 }}
@@ -391,7 +395,7 @@ export default function Credits() {
             <AppIcon name="Clapperboard" size={24} />
             {loading ? "기록 중..." : "엔딩 크레딧 시청 완료 배지 받기"}
           </motion.button>
-        ) : (
+        ) : token ? (
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -399,7 +403,7 @@ export default function Credits() {
           >
             <AppIcon name="BadgeCheck" size={20} /> 배지 획득 완료
           </motion.div>
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -467,34 +471,35 @@ export default function Credits() {
         </div>
       </div>
 
-      {needsManualStart && !hasStarted && (
-        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-[#fffdf4]/85 px-6 backdrop-blur-sm">
-          <div className="rounded-[2rem] border border-[#5EC7A5]/30 bg-white/90 px-8 py-10 text-center shadow-[0_30px_80px_rgba(22,109,119,0.18)]">
-            <p className="mb-6 text-2xl font-bold uppercase tracking-[0.2em] text-[#166D77]">
-              다들 와줘서 고마워!
-            </p>
-            <p className="mb-6 text-xl text-[#365486]">
-              생일 카페를 빛낸 모두를 소개할게
-            </p>
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <button
-                type="button"
-                onClick={() => void handleStart()}
-                className="rounded-full border-2 border-[#bef264] bg-[#166D77] px-8 py-3 text-lg font-black text-[#FFFFF8] shadow-[0_0_30px_rgba(94,199,165,0.3)]"
-              >
-                좋아!
-              </button>
-              <button
-                type="button"
-                onClick={handleDecline}
-                className="rounded-full border-2 border-[#166D77]/15 bg-white px-8 py-3 text-lg font-black text-[#166D77]"
-              >
-                됐어
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CommonModal
+        isOpen={needsManualStart && !hasStarted}
+        onClose={handleDecline}
+        title="다들 와줘서 고마워!"
+        panelClassName="border-[#5EC7A5] px-8 py-10 shadow-[0_30px_80px_rgba(22,109,119,0.18)]"
+        titleClassName="mb-4 text-2xl uppercase"
+        bodyClassName="mb-6 text-xl text-[#365486]"
+        footerClassName="flex flex-col gap-3 sm:flex-row sm:justify-center"
+        footer={
+          <>
+            <PushableButton
+              onClick={() => void handleStart()}
+              variant="mint"
+              className="w-1/2 self-center rounded-full px-8 py-3 text-lg shadow-[0_0_30px_rgba(94,199,165,0.3)] sm:w-auto"
+            >
+              좋아!
+            </PushableButton>
+            <PushableButton
+              onClick={handleDecline}
+              variant="cream"
+              className="w-1/2 self-center rounded-full px-8 py-3 text-lg sm:w-auto"
+            >
+              됐어
+            </PushableButton>
+          </>
+        }
+      >
+        생일 카페를 빛낸 모두를 소개할게
+      </CommonModal>
     </div>
   );
 }
