@@ -9,7 +9,6 @@ import {
 } from "@dnd-kit/core";
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core";
 import { DraggableItem } from "../components/game/DraggableItem";
-import { DroppableCharacter } from "../components/game/DroppableCharacter";
 import type {
   CodyItem,
   EquippedState,
@@ -17,17 +16,20 @@ import type {
   MobileTabId,
 } from "../components/game/codyTypes";
 import { GameContainer } from "../components/common/GameContainer";
-import {
-  BlossomPetalOverlay,
-  SpringBackdrop,
-} from "../components/game/SpringEffect";
+import { SpringBackdrop } from "../components/game/SpringEffect";
 import { FireflyOverlay } from "../components/game/FireflyEffect";
-import { PolaroidFrame } from "../components/game/PolaroidFrame";
-import { RainOverlay } from "../components/game/RainEffect";
-import { BlueButterflyOverlay } from "../components/game/ButterflyEffect";
 import { getInventoryPreviewLayout } from "../components/game/codyInventoryPreviewLayout";
 import { CodyActionBar } from "../components/game/CodyActionBar";
+import { CodyDisplayStage } from "../components/game/CodyDisplayStage";
 import { CodyInventoryPanel } from "../components/game/CodyInventoryPanel";
+import {
+  CODY_CHARACTER_CANVAS,
+  getCodyCharacterScale,
+  getCodyDisplayStageHeight,
+  getCodyMannequinScale,
+  getCodyPolaroidCharacterOffset,
+  getCodyPolaroidCharacterStageClassName,
+} from "../components/game/codyStageLayout";
 import { domToJpeg } from "modern-screenshot";
 import { startCodyAssetPreload } from "../utils/codyAssetPreload";
 import { AppIcon } from "../components/common/AppIcon";
@@ -197,7 +199,7 @@ const combinations: Combination[] = [
   {
     name: "training",
     requiredItems: ["deco_6-1", "dress_5", "hair_1-5", "shoes_2"],
-    backgroundClass: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+    backgroundClass: "training",
   },
 ];
 
@@ -236,7 +238,8 @@ const CodyGame: React.FC = () => {
   }, []);
 
   const isMobile = windowWidth < 768;
-  const characterScale = isMobile ? 1.1 : windowWidth > 1440 ? 1.3 : 1.1;
+  const characterScale = getCodyCharacterScale({ isMobile, windowWidth });
+  const mannequinScale = getCodyMannequinScale({ isMobile, windowWidth });
 
   const availableItems = AVAILABLE_ITEMS;
 
@@ -345,8 +348,10 @@ const CodyGame: React.FC = () => {
 
     return (
       <div
-        className="pointer-events-none absolute w-[384px] h-[700px]"
+        className="pointer-events-none absolute"
         style={{
+          width: `${CODY_CHARACTER_CANVAS.width}px`,
+          height: `${CODY_CHARACTER_CANVAS.height}px`,
           top: previewOffset,
           left: "50%",
           transform: `translateX(calc(-50% + ${previewLeftOffset})) scale(${previewScale})`,
@@ -451,9 +456,17 @@ const CodyGame: React.FC = () => {
     const isDragging = !isMobile && activeId === item.id;
     const isDisabled = isItemDisabled(item);
     const handleClick = () => {
+      if (isEquipped) {
+        setEquippedItems((prev) => ({
+          ...prev,
+          [item.slot]: null,
+        }));
+        return;
+      }
+
       if (!isMobile) return;
 
-      if (!isEquipped && !isDisabled) {
+      if (!isDisabled) {
         setEquippedItems((prev) => applyItemToEquipment(prev, item));
         window.requestAnimationFrame(() => {
           window.scrollTo(0, 0);
@@ -494,7 +507,7 @@ const CodyGame: React.FC = () => {
         )}
 
         {isEquipped && (
-          <div className="absolute inset-0 bg-[#166D77]/10 backdrop-blur-[2px] flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center">
             <span className="bg-pale-custard/90 text-[#166D77] px-3 py-1 rounded-full text-xs font-bold shadow-sm">
               <span className="inline-flex items-center gap-1">
                 <AppIcon name="Sparkles" size={12} />
@@ -507,26 +520,17 @@ const CodyGame: React.FC = () => {
     );
   };
 
-  const getPolaroidCharacterOffset = () => {
-    if (activeBackground?.startsWith("linear-gradient")) {
-      return { x: 0, y: 72 };
-    }
-
-    switch (activeBackground) {
-      case "spring":
-        return { x: -2, y: 470 };
-      case "oriental":
-        return { x: -4, y: 488 };
-      case "rain":
-        return { x: -6, y: 492 };
-      case "beer":
-        return { x: 6, y: 482 };
-      case "knight":
-        return { x: 4, y: 486 };
-      default:
-        return { x: 0, y: 485 };
-    }
-  };
+  const mobileStageHeight = getCodyDisplayStageHeight({
+    isMobile,
+    isFinished,
+  });
+  const polaroidCharacterOffset = getCodyPolaroidCharacterOffset({
+    activeBackground,
+    isFinished,
+    isMobile,
+  });
+  const polaroidCharacterStageClassName =
+    getCodyPolaroidCharacterStageClassName(activeBackground);
 
   const capturePolaroid = async () => {
     if (!polaroidRef.current) return;
@@ -588,7 +592,7 @@ const CodyGame: React.FC = () => {
         helpSlides={CODY_TUTORIAL_SLIDES}
         className="h-screen font-sans relative select-none bg-[#FFFFF8]"
         headerHidden={!showButtons}
-        mainClassName="relative overflow-hidden"
+        mainClassName="relative overflow-x-hidden md:overflow-hidden"
       >
         {activeBackground === "spring" && !isFinished && (
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -608,119 +612,40 @@ const CodyGame: React.FC = () => {
         <div
           className={`relative z-10 w-full h-full flex ${
             isMobile
-              ? `flex-col ${isFinished ? "justify-center" : "overflow-y-auto pb-32"}`
+              ? `flex-col overflow-x-hidden ${isFinished ? "justify-center" : "overflow-y-auto"}`
               : `${showInventory ? "flex-row-reverse justify-between" : "flex-col justify-center"} items-center transition-all duration-1000 px-4 md:px-16 py-10`
           }`}
         >
           {/* Left/Right: Mannequin Display */}
           <div
-            className={`${isMobile ? "w-full pt-8" : `${showInventory ? "w-[35%]" : "w-full"} h-full transition-all duration-1000`} flex flex-col items-center justify-center`}
+            className={`${isMobile ? "w-full pt-0" : `${showInventory ? "w-[35%]" : "w-full"} h-full transition-all duration-1000`} flex flex-col items-center ${isMobile ? "justify-start" : "justify-center"}`}
           >
-            <div
-              className={`relative z-10 w-full ${isMobile ? "h-[550px]" : "h-[80%]"} flex items-center justify-center`}
-            >
-              {isFinished ? (
-                <PolaroidFrame
-                  isFlyAway={isFlyAway}
-                  activeBackground={activeBackground}
-                  characterOffset={getPolaroidCharacterOffset()}
-                  polaroidRef={polaroidRef}
-                  hideAnimations={isCapturing}
-                  backgroundContent={
-                    <>
-                      {/* 그라데이션 배경, 배경색 배경용 로직 유지 */}
-                      {activeBackground?.startsWith("linear-gradient") && (
-                        <div className="absolute inset-0 z-0 bg-transparent" />
-                      )}
-
-                      {/* 올바른 조합 배경을 이미지로 직접 렌더링 */}
-                      {!activeBackground?.startsWith("linear-gradient") &&
-                        activeBackground === "spring" && (
-                          <div className="absolute inset-0 z-0">
-                            <img
-                              src={
-                                springBgUrl ||
-                                "/assets/codygame/background_1-1.jpg"
-                              }
-                              className="w-full h-full object-cover object-[center_30%]"
-                              alt="background-scene"
-                            />
-                          </div>
-                        )}
-                      {!activeBackground?.startsWith("linear-gradient") &&
-                        ["oriental", "rain", "beer", "knight"].includes(
-                          activeBackground || "",
-                        ) && (
-                          <div className="absolute inset-0 z-0">
-                            <img
-                              src={
-                                orientalBgUrl ||
-                                "/assets/codygame/background_3-1.jpg"
-                              }
-                              className="w-full h-full object-cover object-[center_10%]"
-                              alt="background-scene"
-                            />
-                          </div>
-                        )}
-                    </>
-                  }
-                  underlayContent={
-                    <>
-                      {!isCapturing && activeBackground === "rain" && (
-                        <RainOverlay />
-                      )}
-                    </>
-                  }
-                  overlayContent={
-                    <>
-                      {!isCapturing && activeBackground === "spring" && (
-                        <FireflyOverlay isFinished={true} />
-                      )}
-                      {!isCapturing && activeBackground === "knight" && (
-                        <BlueButterflyOverlay />
-                      )}
-                      {!isCapturing && activeBackground === "oriental" && (
-                        <BlossomPetalOverlay
-                          isFinished={true}
-                          isFlyAway={isFlyAway}
-                        />
-                      )}
-                    </>
-                  }
-                >
-                  <div className="relative">
-                    <DroppableCharacter
-                      equippedIds={equippedIds}
-                      activeId={activeId}
-                      isFinished={isFinished}
-                      resultImage={resultImage}
-                      scale={
-                        characterScale *
-                        (activeBackground?.startsWith("linear-gradient")
-                          ? INVALID_POLAROID_SCALE
-                          : VALID_POLAROID_SCALE)
-                      }
-                      isMobile={isMobile}
-                      availableItems={availableItems}
-                    />
-                  </div>
-                </PolaroidFrame>
-              ) : (
-                <div
-                  className={`transition-opacity duration-300 ${contentVisible ? "opacity-100" : "opacity-0"}`}
-                >
-                  <DroppableCharacter
-                    equippedIds={equippedIds}
-                    activeId={activeId}
-                    isFinished={isFinished}
-                    resultImage={resultImage}
-                    scale={characterScale}
-                    isMobile={isMobile}
-                    availableItems={availableItems}
-                  />
-                </div>
-              )}
-            </div>
+            <CodyDisplayStage
+              activeBackground={activeBackground}
+              activeId={activeId}
+              availableItems={availableItems}
+              characterScale={mannequinScale}
+              characterStageClassName={polaroidCharacterStageClassName}
+              characterOffset={polaroidCharacterOffset}
+              contentVisible={contentVisible}
+              equippedIds={equippedIds}
+              isCapturing={isCapturing}
+              isFinished={isFinished}
+              isFlyAway={isFlyAway}
+              isMobile={isMobile}
+              orientalBgUrl={orientalBgUrl}
+              polaroidRef={polaroidRef}
+              resultImage={resultImage}
+              scaleWhenFinished={
+                characterScale *
+                (activeBackground?.startsWith("linear-gradient")
+                  ? INVALID_POLAROID_SCALE
+                  : VALID_POLAROID_SCALE)
+              }
+              springBgUrl={springBgUrl}
+              stageHeight={mobileStageHeight}
+              trainingBgUrl="/assets/codygame/background_5-1.jpg"
+            />
 
             <CodyActionBar
               isFinished={isFinished}
@@ -806,10 +731,19 @@ const CodyGame: React.FC = () => {
 
                       // 발견한 조합 누적 기록 및 5가지 달성 시 업적 해금
                       if (matchedCombo.name !== "training") {
-                        const storedRaw = localStorage.getItem(CODY_DISCOVERED_COMBOS_KEY);
-                        const stored: string[] = storedRaw ? (JSON.parse(storedRaw) as string[]) : [];
-                        const updated = Array.from(new Set([...stored, matchedCombo.name]));
-                        localStorage.setItem(CODY_DISCOVERED_COMBOS_KEY, JSON.stringify(updated));
+                        const storedRaw = localStorage.getItem(
+                          CODY_DISCOVERED_COMBOS_KEY,
+                        );
+                        const stored: string[] = storedRaw
+                          ? (JSON.parse(storedRaw) as string[])
+                          : [];
+                        const updated = Array.from(
+                          new Set([...stored, matchedCombo.name]),
+                        );
+                        localStorage.setItem(
+                          CODY_DISCOVERED_COMBOS_KEY,
+                          JSON.stringify(updated),
+                        );
 
                         if (
                           updated.length >= TOTAL_VALID_COMBOS &&
@@ -821,14 +755,19 @@ const CodyGame: React.FC = () => {
                             try {
                               const res = await fetch(
                                 `${BASE_URL}/achievements/award/${CODY_LEGEND_ACHIEVEMENT_CODE}`,
-                                { method: "POST", headers: { Authorization: `Bearer ${token}` } },
+                                {
+                                  method: "POST",
+                                  headers: { Authorization: `Bearer ${token}` },
+                                },
                               );
                               if (res.ok) {
-                                const newlyAwarded = (await res.json()) === true;
+                                const newlyAwarded =
+                                  (await res.json()) === true;
                                 if (newlyAwarded) {
                                   addToast({
                                     title: "전설의 코디네이터",
-                                    description: "특별한 코디 조합을 전부 찾아냈다.",
+                                    description:
+                                      "특별한 코디 조합을 전부 찾아냈다.",
                                     icon: "Shirt",
                                   });
                                 }
@@ -863,11 +802,9 @@ const CodyGame: React.FC = () => {
                     setActiveBackground(randomGradient);
 
                     setShowInventory(false);
-                    setShowButtons(false);
 
                     setTimeout(() => {
                       setContentVisible(true);
-                      setTimeout(() => setShowButtons(true), 1500);
                     }, 400);
                   }
                 } else {

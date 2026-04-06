@@ -109,7 +109,8 @@ export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
   const moveDesktopSlide = (direction: number) => {
     setDesktopSlideDirection(direction);
     setDesktopSlideIndex(
-      (prev) => (prev + direction + desktopSlides.length) % desktopSlides.length,
+      (prev) =>
+        (prev + direction + desktopSlides.length) % desktopSlides.length,
     );
   };
 
@@ -124,9 +125,13 @@ export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
             activeDesktopSlide.sectionIds.indexOf(b.id),
         );
 
+  if (!isMobile && !showInventory) {
+    return null;
+  }
+
   return (
     <div
-      className={`${isMobile ? `w-full ${showInventory ? "px-4" : "h-0 p-0"}` : "w-[65%] h-full"} flex flex-col transition-all duration-1000 ${showInventory ? "opacity-100" : "opacity-0 w-[0%] overflow-hidden pointer-events-none"}`}
+      className={`${isMobile ? `w-full ${showInventory ? "px-4" : "h-0 p-0"}` : "w-[65%] h-full"} flex flex-col transition-all duration-1000 ${showInventory ? "opacity-100" : "opacity-0 overflow-hidden pointer-events-none"}`}
     >
       {isMobile && !isFinished && (
         <div className="relative z-50 mx-4 mb-4 mt-4">
@@ -179,47 +184,38 @@ export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
       )}
 
       <div
-        className={`flex-1 ${isMobile ? "px-0 py-0 pb-40" : "overflow-x-clip overflow-y-visible px-6 pb-20"} transition-opacity ${isFinished ? "opacity-30 pointer-events-none" : ""}`}
+        className={`flex-1 ${isMobile ? "" : "overflow-x-clip overflow-y-visible px-6 pb-20"} transition-opacity ${isFinished ? "opacity-30 pointer-events-none" : ""}`}
       >
         <AnimatePresence initial={false} mode={isMobile ? "sync" : "wait"}>
           <motion.div
             key={isMobile ? activeTab : activeDesktopSlide.id}
-            initial={isMobile ? false : { opacity: 0, x: desktopSlideDirection > 0 ? 36 : -36 }}
+            initial={
+              isMobile
+                ? false
+                : { opacity: 0, x: desktopSlideDirection > 0 ? 36 : -36 }
+            }
             animate={{ opacity: 1, x: 0 }}
-            exit={isMobile ? undefined : { opacity: 0, x: desktopSlideDirection > 0 ? -36 : 36 }}
+            exit={
+              isMobile
+                ? undefined
+                : { opacity: 0, x: desktopSlideDirection > 0 ? -36 : 36 }
+            }
             transition={{ duration: 0.24, ease: "easeOut" }}
-            className={isMobile ? "pt-6" : "flex h-full flex-col justify-start pt-6 xl:pt-10"}
+            className={
+              isMobile
+                ? "pt-6"
+                : "flex h-full flex-col justify-start pt-6 xl:pt-10"
+            }
           >
             {visibleSections.map((section) => {
-            const useOverlap = section.overlap && !(isMobile && section.id === "dress");
-            const sectionItems = availableItems
-              .filter(section.filter)
-              .sort((a, b) => {
-                if (isMobile && section.id === "hair") {
-                  const aOrder = mobileHairOrderMap.get(a.id);
-                  const bOrder = mobileHairOrderMap.get(b.id);
-
-                  if (aOrder !== undefined || bOrder !== undefined) {
-                    return (
-                      (aOrder ?? Number.MAX_SAFE_INTEGER) -
-                      (bOrder ?? Number.MAX_SAFE_INTEGER)
-                    );
-                  }
-                }
-
-                const widthDiff = getCardWidth(a.id) - getCardWidth(b.id);
-                if (widthDiff !== 0) return widthDiff;
-                return a.id.localeCompare(b.id);
-              });
-            const topSkirtItems =
-              section.id === "dress"
-                ? availableItems.filter((item) => topSkirtIds.has(item.id))
-                : [];
-            const mobileDressItems =
-              section.id === "dress" && isMobile
-                ? [...sectionItems, ...topSkirtItems].sort((a, b) => {
-                    const aOrder = mobileOutfitOrderMap.get(a.id);
-                    const bOrder = mobileOutfitOrderMap.get(b.id);
+              const useOverlap =
+                section.overlap && !(isMobile && section.id === "dress");
+              const sectionItems = availableItems
+                .filter(section.filter)
+                .sort((a, b) => {
+                  if (isMobile && section.id === "hair") {
+                    const aOrder = mobileHairOrderMap.get(a.id);
+                    const bOrder = mobileHairOrderMap.get(b.id);
 
                     if (aOrder !== undefined || bOrder !== undefined) {
                       return (
@@ -227,95 +223,117 @@ export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
                         (bOrder ?? Number.MAX_SAFE_INTEGER)
                       );
                     }
+                  }
 
-                    return a.id.localeCompare(b.id);
-                  })
-                : [];
+                  const widthDiff = getCardWidth(a.id) - getCardWidth(b.id);
+                  if (widthDiff !== 0) return widthDiff;
+                  return a.id.localeCompare(b.id);
+                });
+              const topSkirtItems =
+                section.id === "dress"
+                  ? availableItems.filter((item) => topSkirtIds.has(item.id))
+                  : [];
+              const mobileDressItems =
+                section.id === "dress" && isMobile
+                  ? [...sectionItems, ...topSkirtItems].sort((a, b) => {
+                      const aOrder = mobileOutfitOrderMap.get(a.id);
+                      const bOrder = mobileOutfitOrderMap.get(b.id);
 
-            return (
-              <div
-                key={section.id}
-                className={`${isMobile ? "mb-0 px-0 py-0" : "mb-5 px-3 py-2"}`}
-              >
-                {section.id === "dress" && isMobile ? (
-                  <div className="grid grid-cols-3 justify-items-center gap-x-2 gap-y-3 px-4 pb-4">
-                    {mobileDressItems.map((item, index) =>
-                      renderInventoryCard(
-                        item,
-                        index,
-                        mobileDressItems.length,
-                        "",
-                        "",
-                      ),
-                    )}
-                  </div>
-                ) : (
-                  <div
-                    className={`${
-                      section.id === "dress"
-                        ? `flex overflow-visible px-4 pb-4 ${isMobile ? "items-start" : "items-start justify-center"}`
-                        : `flex ${
-                          useOverlap
-                            ? "overflow-visible flex-nowrap px-4 pb-4"
-                            : `flex-wrap ${isMobile ? "justify-start" : "justify-center"} ${section.tab === "deco" && !isMobile ? "gap-x-4" : ""}`
-                          } ${section.id === "shoes" ? "items-end" : "items-start"}`
-                    }`}
-                  >
-                    <div
-                      className={`${
-                        section.id === "dress" ? "relative z-10 " : ""
-                      }flex ${
-                        useOverlap
-                          ? `${section.id === "shoes" ? "items-end " : "items-start "}overflow-visible flex-nowrap`
-                          : `flex-wrap ${isMobile ? "justify-start" : "justify-center"} ${section.id === "shoes" ? "items-end" : "items-start"} ${section.tab === "deco" && !isMobile ? "gap-x-4" : ""}`
-                      }`}
-                    >
-                      {sectionItems.map((item, index) =>
+                      if (aOrder !== undefined || bOrder !== undefined) {
+                        return (
+                          (aOrder ?? Number.MAX_SAFE_INTEGER) -
+                          (bOrder ?? Number.MAX_SAFE_INTEGER)
+                        );
+                      }
+
+                      return a.id.localeCompare(b.id);
+                    })
+                  : [];
+
+              return (
+                <div
+                  key={section.id}
+                  className={`${isMobile ? "mb-0 px-0 py-0" : "mb-5 px-3 py-2"}`}
+                >
+                  {section.id === "dress" && isMobile ? (
+                    <div className="grid grid-cols-3 justify-items-center gap-x-2 gap-y-3 px-4 pb-4">
+                      {mobileDressItems.map((item, index) =>
                         renderInventoryCard(
                           item,
                           index,
-                          sectionItems.length,
-                          useOverlap
-                            ? isMobile
-                              ? section.mobileOverlapClass || "-ml-8"
-                              : section.desktopOverlapClass || "-ml-12"
-                            : "",
+                          mobileDressItems.length,
+                          "",
+                          "",
                         ),
                       )}
                     </div>
-
-                    {section.id === "dress" && topSkirtItems.length > 0 && (
+                  ) : (
+                    <div
+                      className={`${
+                        section.id === "dress"
+                          ? `flex overflow-visible px-4 pb-4 ${isMobile ? "items-start" : "items-start justify-center"}`
+                          : `flex ${
+                              useOverlap
+                                ? "overflow-visible flex-nowrap px-4 pb-4"
+                                : `flex-wrap ${isMobile ? "justify-start" : "justify-center"} ${section.tab === "deco" && !isMobile ? "gap-x-4" : ""}`
+                            } ${section.id === "shoes" ? "items-end" : "items-start"}`
+                      }`}
+                    >
                       <div
-                        className={`relative flex shrink-0 ${isMobile ? "self-end" : "self-start"} flex-col overflow-visible pb-2 ${
+                        className={`${
+                          section.id === "dress" ? "relative z-10 " : ""
+                        }flex ${
                           useOverlap
-                            ? isMobile
-                              ? section.mobileOverlapClass || "-ml-8"
-                              : section.desktopOverlapClass || "-ml-12"
-                            : ""
+                            ? `${section.id === "shoes" ? "items-end " : "items-start "}overflow-visible flex-nowrap`
+                            : `flex-wrap ${isMobile ? "justify-start" : "justify-center"} ${section.id === "shoes" ? "items-end" : "items-start"} ${section.tab === "deco" && !isMobile ? "gap-x-4" : ""}`
                         }`}
-                        style={{ zIndex: 0 }}
                       >
-                        {topSkirtItems.map((item, index) =>
+                        {sectionItems.map((item, index) =>
                           renderInventoryCard(
                             item,
                             index,
-                            topSkirtItems.length,
-                            isMobile ? "-mt-12" : "-mt-16",
-                            item.id === "top_1"
+                            sectionItems.length,
+                            useOverlap
                               ? isMobile
-                                ? "-ml-1"
-                                : "-ml-5"
-                              : isMobile
-                                ? "ml-2"
-                                : "ml-5",
+                                ? section.mobileOverlapClass || "-ml-8"
+                                : section.desktopOverlapClass || "-ml-12"
+                              : "",
                           ),
                         )}
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
+
+                      {section.id === "dress" && topSkirtItems.length > 0 && (
+                        <div
+                          className={`relative flex shrink-0 ${isMobile ? "self-end" : "self-start"} flex-col overflow-visible pb-2 ${
+                            useOverlap
+                              ? isMobile
+                                ? section.mobileOverlapClass || "-ml-8"
+                                : section.desktopOverlapClass || "-ml-12"
+                              : ""
+                          }`}
+                          style={{ zIndex: 0 }}
+                        >
+                          {topSkirtItems.map((item, index) =>
+                            renderInventoryCard(
+                              item,
+                              index,
+                              topSkirtItems.length,
+                              isMobile ? "-mt-12" : "-mt-16",
+                              item.id === "top_1"
+                                ? isMobile
+                                  ? "-ml-1"
+                                  : "-ml-5"
+                                : isMobile
+                                  ? "ml-2"
+                                  : "ml-5",
+                            ),
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
             })}
           </motion.div>
         </AnimatePresence>

@@ -1,6 +1,7 @@
 import React from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { motion } from "framer-motion";
+import { CODY_CHARACTER_CANVAS } from "./codyStageLayout";
 import type { CodyItem, EquippedState, EquipmentSlot } from "./codyTypes";
 
 interface DroppableCharacterProps {
@@ -138,15 +139,15 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
     <div
       className="relative flex items-center justify-center transition-all duration-300 pointer-events-none overflow-hidden"
       style={{
-        width: `${384 * scale}px`,
-        height: `${700 * scale}px`,
+        width: `${CODY_CHARACTER_CANVAS.width * scale}px`,
+        height: `${CODY_CHARACTER_CANVAS.height * scale}px`,
       }}
     >
       <div
         className="absolute top-0 left-0 origin-top-left"
         style={{
-          width: "384px",
-          height: "700px",
+          width: `${CODY_CHARACTER_CANVAS.width}px`,
+          height: `${CODY_CHARACTER_CANVAS.height}px`,
           transform: `scale(${scale})`,
         }}
       >

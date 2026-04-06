@@ -4,12 +4,17 @@ import { motion, useAnimationControls } from "framer-motion";
 import { KCelebrateSlogan } from "k-celebrate-slogan";
 import { AchievementModal } from "../components/common/AchievementModal";
 import { AdminModal } from "../components/auth/AdminModal";
+import {
+  NoteModal,
+  type NoteModalContent,
+} from "../components/common/NoteModal";
 import { PushableButton } from "../components/common/PushableButton";
 import { usePageBgm } from "../hooks/usePageBgm";
 import {
   PUZZLE_MUSEUM_UNLOCK_EVENT,
   PUZZLE_MUSEUM_UNLOCK_KEY,
 } from "../constants/puzzle";
+import { EASTER_EGG_NOTE_ACCESS_STORAGE_KEY } from "../constants/noteAccess";
 import { AppIcon, type AppIconName } from "../components/common/AppIcon";
 import { LOBBY_BGM_SRC } from "../utils/bgm";
 import { useAuthStore } from "../store/useAuthStore";
@@ -22,6 +27,76 @@ const CLICK_DROP_THRESHOLD = 100;
 const CLICK_SHAKE_MILESTONES = new Set(
   Array.from({ length: 10 }, (_, index) => index * 10).concat(1),
 );
+
+type LobbyNoteKey =
+  | "cody"
+  | "puzzle"
+  | "asparagus"
+  | "fortune"
+  | "adventure";
+
+const LOBBY_NOTE_CONTENT: Record<LobbyNoteKey, NoteModalContent> = {
+  cody: {
+    title: "외출 준비대 메모",
+    eyebrow: "Dress Room",
+    icon: "StickyNote",
+    content: (
+      <>
+        <p>리코는 작은 리본 하나만 달라도 하루 기분이 달라진대.</p>
+        <p>오늘은 어떤 조합이 가장 리코답게 보일까?</p>
+      </>
+    ),
+    signature: "stylist memo",
+  },
+  puzzle: {
+    title: "복원 기록",
+    eyebrow: "Museum Draft",
+    icon: "StickyNote",
+    content: (
+      <>
+        <p>조각은 흩어져도 그림이 기억하는 중심은 사라지지 않아.</p>
+        <p>끝까지 맞추면 로비에 남아 있던 분위기도 조금 달라질 거야.</p>
+      </>
+    ),
+    signature: "curation team",
+  },
+  asparagus: {
+    title: "재배 안내",
+    eyebrow: "Greenhouse",
+    icon: "StickyNote",
+    content: (
+      <>
+        <p>욕심내서 너무 빨리 키우면 모양은 커져도 귀여움이 줄어든다.</p>
+        <p>조금 느려 보여도 끝까지 합치면 의외로 대단한 게 나온다.</p>
+      </>
+    ),
+    signature: "garden log",
+  },
+  fortune: {
+    title: "오늘의 참고사항",
+    eyebrow: "Fortune Slip",
+    icon: "StickyNote",
+    content: (
+      <>
+        <p>좋은 운세는 믿고, 애매한 운세는 재해석하고, 나쁜 운세는 웃어넘길 것.</p>
+        <p>결국 오늘을 만드는 건 뽑은 종이보다 지금 기분에 더 가깝다.</p>
+      </>
+    ),
+    signature: "counter note",
+  },
+  adventure: {
+    title: "용사 관찰일지",
+    eyebrow: "Field Note",
+    icon: "StickyNote",
+    content: (
+      <>
+        <p>검을 들고 있어도 리코의 본질은 귀여움 쪽에 더 가깝다.</p>
+        <p>하지만 방심하면 누구보다 빠르게 세계관을 장악할 수 있음.</p>
+      </>
+    ),
+    signature: "anonymous witness",
+  },
+};
 
 const LobbyIconTile = ({
   name,
@@ -54,9 +129,47 @@ const LobbyIconTile = ({
   </div>
 );
 
+const LobbyHotspot = ({
+  to,
+  noteKey,
+  noteVisible,
+  onOpenNote,
+  children,
+  isMobile,
+}: {
+  to: string;
+  noteKey: LobbyNoteKey;
+  noteVisible: boolean;
+  onOpenNote: (key: LobbyNoteKey) => void;
+  children: React.ReactNode;
+  isMobile: boolean;
+}) => (
+  <div
+    className="relative flex w-full justify-center"
+    style={{ width: isMobile ? undefined : "auto" }}
+  >
+    <Link to={to} className="relative group flex w-full justify-center">
+      {children}
+    </Link>
+    <button
+      type="button"
+      aria-label={`${LOBBY_NOTE_CONTENT[noteKey].title} 열기`}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onOpenNote(noteKey);
+      }}
+      className={`absolute right-[calc(50%-3.6rem)] top-[-0.7rem] z-10 rounded-2xl border-2 border-[#D6B089] bg-[#FFF4D8] p-2 text-[#9B6A3D] shadow-[0_8px_18px_rgba(128,87,40,0.2)] transition-transform duration-150 hover:-translate-y-0.5 ${noteVisible ? "block" : "hidden"}`}
+    >
+      <AppIcon name="StickyNote" size={isMobile ? 16 : 18} />
+    </button>
+  </div>
+);
+
 const Lobby: React.FC = () => {
   usePageBgm(LOBBY_BGM_SRC);
   const isGuest = useAuthStore((state) => state.isGuest);
+  const isAdmin = useAuthStore((state) => state.isAdmin);
   const token = useAuthStore((state) => state.token);
   const navigate = useNavigate();
   const { addToast } = useToastStore();
@@ -67,6 +180,10 @@ const Lobby: React.FC = () => {
   );
   const [isAchievementOpen, setIsAchievementOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isEasterEggNoteAccess, setIsEasterEggNoteAccess] = useState(
+    window.localStorage.getItem(EASTER_EGG_NOTE_ACCESS_STORAGE_KEY) === "true",
+  );
+  const [activeNoteKey, setActiveNoteKey] = useState<LobbyNoteKey | null>(null);
   const [isPuzzleMuseumUnlocked, setIsPuzzleMuseumUnlocked] = useState(
     window.localStorage.getItem(PUZZLE_MUSEUM_UNLOCK_KEY) === "true",
   );
@@ -310,6 +427,7 @@ const Lobby: React.FC = () => {
   ]);
 
   const isMobile = windowWidth < 768;
+  const canViewSecretNotes = isAdmin || isEasterEggNoteAccess;
   const profileButton = (
     <PushableButton
       onClick={() => setIsAchievementOpen(true)}
@@ -462,10 +580,12 @@ const Lobby: React.FC = () => {
           className={`flex-1 relative ${isMobile ? "mt-2 grid grid-cols-2 gap-x-3 gap-y-4 place-items-center content-start pb-8" : "mt-6 flex flex-wrap justify-center items-center gap-6 pb-8"}`}
         >
           {/* Hotspot: TPO Cody (Paper Doll Table) */}
-          <Link
+          <LobbyHotspot
             to="/game/cody"
-            className="relative group w-full flex justify-center"
-            style={{ width: isMobile ? undefined : "auto" }}
+            noteKey="cody"
+            noteVisible={canViewSecretNotes}
+            onOpenNote={setActiveNoteKey}
+            isMobile={isMobile}
           >
             <motion.div whileHover={{ scale: 1.05 }} className="group">
               <LobbyIconTile
@@ -476,7 +596,7 @@ const Lobby: React.FC = () => {
                 iconClassName="text-[#cf9aa3]"
               />
             </motion.div>
-          </Link>
+          </LobbyHotspot>
 
           {/* Hotspot: Itabag (Display Table)
           <Link
@@ -497,10 +617,12 @@ const Lobby: React.FC = () => {
           */}
 
           {/* Hotspot: Mini Game (Puzzle) */}
-          <Link
+          <LobbyHotspot
             to="/game/puzzle"
-            className="relative group w-full flex justify-center"
-            style={{ width: isMobile ? undefined : "auto" }}
+            noteKey="puzzle"
+            noteVisible={canViewSecretNotes}
+            onOpenNote={setActiveNoteKey}
+            isMobile={isMobile}
           >
             <motion.div whileHover={{ scale: 1.05 }} className="group">
               <LobbyIconTile
@@ -517,13 +639,15 @@ const Lobby: React.FC = () => {
                 }
               />
             </motion.div>
-          </Link>
+          </LobbyHotspot>
 
           {/* Hotspot: Asparagus Merge (2048 style) */}
-          <Link
+          <LobbyHotspot
             to="/game/asparagus"
-            className="relative group w-full flex justify-center"
-            style={{ width: isMobile ? undefined : "auto" }}
+            noteKey="asparagus"
+            noteVisible={canViewSecretNotes}
+            onOpenNote={setActiveNoteKey}
+            isMobile={isMobile}
           >
             <motion.div whileHover={{ scale: 1.05 }} className="group">
               <LobbyIconTile
@@ -534,13 +658,15 @@ const Lobby: React.FC = () => {
                 iconClassName="text-[#2d6a4f]"
               />
             </motion.div>
-          </Link>
+          </LobbyHotspot>
 
           {/* Hotspot: Rico's Fortune (Omikuji) */}
-          <Link
+          <LobbyHotspot
             to="/game/fortune"
-            className="relative group w-full flex justify-center"
-            style={{ width: isMobile ? undefined : "auto" }}
+            noteKey="fortune"
+            noteVisible={canViewSecretNotes}
+            onOpenNote={setActiveNoteKey}
+            isMobile={isMobile}
           >
             <motion.div whileHover={{ scale: 1.05 }} className="group">
               <LobbyIconTile
@@ -551,12 +677,14 @@ const Lobby: React.FC = () => {
                 iconClassName="text-[#8B5A2B]"
               />
             </motion.div>
-          </Link>
+          </LobbyHotspot>
 
-          <Link
+          <LobbyHotspot
             to="/game/adventure"
-            className="relative group w-full flex justify-center"
-            style={{ width: isMobile ? undefined : "auto" }}
+            noteKey="adventure"
+            noteVisible={canViewSecretNotes}
+            onOpenNote={setActiveNoteKey}
+            isMobile={isMobile}
           >
             <motion.div whileHover={{ scale: 1.05 }} className="group">
               <LobbyIconTile
@@ -567,7 +695,7 @@ const Lobby: React.FC = () => {
                 iconClassName="text-[#102542]"
               />
             </motion.div>
-          </Link>
+          </LobbyHotspot>
         </div>
       </div>
       {isMobile && adminButton}
@@ -577,7 +705,20 @@ const Lobby: React.FC = () => {
         onClose={() => setIsAchievementOpen(false)}
       />
 
-      <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
+      <AdminModal
+        isOpen={isAdminOpen}
+        onClose={() => setIsAdminOpen(false)}
+        onAccessGranted={(access) => {
+          if (access === "easter_egg") {
+            setIsEasterEggNoteAccess(true);
+          }
+        }}
+      />
+      <NoteModal
+        isOpen={activeNoteKey !== null}
+        onClose={() => setActiveNoteKey(null)}
+        note={activeNoteKey ? LOBBY_NOTE_CONTENT[activeNoteKey] : null}
+      />
     </div>
   );
 };

@@ -1,5 +1,45 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Clover, Heart, Music, Sparkles, Star } from "lucide-react";
+
+type SignatureIconKey = "Heart" | "Sparkles" | "Clover" | "Star" | "Music";
+
+const SIGNATURE_ICONS: Array<{
+  key: SignatureIconKey;
+  color: string;
+  Icon: React.ComponentType<{
+    size?: number | string;
+    color?: string;
+    strokeWidth?: number | string;
+    className?: string;
+  }>;
+}> = [
+  {
+    key: "Heart",
+    color: "#E85D75",
+    Icon: Heart,
+  },
+  {
+    key: "Sparkles",
+    color: "#F2B84B",
+    Icon: Sparkles,
+  },
+  {
+    key: "Clover",
+    color: "#53A66F",
+    Icon: Clover,
+  },
+  {
+    key: "Star",
+    color: "#5C8DF6",
+    Icon: Star,
+  },
+  {
+    key: "Music",
+    color: "#8A63D2",
+    Icon: Music,
+  },
+];
 
 interface PolaroidFrameProps {
   isFlyAway?: boolean;
@@ -10,6 +50,7 @@ interface PolaroidFrameProps {
   frameOverlayContent?: React.ReactNode;
   children?: React.ReactNode;
   characterOffset?: { x?: number; y?: number };
+  characterStageClassName?: string;
   polaroidRef?: React.RefObject<HTMLDivElement | null>;
   hideAnimations?: boolean;
 }
@@ -23,6 +64,7 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
   frameOverlayContent,
   children,
   characterOffset,
+  characterStageClassName,
   polaroidRef,
   hideAnimations,
 }) => {
@@ -30,12 +72,17 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
   const revealDuration = isFastReveal ? 0 : 7.0;
   const revealDelay = isFastReveal ? 0 : 0.5;
   const effectsRevealDelayMs = (revealDelay + revealDuration) * 1000;
-  const characterStageHeightClass = isFastReveal
-    ? "h-[420px] md:h-[470px]"
-    : "h-[600px] md:h-[640px]";
+  const resolvedCharacterStageClassName =
+    characterStageClassName ||
+    (isFastReveal ? "h-[420px] md:h-[470px]" : "h-[600px] md:h-[640px]");
   const [showEffects, setShowEffects] = React.useState(
     hideAnimations || effectsRevealDelayMs === 0,
   );
+  const signatureIcon = React.useMemo(
+    () => SIGNATURE_ICONS[Math.floor(Math.random() * SIGNATURE_ICONS.length)],
+    [],
+  );
+  const SignatureIconComponent = signatureIcon.Icon;
 
   React.useEffect(() => {
     if (hideAnimations || effectsRevealDelayMs === 0) {
@@ -53,10 +100,10 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
   }, [effectsRevealDelayMs, hideAnimations]);
 
   const today = new Date();
-  const formattedDate = `${today.getFullYear()}. ${String(today.getMonth() + 1).padStart(2, "0")}. ${String(today.getDate()).padStart(2, "0")}. Yuzuha Riko`;
+  const formattedDate = `${today.getFullYear()}. ${String(today.getMonth() + 1).padStart(2, "0")}. ${String(today.getDate()).padStart(2, "0")}. photo by 치코`;
 
   return (
-    <div className="absolute inset-0 z-40 overflow-y-auto overflow-x-hidden flex p-4 md:p-0">
+    <div className="absolute inset-0 z-40 overflow-y-auto overflow-x-hidden flex p-2 md:p-0">
       <motion.div
         ref={polaroidRef}
         initial={{ opacity: 0, scale: 1, y: 0 }}
@@ -130,11 +177,9 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
           )}
 
           {/* Character and Shadow */}
-          <div
-            className="absolute bottom-[14px] left-1/2 z-10 flex w-full -translate-x-1/2 justify-center pointer-events-none"
-          >
+          <div className="absolute bottom-[14px] left-1/2 z-10 flex w-full -translate-x-1/2 justify-center pointer-events-none">
             <div
-              className={`relative w-full ${characterStageHeightClass}`}
+              className={`relative w-full ${resolvedCharacterStageClassName}`}
               style={{
                 transform: `translate(${characterOffset?.x || 0}px, ${characterOffset?.y || 0}px)`,
               }}
@@ -164,15 +209,28 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
 
         <div className="absolute bottom-6 left-0 right-0 flex justify-center">
           <span
-            className="font-marker font-bold text-[18px] sm:text-[22px] md:text-[24px] tracking-wider select-none"
+            className="inline-flex items-center font-marker font-bold text-[18px] sm:text-[22px] md:text-[20px] tracking-wider select-none"
             style={{
               color: "#333333",
               fontFamily: "'OneStoreMobilePop', 'Permanent Marker', cursive",
-              fontWeight: 800,
+              fontWeight: 600,
               transform: "rotate(-2deg)",
             }}
           >
-            {formattedDate}
+            <span>{formattedDate}</span>
+            <span
+              className="inline-flex shrink-0"
+              style={{
+                filter: `drop-shadow(0 1px 1px ${signatureIcon.color}33)`,
+              }}
+            >
+              <SignatureIconComponent
+                size={18}
+                strokeWidth={1.9}
+                color={signatureIcon.color}
+                className="shrink-0"
+              />
+            </span>
           </span>
         </div>
       </motion.div>

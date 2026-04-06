@@ -41,9 +41,9 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   };
   const containerLayoutVars = {
     "--container-gutter": "clamp(1rem, 5vw, 3rem)",
-    "--header-top-padding": "clamp(0.625rem, 4vh, 1.75rem)",
-    "--header-bottom-padding": "clamp(0.5rem, 2vh, 1rem)",
-    "--header-gap": "clamp(0.75rem, 2vw, 1.25rem)",
+    "--header-top-padding": "clamp(0.35rem, 2vh, 1.25rem)",
+    "--header-bottom-padding": "clamp(0.25rem, 1.2vh, 0.75rem)",
+    "--header-gap": "clamp(0.5rem, 1.5vw, 1rem)",
   } as React.CSSProperties;
 
   return (
@@ -52,7 +52,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
       style={containerLayoutVars}
     >
       <div
-        className="relative flex min-h-[4.5rem] items-center justify-center select-none lg:min-h-[5.25rem]"
+        className="relative flex min-h-[3.9rem] items-center justify-center select-none lg:min-h-[5.25rem]"
         draggable={false}
         onDragStart={preventTextDrag}
         style={{

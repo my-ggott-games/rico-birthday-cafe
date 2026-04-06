@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useToastStore } from "../../store/useToastStore";
+import { EASTER_EGG_NOTE_ACCESS_STORAGE_KEY } from "../../constants/noteAccess";
 import { BASE_URL } from "../../utils/api";
 
 const ASCII_INPUT_REGEX = /^[A-Za-z0-9]$/;
@@ -92,9 +93,14 @@ const KOREAN_TO_ENGLISH_MAP: Record<string, string> = {
 interface AdminModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onAccessGranted?: (access: "admin" | "easter_egg") => void;
 }
 
-export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
+export const AdminModal: React.FC<AdminModalProps> = ({
+  isOpen,
+  onClose,
+  onAccessGranted,
+}) => {
   const [inputs, setInputs] = useState<string[]>(Array(7).fill(""));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -157,6 +163,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
 
         if (data.message === "easter_egg") {
           setAuthStatus("easter_egg");
+          window.localStorage.setItem(
+            EASTER_EGG_NOTE_ACCESS_STORAGE_KEY,
+            "true",
+          );
+          onAccessGranted?.("easter_egg");
 
           // Trigger achievement for Easter Egg
           if (token) {
@@ -184,6 +195,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
           data.token,
           typeof data.username === "string" ? data.username : null,
         );
+        onAccessGranted?.("admin");
 
         const achievementRes = await fetch(
           `${BASE_URL}/achievements/award/WHO_ARE_YOU`,
@@ -225,7 +237,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
         setLoading(false);
       }
     },
-    [addToast, login, onClose, token],
+    [addToast, login, onAccessGranted, onClose, token],
   );
 
   const handleKeyClick = useCallback(
