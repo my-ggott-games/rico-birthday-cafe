@@ -85,7 +85,10 @@ const CREDITS_SECTIONS: CreditSection[] = [
       },
       {
         label: "백엔드 & 데이터 아키텍처",
-        credits: [{ role: "", name: "CODE NAME: G" }],
+        credits: [
+          { role: "", name: "CODE NAME: G" },
+          { role: "", name: "송파 황제 Harlockius" },
+        ],
       },
       {
         label: "인프라 운영 & 배포",
@@ -96,6 +99,7 @@ const CREDITS_SECTIONS: CreditSection[] = [
         credits: [
           { role: "", name: "Sie" },
           { role: "", name: "미아라" },
+          { role: "", name: "송파 황제 Harlockius" },
           { role: "", name: "CODE NAME: G" },
         ],
       },
