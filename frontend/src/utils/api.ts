@@ -7,9 +7,30 @@ const normalizeBaseUrl = (baseUrl?: string) => {
     return null;
   }
 
-  return trimmedBaseUrl.endsWith("/")
+  const normalizedBaseUrl = trimmedBaseUrl.endsWith("/")
     ? trimmedBaseUrl.slice(0, -1)
     : trimmedBaseUrl;
+
+  if (normalizedBaseUrl === "/api" || normalizedBaseUrl.endsWith("/api")) {
+    return normalizedBaseUrl;
+  }
+
+  if (normalizedBaseUrl.startsWith("/")) {
+    return `${normalizedBaseUrl}/api`;
+  }
+
+  try {
+    const parsedUrl = new URL(normalizedBaseUrl);
+    const normalizedPathname = parsedUrl.pathname.replace(/\/$/, "");
+
+    if (!normalizedPathname || normalizedPathname === "") {
+      return `${normalizedBaseUrl}/api`;
+    }
+
+    return normalizedBaseUrl;
+  } catch {
+    return normalizedBaseUrl;
+  }
 };
 
 const PRODUCTION_API_BASE_URL = "https://rico-birthday-cafe-api.onrender.com/api";

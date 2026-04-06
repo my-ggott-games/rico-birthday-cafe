@@ -86,7 +86,7 @@ const WanderingButterfly: React.FC<{
   );
 };
 
-export const ButterflyEffect: React.FC<{ count?: number }> = ({
+export const BlueButterflyOverlay: React.FC<{ count?: number }> = ({
   count = 9,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);

@@ -102,7 +102,7 @@ const Raindrop: React.FC<{
   );
 };
 
-export const RainEffect: React.FC<{
+export const RainOverlay: React.FC<{
   dropCount?: number;
   enableSplat?: boolean;
 }> = ({ dropCount = 26, enableSplat = true }) => {

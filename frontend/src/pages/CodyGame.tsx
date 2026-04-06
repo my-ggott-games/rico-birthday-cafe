@@ -18,13 +18,13 @@ import type {
 } from "../components/game/codyTypes";
 import { GameContainer } from "../components/common/GameContainer";
 import {
-  SpringEffect,
-  SpringFestivalPetals,
+  BlossomPetalOverlay,
+  SpringBackdrop,
 } from "../components/game/SpringEffect";
-import { FireflyEffect } from "../components/game/FireflyEffect";
+import { FireflyOverlay } from "../components/game/FireflyEffect";
 import { PolaroidFrame } from "../components/game/PolaroidFrame";
-import { RainEffect } from "../components/game/RainEffect";
-import { ButterflyEffect } from "../components/game/ButterflyEffect";
+import { RainOverlay } from "../components/game/RainEffect";
+import { BlueButterflyOverlay } from "../components/game/ButterflyEffect";
 import { getInventoryPreviewLayout } from "../components/game/codyInventoryPreviewLayout";
 import { CodyActionBar } from "../components/game/CodyActionBar";
 import { CodyInventoryPanel } from "../components/game/CodyInventoryPanel";
@@ -592,8 +592,8 @@ const CodyGame: React.FC = () => {
       >
         {activeBackground === "spring" && !isFinished && (
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-            <SpringEffect isFinished={false} />
-            <FireflyEffect isFinished={false} />
+            <SpringBackdrop isFinished={false} />
+            <FireflyOverlay isFinished={false} />
           </div>
         )}
 
@@ -667,20 +667,20 @@ const CodyGame: React.FC = () => {
                   underlayContent={
                     <>
                       {!isCapturing && activeBackground === "rain" && (
-                        <RainEffect />
+                        <RainOverlay />
                       )}
                     </>
                   }
                   overlayContent={
                     <>
                       {!isCapturing && activeBackground === "spring" && (
-                        <FireflyEffect isFinished={true} />
+                        <FireflyOverlay isFinished={true} />
                       )}
                       {!isCapturing && activeBackground === "knight" && (
-                        <ButterflyEffect />
+                        <BlueButterflyOverlay />
                       )}
                       {!isCapturing && activeBackground === "oriental" && (
-                        <SpringFestivalPetals
+                        <BlossomPetalOverlay
                           isFinished={true}
                           isFlyAway={isFlyAway}
                         />

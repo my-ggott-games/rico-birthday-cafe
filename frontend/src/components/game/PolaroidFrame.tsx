@@ -7,6 +7,7 @@ interface PolaroidFrameProps {
   backgroundContent?: React.ReactNode;
   underlayContent?: React.ReactNode;
   overlayContent?: React.ReactNode;
+  frameOverlayContent?: React.ReactNode;
   children?: React.ReactNode;
   characterOffset?: { x?: number; y?: number };
   polaroidRef?: React.RefObject<HTMLDivElement | null>;
@@ -19,6 +20,7 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
   backgroundContent,
   underlayContent,
   overlayContent,
+  frameOverlayContent,
   children,
   characterOffset,
   polaroidRef,
@@ -27,9 +29,28 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
   const isFastReveal = !!activeBackground?.startsWith("linear-gradient");
   const revealDuration = isFastReveal ? 0 : 7.0;
   const revealDelay = isFastReveal ? 0 : 0.5;
+  const effectsRevealDelayMs = (revealDelay + revealDuration) * 1000;
   const characterStageHeightClass = isFastReveal
     ? "h-[420px] md:h-[470px]"
     : "h-[600px] md:h-[640px]";
+  const [showEffects, setShowEffects] = React.useState(
+    hideAnimations || effectsRevealDelayMs === 0,
+  );
+
+  React.useEffect(() => {
+    if (hideAnimations || effectsRevealDelayMs === 0) {
+      setShowEffects(true);
+      return;
+    }
+
+    setShowEffects(false);
+    const timer = window.setTimeout(
+      () => setShowEffects(true),
+      effectsRevealDelayMs,
+    );
+
+    return () => window.clearTimeout(timer);
+  }, [effectsRevealDelayMs, hideAnimations]);
 
   const today = new Date();
   const formattedDate = `${today.getFullYear()}. ${String(today.getMonth() + 1).padStart(2, "0")}. ${String(today.getDate()).padStart(2, "0")}. Yuzuha Riko`;
@@ -66,6 +87,12 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
           boxShadow: "0 10px 30px rgba(0, 0, 0, 0.1)",
         }}
       >
+        {!hideAnimations && showEffects && frameOverlayContent && (
+          <div className="absolute inset-0 z-[120] pointer-events-none overflow-hidden">
+            {frameOverlayContent}
+          </div>
+        )}
+
         <div
           className={`relative h-[300px] w-[300px] overflow-hidden md:h-[340px] md:w-[340px] ${
             activeBackground?.startsWith("bg-") ? activeBackground : ""
@@ -96,7 +123,7 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
             {backgroundContent}
           </motion.div>
 
-          {!hideAnimations && underlayContent && (
+          {!hideAnimations && showEffects && underlayContent && (
             <div className="absolute inset-0 z-[5] pointer-events-none overflow-hidden">
               {underlayContent}
             </div>
@@ -128,7 +155,7 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
           </div>
 
           {/* This renders using the bounds of containerRef! */}
-          {!hideAnimations && (
+          {!hideAnimations && showEffects && (
             <div className="absolute inset-0 z-[100] pointer-events-none overflow-hidden">
               {overlayContent}
             </div>

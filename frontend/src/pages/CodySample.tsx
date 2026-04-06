@@ -1,27 +1,9 @@
 import React from "react";
 import { PolaroidFrame } from "../components/game/PolaroidFrame";
 import { DroppableCharacter } from "../components/game/DroppableCharacter";
+import { CMYGlitchOverlay } from "../components/game/CMYGlitchOverlay";
 
-const AVAILABLE_BGS = [
-  "1-1",
-  "1-2",
-  "1-3",
-  "2-1",
-  "2-2",
-  "2-3",
-  "2-4",
-  "3-1",
-  "3-2",
-  "3-3",
-  "3-4",
-  "4-1",
-  "4-2",
-  "4-3",
-  "4-4",
-  "4-5",
-  "4-6",
-  "4-7",
-];
+const AVAILABLE_BGS = ["5-1"];
 
 // Sample equipped state, just to have a character on screen
 const sampleEquippedIds = {
@@ -77,7 +59,7 @@ const CodySample: React.FC = () => {
                       />
                     </div>
                   }
-                  overlayContent={<></>}
+                  overlayContent={<CMYGlitchOverlay />}
                 >
                   <div className="relative pointer-events-none">
                     <DroppableCharacter

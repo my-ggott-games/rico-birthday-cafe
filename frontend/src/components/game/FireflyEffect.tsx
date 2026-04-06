@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 
-interface Firefly {
+interface FireflyParticle {
   x: number;
   y: number;
   size: number;
@@ -11,7 +11,7 @@ interface Firefly {
   opacitySpeed: number;
 }
 
-export const FireflyEffect: React.FC<{ isFinished?: boolean }> = ({
+export const FireflyOverlay: React.FC<{ isFinished?: boolean }> = ({
   isFinished,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -35,7 +35,7 @@ export const FireflyEffect: React.FC<{ isFinished?: boolean }> = ({
     if (!ctx) return;
 
     let animationFrameId: number;
-    const fireflies: Firefly[] = [];
+    const fireflies: FireflyParticle[] = [];
     const count = 10;
 
     const resizeCanvas = () => {
