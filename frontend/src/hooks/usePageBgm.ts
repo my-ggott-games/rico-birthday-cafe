@@ -15,10 +15,12 @@ export const usePageBgm = (
   { loop = true, volume = 1 }: UsePageBgmOptions = {},
 ) => {
   const isMuted = useAudioStore((state) => state.isMuted);
+  const setCurrentBgmSrc = useAudioStore((state) => state.setCurrentBgmSrc);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tryStartPlaybackRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
+    setCurrentBgmSrc(src);
     const audio = new Audio(src);
     audio.loop = loop;
     audio.volume = volume;
@@ -109,8 +111,11 @@ export const usePageBgm = (
       tryStartPlaybackRef.current = null;
       audio.pause();
       audio.currentTime = 0;
+      if (useAudioStore.getState().currentBgmSrc === src) {
+        setCurrentBgmSrc(null);
+      }
     };
-  }, [loop, src, volume]);
+  }, [loop, setCurrentBgmSrc, src, volume]);
 
   useEffect(() => {
     const audio = audioRef.current;

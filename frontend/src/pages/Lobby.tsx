@@ -28,74 +28,118 @@ const CLICK_SHAKE_MILESTONES = new Set(
   Array.from({ length: 10 }, (_, index) => index * 10).concat(1),
 );
 
-type LobbyNoteKey =
-  | "cody"
-  | "puzzle"
-  | "asparagus"
-  | "fortune"
-  | "adventure";
+type LobbyNoteKey = "cody" | "puzzle" | "asparagus" | "fortune" | "adventure";
 
 const LOBBY_NOTE_CONTENT: Record<LobbyNoteKey, NoteModalContent> = {
   cody: {
-    title: "외출 준비대 메모",
-    eyebrow: "Dress Room",
+    title: "비하인드 스토리",
+    eyebrow: "리코의 외출 준비",
     icon: "StickyNote",
+    accentColor: "#e7bcc2",
+    backgroundColor: "#FFF1F3",
+    bodyBackgroundColor: "rgba(255,255,255,0.82)",
     content: (
       <>
-        <p>리코는 작은 리본 하나만 달라도 하루 기분이 달라진대.</p>
-        <p>오늘은 어떤 조합이 가장 리코답게 보일까?</p>
+        <p>
+          눈치 챘나요? 동물농장 미니게임 크라라의 외출을 모티브로 만들었어요.
+        </p>
+        <p>일러스트 작가님과 함께 작업하니 마마와 파파가 된 기분이네요!</p>
+        <p>작가님... 한복 패턴 한땀한땀 작업하느라 힘드셨죠...</p>
+        <p>제가 그림에 무지해서 복잡한 패턴을 생각 못 했어요...</p>
       </>
     ),
-    signature: "stylist memo",
+    signature: "CODE NAME: G",
   },
   puzzle: {
-    title: "복원 기록",
-    eyebrow: "Museum Draft",
+    title: "비하인드 스토리",
+    eyebrow: "퍼즐 맞추기",
     icon: "StickyNote",
+    accentColor: "#ddd1bf",
+    backgroundColor: "#F7F0E6",
+    bodyBackgroundColor: "rgba(255,255,255,0.82)",
+    iconBackgroundColor: "rgba(221,209,191,0.25)",
     content: (
       <>
-        <p>조각은 흩어져도 그림이 기억하는 중심은 사라지지 않아.</p>
-        <p>끝까지 맞추면 로비에 남아 있던 분위기도 조금 달라질 거야.</p>
+        <p>한국인은 밥심이죠. 한국에 있는 이세계인에게도 예외는 없어요.</p>
+        <p>맛있는 음식 많이 먹고 행복한 하루 보냈으면 좋겠어요.</p>
+        <p>(모바일 자이로센서 재도전?)</p>
+        <p>
+          뭘 좋아할지 몰라 다 차려봤어요. 제일 먼저 먹고싶은 음식은 무엇인가요?
+        </p>
       </>
     ),
-    signature: "curation team",
+    signature: "CODE NAME: G",
   },
   asparagus: {
-    title: "재배 안내",
-    eyebrow: "Greenhouse",
+    title: "비하인드 스토리",
+    eyebrow: "아스파라거스 키우기",
     icon: "StickyNote",
+    accentColor: "#aad0b2",
+    backgroundColor: "#EFF8F1",
+    bodyBackgroundColor: "rgba(255,255,255,0.82)",
     content: (
       <>
-        <p>욕심내서 너무 빨리 키우면 모양은 커져도 귀여움이 줄어든다.</p>
-        <p>조금 느려 보여도 끝까지 합치면 의외로 대단한 게 나온다.</p>
+        <p>아스파라거스의 실제 성장 과정을 참고해 단계를 구상했어요.</p>
+        <p>사실 성검 아스파라거스... 저도 못 만들었어요... 너무 어렵네요.</p>
+        <p>언젠가 어디선가 누군가 나타나서 어떻게든 깨주지 않으려나...</p>
       </>
     ),
-    signature: "garden log",
+    signature: "CODE NAME: G",
   },
   fortune: {
-    title: "오늘의 참고사항",
-    eyebrow: "Fortune Slip",
+    title: "비하인드 스토리",
+    eyebrow: "Rico's Fortune",
     icon: "StickyNote",
+    accentColor: "#b79880",
+    backgroundColor: "#F7EEE8",
+    bodyBackgroundColor: "rgba(255,255,255,0.82)",
     content: (
       <>
-        <p>좋은 운세는 믿고, 애매한 운세는 재해석하고, 나쁜 운세는 웃어넘길 것.</p>
+        <p>
+          좋은 운세는 믿고, 애매한 운세는 재해석하고, 나쁜 운세는 웃어넘길 것.
+        </p>
         <p>결국 오늘을 만드는 건 뽑은 종이보다 지금 기분에 더 가깝다.</p>
       </>
     ),
-    signature: "counter note",
+    signature: "CODE NAME: G",
   },
   adventure: {
-    title: "용사 관찰일지",
-    eyebrow: "Field Note",
+    title: "비하인드 스토리",
+    eyebrow: "용사 리코 이야기",
     icon: "StickyNote",
+    accentColor: "#aebed7",
+    backgroundColor: "#EEF3FB",
+    bodyBackgroundColor: "rgba(255,255,255,0.82)",
     content: (
       <>
-        <p>검을 들고 있어도 리코의 본질은 귀여움 쪽에 더 가깝다.</p>
-        <p>하지만 방심하면 누구보다 빠르게 세계관을 장악할 수 있음.</p>
+        <p>치코는 오케스트라 소속 단원으로 활동하고 있어요.</p>
+        <p>새 악보를 받아 이 게임의 배경음악을 연주하는 그 순간,</p>
+        <p>리코가 이세계에서 마왕을 잡는 이야기가 떠올랐어요.</p>
+        <p>상상하던 이야기를 모두에게 들려줄 수 있게 되어 기쁩니다!</p>
       </>
     ),
-    signature: "anonymous witness",
+    signature: "CODE NAME: G",
   },
+};
+
+const getLobbyNoteContent = (
+  noteKey: LobbyNoteKey,
+  isPuzzleMuseumUnlocked: boolean,
+): NoteModalContent => {
+  if (noteKey !== "puzzle") {
+    return LOBBY_NOTE_CONTENT[noteKey];
+  }
+
+  if (isPuzzleMuseumUnlocked) {
+    return LOBBY_NOTE_CONTENT.puzzle;
+  }
+
+  return {
+    ...LOBBY_NOTE_CONTENT.puzzle,
+    accentColor: "#84bf2e",
+    backgroundColor: "#F2F9E5",
+    iconBackgroundColor: "rgba(132,191,46,0.18)",
+  };
 };
 
 const LobbyIconTile = ({
@@ -113,7 +157,7 @@ const LobbyIconTile = ({
 }) => (
   <div className="flex flex-col items-center">
     <div
-      className={`flex items-center justify-center rounded-[1.35rem] border-4 shadow-xl transition-transform transition-colors group-hover:-translate-y-0.5 ${isMobile ? "h-20 w-20" : "h-24 w-24"} ${className}`}
+      className={`flex items-center justify-center rounded-[1.35rem] border-4 opacity-100 shadow-xl transition-transform transition-colors group-hover:-translate-y-0.5 ${isMobile ? "h-20 w-20" : "h-24 w-24"} ${className}`}
     >
       <AppIcon
         name={icon}
@@ -122,7 +166,7 @@ const LobbyIconTile = ({
       />
     </div>
     <div
-      className={`mt-2 bg-pale-custard ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-2"} rounded-xl font-bold text-[#166D77] shadow-md border-2 border-[#D6C0B0] transition-colors`}
+      className={`mt-2 rounded-xl border-2 border-[#D6C0B0] bg-pale-custard opacity-100 font-bold text-[#166D77] shadow-md transition-colors ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-2"}`}
     >
       {name}
     </div>
@@ -183,6 +227,7 @@ const Lobby: React.FC = () => {
   const [isEasterEggNoteAccess, setIsEasterEggNoteAccess] = useState(
     window.localStorage.getItem(EASTER_EGG_NOTE_ACCESS_STORAGE_KEY) === "true",
   );
+  const [isNoteToggleOn, setIsNoteToggleOn] = useState(true);
   const [activeNoteKey, setActiveNoteKey] = useState<LobbyNoteKey | null>(null);
   const [isPuzzleMuseumUnlocked, setIsPuzzleMuseumUnlocked] = useState(
     window.localStorage.getItem(PUZZLE_MUSEUM_UNLOCK_KEY) === "true",
@@ -427,7 +472,23 @@ const Lobby: React.FC = () => {
   ]);
 
   const isMobile = windowWidth < 768;
-  const canViewSecretNotes = isAdmin || isEasterEggNoteAccess;
+  const hasSecretNoteAccess = isAdmin || isEasterEggNoteAccess;
+  const canViewSecretNotes = hasSecretNoteAccess && isNoteToggleOn;
+  const noteToggleButton = hasSecretNoteAccess ? (
+    <button
+      type="button"
+      aria-label={isNoteToggleOn ? "쪽지 숨기기" : "쪽지 보이기"}
+      aria-pressed={isNoteToggleOn}
+      onClick={() => setIsNoteToggleOn((current) => !current)}
+      className={`inline-flex items-center justify-center self-center rounded-full border-2 shadow-[0_8px_18px_rgba(128,87,40,0.2)] ${
+        isNoteToggleOn
+          ? "border-[#D6B089] bg-[#FFF4D8] text-[#9B6A3D]"
+          : "border-[#D6C0B0] bg-[#FFF8EA] text-[#B7A28D] opacity-80"
+      } ${isMobile ? "h-9 w-9 shrink-0" : "h-[42px] w-[42px] shrink-0"}`}
+    >
+      <AppIcon name="StickyNote" size={isMobile ? 16 : 18} />
+    </button>
+  ) : null;
   const profileButton = (
     <PushableButton
       onClick={() => setIsAchievementOpen(true)}
@@ -482,12 +543,14 @@ const Lobby: React.FC = () => {
             className={`${isMobile ? "flex gap-2" : "flex flex-col items-end gap-3"}`}
           >
             {isMobile ? (
-              <div className="flex w-full  gap-2">
+              <div className="flex w-full gap-2">
+                {noteToggleButton}
                 {creditsButton}
                 {profileButton}
               </div>
             ) : (
               <div className="flex gap-2">
+                {noteToggleButton}
                 {creditsButton}
                 {profileButton}
                 {adminButton}
@@ -592,7 +655,7 @@ const Lobby: React.FC = () => {
                 name="리코의 외출 준비"
                 icon="Shirt"
                 isMobile={isMobile}
-                className="border-[#e7bcc2] bg-[#FFE4E6]/30 group-hover:bg-[#FFE4E6]/85"
+                className="border-[#e7bcc2] bg-[#FFE4E6]/85 group-hover:bg-[#FFE4E6]/85"
                 iconClassName="text-[#cf9aa3]"
               />
             </motion.div>
@@ -630,12 +693,14 @@ const Lobby: React.FC = () => {
                 icon="Puzzle"
                 isMobile={isMobile}
                 className={
-                  isPuzzleMuseumUnlocked
-                    ? "border-[#ddd1bf] bg-[#f5ecdd]/30 group-hover:bg-[#f5ecdd]/85"
-                    : "border-[#84bf2e] bg-[#a3e635]/30 group-hover:bg-[#a3e635]/85"
+                  isMobile || isPuzzleMuseumUnlocked
+                    ? "border-[#ddd1bf] bg-[#f5ecdd]/85 group-hover:bg-[#f5ecdd]/85"
+                    : "border-[#84bf2e] bg-[#a3e635]/85 group-hover:bg-[#a3e635]/85"
                 }
                 iconClassName={
-                  isPuzzleMuseumUnlocked ? "text-[#b9ab97]" : "text-[#6e9f23]"
+                  isMobile || isPuzzleMuseumUnlocked
+                    ? "text-[#b9ab97]"
+                    : "text-[#6e9f23]"
                 }
               />
             </motion.div>
@@ -654,7 +719,7 @@ const Lobby: React.FC = () => {
                 name="아스파라거스 키우기"
                 icon="Sprout"
                 isMobile={isMobile}
-                className="border-[#aad0b2] bg-[#d4edda]/30 group-hover:bg-[#d4edda]/85"
+                className="border-[#aad0b2] bg-[#d4edda]/85 group-hover:bg-[#d4edda]/85"
                 iconClassName="text-[#2d6a4f]"
               />
             </motion.div>
@@ -673,7 +738,7 @@ const Lobby: React.FC = () => {
                 name="오늘의 운세"
                 icon="ScrollText"
                 isMobile={isMobile}
-                className="border-[#b79880] bg-[#D6C0B0]/30 group-hover:bg-[#D6C0B0]/85"
+                className="border-[#b79880] bg-[#D6C0B0]/85 group-hover:bg-[#D6C0B0]/85"
                 iconClassName="text-[#8B5A2B]"
               />
             </motion.div>
@@ -691,7 +756,7 @@ const Lobby: React.FC = () => {
                 name="용사 리코 이야기"
                 icon="Swords"
                 isMobile={isMobile}
-                className="border-[#aebed7] bg-[#d8e4f7]/30 group-hover:bg-[#d8e4f7]/85"
+                className="border-[#aebed7] bg-[#d8e4f7]/85 group-hover:bg-[#d8e4f7]/85"
                 iconClassName="text-[#102542]"
               />
             </motion.div>
@@ -717,7 +782,11 @@ const Lobby: React.FC = () => {
       <NoteModal
         isOpen={activeNoteKey !== null}
         onClose={() => setActiveNoteKey(null)}
-        note={activeNoteKey ? LOBBY_NOTE_CONTENT[activeNoteKey] : null}
+        note={
+          activeNoteKey
+            ? getLobbyNoteContent(activeNoteKey, isPuzzleMuseumUnlocked)
+            : null
+        }
       />
     </div>
   );

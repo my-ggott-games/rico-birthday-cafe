@@ -128,7 +128,7 @@ export const CODY_TUTORIAL_SLIDES: TutorialSlide[] = [
     title: "특별한 조합을 찾아보자",
     titleIcon: "Sparkles",
     lines: [
-      "특별한 조합은 총 5가지야.",
+      "특별한 조합은 총 6가지야.",
       "모든 조합을 찾으면 좋은 일이 생길지도?",
     ],
     showArrows: false,

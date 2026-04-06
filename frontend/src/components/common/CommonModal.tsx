@@ -1,4 +1,4 @@
-import type { DragEvent, ReactNode } from "react";
+import type { CSSProperties, DragEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -11,6 +11,9 @@ type CommonModalProps = {
   footer?: ReactNode;
   overlayClassName?: string;
   panelClassName?: string;
+  panelMaxWidthClassName?: string;
+  panelStyle?: CSSProperties;
+  iconWrapperStyle?: CSSProperties;
   titleClassName?: string;
   bodyClassName?: string;
   footerClassName?: string;
@@ -25,6 +28,9 @@ export const CommonModal = ({
   footer,
   overlayClassName = "",
   panelClassName = "",
+  panelMaxWidthClassName = "max-w-sm",
+  panelStyle,
+  iconWrapperStyle,
   titleClassName = "",
   bodyClassName = "",
   footerClassName = "",
@@ -56,12 +62,16 @@ export const CommonModal = ({
             initial={{ scale: 0.8, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.8, opacity: 0, y: 20 }}
-            className={`relative z-10 w-full max-w-sm rounded-[2rem] border-4 border-[#5EC7A5] bg-[#FFFFF8] p-6 text-center shadow-2xl ${panelClassName}`}
+            className={`relative z-10 w-full ${panelMaxWidthClassName} rounded-[2rem] border-4 border-[#5EC7A5] bg-[#FFFFF8] p-6 text-center shadow-2xl ${panelClassName}`}
+            style={panelStyle}
             draggable={false}
             onClick={(event) => event.stopPropagation()}
           >
             {icon ? (
-              <span className="mb-3 inline-flex rounded-full bg-[#eefaf3] p-3 text-[#166D77] shadow-sm">
+              <span
+                className="mb-3 inline-flex shrink-0 self-start rounded-full bg-[#eefaf3] p-3 text-[#166D77] shadow-sm"
+                style={iconWrapperStyle}
+              >
                 {icon}
               </span>
             ) : null}

@@ -3,7 +3,9 @@ import { AnimatePresence, motion } from "framer-motion";
 
 import { Board } from "../components/asparagus/Board";
 import { Items } from "../components/asparagus/Items";
+import { CommonModal } from "../components/common/CommonModal";
 import { GameContainer } from "../components/common/GameContainer";
+import { PushableButton } from "../components/common/PushableButton";
 import { useAsparagusGame } from "../hooks/useAsparagusGame";
 import { usePageBgm } from "../hooks/usePageBgm";
 import { type Direction } from "../components/asparagus/types";
@@ -228,55 +230,42 @@ const AsparagusMerge: React.FC = () => {
           </div>
         )}
 
-        {gameOver && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{
-              background: "rgba(0,0,0,0.45)",
-              backdropFilter: "blur(4px)",
-            }}
-          >
-            <motion.div
-              initial={{ scale: 0.7, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.7, opacity: 0 }}
-              className="rounded-3xl p-8 max-w-xs w-full mx-4 flex flex-col items-center gap-4 text-center"
-              style={{
-                background: "#FFFFF8",
-                boxShadow: "0 8px 40px rgba(0,0,0,0.2)",
-              }}
-            >
-              <AppIcon name="Flower2" size={50} className="text-[#9ca3af]" />
-              <h2 className="font-black text-2xl" style={{ color: "#166D77" }}>
-                아스파라거스가 시들었어
-              </h2>
-              <p className="text-sm font-bold" style={{ color: "#9ca3af" }}>
-                괜찮아, 씨앗은 또 있어! 다시 키워볼래?
-              </p>
-              <p
-                className="text-xs font-bold px-3 py-1.5 rounded-xl"
-                style={{ background: "#166D77", color: "#bef264" }}
-              >
-                최종 점수: {score}
-              </p>
-              <div className="flex gap-2 w-full mt-2">
-                <button
-                  onClick={() => startGame()}
-                  className="flex-1 py-3 rounded-2xl font-black text-sm bg-[#5EC7A5] text-white"
-                >
-                  재도전
-                </button>
-                <button
-                  onClick={() => (window.location.href = "/lobby")}
-                  className="flex-1 py-3 rounded-2xl font-black text-sm bg-[#166D77] text-white"
-                >
-                  로비
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
       </AnimatePresence>
+
+      <CommonModal
+        isOpen={gameOver}
+        onClose={() => startGame()}
+        icon={<AppIcon name="Flower2" size={32} />}
+        title="아스파라거스가 시들었어"
+        panelClassName="border-[#5EC7A5] px-8 py-8 shadow-[0_30px_80px_rgba(22,109,119,0.16)]"
+        titleClassName="mb-4 text-2xl"
+        bodyClassName="space-y-3 text-center"
+        footerClassName="mt-6 flex gap-3"
+        footer={
+          <>
+            <PushableButton
+              onClick={() => startGame()}
+              className="flex-1 px-0 py-3"
+            >
+              재도전
+            </PushableButton>
+            <PushableButton
+              onClick={() => (window.location.href = "/lobby")}
+              variant="cream"
+              className="flex-1 px-0 py-3"
+            >
+              로비
+            </PushableButton>
+          </>
+        }
+      >
+        <p className="text-sm font-bold text-[#7f8a8f]">
+          괜찮아, 씨앗은 또 있어! 다시 키워볼래?
+        </p>
+        <p className="inline-flex rounded-xl bg-[#166D77] px-3 py-1.5 text-xs font-bold text-[#bef264]">
+          최종 점수: {score}
+        </p>
+      </CommonModal>
     </GameContainer>
   );
 };

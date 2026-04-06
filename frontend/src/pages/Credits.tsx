@@ -29,7 +29,7 @@ type CreditSection = {
 
 const CREDITS_SECTIONS: CreditSection[] = [
   {
-    title: "프로젝트 총괄",
+    title: "생일카페 총대",
     entries: [
       {
         label: "전체 기획 및 컨셉",
@@ -109,14 +109,14 @@ const CREDITS_SECTIONS: CreditSection[] = [
     title: "음악",
     entries: [
       {
-        label: "로비 「감자튀김 옴뇸뇸」",
+        label: "「감자튀김 옴뇸뇸」",
         credits: [
           { role: "작곡", name: "U+003AU+27B4" },
           { role: "편곡", name: "CODE NAME: G" },
         ],
       },
       {
-        label: "「밤바밤바」",
+        label: "「꽃 하나 aka.밤바밤바」",
         credits: [
           { role: "작곡", name: "U+003AU+27B4" },
           { role: "편곡", name: "CODE NAME: G" },
