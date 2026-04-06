@@ -455,6 +455,9 @@ const CodyGame: React.FC = () => {
     const isEquipped = Object.values(equippedIds).includes(item.id);
     const isDragging = !isMobile && activeId === item.id;
     const isDisabled = isItemDisabled(item);
+    const showRaisedEquippedBadge =
+      !isMobile &&
+      ["top", "skirt", "dress", "jacket"].includes(item.category);
     const handleClick = () => {
       if (isEquipped) {
         setEquippedItems((prev) => ({
@@ -507,8 +510,14 @@ const CodyGame: React.FC = () => {
         )}
 
         {isEquipped && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="bg-pale-custard/90 text-[#166D77] px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+          <div
+            className={`absolute z-30 flex justify-center ${
+              showRaisedEquippedBadge
+                ? "left-1/2 top-0 w-max -translate-x-1/2 -translate-y-[60%]"
+                : "inset-0 items-center"
+            }`}
+          >
+            <span className="bg-pale-custard/95 text-[#166D77] px-3 py-1 rounded-full text-xs font-bold shadow-sm border border-[#166D77]/10">
               <span className="inline-flex items-center gap-1">
                 <AppIcon name="Sparkles" size={12} />
                 장착 중
