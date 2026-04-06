@@ -4,12 +4,10 @@ import com.rico.birthdaycafe.dto.AchievementDto;
 import com.rico.birthdaycafe.entity.Achievement;
 import com.rico.birthdaycafe.entity.User;
 import com.rico.birthdaycafe.entity.UserAchievement;
-import com.rico.birthdaycafe.event.GameCompletedEvent;
 import com.rico.birthdaycafe.repository.AchievementRepository;
 import com.rico.birthdaycafe.repository.UserAchievementRepository;
 import com.rico.birthdaycafe.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,25 +23,6 @@ public class AchievementService {
     private final AchievementRepository achievementRepository;
     private final UserAchievementRepository userAchievementRepository;
     private final UserRepository userRepository;
-
-    @EventListener
-    @Transactional
-    public void handleGameCompletedEvent(GameCompletedEvent event) {
-        User user = event.getUser();
-        String gameType = event.getGameType();
-
-        // Very basic example logic: unlock an achievement based on the game played.
-        String achievementCode = switch (gameType) {
-            case "CODY" -> "FIRST_CODY_GAME";
-            case "ITABAG" -> "FIRST_ITABAG";
-            case "PUZZLE" -> "FIRST_PUZZLE";
-            default -> null;
-        };
-
-        if (achievementCode != null) {
-            awardAchievement(user, achievementCode);
-        }
-    }
 
     @Transactional
     public boolean awardAchievement(User user, String achievementCode) {
