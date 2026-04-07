@@ -1,6 +1,6 @@
-# 🎂 Project: Rico's Online Birthday Cafe
+# 🎂 Project: Riko's Online Birthday Cafe
 
-버추얼 유튜버 **유즈하 리코(Yuzuha Rico)**의 온라인 생일 카페 프로젝트.
+버추얼 유튜버 **유즈하 리코(Yuzuha Riko)**의 온라인 생일 카페 프로젝트.
 팬들이 온라인에서 미니게임을 즐기고 업적을 달성하며 생일을 함께 축하하는 인터랙티브 플랫폼.
 
 ---
@@ -115,7 +115,7 @@
 | THANK_YOU_ALL | 감사합니다! | 엔딩크레딧을 끝까지 봤다. | /credits 페이지 버튼 클릭 |
 | (기존 업적들) | ... | ... | 이타백 게임에서 뱃지로 사용 가능 |
 
-### 3.8. [Game 5] 오늘의 리코 운세 (Rico's Fortune/Omikuji)
+### 3.8. [Game 5] 오늘의 리코 운세 (Riko's Fortune/Omikuji)
 - 컨셉: 일본의 '오미쿠지'처럼 통을 흔들어 오늘의 운세 뽑기.
 - 랜덤 요소:
     - 대길(Great Luck) ~ 대흉(Bad Luck) 까지의 운세가 무작위로 나옵니다.

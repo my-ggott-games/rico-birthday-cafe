@@ -1,4 +1,4 @@
-import type { AppIconName } from "./AppIcon";
+import type { AppIconName } from "./appIconRegistry";
 
 const ACHIEVEMENT_ICONS: Record<string, AppIconName> = {
   ASPARAGUS_EXCALIBUR: "Sword",

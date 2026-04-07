@@ -132,7 +132,7 @@ export default function FortuneGame() {
 
   return (
     <GameContainer
-      title="Rico's Fortune"
+      title="Riko's Fortune"
       desc="오늘의 리코 운세"
       gameName="로비"
       helpSlides={FORTUNE_TUTORIAL_SLIDES}

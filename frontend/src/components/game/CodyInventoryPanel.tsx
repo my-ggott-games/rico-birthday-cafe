@@ -1,6 +1,7 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AppIcon, type AppIconName } from "../common/AppIcon";
+import { AppIcon } from "../common/AppIcon";
+import type { AppIconName } from "../common/appIconRegistry";
 import type { CodyItem, MobileTabId } from "./codyTypes";
 
 type InventorySection = {

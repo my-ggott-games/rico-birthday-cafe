@@ -619,17 +619,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <span className="text-xl font-black tracking-wider text-[#5EC7A5] md:text-2xl">
                     {issuedUid}
                   </span>
-                  <button
+                  <PushableButton
                     onClick={() => copyToClipboard(issuedUid)}
-                    className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-[#166D77]/50 transition-colors hover:text-[#5EC7A5] md:text-sm"
+                    variant="mint"
+                    className="mx-auto gap-1.5 rounded-xl px-4 py-2 text-xs md:text-sm"
                   >
                     <AppIcon
                       name={copied ? "BadgeCheck" : "Copy"}
                       size={14}
-                      className={copied ? "text-[#5EC7A5]" : undefined}
+                      className="text-current"
                     />
                     <span>{copied ? "복사 완료" : "클릭하여 복사하기"}</span>
-                  </button>
+                  </PushableButton>
                 </div>
 
                 <p className="mb-4 inline-flex items-center gap-1.5 text-sm font-bold text-[#166D77] md:text-base">

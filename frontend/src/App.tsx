@@ -50,9 +50,18 @@ function App() {
             </Route>
 
             <Route element={<AdminOnlyRoute />}>
-              <Route path="/sample/landing-compare" element={<LandingCompareSample />} />
-              <Route path="/sample/takeout-cup" element={<TakeoutCupShowcase />} />
-              <Route path="/sample/achievements" element={<AchievementListShowcase />} />
+              <Route
+                path="/sample/landing-compare"
+                element={<LandingCompareSample />}
+              />
+              <Route
+                path="/sample/takeout-cup"
+                element={<TakeoutCupShowcase />}
+              />
+              <Route
+                path="/sample/achievements"
+                element={<AchievementListShowcase />}
+              />
               <Route path="/sample/cody" element={<CodySample />} />
               <Route path="/sample/adventure" element={<AdventureSample />} />
               <Route path="/sample/puzzle" element={<PuzzleSandbox />} />

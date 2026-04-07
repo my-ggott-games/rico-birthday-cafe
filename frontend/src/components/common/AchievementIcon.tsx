@@ -1,4 +1,5 @@
-import { AppIcon, isAppIconName } from "./AppIcon";
+import { AppIcon } from "./AppIcon";
+import { isAppIconName } from "./appIconRegistry";
 import { getAchievementIconName } from "./achievementIcons";
 
 const isAssetUrl = (iconUrl?: string | null) =>

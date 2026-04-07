@@ -196,7 +196,7 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
           </div>
 
           {/* Achievement Scroll List */}
-          <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar min-h-0">
+          <div className="min-h-0 flex-1 overflow-y-auto px-1 pb-1 pr-2 custom-scrollbar">
             {loading ? (
               <div className="flex justify-center items-center h-40">
                 <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#5EC7A5] border-t-transparent" />

@@ -15,7 +15,8 @@ import {
   PUZZLE_MUSEUM_UNLOCK_KEY,
 } from "../constants/puzzle";
 import { EASTER_EGG_NOTE_ACCESS_STORAGE_KEY } from "../constants/noteAccess";
-import { AppIcon, type AppIconName } from "../components/common/AppIcon";
+import { AppIcon } from "../components/common/AppIcon";
+import type { AppIconName } from "../components/common/appIconRegistry";
 import { LOBBY_BGM_SRC } from "../utils/bgm";
 import { useAuthStore } from "../store/useAuthStore";
 import { BASE_URL, fetchWithAuth } from "../utils/api";
@@ -88,7 +89,7 @@ const LOBBY_NOTE_CONTENT: Record<LobbyNoteKey, NoteModalContent> = {
   },
   fortune: {
     title: "비하인드 스토리",
-    eyebrow: "Rico's Fortune",
+    eyebrow: "Riko's Fortune",
     icon: "StickyNote",
     accentColor: "#b79880",
     backgroundColor: "#F7EEE8",
@@ -232,16 +233,16 @@ const Lobby: React.FC = () => {
   const [isPuzzleMuseumUnlocked, setIsPuzzleMuseumUnlocked] = useState(
     window.localStorage.getItem(PUZZLE_MUSEUM_UNLOCK_KEY) === "true",
   );
-  const [concertClickCount, setConcertClickCount] = useState(0);
+  const [happyBirthdayClickCount, setHappyBirthdayClickCount] = useState(0);
   const [sloganClickCount, setSloganClickCount] = useState(0);
   const [, setIsSloganCollectorUnlocked] = useState(
     window.localStorage.getItem(SLOGAN_COLLECTOR_STORAGE_KEY) === "true",
   );
-  const [isConcertDropping, setIsConcertDropping] = useState(false);
-  const [isConcertHidden, setIsConcertHidden] = useState(false);
+  const [isHappyBirthdayDropping, setIsHappyBirthdayDropping] = useState(false);
+  const [isHappyBirthdayHidden, setIsHappyBirthdayHidden] = useState(false);
   const [isSloganDropping, setIsSloganDropping] = useState(false);
   const [isSloganHidden, setIsSloganHidden] = useState(false);
-  const concertControls = useAnimationControls();
+  const happyBirthdayControls = useAnimationControls();
   const sloganControls = useAnimationControls();
 
   useEffect(() => {
@@ -326,12 +327,12 @@ const Lobby: React.FC = () => {
     };
   }, [isGuest, token]);
 
-  const triggerConcertShake = useCallback(() => {
-    void concertControls.start({
+  const triggerHappyBirthdayShake = useCallback(() => {
+    void happyBirthdayControls.start({
       y: [0, -4, 3, -3, 2, 0],
       transition: { duration: 0.34, ease: "easeInOut" },
     });
-  }, [concertControls]);
+  }, [happyBirthdayControls]);
 
   const triggerSloganShake = useCallback(() => {
     void sloganControls.start({
@@ -376,8 +377,8 @@ const Lobby: React.FC = () => {
     }
   }, [addToast, isGuest, token]);
 
-  const triggerConcertDrop = useCallback(() => {
-    if (isConcertDropping || isConcertHidden) {
+  const triggerHappyBirthdayDrop = useCallback(() => {
+    if (isHappyBirthdayDropping || isHappyBirthdayHidden) {
       return;
     }
 
@@ -385,9 +386,9 @@ const Lobby: React.FC = () => {
     const bounceFloor = viewportHeight * 0.5;
     const bounceUp = Math.max(bounceFloor - 32, 0);
 
-    setIsConcertDropping(true);
+    setIsHappyBirthdayDropping(true);
 
-    void concertControls.start({
+    void happyBirthdayControls.start({
       y: [0, bounceFloor, bounceUp],
       rotate: [0, 1.6, -1.1],
       transition: {
@@ -396,7 +397,7 @@ const Lobby: React.FC = () => {
         times: [0, 0.86, 1],
       },
     });
-  }, [concertControls, isConcertDropping, isConcertHidden]);
+  }, [happyBirthdayControls, isHappyBirthdayDropping, isHappyBirthdayHidden]);
 
   const triggerSloganDrop = useCallback(() => {
     if (isSloganDropping || isSloganHidden) {
@@ -420,32 +421,32 @@ const Lobby: React.FC = () => {
     });
   }, [sloganControls, isSloganHidden, isSloganDropping]);
 
-  const handleConcertClick = useCallback(() => {
-    if (isConcertDropping || isConcertHidden) {
+  const handleHappyBirthdayClick = useCallback(() => {
+    if (isHappyBirthdayDropping || isHappyBirthdayHidden) {
       return;
     }
 
-    const nextClickCount = concertClickCount + 1;
-    setConcertClickCount(nextClickCount);
+    const nextClickCount = happyBirthdayClickCount + 1;
+    setHappyBirthdayClickCount(nextClickCount);
 
     if (nextClickCount >= CLICK_DROP_THRESHOLD) {
-      triggerConcertDrop();
+      triggerHappyBirthdayDrop();
       return;
     }
 
     if (CLICK_SHAKE_MILESTONES.has(nextClickCount)) {
-      triggerConcertShake();
+      triggerHappyBirthdayShake();
     }
   }, [
-    concertClickCount,
-    isConcertDropping,
-    isConcertHidden,
-    triggerConcertDrop,
-    triggerConcertShake,
+    happyBirthdayClickCount,
+    isHappyBirthdayDropping,
+    isHappyBirthdayHidden,
+    triggerHappyBirthdayDrop,
+    triggerHappyBirthdayShake,
   ]);
 
   const handleSloganClick = useCallback(() => {
-    if (isConcertHidden === false || isSloganDropping || isSloganHidden) {
+    if (isHappyBirthdayHidden === false || isSloganDropping || isSloganHidden) {
       return;
     }
 
@@ -462,7 +463,7 @@ const Lobby: React.FC = () => {
       triggerSloganShake();
     }
   }, [
-    isConcertHidden,
+    isHappyBirthdayHidden,
     isSloganDropping,
     isSloganHidden,
     sloganClickCount,
@@ -582,25 +583,25 @@ const Lobby: React.FC = () => {
               draggable={false}
             />
           </div>
-          {!isConcertHidden && (
+          {!isHappyBirthdayHidden && (
             <motion.button
               type="button"
               initial={false}
-              animate={concertControls}
+              animate={happyBirthdayControls}
               onAnimationComplete={() => {
-                if (isConcertDropping) {
-                  setIsConcertHidden(true);
+                if (isHappyBirthdayDropping) {
+                  setIsHappyBirthdayHidden(true);
                 }
               }}
-              onClick={handleConcertClick}
-              className="lobby-slogan-stage__concert absolute left-1/2 top-1/2 w-[min(86vw,30rem)] -translate-x-1/2 -translate-y-1/2 cursor-pointer border-0 bg-transparent p-0"
+              onClick={handleHappyBirthdayClick}
+              className="lobby-slogan-stage__happy-birthday absolute left-1/2 top-1/2 w-[min(86vw,30rem)] -translate-x-1/2 -translate-y-1/2 cursor-pointer border-0 bg-transparent p-0"
             >
               <div
                 className={`relative overflow-hidden rounded-[1.1rem] ${isMobile ? "h-[6.4rem]" : "h-[10rem]"}`}
               >
                 <img
-                  src="/slogan/concert.jpg"
-                  alt="리코 콘서트 슬로건"
+                  src="/slogan/happybirthday.jpg"
+                  alt="리코 해피버스데이 슬로건"
                   className="h-full w-full select-none object-cover object-center"
                   draggable={false}
                 />
@@ -626,7 +627,7 @@ const Lobby: React.FC = () => {
                 }
               }}
               onClick={handleSloganClick}
-              className={`lobby-slogan-stage__banner absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-transparent p-0 border-0 ${isConcertHidden ? "cursor-pointer" : ""}`}
+              className={`lobby-slogan-stage__banner absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-transparent p-0 border-0 ${isHappyBirthdayHidden ? "cursor-pointer" : ""}`}
             >
               <KCelebrateSlogan
                 className="slogan-lobby"
@@ -725,7 +726,7 @@ const Lobby: React.FC = () => {
             </motion.div>
           </LobbyHotspot>
 
-          {/* Hotspot: Rico's Fortune (Omikuji) */}
+          {/* Hotspot: Riko's Fortune (Omikuji) */}
           <LobbyHotspot
             to="/game/fortune"
             noteKey="fortune"

@@ -20,6 +20,7 @@ const CODY_BACKGROUND_ASSETS = [
   "background_4-1",
   "background_4-2",
   "background_4-3",
+  "background_6-1",
 ].map(JPG_ASSET);
 
 const CODY_ITEM_ASSETS = [

@@ -719,11 +719,7 @@ const CodyGame: React.FC = () => {
                         );
                       } else if (matchedCombo.backgroundClass === "beer") {
                         setOrientalBgUrl(
-                          [
-                            "/assets/codygame/background_4-1.jpg",
-                            "/assets/codygame/background_4-2.jpg",
-                            "/assets/codygame/background_4-3.jpg",
-                          ][Math.floor(Math.random() * 3)],
+                          "/assets/codygame/background_6-1.jpg",
                         );
                       } else if (matchedCombo.backgroundClass === "knight") {
                         setOrientalBgUrl(

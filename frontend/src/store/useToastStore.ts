@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { AppIconName } from "../components/common/AppIcon";
+import type { AppIconName } from "../components/common/appIconRegistry";
 import { playDiriringSfx } from "../utils/soundEffects";
 
 export interface ToastMessage {

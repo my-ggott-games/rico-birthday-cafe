@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { CommonModal } from "./CommonModal";
-import { AppIcon, type AppIconName } from "./AppIcon";
+import { AppIcon } from "./AppIcon";
+import type { AppIconName } from "./appIconRegistry";
 import { PushableButton } from "./PushableButton";
 
 export type NoteModalContent = {

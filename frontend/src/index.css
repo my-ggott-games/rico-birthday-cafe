@@ -260,6 +260,43 @@ button {
   }
 }
 
+@keyframes beer-hex-pulse {
+  0% {
+    opacity: calc(var(--beer-hex-opacity, 0.3) * 0.42);
+  }
+
+  35% {
+    opacity: var(--beer-hex-opacity, 0.3);
+  }
+
+  100% {
+    opacity: calc(var(--beer-hex-opacity, 0.3) * 0.42);
+  }
+}
+
+.beer-hex-ambient {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.beer-hex-ambient__hex {
+  position: absolute;
+  display: block;
+  border-radius: 2px;
+  clip-path: polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0 50%);
+  box-shadow:
+    0 0 8px rgba(255, 255, 255, 0.1),
+    0 0 18px rgba(255, 255, 255, 0.08);
+  mix-blend-mode: screen;
+  --beer-hex-opacity: 0.3;
+  animation-name: beer-hex-pulse;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  will-change: opacity;
+}
+
 .phase-transition-blackout {
   background: #000;
   animation: phase-transition-wash 3.4s ease-in-out forwards;
@@ -363,7 +400,7 @@ button {
   isolation: isolate;
 }
 
-.lobby-slogan-stage__concert {
+.lobby-slogan-stage__happy-birthday {
   z-index: 30;
 }
 

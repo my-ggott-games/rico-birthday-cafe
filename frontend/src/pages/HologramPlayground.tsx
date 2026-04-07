@@ -7,7 +7,7 @@ const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
 const HOLOGRAPHIC_SPRING = { stiffness: 120, damping: 20 };
-const BASE_IMAGE_URL = "/assets/puzzlegame/rico_puzzle_birthday_banquet.png";
+const BASE_IMAGE_URL = "/assets/puzzlegame/riko_puzzle_birthday_banquet.png";
 
 const Toggle: React.FC<{
   label: string;
@@ -93,7 +93,6 @@ const HologramPlayground: React.FC = () => {
       }) as React.CSSProperties,
     [fieldX, fieldY, glintX, glintY],
   );
-
 
   const autoSweepGradient = useMemo(
     () =>

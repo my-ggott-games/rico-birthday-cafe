@@ -3,6 +3,7 @@ import { BlueButterflyOverlay } from "./ButterflyEffect";
 import { CMYGlitchOverlay } from "./CMYGlitchOverlay";
 import { DroppableCharacter } from "./DroppableCharacter";
 import { FireflyOverlay } from "./FireflyEffect";
+import { HexAmbientOverlay } from "./HexAmbientOverlay";
 import { PolaroidFrame } from "./PolaroidFrame";
 import { RainOverlay } from "./RainEffect";
 import { BlossomPetalOverlay } from "./SpringEffect";
@@ -122,6 +123,9 @@ export const CodyDisplayStage: React.FC<CodyDisplayStageProps> = ({
               {!isCapturing && activeBackground === "oriental" && (
                 <BlossomPetalOverlay isFinished={true} isFlyAway={isFlyAway} />
               )}
+              {!isCapturing && activeBackground === "beer" && (
+                <HexAmbientOverlay />
+              )}
               {!isCapturing && activeBackground === "training" && (
                 <CMYGlitchOverlay />
               )}
@@ -158,4 +162,3 @@ export const CodyDisplayStage: React.FC<CodyDisplayStageProps> = ({
     </div>
   );
 };
-

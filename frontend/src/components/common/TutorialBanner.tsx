@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AppIcon, type AppIconName } from "./AppIcon";
+import { AppIcon } from "./AppIcon";
+import type { AppIconName } from "./appIconRegistry";
 import { PushableButton } from "./PushableButton";
 
 export type Direction = "up" | "down" | "left" | "right";

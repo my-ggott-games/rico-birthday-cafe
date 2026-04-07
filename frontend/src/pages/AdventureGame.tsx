@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { TutorialSlide } from "../components/common/TutorialBanner";
-import type { AppIconName } from "../components/common/AppIcon";
+import type { AppIconName } from "../components/common/appIconRegistry";
 import { type AdventureModalAction } from "../components/game/AdventureModal";
 import { BASE_URL } from "../utils/api";
 import { useAuthStore } from "../store/useAuthStore";

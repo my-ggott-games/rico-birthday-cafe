@@ -7,14 +7,11 @@ import ProgressiveBackground from "../components/common/ProgressiveBackground";
 import ProgressiveImage from "../components/common/ProgressiveImage";
 
 const LANDING_IMAGE_ASPECT = "aspect-[3847/2885]";
-const MOBILE_SLOGAN_FRAME_CLASS =
-  "absolute left-1/2 top-[8.5%] w-[30%] -translate-x-1/2";
 const MOBILE_DOOR_FRAME_CLASS =
-  "pointer-events-auto absolute left-1/2 top-[60%] -translate-x-1/2 -translate-y-1/2 cursor-pointer";
-const DESKTOP_SLOGAN_FRAME_CLASS = "absolute left-1/2 w-[30%] -translate-x-1/2";
+  "pointer-events-auto absolute left-1/2 top-[60%] flex -translate-x-1/2 -translate-y-1/2 cursor-pointer flex-col items-center";
 const DESKTOP_LANDING_FRAME_CLASS = `${LANDING_IMAGE_ASPECT} relative w-[max(100vw,calc(100dvh*3847/2885))]`;
 const DESKTOP_DOOR_FRAME_CLASS =
-  "absolute left-1/2 top-[45%] -translate-x-1/2 -translate-y-1/2";
+  "absolute left-1/2 top-[45%] flex -translate-x-1/2 -translate-y-1/2 cursor-pointer flex-col items-center";
 const ENTER_ANIMATION_DURATION_MS = 1850;
 
 const LandingPage: React.FC = () => {
@@ -26,7 +23,6 @@ const LandingPage: React.FC = () => {
   );
   const [isBackgroundReady, setIsBackgroundReady] = useState(false);
   const [isMobileFrameReady, setIsMobileFrameReady] = useState(false);
-  const [isSloganReady, setIsSloganReady] = useState(false);
   const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
@@ -43,8 +39,8 @@ const LandingPage: React.FC = () => {
   };
 
   const isEnterButtonReady = isMobileViewport
-    ? isBackgroundReady && isMobileFrameReady && isSloganReady
-    : isBackgroundReady && isSloganReady;
+    ? isBackgroundReady && isMobileFrameReady
+    : isBackgroundReady;
 
   const handleEnter = () => {
     if (isOpen) {
@@ -113,26 +109,6 @@ const LandingPage: React.FC = () => {
               onHighResVisible={() => setIsMobileFrameReady(true)}
             />
 
-            <motion.div
-              initial={{ y: -24, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ type: "spring", bounce: 0.35 }}
-              className={`${MOBILE_SLOGAN_FRAME_CLASS} z-20 text-center`}
-            >
-              <ProgressiveImage
-                thumbnailSrc="/slogan/landing-thumb.jpg"
-                fullSrc="/slogan/landing.jpg"
-                previewFetchPriority="low"
-                alt="유즈하 리코 생일카페 배너"
-                className="mx-auto aspect-[2419/907] w-full overflow-hidden rounded-[0.8rem] shadow-[0_10px_24px_rgba(0,0,0,0.26)]"
-                imageClassName="object-cover"
-                onHighResVisible={() => setIsSloganReady(true)}
-              />
-              <p className="mt-3 inline-flex rounded-full border border-white/55 bg-white/24 px-4 py-2 text-xs font-black tracking-[0.24em] text-pale-custard shadow-lg backdrop-blur-sm">
-                2026.04.13 OPEN
-              </p>
-            </motion.div>
-
             {!isOpen && isEnterButtonReady && (
               <motion.div
                 onClick={handleEnter}
@@ -162,30 +138,6 @@ const LandingPage: React.FC = () => {
                 </motion.div>
               </motion.div>
             )}
-          </div>
-        </div>
-
-        <div className="pointer-events-none absolute left-1/2 top-0 z-20 hidden -translate-x-1/2 md:block">
-          <div className={DESKTOP_LANDING_FRAME_CLASS}>
-            <motion.div
-              initial={{ y: -24, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ type: "spring", bounce: 0.35 }}
-              className={`${DESKTOP_SLOGAN_FRAME_CLASS} text-center`}
-            >
-              <ProgressiveImage
-                thumbnailSrc="/slogan/landing-thumb.jpg"
-                fullSrc="/slogan/landing.jpg"
-                previewFetchPriority="low"
-                alt="유즈하 리코 생일카페 배너"
-                className="mx-auto aspect-[2419/907] w-full overflow-hidden rounded-[0.9rem] shadow-[0_12px_28px_rgba(0,0,0,0.28)]"
-                imageClassName="object-cover"
-                onHighResVisible={() => setIsSloganReady(true)}
-              />
-              <p className="mt-3 inline-flex rounded-full border border-white/55 bg-white/24 px-5 py-2 text-sm font-black tracking-[0.28em] text-pale-custard shadow-lg backdrop-blur-sm">
-                2026.04.13 OPEN
-              </p>
-            </motion.div>
           </div>
         </div>
 
