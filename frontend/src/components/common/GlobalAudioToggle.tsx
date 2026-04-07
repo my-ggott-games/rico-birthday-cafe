@@ -86,22 +86,6 @@ const AUDIO_NOTE_BY_BGM: Record<string, NoteModalContent> = {
 
 const AUDIO_NOTE_BY_ROUTE: Record<string, NoteModalContent> = {
   "/lobby": AUDIO_NOTE_BY_BGM["/sound/lobby-bgm.m4a"],
-  "/game/cody": AUDIO_NOTE_BY_BGM["/sound/activity-bgm-1.m4a"],
-  "/game/puzzle": AUDIO_NOTE_BY_BGM["/sound/activity-bgm-1.m4a"],
-  "/game/asparagus": AUDIO_NOTE_BY_BGM["/sound/activity-bgm-1.m4a"],
-  "/credits": AUDIO_NOTE_BY_BGM["/sound/activity-bgm-2.m4a"],
-  "/game/fortune": {
-    ...AUDIO_NOTE_BY_BGM["/sound/activity-bgm-2.m4a"],
-    eyebrow: "Fortune BGM",
-  },
-  "/game/adventure": {
-    ...AUDIO_NOTE_BY_BGM["/sound/activity-bgm-2.m4a"],
-    eyebrow: "Adventure BGM",
-  },
-  "/game/itabag": {
-    ...AUDIO_NOTE_BY_BGM["/sound/activity-bgm-1.m4a"],
-    eyebrow: "Itabag BGM",
-  },
 };
 
 export const GlobalAudioToggle: React.FC = () => {
@@ -117,9 +101,9 @@ export const GlobalAudioToggle: React.FC = () => {
     matchPath(route, location.pathname),
   );
   const currentAudioNote =
-    (currentBgmSrc ? AUDIO_NOTE_BY_BGM[currentBgmSrc] : null) ??
-    AUDIO_NOTE_BY_ROUTE[location.pathname] ??
-    null;
+    (currentBgmSrc ? AUDIO_NOTE_BY_BGM[currentBgmSrc] : null) || null;
+  const fallbackAudioNote = AUDIO_NOTE_BY_ROUTE[location.pathname] ?? null;
+  const resolvedAudioNote = currentAudioNote ?? fallbackAudioNote;
 
   if (!isVisible) {
     return null;
@@ -128,7 +112,7 @@ export const GlobalAudioToggle: React.FC = () => {
   return (
     <>
       <div className="fixed bottom-4 right-4 z-[9998] flex items-center gap-2">
-        {currentAudioNote ? (
+        {resolvedAudioNote ? (
           <button
             type="button"
             onClick={() => setIsNoteOpen(true)}
@@ -169,7 +153,7 @@ export const GlobalAudioToggle: React.FC = () => {
       <NoteModal
         isOpen={isNoteOpen}
         onClose={() => setIsNoteOpen(false)}
-        note={currentAudioNote}
+        note={resolvedAudioNote}
       />
     </>
   );

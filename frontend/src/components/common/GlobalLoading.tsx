@@ -35,7 +35,6 @@ const GlobalLoading: React.FC = () => {
       "/game/adventure",
       "/game/fortune",
       "/game/asparagus",
-      "/credits",
     ];
 
     const isValidRoute = validRoutes.some((route) =>

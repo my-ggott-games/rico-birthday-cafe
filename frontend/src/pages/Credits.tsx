@@ -180,11 +180,22 @@ export default function Credits() {
     endY: -window.innerHeight,
     duration: 120,
   });
+  const setCurrentBgmSrc = useAudioStore((state) => state.setCurrentBgmSrc);
   const audioRef = useRef<HTMLAudioElement>(null);
   const claimButtonRef = useRef<HTMLDivElement>(null);
   const creditsViewportRef = useRef<HTMLDivElement>(null);
   const creditsScrollRef = useRef<HTMLDivElement>(null);
   const creditsTrackRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setCurrentBgmSrc(bgmSrc);
+
+    return () => {
+      if (useAudioStore.getState().currentBgmSrc === bgmSrc) {
+        setCurrentBgmSrc(null);
+      }
+    };
+  }, [bgmSrc, setCurrentBgmSrc]);
 
   useEffect(() => {
     setNeedsManualStart(true);

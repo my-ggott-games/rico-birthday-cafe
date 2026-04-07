@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import type { AppIconName } from "../components/common/appIconRegistry";
-import { playDiriringSfx } from "../utils/soundEffects";
+import {
+  isPageTransitionLoading,
+  PAGE_TRANSITION_LOADING_EVENT,
+} from "../utils/pageTransitionLoading";
 
 export interface ToastMessage {
   id: string;
@@ -15,15 +18,71 @@ interface ToastState {
   removeToast: (id: string) => void;
 }
 
+const TOAST_DURATION_MS = 5000;
+
+const pendingToasts: Array<Omit<ToastMessage, "id">> = [];
+let flushListenerAttached = false;
+
+const removeToastById = (id: string) =>
+  useToastStore.setState((state) => ({
+    toasts: state.toasts.filter((toast) => toast.id !== id),
+  }));
+
+const pushToast = (toast: Omit<ToastMessage, "id">) => {
+  const id = Math.random().toString(36).substr(2, 9);
+  useToastStore.setState((state) => ({
+    toasts: [...state.toasts, { ...toast, id }],
+  }));
+
+  window.setTimeout(() => {
+    removeToastById(id);
+  }, TOAST_DURATION_MS);
+};
+
+const flushPendingToasts = () => {
+  while (pendingToasts.length > 0) {
+    const nextToast = pendingToasts.shift();
+    if (!nextToast) {
+      break;
+    }
+    pushToast(nextToast);
+  }
+};
+
+const ensureFlushListener = () => {
+  if (flushListenerAttached || typeof window === "undefined") {
+    return;
+  }
+
+  const handleLoadingChange = (
+    event: Event | CustomEvent<{ loading?: boolean }>,
+  ) => {
+    const loading =
+      "detail" in event && event.detail
+        ? event.detail.loading === true
+        : isPageTransitionLoading();
+
+    if (loading) {
+      return;
+    }
+
+    flushPendingToasts();
+  };
+
+  window.addEventListener(PAGE_TRANSITION_LOADING_EVENT, handleLoadingChange);
+  flushListenerAttached = true;
+};
+
 export const useToastStore = create<ToastState>((set) => ({
   toasts: [],
   addToast: (toast) => {
-    const id = Math.random().toString(36).substr(2, 9);
-    set((state) => ({ toasts: [...state.toasts, { ...toast, id }] }));
-    void playDiriringSfx();
-    setTimeout(() => {
-      set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
-    }, 5000); // Auto remove after 5 seconds
+    if (typeof window !== "undefined" && isPageTransitionLoading()) {
+      pendingToasts.push(toast);
+      ensureFlushListener();
+      return;
+    }
+
+    pushToast(toast);
   },
   removeToast: (id) =>
     set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
