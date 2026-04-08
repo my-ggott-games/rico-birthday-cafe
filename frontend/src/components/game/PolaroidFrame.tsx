@@ -71,12 +71,11 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
   const isFastReveal = !!activeBackground?.startsWith("linear-gradient");
   const revealDuration = isFastReveal ? 0 : 7.0;
   const revealDelay = isFastReveal ? 0 : 0.5;
-  const effectsRevealDelayMs = (revealDelay + revealDuration) * 1000;
   const resolvedCharacterStageClassName =
     characterStageClassName ||
     (isFastReveal ? "h-[420px] md:h-[470px]" : "h-[600px] md:h-[640px]");
   const [showEffects, setShowEffects] = React.useState(
-    hideAnimations || effectsRevealDelayMs === 0,
+    hideAnimations || revealDuration === 0,
   );
   const signatureIcon = React.useMemo(
     () => SIGNATURE_ICONS[Math.floor(Math.random() * SIGNATURE_ICONS.length)],
@@ -85,19 +84,13 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
   const SignatureIconComponent = signatureIcon.Icon;
 
   React.useEffect(() => {
-    if (hideAnimations || effectsRevealDelayMs === 0) {
+    if (hideAnimations || revealDuration === 0) {
       setShowEffects(true);
       return;
     }
 
     setShowEffects(false);
-    const timer = window.setTimeout(
-      () => setShowEffects(true),
-      effectsRevealDelayMs,
-    );
-
-    return () => window.clearTimeout(timer);
-  }, [effectsRevealDelayMs, hideAnimations]);
+  }, [activeBackground, hideAnimations, revealDuration]);
 
   const today = new Date();
   const formattedDate = `${today.getFullYear()}. ${String(today.getMonth() + 1).padStart(2, "0")}. ${String(today.getDate()).padStart(2, "0")}. photo by 치코`;
@@ -160,6 +153,11 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
           <motion.div
             initial={{ opacity: hideAnimations ? 1 : isFastReveal ? 1 : 0 }}
             animate={{ opacity: 1 }}
+            onAnimationComplete={() => {
+              if (!hideAnimations) {
+                setShowEffects(true);
+              }
+            }}
             transition={{
               duration: hideAnimations ? 0 : revealDuration,
               delay: hideAnimations ? 0 : revealDelay,

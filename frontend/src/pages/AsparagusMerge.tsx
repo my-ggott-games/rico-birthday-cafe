@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 import { Board } from "../components/asparagus/Board";
 import { Items } from "../components/asparagus/Items";
@@ -18,6 +18,7 @@ import { useAuthStore } from "../store/useAuthStore";
 const AsparagusMerge: React.FC = () => {
   const [bgmSrc] = React.useState(() => pickRandomActivityBgm());
   const isAdmin = useAuthStore((state) => state.isAdmin);
+  const navigate = useNavigate();
 
   usePageBgm(bgmSrc);
 
@@ -146,66 +147,51 @@ const AsparagusMerge: React.FC = () => {
         </div>
       </div>
 
-      {/* Win/Game Over Modals */}
-      <AnimatePresence>
-        {won && !continueAfterWin && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{
-              background: "rgba(0,0,0,0.45)",
-              backdropFilter: "blur(4px)",
-            }}
-          >
-            <motion.div
-              initial={{ scale: 0.7, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.7, opacity: 0 }}
-              className="rounded-3xl p-8 max-w-xs w-full mx-4 flex flex-col items-center gap-4 text-center"
-              style={{
-                background: "linear-gradient(135deg,#fffbe6,#fff9c4)",
-                boxShadow: "0 0 40px rgba(255,200,0,0.4)",
-              }}
+      <CommonModal
+        isOpen={won && !continueAfterWin}
+        onClose={() => setContinueAfterWin(true)}
+        icon={<AppIcon name="Sword" size={32} />}
+        title="성검 아스파라거스 등장"
+        panelClassName="border-[#F2C94C] bg-[linear-gradient(135deg,#fffbe6,#fff4b8)] px-8 py-8 shadow-[0_0_40px_rgba(255,200,0,0.28)]"
+        iconWrapperStyle={{
+          backgroundColor: "rgba(255,248,210,0.95)",
+          color: "#166D77",
+        }}
+        titleClassName="mb-4 text-2xl"
+        bodyClassName="space-y-3 text-center"
+        footerClassName="mt-6 flex flex-col gap-3"
+        footer={
+          <>
+            <PushableButton
+              onClick={() => setContinueAfterWin(true)}
+              variant="cream"
+              className="w-full px-0 py-3 text-[#6b7280]"
             >
-              <AppIcon name="Sword" size={56} className="text-[#166D77]" />
-              <h2 className="font-black text-2xl" style={{ color: "#166D77" }}>
-                성검 완성!
-              </h2>
-              <p className="text-sm font-bold" style={{ color: "#b45309" }}>
-                축하합니다!
-                <br />
-                성검을 획득하셨습니다!
-              </p>
-              <p
-                className="text-xs font-bold px-3 py-1.5 rounded-xl"
-                style={{ background: "#166D77", color: "#bef264" }}
-              >
-                최종 점수: {score}
-              </p>
-              <div className="flex flex-col gap-2 w-full">
-                <button
-                  onClick={() => setContinueAfterWin(true)}
-                  className="w-full py-2.5 rounded-2xl font-bold text-sm bg-gray-100 text-gray-500"
-                >
-                  계속하기
-                </button>
-                <button
-                  onClick={() => startGame()}
-                  className="w-full py-2.5 rounded-2xl font-black text-sm bg-[#5EC7A5] text-white"
-                >
-                  새 게임
-                </button>
-                <button
-                  onClick={() => (window.location.href = "/lobby")}
-                  className="w-full py-2.5 rounded-2xl font-black text-sm bg-[#166D77] text-white"
-                >
-                  로비로 이동
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-
-      </AnimatePresence>
+              계속하기
+            </PushableButton>
+            <PushableButton
+              onClick={() => startGame()}
+              variant="cream"
+              className="w-full px-0 py-3"
+            >
+              다시 키우기
+            </PushableButton>
+            <PushableButton
+              onClick={() => navigate("/lobby")}
+              className="w-full px-0 py-3"
+            >
+              로비로 이동
+            </PushableButton>
+          </>
+        }
+      >
+        <p className="text-sm font-bold text-[#b45309]">
+          대단해, 너라면 해낼 줄 알았어!
+        </p>
+        <p className="inline-flex rounded-xl bg-[#166D77] px-3 py-1.5 text-xs font-bold text-[#FFF8EA]">
+          최종 점수: {score}
+        </p>
+      </CommonModal>
 
       <CommonModal
         isOpen={gameOver}
@@ -225,7 +211,7 @@ const AsparagusMerge: React.FC = () => {
               재도전
             </PushableButton>
             <PushableButton
-              onClick={() => (window.location.href = "/lobby")}
+              onClick={() => navigate("/lobby")}
               variant="cream"
               className="flex-1 px-0 py-3"
             >
@@ -235,9 +221,9 @@ const AsparagusMerge: React.FC = () => {
         }
       >
         <p className="text-sm font-bold text-[#7f8a8f]">
-          괜찮아, 씨앗은 또 있어! 다시 키워볼래?
+          괜찮아, 씨앗은 더 있어! 다시 키워볼래?
         </p>
-        <p className="inline-flex rounded-xl bg-[#166D77] px-3 py-1.5 text-xs font-bold text-[#bef264]">
+        <p className="inline-flex rounded-xl bg-[#166D77] px-3 py-1.5 text-xs font-bold text-[#FFF8EA]">
           최종 점수: {score}
         </p>
       </CommonModal>

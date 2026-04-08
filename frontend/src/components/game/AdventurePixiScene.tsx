@@ -3,7 +3,6 @@ import {
   Assets,
   Container,
   Graphics,
-  Rectangle,
   Sprite,
   Texture,
   Ticker,
@@ -16,15 +15,13 @@ import {
   type MutableRefObject,
 } from "react";
 import type { Phase, PositionedHole, RunState } from "../../types/adventure";
+import { ADVENTURE_PLAYER_FRAME_PATHS } from "../../features/adventure/adventureAssets";
 
 extend({ Container, Graphics });
 extend({ Sprite });
 
 const GROUND_RATIO = 0.9;
 const PLAYER_CENTER_X = 32;
-const PLAYER_SPRITE_SHEET_PATH = "/assets/adventuregame/1172-Sheet.png";
-const PLAYER_FRAME_SIZE = 2000;
-const PLAYER_FRAME_COUNT = 6;
 const PLAYER_ANIMATION_FPS = 10;
 const PLAYER_SPRITE_WIDTH = 84;
 const PLAYER_SPRITE_HEIGHT = 84;
@@ -51,22 +48,6 @@ type StageProps = Omit<AdventurePixiSceneProps, "onJumpInput"> & Size;
 
 const colorToNumber = (color: string): number =>
   Number.parseInt(color.replace("#", ""), 16);
-
-const buildPlayerFrames = (sheetTexture: Texture): Texture[] =>
-  Array.from({ length: PLAYER_FRAME_COUNT }, (_, index) => {
-    const frame = new Rectangle(
-      index * PLAYER_FRAME_SIZE,
-      0,
-      PLAYER_FRAME_SIZE,
-      PLAYER_FRAME_SIZE,
-    );
-
-    return new Texture({
-      source: sheetTexture.source,
-      frame,
-      orig: new Rectangle(0, 0, PLAYER_FRAME_SIZE, PLAYER_FRAME_SIZE),
-    });
-  });
 
 function useElementSize() {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -124,9 +105,16 @@ function AdventurePixiStage({
   useEffect(() => {
     let mounted = true;
 
-    void Assets.load<Texture>(PLAYER_SPRITE_SHEET_PATH).then((sheetTexture) => {
+    void Promise.all(
+      ADVENTURE_PLAYER_FRAME_PATHS.map((path) =>
+        Assets.load<Texture>({
+          src: path,
+          data: { scaleMode: "nearest" },
+        }),
+      ),
+    ).then((frames) => {
       if (mounted) {
-        setPlayerFrames(buildPlayerFrames(sheetTexture));
+        setPlayerFrames(frames);
       }
     });
 

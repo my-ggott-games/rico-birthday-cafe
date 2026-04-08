@@ -72,7 +72,9 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
       document.body.appendChild(el);
       el.select();
       document.execCommand("copy");
-      document.body.removeChild(el);
+      if (el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }

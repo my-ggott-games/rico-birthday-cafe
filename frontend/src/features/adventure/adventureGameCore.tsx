@@ -3,7 +3,6 @@ import {
   Assets,
   Container as PixiContainer,
   Graphics as PixiGraphics,
-  Rectangle,
   Sprite as PixiSprite,
   Text as PixiText,
   Texture,
@@ -17,6 +16,7 @@ import {
   clamp,
   getPhaseAtTime,
 } from "./adventureGameShared";
+import { ADVENTURE_PLAYER_FRAME_PATHS } from "./adventureAssets";
 
 extend({
   Container: PixiContainer,
@@ -34,12 +34,10 @@ const JUMP_FORCES = [660, 540, 455];
 const MAX_JUMPS = 2;
 const PHASE_FIVE_MAX_JUMPS = 3;
 const COYOTE_TIME_SECONDS = 0.12;
-const PLAYER_SPRITE_SHEET_PATH = "/assets/adventuregame/1172-Sheet.png";
-const PLAYER_FRAME_SIZE = 2000;
-const PLAYER_FRAME_COUNT = 6;
 const PLAYER_ANIMATION_FPS = 10;
 const PLAYER_RENDER_SIZE = 156;
-const PLAYER_RENDER_SCALE = PLAYER_RENDER_SIZE / PLAYER_FRAME_SIZE;
+const PLAYER_SOURCE_FRAME_SIZE = 2000;
+const PLAYER_RENDER_SCALE = PLAYER_RENDER_SIZE / PLAYER_SOURCE_FRAME_SIZE;
 const PLAYER_SUPPORT_HALF_WIDTH = 6;
 const PLAYER_COLLISION_HALF_WIDTH = 18;
 const SCROLL_SPEED = 330;
@@ -187,22 +185,6 @@ const createHole = (id: number, startX: number, courseTime: number): Hole => {
   };
 };
 
-const buildPlayerFrames = (sheetTexture: Texture): Texture[] =>
-  Array.from({ length: PLAYER_FRAME_COUNT }, (_, index) => {
-    const frame = new Rectangle(
-      index * PLAYER_FRAME_SIZE,
-      0,
-      PLAYER_FRAME_SIZE,
-      PLAYER_FRAME_SIZE,
-    );
-
-    return new Texture({
-      source: sheetTexture.source,
-      frame,
-      orig: new Rectangle(0, 0, PLAYER_FRAME_SIZE, PLAYER_FRAME_SIZE),
-    });
-  });
-
 type RunnerSceneProps = {
   stageWidth: number;
   stageHeight: number;
@@ -233,7 +215,6 @@ export function RunnerScene({
   const worldRef = useRef<PixiGraphics | null>(null);
   const shadowRef = useRef<PixiGraphics | null>(null);
   const playerRef = useRef<PixiSprite | null>(null);
-  const scoreTextRef = useRef<PixiText | null>(null);
   const courseTimeRef = useRef(currentCourseTime);
 
   const holesRef = useRef<Hole[]>([]);
@@ -253,7 +234,7 @@ export function RunnerScene({
   const scaleY = stageHeight / WORLD_HEIGHT;
   const uniformScale = Math.min(scaleX, scaleY);
   const viewportOffsetX = (stageWidth - WORLD_WIDTH * uniformScale) / 2;
-  const viewportOffsetY = stageHeight - WORLD_HEIGHT * uniformScale;
+  const viewportOffsetY = (stageHeight - WORLD_HEIGHT * uniformScale) / 2;
   const sx = useCallback((value: number) => value * uniformScale, [uniformScale]);
   const sy = useCallback((value: number) => value * uniformScale, [uniformScale]);
   const px = useCallback(
@@ -271,15 +252,22 @@ export function RunnerScene({
   const groundYScaled = py(GROUND_Y);
   const playerXScaled = px(PLAYER_X);
   const groundSegmentBodyHeight = Math.max(0, stageHeight - py(GROUND_Y + 24));
-  const playerScaleMultiplier = isMobileViewport ? 1.16 : 1;
+  const playerScaleMultiplier = isMobileViewport ? 1.3 : 1;
   const currentPhaseId = getPhaseAtTime(currentCourseTime).id;
 
   useEffect(() => {
     let mounted = true;
 
-    void Assets.load<Texture>(PLAYER_SPRITE_SHEET_PATH).then((sheetTexture) => {
+    void Promise.all(
+      ADVENTURE_PLAYER_FRAME_PATHS.map((path) =>
+        Assets.load<Texture>({
+          src: path,
+          data: { scaleMode: "nearest" },
+        }),
+      ),
+    ).then((frames) => {
       if (mounted) {
-        setPlayerFrames(buildPlayerFrames(sheetTexture));
+        setPlayerFrames(frames);
       }
     });
 
@@ -291,12 +279,6 @@ export function RunnerScene({
   useEffect(() => {
     courseTimeRef.current = currentCourseTime;
   }, [currentCourseTime]);
-
-  const updateHudText = useCallback((score: number) => {
-    if (scoreTextRef.current) {
-      scoreTextRef.current.text = `Score ${score}`;
-    }
-  }, []);
 
   const drawBackdrop = useCallback(() => {
     const graphics = backgroundRef.current;
@@ -310,7 +292,7 @@ export function RunnerScene({
     switch (phase.id) {
       case 1:
         graphics.rect(0, 0, stageWidth, stageHeight).fill(0xf7f2e8);
-        graphics.rect(0, 0, stageWidth, py(238)).fill(0xd9eff3);
+        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, py(238))).fill(0xd9eff3);
         graphics.circle(px(108), py(82), ss(42)).fill(0xffe08b);
         drawCloud(graphics, px(28), py(48), sx(188), sy(42), 0.55);
         drawCloud(graphics, px(512), py(70), sx(178), sy(38), 0.46);
@@ -326,7 +308,7 @@ export function RunnerScene({
         break;
       case 2:
         graphics.rect(0, 0, stageWidth, stageHeight).fill(0xfff4dc);
-        graphics.rect(0, 0, stageWidth, py(238)).fill(0xf5c77e);
+        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, py(238))).fill(0xf5c77e);
         graphics.circle(px(680), py(86), ss(54)).fill(0xfff0ad);
         graphics.roundRect(px(-50), py(156), sx(440), sy(108), ss(54)).fill(0xd9b572);
         graphics.roundRect(px(262), py(172), sx(340), sy(96), ss(48)).fill(0xc68b59);
@@ -348,7 +330,7 @@ export function RunnerScene({
         break;
       case 3:
         graphics.rect(0, 0, stageWidth, stageHeight).fill(0xe8f2de);
-        graphics.rect(0, 0, stageWidth, py(238)).fill(0x9cc8a1);
+        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, py(238))).fill(0x9cc8a1);
         graphics.circle(px(120), py(70), ss(32)).fill({ color: 0xfef3c7, alpha: 0.72 });
         for (let index = 0; index < 6; index += 1) {
           const trunkX = index * 150 - 80;
@@ -368,7 +350,7 @@ export function RunnerScene({
         break;
       case 4:
         graphics.rect(0, 0, stageWidth, stageHeight).fill(0x2d3142);
-        graphics.rect(0, 0, stageWidth, sy(238)).fill(0x4f5d75);
+        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, sy(238))).fill(0x4f5d75);
         graphics.roundRect(sx(44), sy(74), sx(140), sy(118), ss(18)).fill({
           color: 0x232936,
           alpha: 0.88,
@@ -402,7 +384,7 @@ export function RunnerScene({
         break;
       case 5:
         graphics.rect(0, 0, stageWidth, stageHeight).fill(0x28090f);
-        graphics.rect(0, 0, stageWidth, sy(238)).fill(0x8d1c31);
+        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, sy(238))).fill(0x8d1c31);
         graphics.circle(sx(630), sy(92), ss(58)).fill({ color: 0xff8c42, alpha: 0.88 });
         graphics.circle(sx(630), sy(92), ss(86)).fill({ color: 0xff8c42, alpha: 0.16 });
         for (let index = 0; index < 7; index += 1) {
@@ -436,7 +418,7 @@ export function RunnerScene({
         break;
       case 6:
         graphics.rect(0, 0, stageWidth, stageHeight).fill(0xf1fbf8);
-        graphics.rect(0, 0, stageWidth, sy(238)).fill(0xbde0fe);
+        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, sy(238))).fill(0xbde0fe);
         graphics.circle(sx(118), sy(76), ss(34)).fill({ color: 0xfff4b6, alpha: 0.82 });
         drawCloud(graphics, sx(58), sy(42), sx(178), sy(40), 0.52);
         drawCloud(graphics, sx(454), sy(72), sx(162), sy(34), 0.44);
@@ -458,7 +440,7 @@ export function RunnerScene({
         break;
       default:
         graphics.rect(0, 0, stageWidth, stageHeight).fill(0x152238);
-        graphics.rect(0, 0, stageWidth, sy(238)).fill(0x516b8b);
+        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, sy(238))).fill(0x516b8b);
         graphics.circle(sx(648), sy(72), ss(30)).fill({ color: 0xf8fafc, alpha: 0.88 });
         for (let index = 0; index < 28; index += 1) {
           const starX = (index * 63 + 18) % WORLD_WIDTH;
@@ -728,12 +710,11 @@ export function RunnerScene({
     fallingHoleRef.current = false;
     nextHoleIdRef.current = 1;
     holesRef.current = [];
-    updateHudText(0);
     onScoreChange(0);
     drawBackdrop();
     drawTerrain();
     syncPlayerVisuals();
-  }, [drawBackdrop, drawTerrain, onScoreChange, syncPlayerVisuals, updateHudText]);
+  }, [drawBackdrop, drawTerrain, onScoreChange, syncPlayerVisuals]);
 
   const tryJump = useCallback(() => {
     const supported = hasGroundSupport(holesRef.current) && !fallingHoleRef.current;
@@ -934,7 +915,6 @@ export function RunnerScene({
           );
           scoreTickTimerRef.current -= scoreTicks * SCORE_TICK_INTERVAL_SECONDS;
           scoreRef.current += scoreTicks * SCORE_STEP;
-          updateHudText(scoreRef.current);
           onScoreChange(scoreRef.current);
         }
 
@@ -963,7 +943,6 @@ export function RunnerScene({
         runState,
         syncPlayerVisuals,
         playerFrames,
-        updateHudText,
       ],
     ),
   );
@@ -984,23 +963,6 @@ export function RunnerScene({
         />
       ) : null}
 
-      <pixiText
-        ref={scoreTextRef}
-        text="Score 0"
-        x={sx(28)}
-        y={sy(4)}
-        style={{
-          fill: "#102542",
-          fontFamily: "OneStoreMobilePop",
-          fontSize: ss(26),
-          fontWeight: "800",
-          stroke: {
-            color: "#FFFFF8",
-            width: ss(5),
-            join: "round",
-          },
-        }}
-      />
       {playerFrames.length === 0 ? (
         <pixiText
           text="Loading runner..."

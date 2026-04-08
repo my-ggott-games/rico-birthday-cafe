@@ -66,7 +66,10 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({
         footer={
           <>
             <PushableButton
-              onClick={() => navigate("/lobby")}
+              onClick={() => {
+                setIsOpen(false);
+                navigate("/lobby");
+              }}
               variant="mint"
               className="flex-1"
             >

@@ -15,6 +15,7 @@ import {
   type AdventureModalAction,
 } from "../components/game/AdventureModal";
 import { AdventureGamePanel } from "../components/game/adventureSample/AdventureGamePanel";
+import { AdventureGamePanelMobile } from "../components/game/adventureSample/AdventureGamePanelMobile";
 import { AdventurePhaseGuide } from "../components/game/adventureSample/AdventurePhaseGuide";
 import { ADVENTURE_HELP_SLIDES } from "../constants/tutorialSlides";
 import { type RunState } from "../types/adventure";
@@ -71,6 +72,8 @@ export default function AdventureGame() {
   const [runState, setRunState] = useState<RunState>("ready");
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
+  const [pausedScore, setPausedScore] = useState(0);
+  const [resultScore, setResultScore] = useState(0);
   const [jumpNonce, setJumpNonce] = useState(0);
   const [restartNonce, setRestartNonce] = useState(0);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
@@ -110,7 +113,7 @@ export default function AdventureGame() {
     if (Number.isFinite(parsed) && parsed >= 0) {
       setBestScore(parsed);
     }
-  }, []);
+  }, [isMobileViewport]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -127,9 +130,10 @@ export default function AdventureGame() {
     }
 
     const updateStageViewportSize = () => {
-      const rect = element.getBoundingClientRect();
-      const nextWidth = Math.max(1, Math.round(rect.width));
-      const nextHeight = Math.max(1, Math.round(rect.height));
+      // offsetWidth/offsetHeight force layout reflow and are more reliable than
+      // getBoundingClientRect on iOS Safari where h-full resolution can be deferred.
+      const nextWidth = Math.max(1, element.offsetWidth);
+      const nextHeight = Math.max(1, element.offsetHeight);
       setStageViewportSize((current) =>
         current.width === nextWidth && current.height === nextHeight
           ? current
@@ -138,18 +142,27 @@ export default function AdventureGame() {
     };
 
     updateStageViewportSize();
-    const rafId = window.requestAnimationFrame(updateStageViewportSize);
+    // Double RAF: iOS Safari can report 0 on the first animation frame after mount.
+    let cancelled = false;
+    const rafId = window.requestAnimationFrame(() => {
+      if (cancelled) return;
+      updateStageViewportSize();
+      window.requestAnimationFrame(() => {
+        if (!cancelled) updateStageViewportSize();
+      });
+    });
 
     const observer = new ResizeObserver(updateStageViewportSize);
     observer.observe(element);
     window.addEventListener("resize", updateStageViewportSize);
 
     return () => {
+      cancelled = true;
       window.cancelAnimationFrame(rafId);
       window.removeEventListener("resize", updateStageViewportSize);
       observer.disconnect();
     };
-  }, []);
+  }, [isMobileViewport]);
 
   useEffect(() => {
     courseTimeRef.current = hudCourseTime;
@@ -261,10 +274,10 @@ export default function AdventureGame() {
     }
 
     const updateOrientationState = () => {
-      const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
-      const isSmallViewport = window.innerWidth < 1024;
-      const isMobile = coarsePointer || isSmallViewport;
-      setIsMobileViewport(isMobile);
+      // Layout should follow viewport width, not input hardware.
+      // Touch-enabled laptops/desktops can report a coarse pointer and
+      // accidentally get the mobile-only game canvas.
+      setIsMobileViewport(window.innerWidth < 1024);
     };
 
     updateOrientationState();
@@ -280,7 +293,10 @@ export default function AdventureGame() {
   const startGame = useCallback(
     (startTime = 0) => {
       jumpLockUntilRef.current = 0;
+      liveScoreRef.current = 0;
       setScore(0);
+      setPausedScore(0);
+      setResultScore(0);
       setHudCourseTime(startTime);
       setRetryStartTime(startTime);
       setRestartNonce((value) => value + 1);
@@ -293,6 +309,7 @@ export default function AdventureGame() {
   const handlePauseToggle = useCallback(() => {
     setRunState((current) => {
       if (current === "running") {
+        const resolvedScore = Math.max(liveScoreRef.current, score);
         courseTimeSyncActiveRef.current = false;
         const currentMusicTime = musicPlayerRef.current?.getCurrentTime();
         const resolvedCourseTime = clamp(
@@ -302,6 +319,9 @@ export default function AdventureGame() {
           0,
           TOTAL_DURATION,
         );
+        liveScoreRef.current = resolvedScore;
+        setScore(resolvedScore);
+        setPausedScore(resolvedScore);
         setHudCourseTime(resolvedCourseTime);
         pauseMusic();
         return "paused";
@@ -313,7 +333,7 @@ export default function AdventureGame() {
       }
       return current;
     });
-  }, [pauseMusic]);
+  }, [pauseMusic, score]);
 
   const handleScoreChange = useCallback((nextScore: number) => {
     liveScoreRef.current = nextScore;
@@ -322,6 +342,7 @@ export default function AdventureGame() {
 
   const handleGameOver = useCallback(
     (endedScore: number) => {
+      const resolvedScore = Math.max(endedScore, liveScoreRef.current, score);
       const currentMusicTime = musicPlayerRef.current?.getCurrentTime();
       const resolvedCourseTime = clamp(
         Number.isFinite(currentMusicTime ?? Number.NaN)
@@ -333,25 +354,30 @@ export default function AdventureGame() {
       const nextRetryPhase = getRetryPhase(resolvedCourseTime);
 
       pauseMusic();
-      setScore(endedScore);
-      setBestScore((current) => Math.max(current, endedScore));
+      liveScoreRef.current = resolvedScore;
+      setScore(resolvedScore);
+      setResultScore(resolvedScore);
+      setBestScore((current) => Math.max(current, resolvedScore));
       setHudCourseTime(resolvedCourseTime);
       setRetryStartTime(nextRetryPhase.start);
       setRunState("gameover");
     },
-    [pauseMusic],
+    [pauseMusic, score],
   );
 
   const handleGameComplete = useCallback(
     (clearedScore: number) => {
+      const resolvedScore = Math.max(clearedScore, liveScoreRef.current, score);
       pauseMusic();
-      setScore(clearedScore);
-      setBestScore((current) => Math.max(current, clearedScore));
+      liveScoreRef.current = resolvedScore;
+      setScore(resolvedScore);
+      setResultScore(resolvedScore);
+      setBestScore((current) => Math.max(current, resolvedScore));
       setHudCourseTime(TOTAL_DURATION);
       setRetryStartTime(ADVENTURE_PHASES[ADVENTURE_PHASES.length - 1].start);
       setRunState("completed");
     },
-    [pauseMusic],
+    [pauseMusic, score],
   );
 
   useEffect(() => {
@@ -627,7 +653,7 @@ export default function AdventureGame() {
     ) : runState === "paused" ? (
       <AdventureModal
         embedded
-        title={activePhase.title}
+        title={`Score ${pausedScore}`}
         status="용사에게도 휴식이 필요해"
         description="다시 마왕을 무찌르러 가볼까?"
         actions={pauseModalActions}
@@ -638,7 +664,7 @@ export default function AdventureGame() {
       <AdventureModal
         embedded
         status="함정에 빠졌어..."
-        title={activePhase.title}
+        title={`Score ${resultScore}`}
         description="거기 누구 없어요? 도와주세요!!"
         actions={gameOverModalActions}
       >
@@ -700,49 +726,91 @@ export default function AdventureGame() {
             <div className="flex justify-center">{scoreCards}</div>
           ) : null}
           <section className="flex flex-col gap-5">
-            <AdventureGamePanel
-              isMobileViewport={isMobileViewport}
-              runState={runState}
-              introInstructionMessage={introInstructionMessage}
-              introOverlayOpacity={introOverlayOpacity}
-              showMapVolumeUi={showMapVolumeUi}
-              onStagePointerDown={handleStagePointerDown}
-              onPauseToggle={handlePauseToggle}
-              mapVolumeControls={renderVolumeControls()}
-              overlayModal={overlayModal}
-              gameCanvas={
-                <div
-                  ref={stageViewportRef}
-                  className="relative h-full w-full overflow-hidden"
-                >
-                  {stageViewportSize.width > 0 &&
-                  stageViewportSize.height > 0 ? (
-                    <Application
-                      width={stageViewportSize.width}
-                      height={stageViewportSize.height}
-                      autoDensity
-                      resolution={resolution}
-                      antialias
-                      backgroundAlpha={0}
-                      className="block h-full w-full pointer-events-none"
-                    >
-                      <RunnerScene
-                        stageWidth={stageViewportSize.width}
-                        stageHeight={stageViewportSize.height}
-                        isMobileViewport={isMobileViewport}
-                        runState={runState}
-                        jumpNonce={jumpNonce}
-                        restartNonce={restartNonce}
-                        currentCourseTime={displayTime}
-                        onScoreChange={handleScoreChange}
-                        onGameOver={handleGameOver}
-                        onComplete={handleGameComplete}
-                      />
-                    </Application>
-                  ) : null}
-                </div>
-              }
-            />
+            {isMobileViewport ? (
+              <AdventureGamePanelMobile
+                runState={runState}
+                introInstructionMessage={introInstructionMessage}
+                introOverlayOpacity={introOverlayOpacity}
+                onStagePointerDown={handleStagePointerDown}
+                onPauseToggle={handlePauseToggle}
+                overlayModal={overlayModal}
+                gameCanvas={
+                  <div
+                    ref={stageViewportRef}
+                    className="absolute inset-0 overflow-hidden"
+                  >
+                    {stageViewportSize.width > 0 &&
+                    stageViewportSize.height > 0 ? (
+                      <Application
+                        width={stageViewportSize.width}
+                        height={stageViewportSize.height}
+                        autoDensity
+                        resolution={resolution}
+                        antialias
+                        backgroundAlpha={0}
+                        className="block h-full w-full pointer-events-none"
+                      >
+                        <RunnerScene
+                          stageWidth={stageViewportSize.width}
+                          stageHeight={stageViewportSize.height}
+                          isMobileViewport={isMobileViewport}
+                          runState={runState}
+                          jumpNonce={jumpNonce}
+                          restartNonce={restartNonce}
+                          currentCourseTime={displayTime}
+                          onScoreChange={handleScoreChange}
+                          onGameOver={handleGameOver}
+                          onComplete={handleGameComplete}
+                        />
+                      </Application>
+                    ) : null}
+                  </div>
+                }
+              />
+            ) : (
+              <AdventureGamePanel
+                runState={runState}
+                introInstructionMessage={introInstructionMessage}
+                introOverlayOpacity={introOverlayOpacity}
+                showMapVolumeUi={showMapVolumeUi}
+                onStagePointerDown={handleStagePointerDown}
+                onPauseToggle={handlePauseToggle}
+                mapVolumeControls={renderVolumeControls()}
+                overlayModal={overlayModal}
+                gameCanvas={
+                  <div
+                    ref={stageViewportRef}
+                    className="absolute inset-0 overflow-hidden"
+                  >
+                    {stageViewportSize.width > 0 &&
+                    stageViewportSize.height > 0 ? (
+                      <Application
+                        width={stageViewportSize.width}
+                        height={stageViewportSize.height}
+                        autoDensity
+                        resolution={resolution}
+                        antialias
+                        backgroundAlpha={0}
+                        className="block h-full w-full pointer-events-none"
+                      >
+                        <RunnerScene
+                          stageWidth={stageViewportSize.width}
+                          stageHeight={stageViewportSize.height}
+                          isMobileViewport={isMobileViewport}
+                          runState={runState}
+                          jumpNonce={jumpNonce}
+                          restartNonce={restartNonce}
+                          currentCourseTime={displayTime}
+                          onScoreChange={handleScoreChange}
+                          onGameOver={handleGameOver}
+                          onComplete={handleGameComplete}
+                        />
+                      </Application>
+                    ) : null}
+                  </div>
+                }
+              />
+            )}
 
             <AdventurePhaseGuide
               phases={ADVENTURE_PHASES.map((phase) => ({

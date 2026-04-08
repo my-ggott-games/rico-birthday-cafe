@@ -1,4 +1,11 @@
-import type { CSSProperties, DragEvent, ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type DragEvent,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -35,11 +42,38 @@ export const CommonModal = ({
   bodyClassName = "",
   footerClassName = "",
 }: CommonModalProps) => {
+  const portalElementRef = useRef<HTMLDivElement | null>(null);
+  const [portalTarget, setPortalTarget] = useState<HTMLDivElement | null>(null);
+
+  if (typeof document !== "undefined" && portalElementRef.current === null) {
+    const portalElement = document.createElement("div");
+    portalElement.setAttribute("data-common-modal-root", "true");
+    portalElementRef.current = portalElement;
+  }
+
+  useEffect(() => {
+    const portalElement = portalElementRef.current;
+
+    if (!portalElement || typeof document === "undefined") {
+      return;
+    }
+
+    document.body.appendChild(portalElement);
+    setPortalTarget(portalElement);
+
+    return () => {
+      setPortalTarget(null);
+      if (portalElement.parentNode) {
+        portalElement.parentNode.removeChild(portalElement);
+      }
+    };
+  }, []);
+
   const preventDrag = (event: DragEvent<HTMLElement>) => {
     event.preventDefault();
   };
 
-  if (typeof document === "undefined") {
+  if (typeof document === "undefined" || !portalTarget) {
     return null;
   }
 
@@ -86,6 +120,6 @@ export const CommonModal = ({
         </div>
       )}
     </AnimatePresence>,
-    document.body,
+    portalTarget,
   );
 };

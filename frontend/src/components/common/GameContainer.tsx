@@ -48,7 +48,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
   return (
     <div
-      className={`w-full min-h-[100dvh] flex flex-col overflow-x-hidden ${className}`}
+      className={`w-full min-h-screen min-h-[100svh] flex flex-col overflow-x-hidden ${className}`}
       style={containerLayoutVars}
     >
       <div

@@ -41,20 +41,20 @@ export function AdventureModal({
         data-ui-control="true"
         onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
-        className="w-full max-w-sm rounded-[2rem] border-4 border-[#102542]/10 bg-[#fffaf2] p-6 shadow-[0_30px_60px_rgba(0,0,0,0.22)]"
+        className="w-full max-w-[18rem] rounded-[1.6rem] border-4 border-[#102542]/10 bg-[#fffaf2] p-4 shadow-[0_24px_48px_rgba(0,0,0,0.22)] sm:max-w-sm sm:rounded-[2rem] sm:p-6 sm:shadow-[0_30px_60px_rgba(0,0,0,0.22)]"
       >
         <div className="text-center">
-          <h3 className="text-2xl font-black text-[#102542]">{title}</h3>
-          <div className="mt-3 text-xl">{status}</div>
+          <h3 className="text-xl font-black text-[#102542] sm:text-2xl">{title}</h3>
+          <div className="mt-2 text-lg sm:mt-3 sm:text-xl">{status}</div>
           {description ? (
-            <p className="text-base font-bold text-[#365486]">{description}</p>
+            <p className="text-sm font-bold text-[#365486] sm:text-base">{description}</p>
           ) : null}
         </div>
 
-        {children ? <div className="mt-4">{children}</div> : null}
+        {children ? <div className="mt-3 sm:mt-4">{children}</div> : null}
 
         <div
-          className={`mt-6 ${
+          className={`mt-4 sm:mt-6 ${
             singleAction
               ? "flex justify-center"
               : "grid gap-3 sm:grid-cols-2"
@@ -68,7 +68,7 @@ export function AdventureModal({
               onPointerDown={(event) => event.stopPropagation()}
               onClick={action.onClick}
               variant={action.tone === "secondary" ? "modalLight" : "modalDark"}
-              className={`rounded-[1.2rem] px-5 py-4 text-sm font-black transition-transform hover:scale-[1.01] ${
+              className={`rounded-[1rem] px-4 py-3 text-sm font-black transition-transform hover:scale-[1.01] sm:rounded-[1.2rem] sm:px-5 sm:py-4 ${
                 singleAction ? "w-full max-w-[15rem]" : ""
               }`}
             >

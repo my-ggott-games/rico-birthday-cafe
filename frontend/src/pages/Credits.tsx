@@ -50,7 +50,7 @@ const CREDITS_SECTIONS: CreditSection[] = [
           { role: "코디 아이템", name: "Sie" },
           { role: "캐릭터 디자인", name: "Sie" },
           {
-            role: "맵 모델링\n(Animal Crossing: Pocket Camp Complete)",
+            role: "폴라로이드 배경 모델링\n(Animal Crossing: Pocket Camp Complete)",
             name: "CODE NAME: G",
           },
         ],
