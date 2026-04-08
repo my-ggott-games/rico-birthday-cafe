@@ -1,7 +1,7 @@
 import React from "react";
 import { PolaroidFrame } from "../components/game/PolaroidFrame";
 import { DroppableCharacter } from "../components/game/DroppableCharacter";
-import { HexAmbientOverlay } from "../components/game/HexAmbientOverlay";
+import { CMYGlitchOverlay } from "../components/game/CMYGlitchOverlay";
 
 const AVAILABLE_BGS = ["5-1", "6-1"];
 
@@ -60,7 +60,7 @@ const CodySample: React.FC = () => {
                     </div>
                   }
                   overlayContent={
-                    <HexAmbientOverlay />
+                    <CMYGlitchOverlay />
                   }
                 >
                   <div className="relative pointer-events-none">

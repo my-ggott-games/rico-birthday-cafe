@@ -4,6 +4,7 @@ import type {
 } from "react";
 
 type AdventureGamePanelProps = {
+  isMobileViewport: boolean;
   runState: "ready" | "running" | "paused" | "gameover" | "completed";
   introInstructionMessage: string | null;
   introOverlayOpacity: number;
@@ -16,6 +17,7 @@ type AdventureGamePanelProps = {
 };
 
 export function AdventureGamePanel({
+  isMobileViewport,
   runState,
   introInstructionMessage,
   introOverlayOpacity,
@@ -45,7 +47,11 @@ export function AdventureGamePanel({
           WebkitTouchCallout: "none",
         }}
       >
-        <div className="relative aspect-[2/1] w-full touch-none overscroll-none">
+        <div
+          className={`relative mx-auto w-full max-w-[62rem] touch-none overscroll-none ${
+            isMobileViewport ? "aspect-[4/3]" : "aspect-[2/1]"
+          }`}
+        >
           {gameCanvas}
         </div>
 

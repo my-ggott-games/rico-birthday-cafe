@@ -27,7 +27,7 @@ type CodyDisplayStageProps = {
   scaleWhenFinished: number;
   springBgUrl: string | null;
   stageHeight?: string;
-  trainingBgUrl: string;
+  trainingBgUrl: string | null;
   orientalBgUrl: string | null;
 };
 
@@ -86,7 +86,7 @@ export const CodyDisplayStage: React.FC<CodyDisplayStageProps> = ({
                 activeBackground === "training" && (
                   <div className="absolute inset-0 z-0">
                     <img
-                      src={trainingBgUrl}
+                      src={trainingBgUrl || "/assets/codygame/background_5-1.jpg"}
                       className="h-full w-full object-cover object-center"
                       alt="background-training"
                     />

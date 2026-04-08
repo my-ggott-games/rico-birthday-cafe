@@ -119,6 +119,7 @@ function AdventurePixiStage({
   const animationElapsedRef = useRef(0);
   const [playerFrames, setPlayerFrames] = useState<Texture[]>([]);
   const groundY = height * GROUND_RATIO;
+  const groundSegmentBodyHeight = Math.max(0, height - (groundY + 12));
 
   useEffect(() => {
     let mounted = true;
@@ -174,7 +175,7 @@ function AdventurePixiStage({
     visibleHoles.forEach((hole) => {
       const segmentWidth = Math.max(0, hole.x - segmentStart);
       if (segmentWidth > 0) {
-        graphics.roundRect(segmentStart, horizonY, segmentWidth, height - horizonY, 20).fill(
+        graphics.rect(segmentStart, horizonY, segmentWidth, 38).fill(
           {
             color: phaseGround,
           },
@@ -183,7 +184,7 @@ function AdventurePixiStage({
           color: phasePath,
           alpha: 0.94,
         });
-        graphics.rect(segmentStart, groundY + 12, segmentWidth, height - groundY).fill(
+        graphics.rect(segmentStart, groundY + 12, segmentWidth, groundSegmentBodyHeight).fill(
           {
             color: phaseGround,
             alpha: 0.92,
@@ -195,7 +196,7 @@ function AdventurePixiStage({
 
     if (segmentStart < width) {
       const segmentWidth = width - segmentStart;
-      graphics.roundRect(segmentStart, horizonY, segmentWidth, height - horizonY, 20).fill(
+      graphics.rect(segmentStart, horizonY, segmentWidth, 38).fill(
         {
           color: phaseGround,
         },
@@ -204,7 +205,7 @@ function AdventurePixiStage({
         color: phasePath,
         alpha: 0.94,
       });
-      graphics.rect(segmentStart, groundY + 12, segmentWidth, height - groundY).fill(
+      graphics.rect(segmentStart, groundY + 12, segmentWidth, groundSegmentBodyHeight).fill(
         {
           color: phaseGround,
           alpha: 0.92,
@@ -244,6 +245,7 @@ function AdventurePixiStage({
     }
   }, [
     courseTimeRef,
+    groundSegmentBodyHeight,
     groundY,
     height,
     holes,

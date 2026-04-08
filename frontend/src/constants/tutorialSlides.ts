@@ -7,7 +7,7 @@ export const ADVENTURE_HELP_SLIDES: TutorialSlide[] = [
     lines: [
       "이세계 주민들은 리코 덕분에 행복을 되찾았어!",
       "그들은 용사를 영원히 기억하기 위해",
-      "용사의 업적을 이야기로 남겼어",
+      "용사의 업적을 이야기로 남겼지",
       "이세계 구전설화를 게임으로 즐겨보자",
     ],
     showArrows: false,
@@ -28,7 +28,7 @@ export const ADVENTURE_HELP_SLIDES: TutorialSlide[] = [
     lines: [
       "함정에 빠지면 이야기가 끝나버려...",
       "함정을 잘 피해서 달려보자!",
-      "힘들면 P 키를 눌러 잠시 쉴 수 있어",
+      "힘들면 P 키나 일시정지 버튼을 눌러 잠시 쉴 수 있어",
     ],
     showArrows: false,
   },
@@ -53,8 +53,8 @@ export const ASPARAGUS_TUTORIAL_SLIDES: TutorialSlide[] = [
     titleIcon: "Wrench",
     lines: [
       "비료를 사용해봐, 얼마 없으니 아껴써야 해!",
-      "되돌리기: 시간을 되돌려요.",
-      "바꾸기: 두 타일의 위치를 바꿔요.",
+      "되돌리기: 마지막 이동을 되돌릴 수 있어",
+      "바꾸기: 두 타일의 위치를 바꿀 수 있어",
     ],
     showArrows: false,
   },
@@ -82,7 +82,7 @@ export const PUZZLE_TUTORIAL_SLIDES: TutorialSlide[] = [
   },
   {
     title: "어떤 그림일까?",
-    lines: ["제한 시간은 없으니", "여유롭게 즐겨줘!"],
+    lines: ["제한 시간은 없으니 여유롭게 즐겨줘!"],
     showArrows: false,
   },
 ];
@@ -110,7 +110,7 @@ export const CODY_TUTORIAL_SLIDES: TutorialSlide[] = [
     title: "옷을 고르자!",
     titleIcon: "Shirt",
     lines: [
-      "PC: 아이템을 드래그해서 코디 존에 넣어봐!",
+      "PC: 아이템을 드래그해서 리코에게 전해주자",
       "모바일: 아이템을 탭해봐!",
     ],
     showArrows: false,
@@ -118,7 +118,7 @@ export const CODY_TUTORIAL_SLIDES: TutorialSlide[] = [
   {
     title: "코디가 끝났다면",
     titleIcon: "Camera",
-    lines: ['"코디 끝!" 버튼을 눌러줘.', "사진을 찍어줄게!"],
+    lines: ['"코디 끝!" 버튼을 눌러줘', "사진을 찍어줄게!"],
     showArrows: false,
   },
   {

@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { PushableButton } from "../common/PushableButton";
 
 export type AdventureModalAction = {
   label: string;
@@ -60,22 +61,19 @@ export function AdventureModal({
           }`}
         >
           {actions.map((action) => (
-            <button
+            <PushableButton
               key={action.label}
               type="button"
               data-ui-control="true"
               onPointerDown={(event) => event.stopPropagation()}
               onClick={action.onClick}
+              variant={action.tone === "secondary" ? "modalLight" : "modalDark"}
               className={`rounded-[1.2rem] px-5 py-4 text-sm font-black transition-transform hover:scale-[1.01] ${
                 singleAction ? "w-full max-w-[15rem]" : ""
-              } ${
-                action.tone === "secondary"
-                  ? "border-2 border-[#102542] bg-white text-[#102542]"
-                  : "bg-[#102542] text-white"
               }`}
             >
               {action.label}
-            </button>
+            </PushableButton>
           ))}
         </div>
       </motion.div>

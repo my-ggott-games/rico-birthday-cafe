@@ -1,6 +1,11 @@
 import React from "react";
 
-type PushableButtonVariant = "mint" | "cream" | "black";
+type PushableButtonVariant =
+  | "mint"
+  | "cream"
+  | "black"
+  | "modalLight"
+  | "modalDark";
 
 interface PushableButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -14,6 +19,10 @@ const PUSHABLE_BUTTON_VARIANTS: Record<PushableButtonVariant, string> = {
     "border-[#D8B98C] bg-[#FFF8EA] text-[#166D77] shadow-[0_6px_0_#D8B98C] hover:shadow-[0_2px_0_#D8B98C]",
   black:
     "border-[#2a2a2a] bg-[#1a1a1a] text-pale-custard shadow-[0_6px_0_#2a2a2a] hover:shadow-[0_2px_0_#2a2a2a]",
+  modalLight:
+    "border-[#d5cfbe] bg-[#FFFFF8] text-[#112543] shadow-[0_6px_0_#d5cfbe] hover:shadow-[0_2px_0_#d5cfbe]",
+  modalDark:
+    "border-[#091624] bg-[#112543] text-[#FFFFF8] shadow-[0_6px_0_#091624] hover:shadow-[0_2px_0_#091624]",
 };
 
 export const PushableButton = React.forwardRef<

@@ -216,6 +216,7 @@ const CodyGame: React.FC = () => {
   const [activeBackground, setActiveBackground] = useState<string | null>(null);
   const [orientalBgUrl, setOrientalBgUrl] = useState<string | null>(null);
   const [springBgUrl, setSpringFestivalBgUrl] = useState<string | null>(null);
+  const [trainingBgUrl, setTrainingBgUrl] = useState<string | null>(null);
   const [showInventory, setShowInventory] = useState(true);
   const [showButtons, setShowButtons] = useState(true);
   const [contentVisible, setContentVisible] = useState(true);
@@ -285,6 +286,9 @@ const CodyGame: React.FC = () => {
         setIsFinished(false);
         setResultImage(null);
         setActiveBackground(null);
+        setOrientalBgUrl(null);
+        setSpringFestivalBgUrl(null);
+        setTrainingBgUrl(null);
         setShowInventory(true);
         setShowButtons(true);
         setContentVisible(true);
@@ -295,6 +299,9 @@ const CodyGame: React.FC = () => {
       setIsFinished(false);
       setResultImage(null);
       setActiveBackground(null);
+      setOrientalBgUrl(null);
+      setSpringFestivalBgUrl(null);
+      setTrainingBgUrl(null);
       setShowInventory(true);
       setShowButtons(true);
       setContentVisible(true);
@@ -653,7 +660,7 @@ const CodyGame: React.FC = () => {
               }
               springBgUrl={springBgUrl}
               stageHeight={mobileStageHeight}
-              trainingBgUrl="/assets/codygame/background_5-1.jpg"
+              trainingBgUrl={trainingBgUrl}
             />
 
             <CodyActionBar
@@ -727,6 +734,14 @@ const CodyGame: React.FC = () => {
                             "/assets/codygame/background_4-1.jpg",
                             "/assets/codygame/background_4-2.jpg",
                             "/assets/codygame/background_4-3.jpg",
+                          ][Math.floor(Math.random() * 3)],
+                        );
+                      } else if (matchedCombo.backgroundClass === "training") {
+                        setTrainingBgUrl(
+                          [
+                            "/assets/codygame/background_5-1.jpg",
+                            "/assets/codygame/background_5-2.jpg",
+                            "/assets/codygame/background_5-3.jpg",
                           ][Math.floor(Math.random() * 3)],
                         );
                       }

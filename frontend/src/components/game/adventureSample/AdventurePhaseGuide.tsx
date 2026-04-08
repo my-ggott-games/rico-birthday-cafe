@@ -9,6 +9,7 @@ type AdventurePhaseGuideProps = {
   phases: AdventurePhaseItem[];
   activePhaseId: number;
   maxUnlockedPhaseId: number;
+  canSelectPhase: boolean;
   onDebugUnlockAll: () => void;
   onPhaseStart: (startTime: number) => void;
 };
@@ -17,6 +18,7 @@ export function AdventurePhaseGuide({
   phases,
   activePhaseId,
   maxUnlockedPhaseId,
+  canSelectPhase,
   onDebugUnlockAll,
   onPhaseStart,
 }: AdventurePhaseGuideProps) {
@@ -27,19 +29,24 @@ export function AdventurePhaseGuide({
           {phases.map((item) => {
             const active = item.id === activePhaseId;
             const unlocked = item.id <= maxUnlockedPhaseId;
+            const disabled = !unlocked || !canSelectPhase;
 
             return (
               <PushableButton
                 key={item.id}
                 type="button"
                 data-ui-control="true"
-                disabled={!unlocked}
-                onClick={() => onPhaseStart(item.start)}
-                variant={active ? "black" : "cream"}
+                disabled={disabled}
+                onClick={() => {
+                  if (!disabled) {
+                    onPhaseStart(item.start);
+                  }
+                }}
+                variant={active ? "mint" : "cream"}
                 className={`h-12 w-12 rounded-[1rem] px-0 py-0 text-base ${
-                  unlocked
-                    ? ""
-                    : "border-[#b9c0ca] bg-[#e5e7eb] text-[#8a94a5] shadow-[0_6px_0_#b9c0ca] hover:shadow-[0_6px_0_#b9c0ca]"
+                  disabled
+                    ? "border-[#b9c0ca] bg-[#e5e7eb] text-[#8a94a5] shadow-[0_6px_0_#b9c0ca] hover:shadow-[0_6px_0_#b9c0ca]"
+                    : ""
                 }`}
                 aria-label={`${item.id}번 세이브 포인트`}
               >

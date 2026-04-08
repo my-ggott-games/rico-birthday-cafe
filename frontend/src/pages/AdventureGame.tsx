@@ -17,19 +17,19 @@ import {
 import { AdventureGamePanel } from "../components/game/adventureSample/AdventureGamePanel";
 import { AdventurePhaseGuide } from "../components/game/adventureSample/AdventurePhaseGuide";
 import { ADVENTURE_HELP_SLIDES } from "../constants/tutorialSlides";
+import { type RunState } from "../types/adventure";
+import { RunnerScene } from "../features/adventure/adventureGameCore";
 import {
   ADVENTURE_BEST_SCORE_KEY,
   ADVENTURE_PHASES,
   ADVENTURE_PLAYER_ELEMENT_ID,
   TOTAL_DURATION,
   YOUTUBE_VIDEO_ID,
-  type RunState,
-  RunnerScene,
   clamp,
   getClearedPhaseId,
   getPhaseAtTime,
   getRetryPhase,
-} from "../features/adventure/adventureGameCore";
+} from "../features/adventure/adventureGameShared";
 
 type AdventurePlayerInstance = {
   destroy: () => void;
@@ -65,6 +65,7 @@ export default function AdventureGame() {
   const pendingMusicStartRef = useRef(false);
   const pendingMusicStartTimeRef = useRef(0);
   const rafRef = useRef<number | null>(null);
+  const courseTimeSyncActiveRef = useRef(false);
   const stageViewportRef = useRef<HTMLDivElement | null>(null);
   const courseTimeRef = useRef(0);
   const [runState, setRunState] = useState<RunState>("ready");
@@ -292,6 +293,16 @@ export default function AdventureGame() {
   const handlePauseToggle = useCallback(() => {
     setRunState((current) => {
       if (current === "running") {
+        courseTimeSyncActiveRef.current = false;
+        const currentMusicTime = musicPlayerRef.current?.getCurrentTime();
+        const resolvedCourseTime = clamp(
+          Number.isFinite(currentMusicTime ?? Number.NaN)
+            ? (currentMusicTime as number)
+            : courseTimeRef.current,
+          0,
+          TOTAL_DURATION,
+        );
+        setHudCourseTime(resolvedCourseTime);
         pauseMusic();
         return "paused";
       }
@@ -351,6 +362,7 @@ export default function AdventureGame() {
 
   useEffect(() => {
     if (runState !== "running") {
+      courseTimeSyncActiveRef.current = false;
       if (rafRef.current !== null) {
         window.cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
@@ -358,7 +370,12 @@ export default function AdventureGame() {
       return;
     }
 
+    courseTimeSyncActiveRef.current = true;
     const syncCourseTime = () => {
+      if (!courseTimeSyncActiveRef.current) {
+        return;
+      }
+
       const playerTime = musicPlayerRef.current?.getCurrentTime();
       const nextTime = clamp(
         Number.isFinite(playerTime ?? Number.NaN)
@@ -381,6 +398,7 @@ export default function AdventureGame() {
 
     rafRef.current = window.requestAnimationFrame(syncCourseTime);
     return () => {
+      courseTimeSyncActiveRef.current = false;
       if (rafRef.current !== null) {
         window.cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
@@ -538,65 +556,68 @@ export default function AdventureGame() {
   const maxUnlockedPhaseId = debugUnlockAll
     ? ADVENTURE_PHASES.length
     : unlockedPhaseId;
+  const canSelectPhase = runState === "ready" || runState === "gameover";
   const introOverlayFadeProgress = clamp((displayTime - 20) / 1.4, 0, 1);
   const introOverlayOpacity =
     activePhaseId === 1 ? 1 - introOverlayFadeProgress : 0;
-  const showMapVolumeUi = activePhaseId === 1 && introOverlayOpacity > 0;
+  const showMapVolumeUi =
+    !isMobileViewport && activePhaseId === 1 && introOverlayOpacity > 0;
   const introInstructionMessage =
     activePhaseId === 1 && displayTime < 10
       ? "볼륨을 알맞게 조절해줘"
       : activePhaseId === 1 && displayTime < 15
-        ? "화면을 탭하거나 스페이스바로 점프할 수 있어"
+        ? isMobileViewport
+          ? "화면을 탭해서 점프!"
+          : "화면을 탭하거나 스페이스바를 눌러 점프할 수 있어"
         : activePhaseId === 1 && displayTime < 20
-          ? "P 키를 누르면 잠시 쉴 수 있어"
+          ? isMobileViewport
+            ? "일시정지 버튼을 누르면 쉴 수 있어"
+            : "P 키/일시정지 버튼을 누르면 쉴 수 있어"
           : null;
 
-  const renderVolumeControls = (compact = false) => (
-    <div
-      data-ui-control="true"
-      className={`rounded-[1.1rem] bg-white/84 ${
-        compact
-          ? "border border-[#fff7db]/85 px-2.5 py-2 shadow-[0_6px_14px_rgba(16,37,66,0.08)]"
-          : "border-2 border-[#fff7db] px-3 py-2 shadow-[0_12px_28px_rgba(16,37,66,0.14)]"
-      }`}
-    >
+  const renderVolumeControls = (compact = false) =>
+    isMobileViewport ? null : (
       <div
-        className={`flex items-center justify-between ${
-          compact ? "mb-1 gap-2" : "mb-2 gap-3"
+        data-ui-control="true"
+        className={`rounded-[1.1rem] bg-white/84 ${
+          compact
+            ? "border border-[#fff7db]/85 px-2.5 py-2 shadow-[0_6px_14px_rgba(16,37,66,0.08)]"
+            : "border-2 border-[#fff7db] px-3 py-2 shadow-[0_12px_28px_rgba(16,37,66,0.14)]"
         }`}
       >
-        <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#166D77]">
-          {isMobileViewport ? "Device Volume" : "Volume"}
-        </span>
-        <span className="text-sm font-black text-[#102542]">{volume}</span>
-      </div>
-      {isMobileViewport ? (
-        <p className="text-[11px] font-bold leading-relaxed text-[#365486]">
-          모험을 떠나기 전에 볼륨을 알맞게 조절해줘
-        </p>
-      ) : (
-        <input
-          data-ui-control="true"
-          type="range"
-          min={0}
-          max={100}
-          step={1}
-          value={volume}
-          onChange={(event) => setVolume(Number(event.target.value))}
-          className={`w-full cursor-pointer accent-[#166D77] ${
-            compact ? "h-1.5" : "h-2"
+        <div
+          className={`flex items-center justify-between ${
+            compact ? "mb-1 gap-2" : "mb-2 gap-3"
           }`}
-          aria-label="게임 볼륨"
-        />
-      )}
-    </div>
-  );
+        >
+          <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#166D77]">
+            {isMobileViewport ? "" : "Volume"}
+          </span>
+          <span className="text-sm font-black text-[#102542]">{volume}</span>
+        </div>
+        {isMobileViewport ? null : (
+          <input
+            data-ui-control="true"
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={volume}
+            onChange={(event) => setVolume(Number(event.target.value))}
+            className={`w-full cursor-pointer accent-[#166D77] ${
+              compact ? "h-1.5" : "h-2"
+            }`}
+            aria-label="게임 볼륨"
+          />
+        )}
+      </div>
+    );
 
   const overlayModal =
     runState === "ready" ? (
       <AdventureModal
         embedded
-        title="이야기 시작"
+        title="용사 리코 이야기"
         status="준비 됐어?"
         description="모험을 떠나볼까?"
         actions={readyModalActions}
@@ -611,7 +632,7 @@ export default function AdventureGame() {
         description="다시 마왕을 무찌르러 가볼까?"
         actions={pauseModalActions}
       >
-        {renderVolumeControls(true)}
+        {isMobileViewport ? null : renderVolumeControls(true)}
       </AdventureModal>
     ) : runState === "gameover" ? (
       <AdventureModal
@@ -664,15 +685,15 @@ export default function AdventureGame() {
         helpSlides={ADVENTURE_HELP_SLIDES}
         className="relative overflow-hidden bg-[#f7f2e8] text-[#1d3557] select-none"
         mainClassName={
-          isMobileViewport ? "px-3 pb-6 sm:px-4" : "px-4 pb-8 sm:px-6 lg:px-8"
+          isMobileViewport
+            ? "px-3 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] sm:px-4"
+            : "px-4 pb-8 sm:px-6 lg:px-8"
         }
         headerRight={isMobileViewport ? null : scoreCards}
       >
         <div
           className={`mx-auto flex w-full flex-col ${
-            isMobileViewport
-              ? "max-w-[23rem] gap-4"
-              : "max-w-[min(110rem,calc(100vw-3rem))] gap-6"
+            isMobileViewport ? "max-w-[23rem] gap-4" : "max-w-[62rem] gap-6"
           }`}
         >
           {isMobileViewport ? (
@@ -680,6 +701,7 @@ export default function AdventureGame() {
           ) : null}
           <section className="flex flex-col gap-5">
             <AdventureGamePanel
+              isMobileViewport={isMobileViewport}
               runState={runState}
               introInstructionMessage={introInstructionMessage}
               introOverlayOpacity={introOverlayOpacity}
@@ -693,7 +715,8 @@ export default function AdventureGame() {
                   ref={stageViewportRef}
                   className="relative h-full w-full overflow-hidden"
                 >
-                  {stageViewportSize.width > 0 && stageViewportSize.height > 0 ? (
+                  {stageViewportSize.width > 0 &&
+                  stageViewportSize.height > 0 ? (
                     <Application
                       width={stageViewportSize.width}
                       height={stageViewportSize.height}
@@ -706,6 +729,7 @@ export default function AdventureGame() {
                       <RunnerScene
                         stageWidth={stageViewportSize.width}
                         stageHeight={stageViewportSize.height}
+                        isMobileViewport={isMobileViewport}
                         runState={runState}
                         jumpNonce={jumpNonce}
                         restartNonce={restartNonce}
@@ -727,6 +751,7 @@ export default function AdventureGame() {
               }))}
               activePhaseId={activePhaseId}
               maxUnlockedPhaseId={maxUnlockedPhaseId}
+              canSelectPhase={canSelectPhase}
               onDebugUnlockAll={handleDebugUnlockAll}
               onPhaseStart={handlePhaseStart}
             />

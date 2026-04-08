@@ -534,7 +534,7 @@ const Lobby: React.FC = () => {
       <div className="absolute inset-0 pointer-events-none bg-white/30" />
 
       <div
-        className={`relative z-10 w-full min-h-screen ${isMobile ? "px-4 pt-4 pb-8" : "p-10"} flex flex-col`}
+        className={`relative z-10 w-full min-h-screen select-none ${isMobile ? "px-4 pt-4 pb-8" : "p-10"} flex flex-col`}
       >
         <header
           className={`flex ${isMobile ? "justify-between items-start" : "justify-between items-center"} ${isMobile ? "mb-2" : ""}`}
@@ -597,7 +597,7 @@ const Lobby: React.FC = () => {
               className="lobby-slogan-stage__happy-birthday absolute left-1/2 top-1/2 w-[min(86vw,30rem)] -translate-x-1/2 -translate-y-1/2 cursor-pointer border-0 bg-transparent p-0"
             >
               <div
-                className={`relative rounded-[1.1rem] ${isMobile ? "h-[6.4rem]" : "h-[10rem]"}`}
+                className={`relative overflow-hidden rounded-[1.1rem] ${isMobile ? "h-[6.4rem]" : "h-[10rem]"}`}
               >
                 <img
                   src="/slogan/happybirthday.jpg"
