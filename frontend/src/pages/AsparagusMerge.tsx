@@ -6,6 +6,7 @@ import { Items } from "../components/asparagus/Items";
 import { CommonModal } from "../components/common/CommonModal";
 import { GameContainer } from "../components/common/GameContainer";
 import { PushableButton } from "../components/common/PushableButton";
+import { ScoreStatCard } from "../components/common/ScoreStatCard";
 import { useAsparagusGame } from "../hooks/useAsparagusGame";
 import { usePageBgm } from "../hooks/usePageBgm";
 import { type Direction } from "../components/asparagus/types";
@@ -13,33 +14,6 @@ import { AppIcon } from "../components/common/AppIcon";
 import { ASPARAGUS_TUTORIAL_SLIDES } from "../constants/tutorialSlides";
 import { pickRandomActivityBgm } from "../utils/bgm";
 import { useAuthStore } from "../store/useAuthStore";
-
-const ScoreCard = ({
-  label,
-  value,
-  background,
-  textColor,
-}: {
-  label: string;
-  value: number;
-  background: string;
-  textColor: string;
-}) => (
-  <div
-    className="flex min-w-[7rem] flex-1 flex-col items-center rounded-2xl border-2 px-4 py-2 shadow-sm sm:flex-none"
-    style={{
-      background,
-      color: textColor,
-      borderColor: "rgba(255,255,255,0.38)",
-      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.18)",
-    }}
-  >
-    <span className="text-[10px] font-bold uppercase tracking-tighter opacity-70">
-      {label}
-    </span>
-    <span className="text-xl font-black leading-tight">{value}</span>
-  </div>
-);
 
 const AsparagusMerge: React.FC = () => {
   const [bgmSrc] = React.useState(() => pickRandomActivityBgm());
@@ -124,17 +98,18 @@ const AsparagusMerge: React.FC = () => {
         <div className="flex min-h-0 flex-col items-center justify-center gap-4 lg:min-h-[calc(100dvh-260px)]">
           <div className="flex w-full justify-center lg:justify-center">
             <div className="flex w-full max-w-[min(100%,520px)] items-end justify-end gap-3">
-              <ScoreCard
+              <ScoreStatCard
                 label="Score"
                 value={debugMode ? 0 : score}
                 background="#166D77"
-                textColor="#FFFFF8"
+                className="min-w-[7rem] flex-1 sm:flex-none"
               />
-              <ScoreCard
+              <ScoreStatCard
                 label="Best"
                 value={best}
-                background="#2d6a4f"
-                textColor="#bef264"
+                background="#5EC7A5"
+                className="min-w-[7rem] flex-1 sm:flex-none"
+                labelClassName="opacity-80"
               />
             </div>
           </div>

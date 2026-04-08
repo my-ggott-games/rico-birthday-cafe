@@ -16,7 +16,7 @@ import AchievementListShowcase from "./pages/AchievementListShowcase";
 const CodyGame = lazy(() => import("./pages/CodyGame"));
 const ItabagGame = lazy(() => import("./pages/ItabagGame"));
 const FortuneGame = lazy(() => import("./pages/FortuneGame"));
-const AdventureSample = lazy(() => import("./pages/AdventureSample"));
+const AdventureGame = lazy(() => import("./pages/AdventureGame"));
 const CodySample = lazy(() => import("./pages/CodySample"));
 const PuzzleGame = lazy(() => import("./pages/PuzzleGame"));
 const PuzzleSandbox = lazy(() => import("./pages/PuzzleSandbox"));
@@ -43,7 +43,7 @@ function App() {
               <Route path="/game/cody" element={<CodyGame />} />
               <Route path="/game/itabag" element={<ItabagGame />} />
               <Route path="/game/fortune" element={<FortuneGame />} />
-              <Route path="/game/adventure" element={<AdventureSample />} />
+              <Route path="/game/adventure" element={<AdventureGame />} />
               <Route path="/game/puzzle" element={<PuzzleGame />} />
               <Route path="/game/asparagus" element={<AsparagusMerge />} />
               <Route path="/credits" element={<Credits />} />
@@ -63,7 +63,7 @@ function App() {
                 element={<AchievementListShowcase />}
               />
               <Route path="/sample/cody" element={<CodySample />} />
-              <Route path="/sample/adventure" element={<AdventureSample />} />
+              <Route path="/sample/adventure" element={<AdventureGame />} />
               <Route path="/sample/puzzle" element={<PuzzleSandbox />} />
               <Route path="/sample/hologram" element={<HologramPlayground />} />
               <Route path="/sample/asparagus" element={<AsparagusShowcase />} />

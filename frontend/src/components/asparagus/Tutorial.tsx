@@ -16,8 +16,8 @@ export const TutorialModal: React.FC = () => {
         className="w-8 h-8 rounded-full font-black text-base flex items-center justify-center border-2 select-none"
         style={{
           background: "#166D77",
-          color: "#bef264",
-          borderColor: "#bef264",
+          color: "#FFFFF8",
+          borderColor: "#FFFFF8",
           boxShadow: "0 2px 8px rgba(22,109,119,0.25)",
         }}
         aria-label="튜토리얼 열기"

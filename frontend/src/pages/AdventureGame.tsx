@@ -1,30 +1,46 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { TutorialSlide } from "../components/common/TutorialBanner";
-import type { AppIconName } from "../components/common/appIconRegistry";
-import { type AdventureModalAction } from "../components/game/AdventureModal";
-import { BASE_URL } from "../utils/api";
-import { useAuthStore } from "../store/useAuthStore";
-import { useToastStore } from "../store/useToastStore";
-import type { Phase, PositionedHole, RunState, Hole } from "../types/adventure";
-import { AdventureGameView } from "../components/game/AdventureGameView";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
+import { Application } from "@pixi/react";
+import { GameContainer } from "../components/common/GameContainer";
+import { ScoreStatCard } from "../components/common/ScoreStatCard";
+import {
+  AdventureModal,
+  type AdventureModalAction,
+} from "../components/game/AdventureModal";
+import { AdventureGamePanel } from "../components/game/adventureSample/AdventureGamePanel";
+import { AdventurePhaseGuide } from "../components/game/adventureSample/AdventurePhaseGuide";
+import { ADVENTURE_HELP_SLIDES } from "../constants/tutorialSlides";
+import {
+  ADVENTURE_BEST_SCORE_KEY,
+  ADVENTURE_PHASES,
+  ADVENTURE_PLAYER_ELEMENT_ID,
+  TOTAL_DURATION,
+  YOUTUBE_VIDEO_ID,
+  type RunState,
+  RunnerScene,
+  clamp,
+  getClearedPhaseId,
+  getPhaseAtTime,
+  getRetryPhase,
+} from "../features/adventure/adventureGameCore";
 
-declare global {
-  interface Window {
-    YT?: YouTubeNamespace;
-    onYouTubeIframeAPIReady?: () => void;
-  }
-}
-
-type PlayerInstance = {
+type AdventurePlayerInstance = {
   destroy: () => void;
+  getCurrentTime: () => number;
   pauseVideo: () => void;
   playVideo: () => void;
+  setVolume: (volume: number) => void;
   seekTo: (seconds: number, allowSeekAhead?: boolean) => void;
 };
 
-type PlayerStateValue = -1 | 0 | 1 | 2 | 3 | 5;
-
-type YouTubeNamespace = {
+type AdventureYouTubeNamespace = {
   Player: new (
     elementId: string,
     config: {
@@ -33,463 +49,120 @@ type YouTubeNamespace = {
       videoId: string;
       playerVars?: Record<string, number | string>;
       events?: {
-        onReady?: (event: { target: PlayerInstance }) => void;
-        onStateChange?: (event: {
-          data: PlayerStateValue;
-          target: PlayerInstance;
-        }) => void;
+        onReady?: (event: { target: AdventurePlayerInstance }) => void;
       };
     },
-  ) => PlayerInstance;
+  ) => AdventurePlayerInstance;
 };
 
-const BEST_SCORE_KEY = "rico-adventure-best-score";
-const YOUTUBE_VIDEO_ID = "J3B0k47f0Fs";
-const COURSE_LENGTH = 440;
-const PLAYER_X = 72;
-const PIXELS_PER_SECOND = 160;
-const PLAYER_UI_WIDTH = 64;
-const JUMP_VELOCITY = 1080;
-const DOUBLE_JUMP_VELOCITY = 980;
-const GRAVITY = 2800;
-const PLAYER_WIDTH = 28;
-const FALL_OUT_THRESHOLD = 320;
-const DEFAULT_DEATH_MESSAGE = "거기 누구 없어요? 도와주세요!!";
-const HUD_UPDATE_INTERVAL_MS = 80;
-const MIN_RANDOM_HOLE_INTERVAL = 0.85;
-const HOLE_COLLISION_INSET = 6;
-
-const HOLE_PRESETS: Record<
-  number,
-  Array<{ time: number; width?: number; lengthType?: "short" | "long" }>
-> = {
-  2: [
-    { time: 52, width: 68 },
-    { time: 88, lengthType: "long" },
-  ],
-  4: [
-    { time: 228, width: 76 },
-    { time: 252, width: 70 },
-  ],
-  6: [{ time: 332, width: 74 }],
+type AdventureYouTubeWindow = Window & {
+  YT?: AdventureYouTubeNamespace;
+  onYouTubeIframeAPIReady?: () => void;
 };
-
-const ADVENTURE_TUTORIAL_SLIDES: TutorialSlide[] = [
-  {
-    title: "용사 리코 이야기",
-    lines: [
-      "이세계 용사 리코와 함께 모험을 떠나자!",
-      "화면을 탭하면 점프 할 수 있어",
-    ],
-    showArrows: false,
-  },
-  {
-    title: "함정에 빠지지 않게 조심해!",
-    lines: [
-      "함정에 빠지면 우리의 모험이 끝나버려...",
-      "함정을 잘 피해서 달려보자!",
-    ],
-    showArrows: false,
-  },
-  {
-    title: "점프는 2번까지 할 수 있어",
-    lines: ["힘내서 마왕을 무찌르자!"],
-    showArrows: false,
-  },
-];
-
-const PHASES: Phase[] = [
-  {
-    id: 1,
-    title: "1장 - 용사 리코 이야기",
-    start: 0,
-    end: 39,
-    theme: "서막",
-    skyColor: "#f0dfce",
-    hazeColor: "#fff3de",
-    groundColor: "#7f8f63",
-    pathColor: "#7b5f41",
-    detailColor: "#d0c5a3",
-    accent: "#9c6644",
-    description: "옛날옛날 아주 먼 옛날에...",
-  },
-  {
-    id: 2,
-    title: "2장 - 모험의 시작",
-    start: 39,
-    end: 121,
-    theme: "모험의 시작",
-    skyColor: "#efcf99",
-    hazeColor: "#f9e5bc",
-    groundColor: "#7e8d5f",
-    pathColor: "#82583d",
-    detailColor: "#d4cbac",
-    accent: "#b85c38",
-    description: "긴 여정을 향해 첫 발을 내딛는 구간입니다.",
-  },
-  {
-    id: 3,
-    title: "3장",
-    start: 121,
-    end: 224,
-    theme: "숲",
-    skyColor: "#bfd4ad",
-    hazeColor: "#eaf2d0",
-    groundColor: "#5f7d4a",
-    pathColor: "#5d4731",
-    detailColor: "#d7dbb8",
-    accent: "#386641",
-    description: "햇살이 스며드는 숲과 들판을 달립니다.",
-  },
-  {
-    id: 4,
-    title: "4장",
-    start: 224,
-    end: 282,
-    theme: "던전",
-    skyColor: "#434a5f",
-    hazeColor: "#667085",
-    groundColor: "#4d5b4a",
-    pathColor: "#4a392b",
-    detailColor: "#9aa0ab",
-    accent: "#e07a5f",
-    description: "마왕의 성 내부로 들어가며 분위기가 어두워집니다.",
-  },
-  {
-    id: 5,
-    title: "5장",
-    start: 282,
-    end: 310,
-    theme: "결투",
-    skyColor: "#8b2f2f",
-    hazeColor: "#d57b58",
-    groundColor: "#6a5b44",
-    pathColor: "#55331f",
-    detailColor: "#b6825d",
-    accent: "#ffd166",
-    description: "짧고 거대한 결전 구간입니다.",
-  },
-  {
-    id: 6,
-    title: "6장",
-    start: 310,
-    end: 388,
-    theme: "승리",
-    skyColor: "#b5dff0",
-    hazeColor: "#edf7ef",
-    groundColor: "#789768",
-    pathColor: "#6e5238",
-    detailColor: "#dcead4",
-    accent: "#2a9d8f",
-    description: "전투가 끝나고 평화로운 풍경이 펼쳐집니다.",
-  },
-  {
-    id: 7,
-    title: "7장",
-    start: 388,
-    end: 433,
-    theme: "엔딩",
-    skyColor: "#6f87a6",
-    hazeColor: "#d7e3dc",
-    groundColor: "#667b68",
-    pathColor: "#5d4734",
-    detailColor: "#c8d3d7",
-    accent: "#f1fa8c",
-    description: "옛날이야기의 마지막 페이지입니다.",
-  },
-];
-
-const getCurrentPhase = (time: number): Phase =>
-  PHASES.find((phase) => time >= phase.start && time < phase.end) ??
-  PHASES[PHASES.length - 1];
-
-const TOTAL_RUN_DURATION = PHASES[PHASES.length - 1].end;
-
-const getRandomHoleWidth = (
-  _phaseId: number,
-  lengthType: "short" | "long" = "short",
-): number => {
-  const base = PLAYER_UI_WIDTH * 1.5;
-  return lengthType === "long" ? base * 2 : base;
-};
-
-const getHoleVisualHeight = (width: number): number =>
-  Math.max(180, Math.round(width * 1.65), Math.round(width + 56));
-
-const getHoleBottomKoDepth = (hole: Hole): number =>
-  getHoleVisualHeight(hole.width);
-
-type HoleCollisionState = {
-  wallHole: Hole | null;
-  fallingHole: Hole | null;
-  bottomHitHole: Hole | null;
-  passedHoleKeys: string[];
-};
-
-const getHoleCollisionState = (
-  holes: Hole[],
-  currentCourseTime: number,
-  nextCourseTime: number,
-  playerY: number,
-  ignoredHoleKeys: Set<string>,
-): HoleCollisionState => {
-  // 플레이어 좌우 끝 계산
-  const playerLeft = PLAYER_X - PLAYER_WIDTH / 2;
-  const playerRight = PLAYER_X + PLAYER_WIDTH / 2;
-  const playerBottom = -playerY;
-
-  let wallHole: Hole | null = null;
-  let fallingHole: Hole | null = null;
-  let bottomHitHole: Hole | null = null;
-  const newlyPassedHoleKeys: string[] = [];
-
-  for (const hole of holes) {
-    if (ignoredHoleKeys.has(hole.key)) continue;
-
-    // 현재/다음 프레임에서 홀 중심 X 위치
-    const currentHoleCenterX =
-      PLAYER_X + (hole.time - currentCourseTime) * PIXELS_PER_SECOND;
-    const nextHoleCenterX =
-      PLAYER_X + (hole.time - nextCourseTime) * PIXELS_PER_SECOND;
-
-    // 홀의 좌우 경계 (collision inset 적용)
-    // const currentHoleLeft =
-    //   currentHoleCenterX - hole.width / 2 + HOLE_COLLISION_INSET;
-    const currentHoleRight =
-      currentHoleCenterX + hole.width / 2 - HOLE_COLLISION_INSET;
-    const nextHoleLeft =
-      nextHoleCenterX - hole.width / 2 + HOLE_COLLISION_INSET;
-    const nextHoleRight =
-      nextHoleCenterX + hole.width / 2 - HOLE_COLLISION_INSET;
-
-    const holeTop = 0;
-    const holeBottom = getHoleBottomKoDepth(hole);
-
-    // ── 추락/바닥 판정 ───────────────────────────────────────────────────────
-    // 플레이어가 홀 위에 있다고 판단하는 조건:
-    //   플레이어 우측이 홀 우측을 완전히 넘어서지 않았고 (아직 탈출 못함)
-    //   플레이어 좌측이 홀 우측보다 왼쪽에 있을 때 (홀과 수평 겹침 있음)
-    const playerOverlapsHoleHorizontally =
-      playerRight <= nextHoleRight && // 우측이 홀 우측을 완전히 못 넘었음
-      playerLeft < nextHoleRight && // 좌측이 홀 안에 걸쳐 있음
-      playerRight > nextHoleLeft; // 우측이 홀 좌측보다는 오른쪽
-
-    if (playerOverlapsHoleHorizontally && playerBottom >= holeTop) {
-      if (playerBottom >= holeBottom) {
-        bottomHitHole = hole;
-      } else {
-        fallingHole = hole;
-      }
-    }
-
-    // ── 벽 충돌 판정 ─────────────────────────────────────────────────────────
-    // 플레이어 우측이 홀 우측 벽에 막히는 조건:
-    //   수직 범위 안에 있고, 우측 경계를 이번 프레임에 통과하려는 경우
-    const playerInsideHoleVertical =
-      playerBottom > holeTop && playerBottom < holeBottom;
-
-    const hitsWallThisFrame =
-      nextHoleRight > playerLeft &&
-      ((currentHoleRight > playerRight && nextHoleRight <= playerRight) ||
-        (nextHoleRight <= playerRight && nextHoleLeft < playerRight));
-
-    if (playerInsideHoleVertical && hitsWallThisFrame) {
-      wallHole = hole;
-    }
-
-    // ── 통과 판정 ─────────────────────────────────────────────────────────────
-    if (nextHoleRight < PLAYER_X - 22) {
-      newlyPassedHoleKeys.push(hole.key);
-    }
-  }
-
-  return {
-    wallHole,
-    fallingHole,
-    bottomHitHole,
-    passedHoleKeys: newlyPassedHoleKeys,
-  };
-};
-
-const buildHoleCourse = (): Hole[] => {
-  const holes: Hole[] = [];
-  const safeStart = 4.8;
-
-  PHASES.forEach((phase) => {
-    const gapMin = phase.id >= 5 ? 1.1 : phase.id >= 3 ? 1.35 : 1.7;
-    const gapMax = phase.id >= 5 ? 1.65 : phase.id >= 3 ? 2.1 : 2.7;
-    const minCenter = Math.max(
-      phase.start + 1.35,
-      phase.id === 1 ? safeStart : phase.start + 1.35,
-    );
-    let lastHoleEnd = minCenter - MIN_RANDOM_HOLE_INTERVAL;
-
-    const sortedPresets = [...(HOLE_PRESETS[phase.id] ?? [])].sort(
-      (a, b) => a.time - b.time,
-    );
-
-    const pushHole = (
-      time: number,
-      width: number,
-      lengthType?: "short" | "long",
-    ) => {
-      const key = `${phase.id}-${time.toFixed(3)}`;
-      holes.push({ key, time, width, lengthType });
-      lastHoleEnd = time + width / (2 * PIXELS_PER_SECOND);
-    };
-
-    for (const preset of sortedPresets) {
-      if (preset.time <= phase.start || preset.time >= phase.end) {
-        console.warn(
-          `Preset hole at ${preset.time}s is outside phase ${phase.id} bounds`,
-        );
-        continue;
-      }
-      const width =
-        preset.width ??
-        getRandomHoleWidth(phase.id, preset.lengthType ?? "short");
-      const halfDuration = width / (2 * PIXELS_PER_SECOND);
-      let center = preset.time;
-      if (center - halfDuration < lastHoleEnd + MIN_RANDOM_HOLE_INTERVAL) {
-        center = lastHoleEnd + MIN_RANDOM_HOLE_INTERVAL + halfDuration;
-      }
-      if (center + halfDuration >= phase.end) {
-        continue;
-      }
-      pushHole(center, width, preset.lengthType);
-    }
-
-    let marker = Math.max(minCenter, lastHoleEnd + MIN_RANDOM_HOLE_INTERVAL);
-    while (marker < phase.end - 1.7) {
-      const lengthType: "short" | "long" =
-        Math.random() < 0.2 ? "long" : "short";
-      const width = getRandomHoleWidth(phase.id, lengthType);
-      const halfDuration = width / (2 * PIXELS_PER_SECOND);
-      const earliestAllowed =
-        lastHoleEnd + MIN_RANDOM_HOLE_INTERVAL + halfDuration;
-      if (marker - halfDuration < lastHoleEnd + MIN_RANDOM_HOLE_INTERVAL) {
-        marker = earliestAllowed;
-      }
-      if (marker + halfDuration >= phase.end) {
-        break;
-      }
-
-      pushHole(marker, width, lengthType);
-      marker += gapMin + Math.random() * (gapMax - gapMin);
-    }
-  });
-
-  return holes;
-};
-
-const formatTime = (seconds: number): string => {
-  const safeSeconds = Math.max(0, Math.floor(seconds));
-  const minutes = Math.floor(safeSeconds / 60);
-  const remain = safeSeconds % 60;
-  return `${minutes}:${remain.toString().padStart(2, "0")}`;
-};
-
-const getSavedBestScore = (): number => {
-  if (typeof window === "undefined") {
-    return 0;
-  }
-
-  const saved = Number(window.localStorage.getItem(BEST_SCORE_KEY) ?? "0");
-  return Number.isFinite(saved) ? saved : 0;
-};
-
-const getPassedHoleKeys = (time: number, holes: Hole[]): Set<string> =>
-  new Set(holes.filter((hole) => hole.time < time).map((hole) => hole.key));
-
-const getDistanceAtTime = (time: number): number =>
-  (Math.min(Math.max(time, 0), TOTAL_RUN_DURATION) / TOTAL_RUN_DURATION) *
-  COURSE_LENGTH;
-
-const getPhaseScoreRate = (phaseId: number): number => 10 + (phaseId - 1) * 5;
-
-const getScoreAtTime = (time: number): number =>
-  PHASES.reduce((totalScore, phase) => {
-    const phaseDistance = Math.max(
-      0,
-      getDistanceAtTime(Math.min(time, phase.end)) -
-        getDistanceAtTime(phase.start),
-    );
-    return totalScore + Math.floor(phaseDistance) * getPhaseScoreRate(phase.id);
-  }, 0);
-
-const getStageSpeedMultiplier = (phaseId: number): number =>
-  1 + (phaseId - 1) * 0.06;
 
 export default function AdventureGame() {
-  const { token } = useAuthStore();
-  const { addToast } = useToastStore();
-  const musicPlayerRef = useRef<PlayerInstance | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const lastFrameTsRef = useRef<number | null>(null);
-  const lastHudUpdateRef = useRef(0);
-  const playerYRef = useRef(0);
-  const jumpVelocityRef = useRef(0);
-  const remainingAirJumpRef = useRef(1);
-  const passedHoleKeysRef = useRef<Set<string>>(new Set());
-  const awardedCodesRef = useRef<Set<string>>(new Set());
-  const fallingHoleKeyRef = useRef<string | null>(null);
-  const runStateRef = useRef<RunState>("ready");
-  const courseTimeRef = useRef(0);
+  const musicPlayerRef = useRef<AdventurePlayerInstance | null>(null);
   const pendingMusicStartRef = useRef(false);
   const pendingMusicStartTimeRef = useRef(0);
-  const intentionalMusicPauseRef = useRef(false);
-
+  const rafRef = useRef<number | null>(null);
+  const stageViewportRef = useRef<HTMLDivElement | null>(null);
+  const courseTimeRef = useRef(0);
+  const [runState, setRunState] = useState<RunState>("ready");
+  const [score, setScore] = useState(0);
+  const [bestScore, setBestScore] = useState(0);
+  const [jumpNonce, setJumpNonce] = useState(0);
+  const [restartNonce, setRestartNonce] = useState(0);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [apiReady, setApiReady] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
-  const [runState, setRunState] = useState<RunState>("ready");
   const [hudCourseTime, setHudCourseTime] = useState(0);
-  const [bestScore, setBestScore] = useState(() => getSavedBestScore());
-  const [holes, setHoles] = useState<Hole[]>(() => buildHoleCourse());
-  const [deathMessage, setDeathMessage] = useState(DEFAULT_DEATH_MESSAGE);
+  const [retryStartTime, setRetryStartTime] = useState(0);
+  const [volume, setVolume] = useState(55);
+  const [debugUnlockAll, setDebugUnlockAll] = useState(false);
+  const [stageViewportSize, setStageViewportSize] = useState({
+    width: 0,
+    height: 0,
+  });
+  const volumeRef = useRef(55);
+  const liveScoreRef = useRef(0);
+  const jumpLockUntilRef = useRef(0);
+  const youtubeWindow =
+    typeof window === "undefined"
+      ? undefined
+      : (window as AdventureYouTubeWindow);
 
-  const phase = useMemo(() => getCurrentPhase(hudCourseTime), [hudCourseTime]);
-  const holesWithPosition = useMemo<PositionedHole[]>(
+  const resolution = useMemo(
     () =>
-      holes.map((hole) => ({
-        ...hole,
-        baseLeft: PLAYER_X + hole.time * PIXELS_PER_SECOND - hole.width / 2,
-        visualHeight: getHoleVisualHeight(hole.width),
-      })),
-    [holes],
+      typeof window === "undefined"
+        ? 1
+        : Math.min(window.devicePixelRatio || 1, 2),
+    [],
   );
-  const currentScore = useMemo(
-    () => getScoreAtTime(hudCourseTime),
-    [hudCourseTime],
-  );
-  const overallCourseProgress = Math.min(hudCourseTime / TOTAL_RUN_DURATION, 1);
-  const phaseProgress = useMemo(() => {
-    const phaseDuration = phase.end - phase.start;
-    if (phaseDuration <= 0) {
-      return 1;
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
     }
 
-    return Math.min(
-      Math.max((hudCourseTime - phase.start) / phaseDuration, 0),
-      1,
-    );
-  }, [hudCourseTime, phase]);
-  const unlockedPhaseId =
-    runState === "completed"
-      ? PHASES[PHASES.length - 1].id
-      : PHASES.reduce((highest, item) => {
-          if (hudCourseTime >= item.start) {
-            return item.id;
-          }
-
-          return highest;
-        }, 1);
+    const rawBestScore = window.localStorage.getItem(ADVENTURE_BEST_SCORE_KEY);
+    const parsed = Number(rawBestScore);
+    if (Number.isFinite(parsed) && parsed >= 0) {
+      setBestScore(parsed);
+    }
+  }, []);
 
   useEffect(() => {
-    runStateRef.current = runState;
-  }, [runState]);
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem(ADVENTURE_BEST_SCORE_KEY, String(bestScore));
+  }, [bestScore]);
+
+  useLayoutEffect(() => {
+    const element = stageViewportRef.current;
+    if (!element) {
+      return;
+    }
+
+    const updateStageViewportSize = () => {
+      const rect = element.getBoundingClientRect();
+      const nextWidth = Math.max(1, Math.round(rect.width));
+      const nextHeight = Math.max(1, Math.round(rect.height));
+      setStageViewportSize((current) =>
+        current.width === nextWidth && current.height === nextHeight
+          ? current
+          : { width: nextWidth, height: nextHeight },
+      );
+    };
+
+    updateStageViewportSize();
+    const rafId = window.requestAnimationFrame(updateStageViewportSize);
+
+    const observer = new ResizeObserver(updateStageViewportSize);
+    observer.observe(element);
+    window.addEventListener("resize", updateStageViewportSize);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", updateStageViewportSize);
+      observer.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
-    if (window.YT?.Player) {
+    courseTimeRef.current = hudCourseTime;
+  }, [hudCourseTime]);
+
+  useEffect(() => {
+    volumeRef.current = volume;
+    if (playerReady && musicPlayerRef.current) {
+      musicPlayerRef.current.setVolume(volume);
+    }
+  }, [playerReady, volume]);
+
+  useEffect(() => {
+    if (youtubeWindow?.YT?.Player) {
       setApiReady(true);
       return;
     }
@@ -498,8 +171,12 @@ export default function AdventureGame() {
     script.src = "https://www.youtube.com/iframe_api";
     script.async = true;
 
-    const previousHandler = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => {
+    const previousHandler = youtubeWindow?.onYouTubeIframeAPIReady;
+    if (!youtubeWindow) {
+      return;
+    }
+
+    youtubeWindow.onYouTubeIframeAPIReady = () => {
       previousHandler?.();
       setApiReady(true);
     };
@@ -507,379 +184,242 @@ export default function AdventureGame() {
     document.body.appendChild(script);
 
     return () => {
-      window.onYouTubeIframeAPIReady = previousHandler;
+      youtubeWindow.onYouTubeIframeAPIReady = previousHandler;
     };
-  }, []);
+  }, [youtubeWindow]);
 
   useEffect(() => {
-    if (!apiReady || musicPlayerRef.current || !window.YT?.Player) {
+    if (!apiReady || musicPlayerRef.current || !youtubeWindow?.YT?.Player) {
       return;
     }
 
-    musicPlayerRef.current = new window.YT.Player("rico-adventure-player", {
-      height: 1,
-      width: 1,
-      videoId: YOUTUBE_VIDEO_ID,
-      playerVars: {
-        autoplay: 0,
-        controls: 0,
-        disablekb: 1,
-        fs: 0,
-        iv_load_policy: 3,
-        rel: 0,
-        modestbranding: 1,
-        playsinline: 1,
-        enablejsapi: 1,
-        origin: window.location.origin,
-      },
-      events: {
-        onReady: (event) => {
-          setPlayerReady(true);
+    musicPlayerRef.current = new youtubeWindow.YT.Player(
+      ADVENTURE_PLAYER_ELEMENT_ID,
+      {
+        height: 1,
+        width: 1,
+        videoId: YOUTUBE_VIDEO_ID,
+        playerVars: {
+          autoplay: 0,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          iv_load_policy: 3,
+          rel: 0,
+          modestbranding: 1,
+          playsinline: 1,
+          enablejsapi: 1,
+          origin: window.location.origin,
+        },
+        events: {
+          onReady: (event) => {
+            const player = event.target as AdventurePlayerInstance;
+            setPlayerReady(true);
+            player.setVolume(volumeRef.current);
 
-          if (pendingMusicStartRef.current) {
-            event.target.seekTo(pendingMusicStartTimeRef.current, true);
-            event.target.playVideo();
-            pendingMusicStartRef.current = false;
-          }
-        },
-        onStateChange: (event) => {
-          if (
-            event.data === 2 &&
-            runStateRef.current === "running" &&
-            !intentionalMusicPauseRef.current
-          ) {
-            event.target.playVideo();
-          }
+            if (pendingMusicStartRef.current) {
+              player.seekTo(pendingMusicStartTimeRef.current, true);
+              player.playVideo();
+              pendingMusicStartRef.current = false;
+            }
+          },
         },
       },
-    });
+    ) as AdventurePlayerInstance;
 
     return () => {
       musicPlayerRef.current?.destroy();
       musicPlayerRef.current = null;
     };
-  }, [apiReady]);
+  }, [apiReady, youtubeWindow]);
 
-  const playMusicFromTime = (time: number) => {
-    pendingMusicStartRef.current = true;
-    pendingMusicStartTimeRef.current = Math.max(0, time);
-    intentionalMusicPauseRef.current = false;
+  const playMusicFromTime = useCallback(
+    (seconds: number) => {
+      pendingMusicStartRef.current = true;
+      pendingMusicStartTimeRef.current = clamp(seconds, 0, TOTAL_DURATION);
 
-    if (!playerReady || !musicPlayerRef.current) {
+      if (!playerReady || !musicPlayerRef.current) {
+        return;
+      }
+
+      musicPlayerRef.current.seekTo(pendingMusicStartTimeRef.current, true);
+      musicPlayerRef.current.playVideo();
+      pendingMusicStartRef.current = false;
+    },
+    [playerReady],
+  );
+
+  const pauseMusic = useCallback(() => {
+    pendingMusicStartRef.current = false;
+    musicPlayerRef.current?.pauseVideo();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
       return;
     }
 
-    musicPlayerRef.current.seekTo(pendingMusicStartTimeRef.current, true);
-    musicPlayerRef.current.playVideo();
-    pendingMusicStartRef.current = false;
-  };
+    const updateOrientationState = () => {
+      const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+      const isSmallViewport = window.innerWidth < 1024;
+      const isMobile = coarsePointer || isSmallViewport;
+      setIsMobileViewport(isMobile);
+    };
 
-  const pauseMusic = () => {
-    pendingMusicStartRef.current = false;
-    intentionalMusicPauseRef.current = true;
-    musicPlayerRef.current?.pauseVideo();
-  };
+    updateOrientationState();
+    window.addEventListener("resize", updateOrientationState);
+    window.addEventListener("orientationchange", updateOrientationState);
+
+    return () => {
+      window.removeEventListener("resize", updateOrientationState);
+      window.removeEventListener("orientationchange", updateOrientationState);
+    };
+  }, []);
+
+  const startGame = useCallback(
+    (startTime = 0) => {
+      jumpLockUntilRef.current = 0;
+      setScore(0);
+      setHudCourseTime(startTime);
+      setRetryStartTime(startTime);
+      setRestartNonce((value) => value + 1);
+      playMusicFromTime(startTime);
+      setRunState("running");
+    },
+    [playMusicFromTime],
+  );
+
+  const handlePauseToggle = useCallback(() => {
+    setRunState((current) => {
+      if (current === "running") {
+        pauseMusic();
+        return "paused";
+      }
+      if (current === "paused") {
+        jumpLockUntilRef.current = Date.now() + 240;
+        musicPlayerRef.current?.playVideo();
+        return "running";
+      }
+      return current;
+    });
+  }, [pauseMusic]);
+
+  const handleScoreChange = useCallback((nextScore: number) => {
+    liveScoreRef.current = nextScore;
+    setScore((current) => (current === nextScore ? current : nextScore));
+  }, []);
+
+  const handleGameOver = useCallback(
+    (endedScore: number) => {
+      const currentMusicTime = musicPlayerRef.current?.getCurrentTime();
+      const resolvedCourseTime = clamp(
+        Number.isFinite(currentMusicTime ?? Number.NaN)
+          ? (currentMusicTime as number)
+          : courseTimeRef.current,
+        0,
+        TOTAL_DURATION,
+      );
+      const nextRetryPhase = getRetryPhase(resolvedCourseTime);
+
+      pauseMusic();
+      setScore(endedScore);
+      setBestScore((current) => Math.max(current, endedScore));
+      setHudCourseTime(resolvedCourseTime);
+      setRetryStartTime(nextRetryPhase.start);
+      setRunState("gameover");
+    },
+    [pauseMusic],
+  );
+
+  const handleGameComplete = useCallback(
+    (clearedScore: number) => {
+      pauseMusic();
+      setScore(clearedScore);
+      setBestScore((current) => Math.max(current, clearedScore));
+      setHudCourseTime(TOTAL_DURATION);
+      setRetryStartTime(ADVENTURE_PHASES[ADVENTURE_PHASES.length - 1].start);
+      setRunState("completed");
+    },
+    [pauseMusic],
+  );
+
+  useEffect(() => {
+    if (runState === "ready") {
+      pauseMusic();
+    }
+  }, [pauseMusic, runState]);
 
   useEffect(() => {
     if (runState !== "running") {
-      lastFrameTsRef.current = null;
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
       return;
     }
 
-    const tick = (ts: number) => {
-      const previousTs = lastFrameTsRef.current ?? ts;
-      const delta = Math.min((ts - previousTs) / 1000, 0.04);
-      lastFrameTsRef.current = ts;
-      const currentCourseTime = courseTimeRef.current;
-      const speedMultiplier = getStageSpeedMultiplier(
-        getCurrentPhase(currentCourseTime).id,
+    const syncCourseTime = () => {
+      const playerTime = musicPlayerRef.current?.getCurrentTime();
+      const nextTime = clamp(
+        Number.isFinite(playerTime ?? Number.NaN)
+          ? (playerTime as number)
+          : courseTimeRef.current,
+        0,
+        TOTAL_DURATION,
       );
 
-      let nextTime = Math.min(
-        currentCourseTime + delta * speedMultiplier,
-        PHASES[PHASES.length - 1].end,
-      );
-      const nextJumpVelocity = jumpVelocityRef.current - GRAVITY * delta;
-      const nextPlayerY = playerYRef.current + nextJumpVelocity * delta;
-      let collisionState = getHoleCollisionState(
-        holes,
-        currentCourseTime,
-        nextTime,
-        nextPlayerY,
-        passedHoleKeysRef.current,
-      );
-
-      if (collisionState.wallHole) {
-        // 플레이어 우측이 홀 우측 벽에 닿은 순간의 courseTime을 계산
-        // hole.right(in time) = hole.time + (hole.width/2 - PLAYER_WIDTH/2) / PPS
-        const wallContactTime =
-          collisionState.wallHole.time +
-          (collisionState.wallHole.width / 2 - PLAYER_WIDTH / 2) /
-            PIXELS_PER_SECOND;
-
-        // nextTime을 벽 접촉 시점으로 클램핑 → 맵이 더 이상 좌로 이동하지 않음
-        nextTime = Math.max(
-          currentCourseTime,
-          Math.min(nextTime, wallContactTime),
-        );
-
-        // 클램핑 후 상태 재계산
-        collisionState = getHoleCollisionState(
-          holes,
-          currentCourseTime,
-          nextTime,
-          nextPlayerY,
-          passedHoleKeysRef.current,
-        );
-
-        // 플레이어가 홀 위로 올라갔으면(playerBottom <= holeTop = 0) 벽 차단 해제
-        // → nextTime 클램핑을 취소하고 원래 nextTime 사용
-        if (nextPlayerY > 0 && collisionState.wallHole === null) {
-          // 위로 탈출 성공: 별도 처리 없이 이미 collisionState가 null이므로 자연스럽게 이동 재개
-        }
-      }
-
-      jumpVelocityRef.current = nextJumpVelocity;
-      playerYRef.current = nextPlayerY;
-
-      collisionState.passedHoleKeys.forEach((holeKey) => {
-        passedHoleKeysRef.current.add(holeKey);
-      });
-
-      if (collisionState.fallingHole) {
-        if (
-          playerYRef.current <= 0 &&
-          fallingHoleKeyRef.current !== collisionState.fallingHole.key
-        ) {
-          remainingAirJumpRef.current = Math.max(
-            remainingAirJumpRef.current,
-            2,
-          );
-        }
-        fallingHoleKeyRef.current = collisionState.fallingHole.key;
-      } else {
-        fallingHoleKeyRef.current = null;
-      }
-
-      if (collisionState.bottomHitHole) {
-        jumpVelocityRef.current = 0;
-        setDeathMessage(DEFAULT_DEATH_MESSAGE);
-        setRunState("gameover");
-        courseTimeRef.current = nextTime;
-        setHudCourseTime(nextTime);
+      if (nextTime >= TOTAL_DURATION - 0.05) {
+        handleGameComplete(liveScoreRef.current);
         return;
       }
 
-      if (!collisionState.fallingHole && playerYRef.current <= 0) {
-        playerYRef.current = 0;
-        if (jumpVelocityRef.current < 0) {
-          jumpVelocityRef.current = 0;
-        }
-        remainingAirJumpRef.current = 1;
-      }
-
-      if (playerYRef.current < -FALL_OUT_THRESHOLD) {
-        jumpVelocityRef.current = 0;
-        setDeathMessage(DEFAULT_DEATH_MESSAGE);
-        setRunState("gameover");
-        courseTimeRef.current = nextTime;
-        setHudCourseTime(nextTime);
-        return;
-      }
-
-      courseTimeRef.current = nextTime;
-
-      const shouldUpdateHud =
-        ts - lastHudUpdateRef.current >= HUD_UPDATE_INTERVAL_MS;
-      if (shouldUpdateHud) {
-        lastHudUpdateRef.current = ts;
-        setHudCourseTime(nextTime);
-      }
-
-      if (nextTime >= PHASES[PHASES.length - 1].end) {
-        setHudCourseTime(nextTime);
-        setRunState("completed");
-        return;
-      }
-
-      rafRef.current = requestAnimationFrame(tick);
+      setHudCourseTime((current) =>
+        Math.abs(current - nextTime) < 0.05 ? current : nextTime,
+      );
+      rafRef.current = window.requestAnimationFrame(syncCourseTime);
     };
 
-    rafRef.current = requestAnimationFrame(tick);
-
+    rafRef.current = window.requestAnimationFrame(syncCourseTime);
     return () => {
       if (rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current);
+        window.cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
       }
     };
-  }, [holes, runState]);
+  }, [handleGameComplete, runState]);
 
-  useEffect(() => {
-    if (currentScore <= bestScore) {
+  const triggerJump = useCallback(() => {
+    if (Date.now() < jumpLockUntilRef.current) {
       return;
     }
+    setJumpNonce((value) => value + 1);
+  }, []);
 
-    setBestScore(currentScore);
-    window.localStorage.setItem(BEST_SCORE_KEY, String(currentScore));
-  }, [bestScore, currentScore]);
+  const readyModalActions: AdventureModalAction[] = [
+    {
+      label: "게임 시작하기",
+      onClick: () => startGame(0),
+    },
+  ];
 
-  useEffect(() => {
-    if (runState !== "completed" || !token) {
-      return;
-    }
+  const handleRestartStageOne = useCallback(() => {
+    startGame(0);
+  }, [startGame]);
 
-    const award = async (
-      code: string,
-      title: string,
-      description: string,
-      icon: AppIconName,
-    ) => {
-      if (awardedCodesRef.current.has(code)) {
-        return;
-      }
+  const handleRestartCurrentStage = useCallback(() => {
+    startGame(getPhaseAtTime(hudCourseTime).start);
+  }, [hudCourseTime, startGame]);
 
-      awardedCodesRef.current.add(code);
+  const handleDebugUnlockAll = useCallback(() => {
+    setDebugUnlockAll(true);
+  }, []);
 
-      try {
-        const response = await fetch(`${BASE_URL}/achievements/award/${code}`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          return;
-        }
-
-        const newlyAwarded = (await response.json()) === true;
-        if (newlyAwarded) {
-          addToast({ title, description, icon });
-        }
-      } catch (error) {
-        console.error(`Failed to award ${code}`, error);
-      }
-    };
-
-    void award(
-      "LEGEND-HERO",
-      "레전드 용사",
-      "마왕을 물리치고 긴 여정을 끝마쳤다.",
-      "Sword",
-    );
-    void award(
-      "R-GEND-HERO",
-      "R전드 용사",
-      "단 한 번의 실패 없이 여정을 끝마쳤다.",
-      "Crown",
-    );
-  }, [addToast, runState, token]);
-
-  useEffect(() => {
-    if (runState === "gameover" || runState === "completed") {
-      pauseMusic();
-    }
-  }, [runState]);
-
-  const resetRun = () => {
-    const nextHoles = buildHoleCourse();
-
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-
-    lastFrameTsRef.current = null;
-    playerYRef.current = 0;
-    jumpVelocityRef.current = 0;
-    remainingAirJumpRef.current = 1;
-    fallingHoleKeyRef.current = null;
-    passedHoleKeysRef.current = new Set();
-    setHoles(nextHoles);
-    setHudCourseTime(0);
-    setDeathMessage(DEFAULT_DEATH_MESSAGE);
-    courseTimeRef.current = 0;
-  };
-
-  const restartFromTime = (
-    time: number,
-    options?: { rebuildCourse?: boolean },
-  ) => {
-    const rebuildCourse = options?.rebuildCourse ?? false;
-    const nextHoles = rebuildCourse ? buildHoleCourse() : holes;
-    const passedHoleKeys = getPassedHoleKeys(time, nextHoles);
-
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-
-    lastFrameTsRef.current = null;
-    playerYRef.current = 0;
-    jumpVelocityRef.current = 0;
-    remainingAirJumpRef.current = 1;
-    fallingHoleKeyRef.current = null;
-    passedHoleKeysRef.current = passedHoleKeys;
-
-    if (rebuildCourse) {
-      setHoles(nextHoles);
-    }
-
-    setHudCourseTime(time);
-    setDeathMessage(DEFAULT_DEATH_MESSAGE);
-    courseTimeRef.current = time;
-    playMusicFromTime(time);
-    setRunState("running");
-  };
-
-  const handleStart = () => {
-    resetRun();
-    playMusicFromTime(0);
-    setRunState("running");
-  };
-
-  const handleRestartStageOne = () =>
-    restartFromTime(0, { rebuildCourse: true });
-
-  const handleRestartCurrentStage = () => restartFromTime(phase.start);
-
-  const handlePauseToggle = () => {
-    if (runState === "running") {
-      pauseMusic();
-      setRunState("paused");
-      return;
-    }
-
-    if (runState === "paused") {
-      lastFrameTsRef.current = null;
-      playMusicFromTime(courseTimeRef.current);
-      setRunState("running");
-    }
-  };
-
-  const performJump = () => {
-    if (runStateRef.current !== "running") {
-      return;
-    }
-
-    const hasGroundSupport =
-      playerYRef.current <= 4 && fallingHoleKeyRef.current === null;
-
-    if (hasGroundSupport) {
-      jumpVelocityRef.current = JUMP_VELOCITY;
-      remainingAirJumpRef.current = 1;
-      return;
-    }
-
-    if (remainingAirJumpRef.current > 0) {
-      jumpVelocityRef.current = DOUBLE_JUMP_VELOCITY;
-      remainingAirJumpRef.current -= 1;
-    }
-  };
-
-  const handleJumpInput = () => {
-    performJump();
-  };
+  const handlePhaseStart = useCallback(
+    (startTime: number) => {
+      startGame(startTime);
+    },
+    [startGame],
+  );
 
   const pauseModalActions: AdventureModalAction[] = [
     {
@@ -905,48 +445,296 @@ export default function AdventureGame() {
     },
   ];
 
-  const statusLabel =
-    runState === "running"
-      ? "Live Run"
-      : runState === "paused"
-        ? "Paused"
-        : runState === "gameover"
-          ? "Game Over"
-          : runState === "completed"
-            ? "Completed"
-            : "Ready";
+  const completedModalActions: AdventureModalAction[] = [
+    {
+      label: "처음부터 다시 보기",
+      onClick: handleRestartStageOne,
+    },
+  ];
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.code === "KeyP") {
+        event.preventDefault();
+        if (runState === "running" || runState === "paused") {
+          handlePauseToggle();
+        }
+        return;
+      }
+
+      if (
+        event.code === "Enter" &&
+        (runState === "ready" ||
+          runState === "gameover" ||
+          runState === "completed")
+      ) {
+        event.preventDefault();
+        if (runState === "gameover") {
+          handleRestartCurrentStage();
+          return;
+        }
+        if (runState === "completed") {
+          handleRestartStageOne();
+          return;
+        }
+        startGame(0);
+        return;
+      }
+
+      if (
+        event.code === "Space" ||
+        event.code === "ArrowUp" ||
+        event.code === "KeyW"
+      ) {
+        event.preventDefault();
+        if (runState === "running") {
+          triggerJump();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    handlePauseToggle,
+    handleRestartCurrentStage,
+    handleRestartStageOne,
+    runState,
+    startGame,
+    triggerJump,
+  ]);
+
+  const handleStagePointerDown = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        target.closest("[data-ui-control='true']")
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (runState === "running") {
+        triggerJump();
+      }
+    },
+    [runState, triggerJump],
+  );
+
+  const displayTime =
+    runState === "gameover" || runState === "completed"
+      ? hudCourseTime
+      : runState === "ready"
+        ? retryStartTime
+        : hudCourseTime;
+  const activePhase = getPhaseAtTime(displayTime);
+  const activePhaseId = activePhase.id;
+  const unlockedPhaseId = Math.min(
+    getClearedPhaseId(hudCourseTime) + 1,
+    ADVENTURE_PHASES.length,
+  );
+  const maxUnlockedPhaseId = debugUnlockAll
+    ? ADVENTURE_PHASES.length
+    : unlockedPhaseId;
+  const introOverlayFadeProgress = clamp((displayTime - 20) / 1.4, 0, 1);
+  const introOverlayOpacity =
+    activePhaseId === 1 ? 1 - introOverlayFadeProgress : 0;
+  const showMapVolumeUi = activePhaseId === 1 && introOverlayOpacity > 0;
+  const introInstructionMessage =
+    activePhaseId === 1 && displayTime < 10
+      ? "볼륨을 알맞게 조절해줘"
+      : activePhaseId === 1 && displayTime < 15
+        ? "화면을 탭하거나 스페이스바로 점프할 수 있어"
+        : activePhaseId === 1 && displayTime < 20
+          ? "P 키를 누르면 잠시 쉴 수 있어"
+          : null;
+
+  const renderVolumeControls = (compact = false) => (
+    <div
+      data-ui-control="true"
+      className={`rounded-[1.1rem] bg-white/84 ${
+        compact
+          ? "border border-[#fff7db]/85 px-2.5 py-2 shadow-[0_6px_14px_rgba(16,37,66,0.08)]"
+          : "border-2 border-[#fff7db] px-3 py-2 shadow-[0_12px_28px_rgba(16,37,66,0.14)]"
+      }`}
+    >
+      <div
+        className={`flex items-center justify-between ${
+          compact ? "mb-1 gap-2" : "mb-2 gap-3"
+        }`}
+      >
+        <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#166D77]">
+          {isMobileViewport ? "Device Volume" : "Volume"}
+        </span>
+        <span className="text-sm font-black text-[#102542]">{volume}</span>
+      </div>
+      {isMobileViewport ? (
+        <p className="text-[11px] font-bold leading-relaxed text-[#365486]">
+          모험을 떠나기 전에 볼륨을 알맞게 조절해줘
+        </p>
+      ) : (
+        <input
+          data-ui-control="true"
+          type="range"
+          min={0}
+          max={100}
+          step={1}
+          value={volume}
+          onChange={(event) => setVolume(Number(event.target.value))}
+          className={`w-full cursor-pointer accent-[#166D77] ${
+            compact ? "h-1.5" : "h-2"
+          }`}
+          aria-label="게임 볼륨"
+        />
+      )}
+    </div>
+  );
+
+  const overlayModal =
+    runState === "ready" ? (
+      <AdventureModal
+        embedded
+        title="이야기 시작"
+        status="준비 됐어?"
+        description="모험을 떠나볼까?"
+        actions={readyModalActions}
+      >
+        {renderVolumeControls(true)}
+      </AdventureModal>
+    ) : runState === "paused" ? (
+      <AdventureModal
+        embedded
+        title={activePhase.title}
+        status="용사에게도 휴식이 필요해"
+        description="다시 마왕을 무찌르러 가볼까?"
+        actions={pauseModalActions}
+      >
+        {renderVolumeControls(true)}
+      </AdventureModal>
+    ) : runState === "gameover" ? (
+      <AdventureModal
+        embedded
+        status="함정에 빠졌어..."
+        title={activePhase.title}
+        description="거기 누구 없어요? 도와주세요!!"
+        actions={gameOverModalActions}
+      >
+        {renderVolumeControls(true)}
+      </AdventureModal>
+    ) : runState === "completed" ? (
+      <AdventureModal
+        embedded
+        status="배경음악이 끝났어"
+        title="모험 성공!"
+        description="용사 리코의 이야기가 해피엔딩으로 마무리됐어."
+        actions={completedModalActions}
+      >
+        {renderVolumeControls(true)}
+      </AdventureModal>
+    ) : null;
+
+  const scoreCards = (
+    <div className="flex items-center gap-3">
+      <ScoreStatCard
+        label="Score"
+        value={score}
+        background="#102542"
+        className={isMobileViewport ? "min-w-[76px]" : "min-w-[88px]"}
+        valueClassName={isMobileViewport ? "text-lg" : "text-xl"}
+      />
+      <ScoreStatCard
+        label="Best"
+        value={bestScore}
+        background="#5EC7A5"
+        className={isMobileViewport ? "min-w-[76px]" : "min-w-[88px]"}
+        labelClassName="opacity-80"
+        valueClassName={isMobileViewport ? "text-lg" : "text-xl"}
+      />
+    </div>
+  );
 
   return (
     <>
-      <AdventureGameView
-        statusLabel={statusLabel}
-        bestScore={bestScore}
-        currentScore={currentScore}
-        hudCourseTime={hudCourseTime}
-        totalDuration={PHASES[PHASES.length - 1].end}
-        courseLength={COURSE_LENGTH}
-        phase={phase}
-        overallCourseProgress={overallCourseProgress}
-        runState={runState}
-        pauseModalActions={pauseModalActions}
-        gameOverModalActions={gameOverModalActions}
-        onPauseToggle={handlePauseToggle}
-        onJumpInput={handleJumpInput}
-        onStart={handleStart}
-        deathMessage={deathMessage}
-        holes={holesWithPosition}
-        courseTimeRef={courseTimeRef}
-        playerYRef={playerYRef}
-        phaseProgress={phaseProgress}
-        helpSlides={ADVENTURE_TUTORIAL_SLIDES}
-        formatTime={formatTime}
-        playerX={PLAYER_X}
-        pixelsPerSecond={PIXELS_PER_SECOND}
-        phases={PHASES}
-        unlockedPhaseId={unlockedPhaseId}
-      />
+      <GameContainer
+        title="용사 리코 이야기"
+        desc="라떼는 말이야 검 하나로 마왕을 잡았다고"
+        gameName="용사 리코 이야기"
+        helpSlides={ADVENTURE_HELP_SLIDES}
+        className="relative overflow-hidden bg-[#f7f2e8] text-[#1d3557] select-none"
+        mainClassName={
+          isMobileViewport ? "px-3 pb-6 sm:px-4" : "px-4 pb-8 sm:px-6 lg:px-8"
+        }
+        headerRight={isMobileViewport ? null : scoreCards}
+      >
+        <div
+          className={`mx-auto flex w-full flex-col ${
+            isMobileViewport
+              ? "max-w-[23rem] gap-4"
+              : "max-w-[min(110rem,calc(100vw-3rem))] gap-6"
+          }`}
+        >
+          {isMobileViewport ? (
+            <div className="flex justify-center">{scoreCards}</div>
+          ) : null}
+          <section className="flex flex-col gap-5">
+            <AdventureGamePanel
+              runState={runState}
+              introInstructionMessage={introInstructionMessage}
+              introOverlayOpacity={introOverlayOpacity}
+              showMapVolumeUi={showMapVolumeUi}
+              onStagePointerDown={handleStagePointerDown}
+              onPauseToggle={handlePauseToggle}
+              mapVolumeControls={renderVolumeControls()}
+              overlayModal={overlayModal}
+              gameCanvas={
+                <div
+                  ref={stageViewportRef}
+                  className="relative h-full w-full overflow-hidden"
+                >
+                  {stageViewportSize.width > 0 && stageViewportSize.height > 0 ? (
+                    <Application
+                      width={stageViewportSize.width}
+                      height={stageViewportSize.height}
+                      autoDensity
+                      resolution={resolution}
+                      antialias
+                      backgroundAlpha={0}
+                      className="block h-full w-full pointer-events-none"
+                    >
+                      <RunnerScene
+                        stageWidth={stageViewportSize.width}
+                        stageHeight={stageViewportSize.height}
+                        runState={runState}
+                        jumpNonce={jumpNonce}
+                        restartNonce={restartNonce}
+                        currentCourseTime={displayTime}
+                        onScoreChange={handleScoreChange}
+                        onGameOver={handleGameOver}
+                        onComplete={handleGameComplete}
+                      />
+                    </Application>
+                  ) : null}
+                </div>
+              }
+            />
+
+            <AdventurePhaseGuide
+              phases={ADVENTURE_PHASES.map((phase) => ({
+                id: phase.id,
+                start: phase.start,
+              }))}
+              activePhaseId={activePhaseId}
+              maxUnlockedPhaseId={maxUnlockedPhaseId}
+              onDebugUnlockAll={handleDebugUnlockAll}
+              onPhaseStart={handlePhaseStart}
+            />
+          </section>
+        </div>
+      </GameContainer>
       <div
-        id="rico-adventure-player"
+        id={ADVENTURE_PLAYER_ELEMENT_ID}
         aria-hidden="true"
         className="pointer-events-none fixed -left-[9999px] top-0 h-px w-px overflow-hidden opacity-0"
       />

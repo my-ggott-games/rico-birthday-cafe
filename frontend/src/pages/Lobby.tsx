@@ -597,7 +597,7 @@ const Lobby: React.FC = () => {
               className="lobby-slogan-stage__happy-birthday absolute left-1/2 top-1/2 w-[min(86vw,30rem)] -translate-x-1/2 -translate-y-1/2 cursor-pointer border-0 bg-transparent p-0"
             >
               <div
-                className={`relative overflow-hidden rounded-[1.1rem] ${isMobile ? "h-[6.4rem]" : "h-[10rem]"}`}
+                className={`relative rounded-[1.1rem] ${isMobile ? "h-[6.4rem]" : "h-[10rem]"}`}
               >
                 <img
                   src="/slogan/happybirthday.jpg"

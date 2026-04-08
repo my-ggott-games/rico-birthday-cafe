@@ -1,18 +1,20 @@
 import type { TutorialSlide } from "../components/common/TutorialBanner";
 
-export const ADVENTURE_SAMPLE_HELP_SLIDES: TutorialSlide[] = [
+export const ADVENTURE_HELP_SLIDES: TutorialSlide[] = [
   {
     title: "용사 리코 이야기",
+    titleIcon: "Sword",
     lines: [
       "이세계 주민들은 리코 덕분에 행복을 되찾았어!",
       "그들은 용사를 영원히 기억하기 위해",
-      "용사의 모험을 이야기로 남겼어",
+      "용사의 업적을 이야기로 남겼어",
       "이세계 구전설화를 게임으로 즐겨보자",
     ],
     showArrows: false,
   },
   {
     title: "멋진 용사는 점프를 잘한대",
+    titleIcon: "Sparkles",
     lines: [
       "클릭 또는 스페이스바로 점프할 수 있어",
       "2단 점프도 가능하니까, 타이밍을 잘 맞춰보자",
@@ -22,6 +24,7 @@ export const ADVENTURE_SAMPLE_HELP_SLIDES: TutorialSlide[] = [
   },
   {
     title: "함정에 빠지지 않게 조심해!",
+    titleIcon: "Shield",
     lines: [
       "함정에 빠지면 이야기가 끝나버려...",
       "함정을 잘 피해서 달려보자!",
