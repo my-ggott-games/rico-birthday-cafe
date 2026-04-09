@@ -31,13 +31,13 @@ import {
   PUZZLE_MUSEUM_UNLOCK_KEY,
 } from "../constants/puzzle";
 import {
-  COLS,
   PIECE_SIZE,
-  ROWS,
   MOUSE_DRAG_DISTANCE_PX,
   TOUCH_DRAG_ACTIVATION_DELAY_MS,
   TOUCH_DRAG_TOLERANCE_PX,
-  BOARD_SIZE,
+  PUZZLE_GRID_OPTIONS,
+  type PuzzleGridSize,
+  getPuzzleBoardConfig,
 } from "../features/puzzle/constants";
 import { PUZZLE_TUTORIAL_SLIDES } from "../constants/tutorialSlides";
 import { usePageBgm } from "../hooks/usePageBgm";
@@ -55,10 +55,92 @@ type PuzzleGameProps = {
   embedInContainer?: boolean;
 };
 
+const PUZZLE_PROGRESS_STORAGE_KEY = "puzzle_game_progress_v1";
+
+type StoredPuzzlePiece = {
+  id: number;
+  rotation: number;
+  isPlaced: boolean;
+  currentXRatio: number | null;
+  currentYRatio: number | null;
+};
+
+type StoredPuzzleProgress = {
+  gridSize: PuzzleGridSize;
+  pieces: StoredPuzzlePiece[];
+};
+
+const isPuzzleGridSize = (value: unknown): value is PuzzleGridSize =>
+  typeof value === "number" &&
+  PUZZLE_GRID_OPTIONS.includes(value as PuzzleGridSize);
+
+const readStoredPuzzleProgress = (): StoredPuzzleProgress | null => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(PUZZLE_PROGRESS_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<StoredPuzzleProgress>;
+    if (!isPuzzleGridSize(parsed.gridSize) || !Array.isArray(parsed.pieces)) {
+      return null;
+    }
+
+    return {
+      gridSize: parsed.gridSize,
+      pieces: parsed.pieces.flatMap((piece) => {
+        if (
+          typeof piece?.id !== "number" ||
+          typeof piece.rotation !== "number" ||
+          typeof piece.isPlaced !== "boolean"
+        ) {
+          return [];
+        }
+
+        const currentXRatio =
+          typeof piece.currentXRatio === "number" ? piece.currentXRatio : null;
+        const currentYRatio =
+          typeof piece.currentYRatio === "number" ? piece.currentYRatio : null;
+
+        return [
+          {
+            id: piece.id,
+            rotation: piece.rotation,
+            isPlaced: piece.isPlaced,
+            currentXRatio,
+            currentYRatio,
+          },
+        ];
+      }),
+    };
+  } catch (error) {
+    console.error("Failed to read stored puzzle progress", error);
+    return null;
+  }
+};
+
+const clearStoredPuzzleProgress = () => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(PUZZLE_PROGRESS_STORAGE_KEY);
+};
+
 const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   const [bgmSrc] = useState(() => pickRandomActivityBgm());
+  const [gridSize, setGridSize] = useState<PuzzleGridSize>(() => {
+    const storedProgress = readStoredPuzzleProgress();
+    return storedProgress?.gridSize ?? 10;
+  });
 
   usePageBgm(bgmSrc);
+  const boardConfig = getPuzzleBoardConfig(gridSize);
+  const { cols, rows, boardWidth, boardHeight } = boardConfig;
 
   const [pieces, setPieces] = useState<PuzzlePiece[]>([]);
   const [completed, setCompleted] = useState(false);
@@ -72,7 +154,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   const [displayPieceSize, setDisplayPieceSize] = useState(() =>
     typeof window === "undefined"
       ? PIECE_SIZE
-      : getDisplayPieceSize(window.innerWidth, window.innerHeight),
+      : getDisplayPieceSize(window.innerWidth, window.innerHeight, gridSize),
   );
   const [isNarrowViewport, setIsNarrowViewport] = useState(
     typeof window !== "undefined" ? window.innerWidth <= 768 : false,
@@ -82,6 +164,9 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   const artworkRef = useRef<HTMLDivElement>(null);
   const puzzleAchievementAwardedRef = useRef(false);
   const completionMetaTriggeredRef = useRef(false);
+  const storedProgressRef = useRef<StoredPuzzleProgress | null>(
+    readStoredPuzzleProgress(),
+  );
   const { token, isAdmin } = useAuthStore();
   const { addToast } = useToastStore();
   const isCoarsePointerDevice =
@@ -233,14 +318,14 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   useEffect(() => {
     const updateDisplaySize = () =>
       setDisplayPieceSize(
-        getDisplayPieceSize(window.innerWidth, window.innerHeight),
+        getDisplayPieceSize(window.innerWidth, window.innerHeight, gridSize),
       );
 
     updateDisplaySize();
     window.addEventListener("resize", updateDisplaySize);
 
     return () => window.removeEventListener("resize", updateDisplaySize);
-  }, []);
+  }, [gridSize]);
 
   useEffect(() => {
     if (!playAreaRef.current || !boardRef.current) return;
@@ -262,14 +347,70 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
       const scale = displayPieceSize / PIECE_SIZE;
 
       if (pieces.length === 0) {
-        setPieces(
-          assignSpawnPositions(
-            createPieces(),
-            playAreaRef.current,
-            boardRef.current,
-            scale,
-          ),
+        const spawnedPieces = assignSpawnPositions(
+          createPieces(gridSize),
+          playAreaRef.current,
+          boardRef.current,
+          scale,
         );
+        const storedProgress = storedProgressRef.current;
+
+        if (storedProgress?.gridSize === gridSize) {
+          const storedPieces = new Map(
+            storedProgress.pieces.map((piece) => [piece.id, piece]),
+          );
+
+          const restoredPieces = spawnedPieces.map((piece) => {
+            const storedPiece = storedPieces.get(piece.id);
+            if (!storedPiece) {
+              return piece;
+            }
+
+            if (storedPiece.isPlaced) {
+              return {
+                ...piece,
+                isPlaced: true,
+                rotation: storedPiece.rotation,
+                currentX: -999,
+                currentY: -999,
+              };
+            }
+
+            if (
+              storedPiece.currentXRatio === null ||
+              storedPiece.currentYRatio === null
+            ) {
+              return {
+                ...piece,
+                rotation: storedPiece.rotation,
+              };
+            }
+
+            const containerWidth = playAreaRef.current!.clientWidth;
+            const containerHeight = playAreaRef.current!.clientHeight;
+            const restoredX = storedPiece.currentXRatio * containerWidth;
+            const restoredY = storedPiece.currentYRatio * containerHeight;
+
+            return {
+              ...piece,
+              rotation: storedPiece.rotation,
+              ...clampPiecePosition(
+                piece,
+                restoredX,
+                restoredY,
+                containerWidth,
+                containerHeight,
+                scale,
+              ),
+            };
+          });
+
+          storedProgressRef.current = null;
+          setPieces(restoredPieces);
+          return;
+        }
+
+        setPieces(spawnedPieces);
         return;
       }
 
@@ -293,7 +434,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [displayPieceSize, layoutVersion, pieces.length]);
+  }, [displayPieceSize, gridSize, layoutVersion, pieces.length]);
 
   const handleDragStart = (_event: DragStartEvent) => {};
 
@@ -408,6 +549,8 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   }, [isCoarsePointerDevice, isNarrowViewport, photocardModeEnabled]);
 
   const handleReplay = React.useCallback(() => {
+    clearStoredPuzzleProgress();
+    storedProgressRef.current = null;
     setCompleted(false);
     setPhotocardModeEnabled(false);
     setIsOpeningPhotocard(false);
@@ -418,6 +561,24 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
     setPieces([]);
     setLayoutVersion((prev) => prev + 1);
   }, []);
+
+  const handleGridSizeChange = React.useCallback(
+    (nextGridSize: PuzzleGridSize) => {
+      clearStoredPuzzleProgress();
+      storedProgressRef.current = null;
+      setGridSize(nextGridSize);
+      setCompleted(false);
+      setPhotocardModeEnabled(false);
+      setIsOpeningPhotocard(false);
+      setSensorUnavailable(false);
+      setOrientationEnabled(false);
+      setIsMagnifierActive(false);
+      setMagnifierPoint({ x: 0, y: 0 });
+      setPieces([]);
+      setLayoutVersion((prev) => prev + 1);
+    },
+    [],
+  );
 
   const updateMagnifierPoint = React.useCallback(
     (clientX: number, clientY: number) => {
@@ -459,6 +620,36 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   }, [pieces]);
 
   useEffect(() => {
+    if (typeof window === "undefined" || pieces.length === 0) {
+      return;
+    }
+
+    const containerWidth = playAreaRef.current?.clientWidth;
+    const containerHeight = playAreaRef.current?.clientHeight;
+
+    if (!containerWidth || !containerHeight) {
+      return;
+    }
+
+    const storedProgress: StoredPuzzleProgress = {
+      gridSize,
+      pieces: pieces.map((piece) => ({
+        id: piece.id,
+        rotation: piece.rotation,
+        isPlaced: piece.isPlaced,
+        currentXRatio: piece.isPlaced ? null : piece.currentX / containerWidth,
+        currentYRatio:
+          piece.isPlaced ? null : piece.currentY / containerHeight,
+      })),
+    };
+
+    window.localStorage.setItem(
+      PUZZLE_PROGRESS_STORAGE_KEY,
+      JSON.stringify(storedProgress),
+    );
+  }, [gridSize, pieces]);
+
+  useEffect(() => {
     if (!completed) {
       setIsMagnifierActive(false);
     }
@@ -493,8 +684,8 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
             <image
               id="shared-puzzle-img"
               href={PUZZLE_IMAGE_URL}
-              width={BOARD_SIZE.width}
-              height={BOARD_SIZE.height}
+              width={boardWidth}
+              height={boardHeight}
               preserveAspectRatio="none"
             />
           </defs>
@@ -528,12 +719,27 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
                 <div className="pointer-events-none absolute inset-[6px] rounded-[2rem] border border-[#fff6df]/35" />
 
                 <div className="relative rounded-[1.7rem] border border-[#fff7eb] bg-[linear-gradient(180deg,#f8f4ea_0%,#ede5d3_100%)] p-4 sm:p-5">
+                  {!completed && (
+                    <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
+                      {PUZZLE_GRID_OPTIONS.map((option) => (
+                        <PushableButton
+                          key={option}
+                          type="button"
+                          onClick={() => handleGridSizeChange(option)}
+                          variant={gridSize === option ? "mint" : "cream"}
+                          className="min-w-[4.75rem] justify-center px-4 py-2 text-xs"
+                        >
+                          {option} x {option}
+                        </PushableButton>
+                      ))}
+                    </div>
+                  )}
                   <div
                     ref={artworkRef}
                     className="relative overflow-hidden border border-[#e8ddc6] bg-[#faf8f1]"
                     style={{
-                      width: `${displayPieceSize * COLS}px`,
-                      height: `${displayPieceSize * ROWS}px`,
+                      width: `${displayPieceSize * cols}px`,
+                      height: `${displayPieceSize * rows}px`,
                     }}
                   >
                     <div className="pointer-events-none absolute inset-0 z-[1] border border-white/35" />
@@ -549,13 +755,13 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
                     <div
                       className="absolute inset-0 z-[2] grid gap-0"
                       style={{
-                        gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`,
-                        gridTemplateRows: `repeat(${ROWS}, minmax(0, 1fr))`,
+                        gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+                        gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
                       }}
                     >
-                      {Array.from({ length: ROWS * COLS }).map((_, index) => {
-                        const col = index % COLS;
-                        const row = Math.floor(index / COLS);
+                      {Array.from({ length: rows * cols }).map((_, index) => {
+                        const col = index % cols;
+                        const row = Math.floor(index / cols);
                         const cellId = `cell-${col}-${row}`;
                         const slotPiece = pieces.find(
                           (piece) =>
@@ -576,6 +782,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
                             placedPiece={placedPiece}
                             completed={completed}
                             displayPieceSize={displayPieceSize}
+                            boardConfig={boardConfig}
                           />
                         );
                       })}
@@ -620,8 +827,8 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
                         <MagnifyingGlass
                           visible={isMagnifierActive}
                           imageUrl={PUZZLE_IMAGE_URL}
-                          boardWidth={displayPieceSize * COLS}
-                          boardHeight={displayPieceSize * ROWS}
+                          boardWidth={displayPieceSize * cols}
+                          boardHeight={displayPieceSize * rows}
                           pointerX={magnifierPoint.x}
                           pointerY={magnifierPoint.y}
                         />
@@ -742,6 +949,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
                 piece={piece}
                 onRotate={handleRotate}
                 displayPieceSize={displayPieceSize}
+                boardConfig={boardConfig}
               />
             ))}
           </div>

@@ -3,10 +3,10 @@ import { motion } from "framer-motion";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import {
   CORNER_PETAL_ROTATIONS,
-  BOARD_SIZE,
   PIECE_RENDER_BLEED,
   PIECE_SIZE,
   TAP_ROTATE_MAX_MS,
+  type PuzzleBoardConfig,
 } from "../../../features/puzzle/constants";
 import { PUZZLE_IMAGE_URL } from "../../../constants/puzzle";
 import {
@@ -18,6 +18,7 @@ import type { PuzzlePiece } from "../../../features/puzzle/types";
 type PuzzlePieceComponentProps = {
   piece: PuzzlePiece;
   displayPieceSize: number;
+  boardConfig: PuzzleBoardConfig;
   className?: string;
   showOutline?: boolean;
 };
@@ -25,6 +26,7 @@ type PuzzlePieceComponentProps = {
 const PuzzlePieceComponent = ({
   piece,
   displayPieceSize,
+  boardConfig,
   className,
   showOutline = true,
 }: PuzzlePieceComponentProps) => {
@@ -68,7 +70,7 @@ const PuzzlePieceComponent = ({
           width: `${renderWidth}px`,
           height: `${renderHeight}px`,
           backgroundImage: `url(${PUZZLE_IMAGE_URL})`,
-          backgroundSize: `${BOARD_SIZE.width * scale}px ${BOARD_SIZE.height * scale}px`,
+          backgroundSize: `${boardConfig.boardWidth * scale}px ${boardConfig.boardHeight * scale}px`,
           backgroundPosition: `${-piece.expandedBounds.x * scale + bleed}px ${-piece.expandedBounds.y * scale + bleed}px`,
           backgroundRepeat: "no-repeat",
           clipPath: `url(#${clipId})`,
@@ -111,10 +113,12 @@ const PuzzlePieceComponent = ({
 const PuzzleSlotShape = ({
   piece,
   displayPieceSize,
+  boardConfig,
   highlighted = false,
 }: {
   piece: PuzzlePiece;
   displayPieceSize: number;
+  boardConfig: PuzzleBoardConfig;
   highlighted?: boolean;
 }) => {
   const scale = displayPieceSize / PIECE_SIZE;
@@ -123,7 +127,7 @@ const PuzzleSlotShape = ({
   const height = piece.expandedBounds.height * scale + bleed * 2;
   const offsetX = piece.padding.left * scale;
   const offsetY = piece.padding.top * scale;
-  const guidelinePath = createGuidelinePath(piece);
+  const guidelinePath = createGuidelinePath(piece, boardConfig);
 
   return (
     <svg
@@ -158,6 +162,7 @@ type DroppableCellProps = {
   placedPiece?: PuzzlePiece | null;
   completed: boolean;
   displayPieceSize: number;
+  boardConfig: PuzzleBoardConfig;
 };
 
 export const DroppableCell = ({
@@ -166,6 +171,7 @@ export const DroppableCell = ({
   placedPiece,
   completed,
   displayPieceSize,
+  boardConfig,
 }: DroppableCellProps) => {
   const { setNodeRef, isOver } = useDroppable({ id });
 
@@ -184,6 +190,7 @@ export const DroppableCell = ({
         <PuzzlePieceComponent
           piece={placedPiece}
           displayPieceSize={displayPieceSize}
+          boardConfig={boardConfig}
           showOutline={false}
         />
       )}
@@ -192,6 +199,7 @@ export const DroppableCell = ({
           <PuzzleSlotShape
             piece={slotPiece}
             displayPieceSize={displayPieceSize}
+            boardConfig={boardConfig}
             highlighted={isOver && !placedPiece}
           />
         </div>
@@ -273,10 +281,12 @@ export const DraggablePiece = React.memo(
     piece,
     onRotate,
     displayPieceSize,
+    boardConfig,
   }: {
     piece: PuzzlePiece;
     onRotate: (id: number) => void;
     displayPieceSize: number;
+    boardConfig: PuzzleBoardConfig;
   }) => {
     const { attributes, listeners, setNodeRef, isDragging, transform } =
       useDraggable({
@@ -365,6 +375,7 @@ export const DraggablePiece = React.memo(
           <PuzzlePieceComponent
             piece={piece}
             displayPieceSize={displayPieceSize}
+            boardConfig={boardConfig}
           />
         </motion.div>
       </div>
@@ -372,5 +383,6 @@ export const DraggablePiece = React.memo(
   },
   (prev, next) =>
     prev.piece === next.piece &&
-    prev.displayPieceSize === next.displayPieceSize,
+    prev.displayPieceSize === next.displayPieceSize &&
+    prev.boardConfig === next.boardConfig,
 );

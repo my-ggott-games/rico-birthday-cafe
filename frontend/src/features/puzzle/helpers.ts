@@ -1,5 +1,4 @@
 import {
-  COLS,
   CONNECTOR_DEPTH,
   CONNECTOR_NECK,
   DESKTOP_BOARD_HORIZONTAL_PADDING,
@@ -8,7 +7,9 @@ import {
   MOBILE_BOARD_HORIZONTAL_PADDING,
   MOBILE_BOARD_VERTICAL_PADDING,
   PIECE_SIZE,
-  ROWS,
+  type PuzzleBoardConfig,
+  type PuzzleGridSize,
+  getPuzzleBoardConfig,
 } from "./constants";
 import type {
   Bounds,
@@ -26,7 +27,9 @@ export const clamp = (value: number, min: number, max: number) =>
 export const getDisplayPieceSize = (
   viewportWidth: number,
   viewportHeight: number,
+  gridSize: PuzzleGridSize,
 ) => {
+  const { cols, rows } = getPuzzleBoardConfig(gridSize);
   const isDesktop = viewportWidth >= 1024;
   const availableBoardWidth =
     (isDesktop ? viewportWidth * 0.42 : viewportWidth) -
@@ -43,8 +46,8 @@ export const getDisplayPieceSize = (
     MIN_DISPLAY_PIECE_SIZE,
     Math.min(
       PIECE_SIZE,
-      Math.floor(availableBoardWidth / COLS),
-      Math.floor(availableBoardHeight / ROWS),
+      Math.floor(availableBoardWidth / cols),
+      Math.floor(availableBoardHeight / rows),
     ),
   );
 };
@@ -159,8 +162,10 @@ export const createInterlockingPath = (
 
 export const createGuidelinePath = (
   piece: Pick<PuzzlePiece, "edgeTypes" | "padding" | "correctX" | "correctY">,
+  boardConfig: PuzzleBoardConfig,
 ) => {
   const { edgeTypes: edges, padding, correctX, correctY } = piece;
+  const { cols, rows } = boardConfig;
   const x0 = padding.left;
   const y0 = padding.top;
   const x1 = x0 + PIECE_SIZE;
@@ -221,33 +226,34 @@ export const createGuidelinePath = (
 
   const segments = [`M ${x0} ${y0} ${top}`, `M ${x0} ${y1} ${left}`];
 
-  if (correctX === COLS - 1) {
+  if (correctX === cols - 1) {
     segments.push(`M ${x1} ${y0} ${right}`);
   }
 
-  if (correctY === ROWS - 1) {
+  if (correctY === rows - 1) {
     segments.push(`M ${x1} ${y1} ${bottom}`);
   }
 
   return segments.join(" ").replace(/\s+/g, " ").trim();
 };
 
-export const createPieces = () => {
-  const internalVertical = Array.from({ length: ROWS }, () =>
-    Array.from({ length: COLS - 1 }, () => (Math.random() > 0.5 ? 1 : -1)),
+export const createPieces = (gridSize: PuzzleGridSize) => {
+  const { cols, rows } = getPuzzleBoardConfig(gridSize);
+  const internalVertical = Array.from({ length: rows }, () =>
+    Array.from({ length: cols - 1 }, () => (Math.random() > 0.5 ? 1 : -1)),
   );
-  const internalHorizontal = Array.from({ length: ROWS - 1 }, () =>
-    Array.from({ length: COLS }, () => (Math.random() > 0.5 ? 1 : -1)),
+  const internalHorizontal = Array.from({ length: rows - 1 }, () =>
+    Array.from({ length: cols }, () => (Math.random() > 0.5 ? 1 : -1)),
   );
 
   const pieces: PuzzlePiece[] = [];
 
-  for (let row = 0; row < ROWS; row++) {
-    for (let col = 0; col < COLS; col++) {
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
       const top =
         row === 0 ? 0 : internalHorizontal[row - 1][col] === 1 ? -1 : 1;
-      const right = col === COLS - 1 ? 0 : internalVertical[row][col];
-      const bottom = row === ROWS - 1 ? 0 : internalHorizontal[row][col];
+      const right = col === cols - 1 ? 0 : internalVertical[row][col];
+      const bottom = row === rows - 1 ? 0 : internalHorizontal[row][col];
       const left =
         col === 0 ? 0 : internalVertical[row][col - 1] === 1 ? -1 : 1;
       const padding = {
@@ -267,7 +273,7 @@ export const createPieces = () => {
       const edgeTypes = { top, right, bottom, left } satisfies EdgeTypes;
 
       pieces.push({
-        id: row * COLS + col,
+        id: row * cols + col,
         correctX: col,
         correctY: row,
         currentX: 0,
