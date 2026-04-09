@@ -616,10 +616,7 @@ export default function AdventureGame() {
     });
 
     return () => {
-      stageElement.removeEventListener(
-        "pointerdown",
-        handleNativePointerDown,
-      );
+      stageElement.removeEventListener("pointerdown", handleNativePointerDown);
     };
   }, [runState, triggerJump]);
 
@@ -723,7 +720,7 @@ export default function AdventureGame() {
           gameOverReason === "slime"
             ? "리코는 슬라임 싫어해"
             : gameOverReason === "magic"
-              ? "마왕 녀석 비겁하다!"
+              ? "함정이라니 비겁하다!"
               : gameOverReason === "lava"
                 ? "용암에 빠졌어"
                 : "함정에 빠졌어..."
@@ -733,7 +730,7 @@ export default function AdventureGame() {
           gameOverReason === "slime"
             ? "웩... 끈적끈적해..."
             : gameOverReason === "magic"
-              ? "정정당당하게 싸워라!!"
+              ? "마왕녀석, 정정당당하게 싸워라!!"
               : gameOverReason === "lava"
                 ? "꺄아악!! 뜨거워!!!"
                 : "거기 누구 없어요? 도와주세요!!"
@@ -829,7 +826,9 @@ export default function AdventureGame() {
                           restartNonce={restartNonce}
                           currentCourseTime={displayTime}
                           sceneSnapshot={mobileSceneSnapshotRef.current}
-                          onSceneSnapshotChange={handleMobileSceneSnapshotChange}
+                          onSceneSnapshotChange={
+                            handleMobileSceneSnapshotChange
+                          }
                           onScoreChange={handleScoreChange}
                           onGameOver={handleGameOver}
                           onComplete={handleGameComplete}
@@ -872,7 +871,9 @@ export default function AdventureGame() {
                           restartNonce={restartNonce}
                           currentCourseTime={displayTime}
                           sceneSnapshot={desktopSceneSnapshotRef.current}
-                          onSceneSnapshotChange={handleDesktopSceneSnapshotChange}
+                          onSceneSnapshotChange={
+                            handleDesktopSceneSnapshotChange
+                          }
                           onScoreChange={handleScoreChange}
                           onGameOver={handleGameOver}
                           onComplete={handleGameComplete}
