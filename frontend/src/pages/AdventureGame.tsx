@@ -44,7 +44,7 @@ type AdventurePlayerInstance = {
 
 type AdventureYouTubeNamespace = {
   Player: new (
-    elementId: string,
+    elementId: string | HTMLElement,
     config: {
       height?: number | string;
       width?: number | string;
@@ -64,6 +64,7 @@ type AdventureYouTubeWindow = Window & {
 
 export default function AdventureGame() {
   const musicPlayerRef = useRef<AdventurePlayerInstance | null>(null);
+  const ytContainerRef = useRef<HTMLDivElement | null>(null);
   const pendingMusicStartRef = useRef(false);
   const pendingMusicStartTimeRef = useRef(0);
   const rafRef = useRef<number | null>(null);
@@ -184,6 +185,22 @@ export default function AdventureGame() {
   }, [playerReady, volume]);
 
   useEffect(() => {
+    const div = document.createElement("div");
+    div.setAttribute("aria-hidden", "true");
+    div.style.cssText =
+      "position:fixed;left:-9999px;top:0;height:1px;width:1px;overflow:hidden;opacity:0;pointer-events:none;";
+    document.body.appendChild(div);
+    ytContainerRef.current = div;
+
+    return () => {
+      ytContainerRef.current = null;
+      if (div.parentNode) {
+        div.parentNode.removeChild(div);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (youtubeWindow?.YT?.Player) {
       setApiReady(true);
       return;
@@ -215,8 +232,12 @@ export default function AdventureGame() {
       return;
     }
 
+    if (!ytContainerRef.current) {
+      return;
+    }
+
     musicPlayerRef.current = new youtubeWindow.YT.Player(
-      ADVENTURE_PLAYER_ELEMENT_ID,
+      ytContainerRef.current,
       {
         height: 1,
         width: 1,
@@ -832,11 +853,6 @@ export default function AdventureGame() {
           </section>
         </div>
       </GameContainer>
-      <div
-        id={ADVENTURE_PLAYER_ELEMENT_ID}
-        aria-hidden="true"
-        className="pointer-events-none fixed -left-[9999px] top-0 h-px w-px overflow-hidden opacity-0"
-      />
     </>
   );
 }

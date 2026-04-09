@@ -101,6 +101,7 @@ const CREDITS_SECTIONS: CreditSection[] = [
           { role: "", name: "미아라" },
           { role: "", name: "송파 황제 Harlockius" },
           { role: "", name: "금자C" },
+          { role: "", name: "HE" },
           { role: "", name: "CODE NAME: G" },
         ],
       },
@@ -419,7 +420,7 @@ export default function Credits() {
           THANK YOU
         </h1>
         <p className="font-bold tracking-widest text-[#2a9d8f]">
-          비공식 팬메이드 유즈하 리코 온라인 생일카페
+          비공식 팬메이드 유즈하 리코 사이버 생일카페
         </p>
         <p className="mt-3 text-sm font-medium tracking-[0.28em] text-[#365486]/75 md:text-base">
           생일 카페를 빛낸 모두를 소개할게
@@ -577,35 +578,37 @@ export default function Credits() {
         </div>
       </div>
 
-      <CommonModal
-        isOpen={needsManualStart && !hasStarted}
-        onClose={handleDecline}
-        title="다들 와줘서 고마워!"
-        panelClassName="border-[#5EC7A5] px-8 py-10 shadow-[0_30px_80px_rgba(22,109,119,0.18)]"
-        titleClassName="mb-4 text-2xl uppercase"
-        bodyClassName="mb-6 text-xl text-[#365486]"
-        footerClassName="flex flex-col gap-3 sm:flex-row sm:justify-center"
-        footer={
-          <>
-            <PushableButton
-              onClick={() => void handleStart()}
-              variant="mint"
-              className="w-1/2 self-center rounded-full px-8 py-3 text-lg shadow-[0_0_30px_rgba(94,199,165,0.3)] sm:w-auto"
-            >
-              좋아!
-            </PushableButton>
-            <PushableButton
-              onClick={handleDecline}
-              variant="cream"
-              className="w-1/2 self-center rounded-full px-8 py-3 text-lg sm:w-auto"
-            >
-              됐어
-            </PushableButton>
-          </>
-        }
-      >
-        생일 카페를 빛낸 모두를 소개할게
-      </CommonModal>
+      {!claimed && (
+        <CommonModal
+          isOpen={needsManualStart && !hasStarted}
+          onClose={handleDecline}
+          title="다들 와줘서 고마워!"
+          panelClassName="border-[#5EC7A5] px-8 py-10 shadow-[0_30px_80px_rgba(22,109,119,0.18)]"
+          titleClassName="mb-4 text-2xl uppercase"
+          bodyClassName="mb-6 text-xl text-[#365486]"
+          footerClassName="flex flex-col gap-3 sm:flex-row sm:justify-center"
+          footer={
+            <>
+              <PushableButton
+                onClick={() => void handleStart()}
+                variant="mint"
+                className="w-1/2 self-center rounded-full px-8 py-3 text-lg shadow-[0_0_30px_rgba(94,199,165,0.3)] sm:w-auto"
+              >
+                좋아!
+              </PushableButton>
+              <PushableButton
+                onClick={handleDecline}
+                variant="cream"
+                className="w-1/2 self-center rounded-full px-8 py-3 text-lg sm:w-auto"
+              >
+                됐어
+              </PushableButton>
+            </>
+          }
+        >
+          생일 카페를 빛낸 모두를 소개할게
+        </CommonModal>
+      )}
     </div>
   );
 }

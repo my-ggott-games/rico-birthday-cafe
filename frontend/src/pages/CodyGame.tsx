@@ -608,7 +608,7 @@ const CodyGame: React.FC = () => {
         helpSlides={CODY_TUTORIAL_SLIDES}
         className="h-screen font-sans relative select-none bg-[#FFFFF8]"
         headerHidden={!showButtons}
-        mainClassName="relative overflow-x-hidden md:overflow-hidden"
+        mainClassName="relative overflow-x-hidden md:overflow-y-auto"
       >
         {activeBackground === "spring" && !isFinished && (
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -629,7 +629,7 @@ const CodyGame: React.FC = () => {
           className={`relative z-10 w-full h-full flex ${
             isMobile
               ? `flex-col overflow-x-hidden ${isFinished ? "justify-center" : "overflow-y-auto"}`
-              : `${showInventory ? "flex-row-reverse justify-between" : "flex-col justify-center"} items-center transition-all duration-1000 px-4 md:px-16 py-10`
+              : `${showInventory ? "flex-row-reverse justify-between" : "flex-col justify-center"} min-h-full items-center transition-all duration-1000 px-4 md:px-16 py-10`
           }`}
         >
           {/* Left/Right: Mannequin Display */}

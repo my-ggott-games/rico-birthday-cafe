@@ -24,7 +24,6 @@ const HologramPlayground = lazy(() => import("./pages/HologramPlayground"));
 const AsparagusMerge = lazy(() => import("./pages/AsparagusMerge"));
 const AsparagusShowcase = lazy(() => import("./pages/AsparagusShowcase"));
 const Credits = lazy(() => import("./pages/Credits"));
-const TakeoutCupShowcase = lazy(() => import("./pages/TakeoutCupShowcase"));
 
 function App() {
   return (
@@ -55,13 +54,10 @@ function App() {
                 element={<LandingCompareSample />}
               />
               <Route
-                path="/sample/takeout-cup"
-                element={<TakeoutCupShowcase />}
-              />
-              <Route
                 path="/sample/achievements"
                 element={<AchievementListShowcase />}
               />
+              ``
               <Route path="/sample/cody" element={<CodySample />} />
               <Route path="/sample/adventure" element={<AdventureGame />} />
               <Route path="/sample/puzzle" element={<PuzzleSandbox />} />
