@@ -5,7 +5,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type PointerEvent as ReactPointerEvent,
 } from "react";
 import { Application } from "@pixi/react";
 import { GameContainer } from "../components/common/GameContainer";
@@ -18,13 +17,16 @@ import { AdventureGamePanel } from "../components/game/adventure/AdventureGamePa
 import { AdventureGamePanelMobile } from "../components/game/adventure/AdventureGamePanelMobile";
 import { AdventurePhaseGuide } from "../components/game/adventure/AdventurePhaseGuide";
 import { ADVENTURE_HELP_SLIDES } from "../constants/tutorialSlides";
-import { type RunState } from "../types/adventure";
+import {
+  type AdventureGameOverReason,
+  type AdventureRunnerSnapshot,
+  type RunState,
+} from "../types/adventure";
 import { RunnerScene } from "../features/adventure/adventureGameCore";
 import { RunnerSceneMobile } from "../features/adventure/adventureGameCoreMobile";
 import {
   ADVENTURE_BEST_SCORE_KEY,
   ADVENTURE_PHASES,
-  ADVENTURE_PLAYER_ELEMENT_ID,
   TOTAL_DURATION,
   YOUTUBE_VIDEO_ID,
   clamp,
@@ -85,13 +87,16 @@ export default function AdventureGame() {
   const [retryStartTime, setRetryStartTime] = useState(0);
   const [volume, setVolume] = useState(55);
   const [debugUnlockAll, setDebugUnlockAll] = useState(false);
+  const [gameOverReason, setGameOverReason] =
+    useState<AdventureGameOverReason>("pit");
   const [stageViewportSize, setStageViewportSize] = useState({
     width: 0,
     height: 0,
   });
   const volumeRef = useRef(55);
   const liveScoreRef = useRef(0);
-  const jumpLockUntilRef = useRef(0);
+  const desktopSceneSnapshotRef = useRef<AdventureRunnerSnapshot | null>(null);
+  const mobileSceneSnapshotRef = useRef<AdventureRunnerSnapshot | null>(null);
   const youtubeWindow =
     typeof window === "undefined"
       ? undefined
@@ -321,8 +326,10 @@ export default function AdventureGame() {
 
   const startGame = useCallback(
     (startTime = 0) => {
-      jumpLockUntilRef.current = 0;
+      desktopSceneSnapshotRef.current = null;
+      mobileSceneSnapshotRef.current = null;
       liveScoreRef.current = 0;
+      setGameOverReason("pit");
       setScore(0);
       setPausedScore(0);
       setResultScore(0);
@@ -356,7 +363,6 @@ export default function AdventureGame() {
         return "paused";
       }
       if (current === "paused") {
-        jumpLockUntilRef.current = Date.now() + 240;
         musicPlayerRef.current?.playVideo();
         return "running";
       }
@@ -369,8 +375,22 @@ export default function AdventureGame() {
     setScore((current) => (current === nextScore ? current : nextScore));
   }, []);
 
+  const handleDesktopSceneSnapshotChange = useCallback(
+    (snapshot: AdventureRunnerSnapshot) => {
+      desktopSceneSnapshotRef.current = snapshot;
+    },
+    [],
+  );
+
+  const handleMobileSceneSnapshotChange = useCallback(
+    (snapshot: AdventureRunnerSnapshot) => {
+      mobileSceneSnapshotRef.current = snapshot;
+    },
+    [],
+  );
+
   const handleGameOver = useCallback(
-    (endedScore: number) => {
+    (endedScore: number, reason: AdventureGameOverReason) => {
       const resolvedScore = Math.max(endedScore, liveScoreRef.current, score);
       const currentMusicTime = musicPlayerRef.current?.getCurrentTime();
       const resolvedCourseTime = clamp(
@@ -384,6 +404,7 @@ export default function AdventureGame() {
 
       pauseMusic();
       liveScoreRef.current = resolvedScore;
+      setGameOverReason(reason);
       setScore(resolvedScore);
       setResultScore(resolvedScore);
       setBestScore((current) => Math.max(current, resolvedScore));
@@ -398,6 +419,8 @@ export default function AdventureGame() {
     (clearedScore: number) => {
       const resolvedScore = Math.max(clearedScore, liveScoreRef.current, score);
       pauseMusic();
+      desktopSceneSnapshotRef.current = null;
+      mobileSceneSnapshotRef.current = null;
       liveScoreRef.current = resolvedScore;
       setScore(resolvedScore);
       setResultScore(resolvedScore);
@@ -462,9 +485,6 @@ export default function AdventureGame() {
   }, [handleGameComplete, runState]);
 
   const triggerJump = useCallback(() => {
-    if (Date.now() < jumpLockUntilRef.current) {
-      return;
-    }
     setJumpNonce((value) => value + 1);
   }, []);
 
@@ -577,24 +597,31 @@ export default function AdventureGame() {
     triggerJump,
   ]);
 
-  const handleStagePointerDown = useCallback(
-    (event: ReactPointerEvent<HTMLDivElement>) => {
-      const target = event.target;
-      if (
-        target instanceof HTMLElement &&
-        target.closest("[data-ui-control='true']")
-      ) {
-        return;
-      }
+  useEffect(() => {
+    const stageElement = stageViewportRef.current;
+    if (!stageElement) {
+      return;
+    }
 
+    const handleNativePointerDown = (event: PointerEvent) => {
       event.preventDefault();
 
       if (runState === "running") {
         triggerJump();
       }
-    },
-    [runState, triggerJump],
-  );
+    };
+
+    stageElement.addEventListener("pointerdown", handleNativePointerDown, {
+      passive: false,
+    });
+
+    return () => {
+      stageElement.removeEventListener(
+        "pointerdown",
+        handleNativePointerDown,
+      );
+    };
+  }, [runState, triggerJump]);
 
   const displayTime =
     runState === "gameover" || runState === "completed"
@@ -692,9 +719,25 @@ export default function AdventureGame() {
     ) : runState === "gameover" ? (
       <AdventureModal
         embedded
-        status="함정에 빠졌어..."
+        status={
+          gameOverReason === "slime"
+            ? "리코는 슬라임 싫어해"
+            : gameOverReason === "magic"
+              ? "마왕 녀석 비겁하다!"
+              : gameOverReason === "lava"
+                ? "용암에 빠졌어"
+                : "함정에 빠졌어..."
+        }
         title={`Score ${resultScore}`}
-        description="거기 누구 없어요? 도와주세요!!"
+        description={
+          gameOverReason === "slime"
+            ? "웩... 끈적끈적해..."
+            : gameOverReason === "magic"
+              ? "정정당당하게 싸워라!!"
+              : gameOverReason === "lava"
+                ? "꺄아악!! 뜨거워!!!"
+                : "거기 누구 없어요? 도와주세요!!"
+        }
         actions={gameOverModalActions}
       >
         {renderVolumeControls(true)}
@@ -760,7 +803,6 @@ export default function AdventureGame() {
                 runState={runState}
                 introInstructionMessage={introInstructionMessage}
                 introOverlayOpacity={introOverlayOpacity}
-                onStagePointerDown={handleStagePointerDown}
                 onPauseToggle={handlePauseToggle}
                 overlayModal={overlayModal}
                 gameCanvas={
@@ -786,6 +828,8 @@ export default function AdventureGame() {
                           jumpNonce={jumpNonce}
                           restartNonce={restartNonce}
                           currentCourseTime={displayTime}
+                          sceneSnapshot={mobileSceneSnapshotRef.current}
+                          onSceneSnapshotChange={handleMobileSceneSnapshotChange}
                           onScoreChange={handleScoreChange}
                           onGameOver={handleGameOver}
                           onComplete={handleGameComplete}
@@ -801,7 +845,6 @@ export default function AdventureGame() {
                 introInstructionMessage={introInstructionMessage}
                 introOverlayOpacity={introOverlayOpacity}
                 showMapVolumeUi={showMapVolumeUi}
-                onStagePointerDown={handleStagePointerDown}
                 onPauseToggle={handlePauseToggle}
                 mapVolumeControls={renderVolumeControls()}
                 overlayModal={overlayModal}
@@ -828,6 +871,8 @@ export default function AdventureGame() {
                           jumpNonce={jumpNonce}
                           restartNonce={restartNonce}
                           currentCourseTime={displayTime}
+                          sceneSnapshot={desktopSceneSnapshotRef.current}
+                          onSceneSnapshotChange={handleDesktopSceneSnapshotChange}
                           onScoreChange={handleScoreChange}
                           onGameOver={handleGameOver}
                           onComplete={handleGameComplete}

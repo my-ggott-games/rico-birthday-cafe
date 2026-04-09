@@ -1,6 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+const frameworkPackagePattern =
+  /\/node_modules\/(react|react-dom|scheduler|zustand|use-sync-external-store)\//;
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
@@ -33,11 +36,7 @@ export default defineConfig({
             return "router";
           }
 
-          if (id.includes("pixi.js") || id.includes("@pixi/react")) {
-            return "pixi";
-          }
-
-          if (id.includes("react") || id.includes("zustand")) {
+          if (frameworkPackagePattern.test(id)) {
             return "framework";
           }
         },

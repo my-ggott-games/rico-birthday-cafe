@@ -9,14 +9,43 @@ import {
   Ticker,
 } from "pixi.js";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { RunState } from "../../types/adventure";
-import {
-  ADVENTURE_PHASES,
-  TOTAL_DURATION,
-  clamp,
-  getPhaseAtTime,
-} from "./adventureGameShared";
+import type {
+  AdventureGameOverReason,
+  AdventureRunnerSnapshot,
+  RunState,
+} from "../../types/adventure";
+import { TOTAL_DURATION, clamp, getPhaseAtTime } from "./adventureGameShared";
 import { ADVENTURE_PLAYER_FRAME_PATHS } from "./adventureAssets";
+import {
+  COYOTE_TIME_SECONDS,
+  FALL_OUT_THRESHOLD,
+  GRAVITY,
+  GROUND_Y,
+  PLAYER_ANIMATION_FPS,
+  PLAYER_COLLISION_HALF_WIDTH,
+  PLAYER_RENDER_SCALE,
+  PLAYER_X,
+  SCORE_STEP,
+  SCORE_TICK_INTERVAL_SECONDS,
+  SCROLL_SPEED,
+  WORLD_HEIGHT,
+  WORLD_WIDTH,
+  createHole,
+  drawCloud,
+  drawStar,
+  drawTerrainScene,
+  getGameOverReasonForHoleKind,
+  getGapHazardUnderPlayer,
+  getJumpForce,
+  getMaxJumpsForTime,
+  getRunSpeedMultiplier,
+  getSolidHazardTouchingPlayer,
+  hasGroundSupport,
+  isHazardLockedAtTime,
+  isPlayerOverHole,
+  type Hole,
+  type HoleKind,
+} from "./adventureGameDesktopConstants";
 
 extend({
   Container: PixiContainer,
@@ -25,166 +54,6 @@ extend({
   Text: PixiText,
 });
 
-const WORLD_WIDTH = 800;
-const WORLD_HEIGHT = 400;
-const GROUND_Y = 318;
-const PLAYER_X = 138;
-const GRAVITY = 2150;
-const JUMP_FORCES = [660, 540, 455];
-const MAX_JUMPS = 2;
-const PHASE_FIVE_MAX_JUMPS = 3;
-const COYOTE_TIME_SECONDS = 0.12;
-const PLAYER_ANIMATION_FPS = 10;
-const PLAYER_RENDER_SIZE = 156;
-const PLAYER_SOURCE_FRAME_SIZE = 2000;
-const PLAYER_RENDER_SCALE = PLAYER_RENDER_SIZE / PLAYER_SOURCE_FRAME_SIZE;
-const PLAYER_SUPPORT_HALF_WIDTH = 6;
-const PLAYER_COLLISION_HALF_WIDTH = 18;
-const SCROLL_SPEED = 330;
-const HOLE_MIN_WIDTH = 144;
-const HOLE_MAX_WIDTH = 220;
-const HOLE_SPAWN_DISTANCE = 300;
-const CLEAR_SLOWDOWN_START_SECONDS = 404;
-const FALL_OUT_THRESHOLD = 252;
-const SCORE_TICK_INTERVAL_SECONDS = 1;
-const SCORE_STEP = 10;
-const PHASE_ONE_HAZARD_DELAY_SECONDS = 20;
-const PHASE_TRANSITION_SAFE_SECONDS = 3;
-
-type HoleKind = "pit" | "spike" | "lava";
-
-type Hole = {
-  id: number;
-  x: number;
-  width: number;
-  gapAfter: number;
-  kind: HoleKind;
-};
-
-const randomBetween = (min: number, max: number) =>
-  min + Math.random() * (max - min);
-
-const isHazardLockedAtTime = (time: number) =>
-  time < PHASE_ONE_HAZARD_DELAY_SECONDS ||
-  ADVENTURE_PHASES.some(
-    (phase) =>
-      phase.start > 0 &&
-      time >= phase.start &&
-      time < phase.start + PHASE_TRANSITION_SAFE_SECONDS,
-  );
-
-const drawCloud = (
-  graphics: PixiGraphics,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  alpha: number,
-) => {
-  graphics
-    .roundRect(x, y, width, height * 0.5, height * 0.25)
-    .fill({ color: 0xffffff, alpha });
-  graphics
-    .circle(x + width * 0.24, y + height * 0.2, height * 0.34)
-    .fill({ color: 0xffffff, alpha });
-  graphics
-    .circle(x + width * 0.48, y + height * 0.1, height * 0.42)
-    .fill({ color: 0xffffff, alpha });
-  graphics
-    .circle(x + width * 0.76, y + height * 0.2, height * 0.3)
-    .fill({ color: 0xffffff, alpha });
-};
-
-const drawStar = (
-  graphics: PixiGraphics,
-  x: number,
-  y: number,
-  radius: number,
-  alpha: number,
-) => {
-  graphics.circle(x, y, radius).fill({ color: 0xfff3b0, alpha });
-};
-
-const getJumpForce = (jumpCount: number) =>
-  JUMP_FORCES[jumpCount - 1] ??
-  Math.max(
-    380,
-    JUMP_FORCES[JUMP_FORCES.length - 1] - (jumpCount - JUMP_FORCES.length) * 55,
-  );
-
-const getMaxJumpsForTime = (time: number) =>
-  getPhaseAtTime(time).id === 5 ? PHASE_FIVE_MAX_JUMPS : MAX_JUMPS;
-
-const isPlayerOverHole = (holes: Hole[], halfWidth: number) => {
-  const playerLeft = PLAYER_X - halfWidth;
-  const playerRight = PLAYER_X + halfWidth;
-
-  return holes.some(
-    (hole) => playerRight > hole.x && playerLeft < hole.x + hole.width,
-  );
-};
-
-const hasGroundSupport = (holes: Hole[]) =>
-  !isPlayerOverHole(holes, PLAYER_SUPPORT_HALF_WIDTH);
-
-const getRunSpeedMultiplier = (courseTime: number) => {
-  if (courseTime <= CLEAR_SLOWDOWN_START_SECONDS) {
-    return 1;
-  }
-
-  return clamp(
-    (TOTAL_DURATION - courseTime) /
-      (TOTAL_DURATION - CLEAR_SLOWDOWN_START_SECONDS),
-    0,
-    1,
-  );
-};
-
-const createHole = (id: number, startX: number, courseTime: number): Hole => {
-  const phaseId = getPhaseAtTime(courseTime).id;
-  const roll = Math.random();
-
-  if (roll < 0.25) {
-    return {
-      id,
-      x: startX,
-      width: Math.round(randomBetween(118, 146)),
-      gapAfter: Math.round(randomBetween(148, 210)),
-      kind: phaseId >= 4 ? "spike" : "pit",
-    };
-  }
-
-  if (roll < 0.55) {
-    return {
-      id,
-      x: startX,
-      width: Math.round(randomBetween(HOLE_MIN_WIDTH, HOLE_MAX_WIDTH)),
-      gapAfter: Math.round(
-        randomBetween(HOLE_SPAWN_DISTANCE - 30, HOLE_SPAWN_DISTANCE + 80),
-      ),
-      kind: phaseId >= 5 ? "lava" : "pit",
-    };
-  }
-
-  if (roll < 0.8) {
-    return {
-      id,
-      x: startX,
-      width: Math.round(randomBetween(210, 286)),
-      gapAfter: Math.round(randomBetween(220, 320)),
-      kind: phaseId >= 4 ? "spike" : "pit",
-    };
-  }
-
-  return {
-    id,
-    x: startX,
-    width: Math.round(randomBetween(132, 178)),
-    gapAfter: Math.round(randomBetween(128, 176)),
-    kind: phaseId >= 3 ? "lava" : "pit",
-  };
-};
-
 type RunnerSceneProps = {
   stageWidth: number;
   stageHeight: number;
@@ -192,8 +61,10 @@ type RunnerSceneProps = {
   jumpNonce: number;
   restartNonce: number;
   currentCourseTime: number;
+  sceneSnapshot: AdventureRunnerSnapshot | null;
+  onSceneSnapshotChange: (snapshot: AdventureRunnerSnapshot) => void;
   onScoreChange: (score: number) => void;
-  onGameOver: (score: number) => void;
+  onGameOver: (score: number, reason: AdventureGameOverReason) => void;
   onComplete: (score: number) => void;
 };
 
@@ -204,6 +75,8 @@ export function RunnerScene({
   jumpNonce,
   restartNonce,
   currentCourseTime,
+  sceneSnapshot,
+  onSceneSnapshotChange,
   onScoreChange,
   onGameOver,
   onComplete,
@@ -214,6 +87,7 @@ export function RunnerScene({
   const shadowRef = useRef<PixiGraphics | null>(null);
   const playerRef = useRef<PixiSprite | null>(null);
   const courseTimeRef = useRef(currentCourseTime);
+  const lastHandledJumpNonceRef = useRef(jumpNonce);
 
   const holesRef = useRef<Hole[]>([]);
   const nextHoleIdRef = useRef(1);
@@ -225,6 +99,7 @@ export function RunnerScene({
   const scoreRef = useRef(0);
   const scoreTickTimerRef = useRef(0);
   const gameOverSentRef = useRef(false);
+  const fallHazardKindRef = useRef<HoleKind>("pit");
   const animationElapsedRef = useRef(0);
   const runElapsedRef = useRef(0);
   const fallingHoleRef = useRef(false);
@@ -233,8 +108,14 @@ export function RunnerScene({
   const uniformScale = Math.min(scaleX, scaleY);
   const viewportOffsetX = (stageWidth - WORLD_WIDTH * uniformScale) / 2;
   const viewportOffsetY = (stageHeight - WORLD_HEIGHT * uniformScale) / 2;
-  const sx = useCallback((value: number) => value * uniformScale, [uniformScale]);
-  const sy = useCallback((value: number) => value * uniformScale, [uniformScale]);
+  const sx = useCallback(
+    (value: number) => value * uniformScale,
+    [uniformScale],
+  );
+  const sy = useCallback(
+    (value: number) => value * uniformScale,
+    [uniformScale],
+  );
   const px = useCallback(
     (value: number) => viewportOffsetX + value * uniformScale,
     [uniformScale, viewportOffsetX],
@@ -252,6 +133,23 @@ export function RunnerScene({
   const groundSegmentBodyHeight = Math.max(0, stageHeight - py(GROUND_Y + 24));
   const playerScaleMultiplier = 1;
   const currentPhaseId = getPhaseAtTime(currentCourseTime).id;
+
+  const emitSnapshot = useCallback(() => {
+    onSceneSnapshotChange({
+      playerY: playerYRef.current,
+      velocity: velocityRef.current,
+      rotation: rotationRef.current,
+      jumpCount: jumpCountRef.current,
+      coyoteTime: coyoteTimeRef.current,
+      score: scoreRef.current,
+      scoreTickTimer: scoreTickTimerRef.current,
+      animationElapsed: animationElapsedRef.current,
+      runElapsed: runElapsedRef.current,
+      fallingHole: fallingHoleRef.current,
+      nextHoleId: nextHoleIdRef.current,
+      holes: holesRef.current.map((hole) => ({ ...hole })),
+    });
+  }, [onSceneSnapshotChange]);
 
   useEffect(() => {
     let mounted = true;
@@ -278,6 +176,12 @@ export function RunnerScene({
     courseTimeRef.current = currentCourseTime;
   }, [currentCourseTime]);
 
+  useEffect(() => {
+    if (runState !== "running") {
+      lastHandledJumpNonceRef.current = jumpNonce;
+    }
+  }, [jumpNonce, runState]);
+
   const drawBackdrop = useCallback(() => {
     const graphics = backgroundRef.current;
     if (!graphics) {
@@ -289,8 +193,11 @@ export function RunnerScene({
     graphics.clear();
     switch (phase.id) {
       case 1:
+      case 2:
         graphics.rect(0, 0, stageWidth, stageHeight).fill(0xf7f2e8);
-        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, py(238))).fill(0xd9eff3);
+        graphics
+          .rect(0, 0, stageWidth, Math.min(stageHeight, py(238)))
+          .fill(0xd9eff3);
         graphics.circle(px(108), py(82), ss(42)).fill(0xffe08b);
         drawCloud(graphics, px(28), py(48), sx(188), sy(42), 0.55);
         drawCloud(graphics, px(512), py(70), sx(178), sy(38), 0.46);
@@ -304,32 +211,14 @@ export function RunnerScene({
           alpha: 0.24,
         });
         break;
-      case 2:
-        graphics.rect(0, 0, stageWidth, stageHeight).fill(0xfff4dc);
-        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, py(238))).fill(0xf5c77e);
-        graphics.circle(px(680), py(86), ss(54)).fill(0xfff0ad);
-        graphics.roundRect(px(-50), py(156), sx(440), sy(108), ss(54)).fill(0xd9b572);
-        graphics.roundRect(px(262), py(172), sx(340), sy(96), ss(48)).fill(0xc68b59);
-        graphics.roundRect(px(548), py(150), sx(320), sy(114), ss(56)).fill(0xaa714f);
-        for (let index = 0; index < 4; index += 1) {
-          const baseX = index * 210 - 100;
-          graphics
-            .rect(px(baseX), py(132), sx(10), sy(120))
-            .fill({ color: 0xfef3c7, alpha: 0.35 });
-        }
-        graphics.rect(0, py(260), stageWidth, sy(14)).fill({
-          color: 0xffffff,
-          alpha: 0.12,
-        });
-        graphics.rect(0, py(274), stageWidth, sy(8)).fill({
-          color: 0xf7b267,
-          alpha: 0.22,
-        });
-        break;
       case 3:
         graphics.rect(0, 0, stageWidth, stageHeight).fill(0xe8f2de);
-        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, py(238))).fill(0x9cc8a1);
-        graphics.circle(px(120), py(70), ss(32)).fill({ color: 0xfef3c7, alpha: 0.72 });
+        graphics
+          .rect(0, 0, stageWidth, Math.min(stageHeight, py(238)))
+          .fill(0x9cc8a1);
+        graphics
+          .circle(px(120), py(70), ss(32))
+          .fill({ color: 0xfef3c7, alpha: 0.72 });
         for (let index = 0; index < 6; index += 1) {
           const trunkX = index * 150 - 80;
           graphics.rect(px(trunkX), py(118), sx(18), sy(136)).fill(0x5b4636);
@@ -348,7 +237,9 @@ export function RunnerScene({
         break;
       case 4:
         graphics.rect(0, 0, stageWidth, stageHeight).fill(0x2d3142);
-        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, sy(238))).fill(0x4f5d75);
+        graphics
+          .rect(0, 0, stageWidth, Math.min(stageHeight, sy(238)))
+          .fill(0x4f5d75);
         graphics.roundRect(sx(44), sy(74), sx(140), sy(118), ss(18)).fill({
           color: 0x232936,
           alpha: 0.88,
@@ -361,9 +252,15 @@ export function RunnerScene({
           color: 0x232936,
           alpha: 0.88,
         });
-        graphics.circle(sx(98), sy(140), ss(11)).fill({ color: 0xffb703, alpha: 0.62 });
-        graphics.circle(sx(388), sy(122), ss(12)).fill({ color: 0xffb703, alpha: 0.58 });
-        graphics.circle(sx(660), sy(146), ss(10)).fill({ color: 0xffb703, alpha: 0.56 });
+        graphics
+          .circle(sx(98), sy(140), ss(11))
+          .fill({ color: 0xffb703, alpha: 0.62 });
+        graphics
+          .circle(sx(388), sy(122), ss(12))
+          .fill({ color: 0xffb703, alpha: 0.58 });
+        graphics
+          .circle(sx(660), sy(146), ss(10))
+          .fill({ color: 0xffb703, alpha: 0.56 });
         for (let index = 0; index < 18; index += 1) {
           const brickX = (index % 6) * 132;
           const brickY = 194 + Math.floor(index / 6) * 24;
@@ -382,9 +279,15 @@ export function RunnerScene({
         break;
       case 5:
         graphics.rect(0, 0, stageWidth, stageHeight).fill(0x28090f);
-        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, sy(238))).fill(0x8d1c31);
-        graphics.circle(sx(630), sy(92), ss(58)).fill({ color: 0xff8c42, alpha: 0.88 });
-        graphics.circle(sx(630), sy(92), ss(86)).fill({ color: 0xff8c42, alpha: 0.16 });
+        graphics
+          .rect(0, 0, stageWidth, Math.min(stageHeight, sy(238)))
+          .fill(0x8d1c31);
+        graphics
+          .circle(sx(630), sy(92), ss(58))
+          .fill({ color: 0xff8c42, alpha: 0.88 });
+        graphics
+          .circle(sx(630), sy(92), ss(86))
+          .fill({ color: 0xff8c42, alpha: 0.16 });
         for (let index = 0; index < 7; index += 1) {
           const smokeX = index * 150 - 100;
           graphics.circle(sx(smokeX), sy(74 + (index % 3) * 26), ss(26)).fill({
@@ -416,8 +319,12 @@ export function RunnerScene({
         break;
       case 6:
         graphics.rect(0, 0, stageWidth, stageHeight).fill(0xf1fbf8);
-        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, sy(238))).fill(0xbde0fe);
-        graphics.circle(sx(118), sy(76), ss(34)).fill({ color: 0xfff4b6, alpha: 0.82 });
+        graphics
+          .rect(0, 0, stageWidth, Math.min(stageHeight, sy(238)))
+          .fill(0xbde0fe);
+        graphics
+          .circle(sx(118), sy(76), ss(34))
+          .fill({ color: 0xfff4b6, alpha: 0.82 });
         drawCloud(graphics, sx(58), sy(42), sx(178), sy(40), 0.52);
         drawCloud(graphics, sx(454), sy(72), sx(162), sy(34), 0.44);
         for (let index = 0; index < 12; index += 1) {
@@ -438,16 +345,26 @@ export function RunnerScene({
         break;
       default:
         graphics.rect(0, 0, stageWidth, stageHeight).fill(0x152238);
-        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, sy(238))).fill(0x516b8b);
-        graphics.circle(sx(648), sy(72), ss(30)).fill({ color: 0xf8fafc, alpha: 0.88 });
+        graphics
+          .rect(0, 0, stageWidth, Math.min(stageHeight, sy(238)))
+          .fill(0x516b8b);
+        graphics
+          .circle(sx(648), sy(72), ss(30))
+          .fill({ color: 0xf8fafc, alpha: 0.88 });
         for (let index = 0; index < 28; index += 1) {
           const starX = (index * 63 + 18) % WORLD_WIDTH;
           const starY = 26 + (index % 6) * 28;
           drawStar(graphics, sx(starX), sy(starY), ss(1.8 + (index % 3)), 0.6);
         }
-        graphics.roundRect(sx(-40), sy(164), sx(360), sy(96), ss(48)).fill(0x324a5f);
-        graphics.roundRect(sx(214), sy(148), sx(330), sy(112), ss(54)).fill(0x243b53);
-        graphics.roundRect(sx(488), sy(170), sx(360), sy(102), ss(52)).fill(0x1b2a41);
+        graphics
+          .roundRect(sx(-40), sy(164), sx(360), sy(96), ss(48))
+          .fill(0x324a5f);
+        graphics
+          .roundRect(sx(214), sy(148), sx(330), sy(112), ss(54))
+          .fill(0x243b53);
+        graphics
+          .roundRect(sx(488), sy(170), sx(360), sy(102), ss(52))
+          .fill(0x1b2a41);
         graphics.rect(0, sy(258), stageWidth, sy(16)).fill({
           color: 0xffffff,
           alpha: 0.1,
@@ -465,195 +382,19 @@ export function RunnerScene({
     if (!graphics) {
       return;
     }
-
-    const phase = getPhaseAtTime(courseTimeRef.current);
-
-    graphics.clear();
-
-    const sortedHoles = [...holesRef.current].sort((a, b) => a.x - b.x);
-    let segmentStart = 0;
-
-    for (const hole of sortedHoles) {
-      const clampedLeft = clamp(hole.x, 0, WORLD_WIDTH);
-      const clampedRight = clamp(hole.x + hole.width, 0, WORLD_WIDTH);
-      const holeLeft = px(clampedLeft);
-      const holeRight = px(clampedRight);
-
-      if (clampedRight > clampedLeft) {
-        graphics
-          .rect(
-            holeLeft,
-            py(GROUND_Y - 4),
-            holeRight - holeLeft,
-            stageHeight - py(GROUND_Y - 4),
-          )
-          .fill(hole.kind === "lava" ? 0x5a0c20 : 0x3d2b2c);
-        if (hole.kind === "spike") {
-          for (
-            let spikeX = clampedLeft;
-            spikeX <= clampedRight - 16;
-            spikeX += 18
-          ) {
-            graphics
-              .poly([
-                px(spikeX),
-                py(GROUND_Y - 4),
-                px(spikeX + 8),
-                py(GROUND_Y - 24),
-                px(spikeX + 16),
-                py(GROUND_Y - 4),
-              ])
-              .fill({ color: 0xd9d9d9, alpha: 0.9 });
-          }
-        }
-        if (hole.kind === "lava") {
-          graphics
-            .rect(
-              px(clampedLeft + 8),
-              py(GROUND_Y + 14),
-              sx(Math.max(clampedRight - clampedLeft - 16, 0)),
-              sy(12),
-            )
-            .fill({ color: 0xff8c42, alpha: 0.72 });
-          graphics
-            .rect(
-              px(clampedLeft + 18),
-              py(GROUND_Y + 28),
-              sx(Math.max(clampedRight - clampedLeft - 36, 0)),
-              sy(8),
-            )
-            .fill({ color: 0xffbe0b, alpha: 0.5 });
-        }
-        graphics
-          .rect(
-            px(clampedLeft + 12),
-            py(GROUND_Y + 28),
-            sx(Math.max(clampedRight - clampedLeft - 24, 0)),
-            sy(10),
-          )
-          .fill({
-            color: 0x000000,
-            alpha: 0.16,
-          });
-      }
-
-      if (hole.x > segmentStart) {
-        const segmentWidth = hole.x - segmentStart;
-        graphics
-          .rect(
-            px(segmentStart),
-            py(GROUND_Y - 16),
-            sx(segmentWidth),
-            sy(40),
-          )
-          .fill(
-            phase.id === 4
-              ? 0x7d8597
-              : phase.id === 5
-                ? 0x9c6644
-                : phase.id === 7
-                  ? 0x8892b0
-                  : 0xf0d3ae,
-          );
-        graphics
-          .rect(px(segmentStart), py(GROUND_Y - 18), sx(segmentWidth), sy(14))
-          .fill(
-            phase.id === 2
-              ? 0xf7b267
-              : phase.id === 3
-                ? 0x7bb661
-                : phase.id === 4
-                  ? 0xa9b4c2
-                  : phase.id === 5
-                    ? 0xff8c42
-                    : phase.id === 6
-                      ? 0x7dd3c7
-                      : phase.id === 7
-                        ? 0x90cdf4
-                        : 0x5ec7a5,
-          );
-        graphics
-          .rect(
-            px(segmentStart),
-            py(GROUND_Y + 24),
-            sx(segmentWidth),
-            groundSegmentBodyHeight,
-          )
-          .fill(
-            phase.id === 4
-              ? 0x7d8597
-              : phase.id === 5
-                ? 0x9c6644
-                : phase.id === 7
-                  ? 0x8892b0
-                  : 0xf0d3ae,
-          );
-        graphics.rect(px(segmentStart), py(GROUND_Y + 24), sx(segmentWidth), sy(9)).fill({
-          color: 0xffffff,
-          alpha: 0.18,
-        });
-      }
-
-      segmentStart = Math.max(segmentStart, hole.x + hole.width);
-    }
-
-    if (segmentStart < WORLD_WIDTH) {
-      const segmentWidth = WORLD_WIDTH - segmentStart;
-      graphics
-        .rect(
-          px(segmentStart),
-          py(GROUND_Y - 16),
-          sx(segmentWidth),
-          sy(40),
-        )
-        .fill(
-          phase.id === 4
-            ? 0x7d8597
-            : phase.id === 5
-              ? 0x9c6644
-              : phase.id === 7
-                ? 0x8892b0
-                : 0xf0d3ae,
-        );
-      graphics
-        .rect(px(segmentStart), py(GROUND_Y - 18), sx(segmentWidth), sy(14))
-        .fill(
-          phase.id === 2
-            ? 0xf7b267
-            : phase.id === 3
-              ? 0x7bb661
-              : phase.id === 4
-                ? 0xa9b4c2
-                : phase.id === 5
-                  ? 0xff8c42
-                  : phase.id === 6
-                    ? 0x7dd3c7
-                    : phase.id === 7
-                      ? 0x90cdf4
-                      : 0x5ec7a5,
-        );
-      graphics
-        .rect(
-          px(segmentStart),
-          py(GROUND_Y + 24),
-          sx(segmentWidth),
-          groundSegmentBodyHeight,
-        )
-        .fill(
-          phase.id === 4
-            ? 0x7d8597
-            : phase.id === 5
-              ? 0x9c6644
-              : phase.id === 7
-                ? 0x8892b0
-                : 0xf0d3ae,
-        );
-      graphics.rect(px(segmentStart), py(GROUND_Y + 24), sx(segmentWidth), sy(9)).fill({
-        color: 0xffffff,
-        alpha: 0.18,
-      });
-    }
-  }, [groundSegmentBodyHeight, px, py, stageHeight, sx, sy]);
+    drawTerrainScene({
+      graphics,
+      holes: holesRef.current,
+      phaseId: getPhaseAtTime(courseTimeRef.current).id,
+      stageHeight,
+      groundSegmentBodyHeight,
+      px,
+      py,
+      sx,
+      sy,
+      ss,
+    });
+  }, [groundSegmentBodyHeight, px, py, stageHeight, sx, sy, ss]);
 
   const syncPlayerVisuals = useCallback(() => {
     const player = playerRef.current;
@@ -665,7 +406,9 @@ export function RunnerScene({
     player.x = playerXScaled;
     player.y = groundYScaled - ss(playerYRef.current);
     player.rotation = rotationRef.current;
-    player.scale.set(PLAYER_RENDER_SCALE * uniformScale * playerScaleMultiplier);
+    player.scale.set(
+      PLAYER_RENDER_SCALE * uniformScale * playerScaleMultiplier,
+    );
 
     const shadowScale = clamp(
       0.82 - Math.max(playerYRef.current, 0) / 220,
@@ -692,7 +435,15 @@ export function RunnerScene({
         color: 0x102542,
         alpha: shadowAlpha,
       });
-  }, [groundYScaled, playerScaleMultiplier, playerXScaled, py, runState, ss, uniformScale]);
+  }, [
+    groundYScaled,
+    playerScaleMultiplier,
+    playerXScaled,
+    py,
+    runState,
+    ss,
+    uniformScale,
+  ]);
 
   const resetScene = useCallback(() => {
     playerYRef.current = 0;
@@ -703,6 +454,7 @@ export function RunnerScene({
     scoreRef.current = 0;
     scoreTickTimerRef.current = 0;
     gameOverSentRef.current = false;
+    fallHazardKindRef.current = "pit";
     animationElapsedRef.current = 0;
     runElapsedRef.current = 0;
     fallingHoleRef.current = false;
@@ -712,10 +464,42 @@ export function RunnerScene({
     drawBackdrop();
     drawTerrain();
     syncPlayerVisuals();
-  }, [drawBackdrop, drawTerrain, onScoreChange, syncPlayerVisuals]);
+    emitSnapshot();
+  }, [
+    drawBackdrop,
+    drawTerrain,
+    emitSnapshot,
+    onScoreChange,
+    syncPlayerVisuals,
+  ]);
+
+  const restoreScene = useCallback(
+    (snapshot: AdventureRunnerSnapshot) => {
+      playerYRef.current = snapshot.playerY;
+      velocityRef.current = snapshot.velocity;
+      rotationRef.current = snapshot.rotation;
+      jumpCountRef.current = snapshot.jumpCount;
+      coyoteTimeRef.current = snapshot.coyoteTime;
+      scoreRef.current = snapshot.score;
+      scoreTickTimerRef.current = snapshot.scoreTickTimer;
+      animationElapsedRef.current = snapshot.animationElapsed;
+      runElapsedRef.current = snapshot.runElapsed;
+      fallingHoleRef.current = snapshot.fallingHole;
+      nextHoleIdRef.current = snapshot.nextHoleId;
+      holesRef.current = snapshot.holes.map((hole) => ({ ...hole }));
+      gameOverSentRef.current = false;
+      onScoreChange(snapshot.score);
+      drawBackdrop();
+      drawTerrain();
+      syncPlayerVisuals();
+      emitSnapshot();
+    },
+    [drawBackdrop, drawTerrain, emitSnapshot, onScoreChange, syncPlayerVisuals],
+  );
 
   const tryJump = useCallback(() => {
-    const supported = hasGroundSupport(holesRef.current) && !fallingHoleRef.current;
+    const supported =
+      hasGroundSupport(holesRef.current) && !fallingHoleRef.current;
     const grounded = playerYRef.current <= 0.01 && supported;
     const maxJumps = getMaxJumpsForTime(courseTimeRef.current);
     const canGroundJump = grounded;
@@ -732,7 +516,7 @@ export function RunnerScene({
     jumpCountRef.current = nextJumpCount;
     coyoteTimeRef.current = 0;
     velocityRef.current = getJumpForce(nextJumpCount);
-    rotationRef.current = nextJumpCount > 1 ? -0.34 : -0.18;
+    rotationRef.current = nextJumpCount > 1 ? 0.05 : -0.18;
     syncPlayerVisuals();
   }, [syncPlayerVisuals]);
 
@@ -741,8 +525,13 @@ export function RunnerScene({
       return;
     }
 
+    if (sceneSnapshot) {
+      restoreScene(sceneSnapshot);
+      return;
+    }
+
     resetScene();
-  }, [playerFrames, restartNonce, resetScene]);
+  }, [playerFrames, restartNonce, resetScene, restoreScene, sceneSnapshot]);
 
   useEffect(() => {
     if (playerFrames.length === 0) {
@@ -766,6 +555,11 @@ export function RunnerScene({
       return;
     }
 
+    if (jumpNonce === lastHandledJumpNonceRef.current) {
+      return;
+    }
+
+    lastHandledJumpNonceRef.current = jumpNonce;
     tryJump();
   }, [jumpNonce, playerFrames, runState, tryJump]);
 
@@ -803,6 +597,7 @@ export function RunnerScene({
             drawBackdrop();
             drawTerrain();
             syncPlayerVisuals();
+            emitSnapshot();
           }
           return;
         }
@@ -813,20 +608,23 @@ export function RunnerScene({
         runElapsedRef.current += deltaSeconds;
         const obstaclesEnabled = !isHazardLockedAtTime(courseTimeRef.current);
 
-        let nextHoles: Hole[] = [];
-        if (obstaclesEnabled) {
-          nextHoles = holesRef.current
-            .map((hole) => ({
-              ...hole,
-              x: hole.x - SCROLL_SPEED * holeDeltaSeconds,
-            }))
-            .filter((hole) => hole.x + hole.width > -80);
+        let nextHoles: Hole[] = holesRef.current
+          .map((hole) => ({
+            ...hole,
+            x: hole.x - SCROLL_SPEED * holeDeltaSeconds,
+          }))
+          .filter((hole) => hole.x + hole.width > -80);
 
+        if (obstaclesEnabled) {
+          const currentPhaseId = getPhaseAtTime(courseTimeRef.current).id;
           const lastHole = nextHoles[nextHoles.length - 1];
-          if (
-            !lastHole ||
-            lastHole.x + lastHole.width < WORLD_WIDTH - HOLE_SPAWN_DISTANCE
-          ) {
+          const canSpawnNextHole =
+            currentPhaseId === 1
+              ? nextHoles.length === 0
+              : !lastHole ||
+                lastHole.x + lastHole.width < WORLD_WIDTH - lastHole.gapAfter;
+
+          if (canSpawnNextHole) {
             const spawnX = Math.max(
               WORLD_WIDTH + 120,
               lastHole
@@ -838,17 +636,20 @@ export function RunnerScene({
             );
             nextHoleIdRef.current += 1;
           }
-        } else {
-          nextHoleIdRef.current = 1;
         }
         holesRef.current = nextHoles;
 
         let nextVelocity = velocityRef.current - GRAVITY * deltaSeconds;
         let nextY = playerYRef.current + nextVelocity * deltaSeconds;
 
-        const rawOverHole = isPlayerOverHole(
+        const overlappingGapHazard = getGapHazardUnderPlayer(
           nextHoles,
           PLAYER_COLLISION_HALF_WIDTH,
+        );
+        const rawOverHole = Boolean(overlappingGapHazard);
+        const touchingSolidHazard = getSolidHazardTouchingPlayer(
+          nextHoles,
+          nextY,
         );
         const groundSupportAvailable = hasGroundSupport(nextHoles);
 
@@ -870,18 +671,18 @@ export function RunnerScene({
 
         const descendingTowardHole =
           velocityRef.current <= 0 && nextVelocity <= 0;
-        const closeEnoughToFallLatch =
-          playerYRef.current <= 6 && nextY <= 0;
+        const closeEnoughToFallLatch = playerYRef.current <= 6 && nextY <= 0;
 
         if (
           !fallingHoleRef.current &&
-          rawOverHole &&
+          overlappingGapHazard &&
           !supported &&
           descendingTowardHole &&
           closeEnoughToFallLatch &&
           coyoteTimeRef.current <= 0
         ) {
           fallingHoleRef.current = true;
+          fallHazardKindRef.current = overlappingGapHazard.kind;
         }
 
         const overHole = fallingHoleRef.current || rawOverHole;
@@ -918,10 +719,23 @@ export function RunnerScene({
 
         drawTerrain();
         syncPlayerVisuals();
+        emitSnapshot();
+
+        if (touchingSolidHazard && !gameOverSentRef.current) {
+          gameOverSentRef.current = true;
+          onGameOver(
+            scoreRef.current,
+            getGameOverReasonForHoleKind(touchingSolidHazard.kind),
+          );
+          return;
+        }
 
         if (nextY < -FALL_OUT_THRESHOLD && !gameOverSentRef.current) {
           gameOverSentRef.current = true;
-          onGameOver(scoreRef.current);
+          onGameOver(
+            scoreRef.current,
+            getGameOverReasonForHoleKind(fallHazardKindRef.current),
+          );
         }
 
         if (
@@ -935,6 +749,7 @@ export function RunnerScene({
       [
         drawBackdrop,
         drawTerrain,
+        emitSnapshot,
         onComplete,
         onGameOver,
         onScoreChange,

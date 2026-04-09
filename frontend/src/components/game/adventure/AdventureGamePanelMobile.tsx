@@ -1,11 +1,10 @@
 import { Play } from "lucide-react";
-import type { PointerEventHandler, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 type AdventureGamePanelMobileProps = {
   runState: "ready" | "running" | "paused" | "gameover" | "completed";
   introInstructionMessage: string | null;
   introOverlayOpacity: number;
-  onStagePointerDown: PointerEventHandler<HTMLDivElement>;
   onPauseToggle: () => void;
   gameCanvas: ReactNode;
   overlayModal: ReactNode;
@@ -15,7 +14,6 @@ export function AdventureGamePanelMobile({
   runState,
   introInstructionMessage,
   introOverlayOpacity,
-  onStagePointerDown,
   onPauseToggle,
   gameCanvas,
   overlayModal,
@@ -34,7 +32,6 @@ export function AdventureGamePanelMobile({
       <div className="flex justify-center">
         <div
           className="relative w-full overflow-hidden rounded-[1.45rem] border-4 border-white/80 bg-[#112543] shadow-[0_18px_44px_rgba(17,24,39,0.18)]"
-          onPointerDown={onStagePointerDown}
           onContextMenu={(event) => event.preventDefault()}
           style={{
             touchAction: "none",

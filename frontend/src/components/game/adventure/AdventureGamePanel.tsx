@@ -1,12 +1,11 @@
 import { Play } from "lucide-react";
-import type { PointerEventHandler, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 type AdventureGamePanelProps = {
   runState: "ready" | "running" | "paused" | "gameover" | "completed";
   introInstructionMessage: string | null;
   introOverlayOpacity: number;
   showMapVolumeUi: boolean;
-  onStagePointerDown: PointerEventHandler<HTMLDivElement>;
   onPauseToggle: () => void;
   gameCanvas: ReactNode;
   mapVolumeControls: ReactNode;
@@ -18,7 +17,6 @@ export function AdventureGamePanel({
   introInstructionMessage,
   introOverlayOpacity,
   showMapVolumeUi,
-  onStagePointerDown,
   onPauseToggle,
   gameCanvas,
   mapVolumeControls,
@@ -37,7 +35,6 @@ export function AdventureGamePanel({
     >
       <div
         className="relative flex flex-col overflow-hidden rounded-[1.75rem] border-4 border-white/80 bg-[#102542] shadow-[0_18px_50px_rgba(17,24,39,0.18)]"
-        onPointerDown={onStagePointerDown}
         onContextMenu={(event) => event.preventDefault()}
         style={{
           touchAction: "none",
