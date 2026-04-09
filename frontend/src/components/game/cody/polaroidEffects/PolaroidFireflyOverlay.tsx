@@ -11,7 +11,7 @@ interface FireflyParticle {
   opacitySpeed: number;
 }
 
-export const FireflyOverlay: React.FC<{ isFinished?: boolean }> = ({
+export const PolaroidFireflyOverlay: React.FC<{ isFinished?: boolean }> = ({
   isFinished,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);

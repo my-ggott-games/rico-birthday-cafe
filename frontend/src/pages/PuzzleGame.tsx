@@ -15,15 +15,15 @@ import { BASE_URL } from "../utils/api";
 import { playDiriringSfx, preloadDiriringSfx } from "../utils/soundEffects";
 import { useAuthStore } from "../store/useAuthStore";
 import { useToastStore } from "../store/useToastStore";
-import { HolographicOverlay } from "../components/game/HolographicOverlay";
+import { PolaroidHolographicOverlay } from "../components/game/cody/polaroidEffects/PolaroidHolographicOverlay";
 import { PushableButton } from "../components/common/PushableButton";
-import { MuseumPlaque } from "../components/game/MuseumPlaque";
-import { MagnifyingGlass } from "../components/game/MagnifyingGlass";
+import { MagnifyingGlass } from "../components/game/puzzle/MagnifyingGlass";
+import { MuseumPlaque } from "../components/game/puzzle/MuseumPlaque";
 import {
   DraggablePiece,
   DroppableCell,
   FrameCorner,
-} from "../components/game/PuzzleBoardElements";
+} from "../components/game/puzzle/PuzzleBoardElements";
 import {
   PUZZLE_ACHIEVEMENT_CODE,
   PUZZLE_IMAGE_URL,
@@ -580,7 +580,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
                         );
                       })}
                     </div>
-                    <HolographicOverlay
+                    <PolaroidHolographicOverlay
                       visible={hologramVisible}
                       mobileInteractive={mobilePhotocardActive}
                       orientationEnabled={orientationEnabled}

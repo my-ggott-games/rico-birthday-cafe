@@ -1,7 +1,7 @@
 import React from "react";
-import { PolaroidFrame } from "../components/game/PolaroidFrame";
-import { DroppableCharacter } from "../components/game/DroppableCharacter";
-import { CMYGlitchOverlay } from "../components/game/CMYGlitchOverlay";
+import { DroppableCharacter } from "../components/game/cody/DroppableCharacter";
+import { PolaroidFrame } from "../components/game/cody/PolaroidFrame";
+import { CMYGlitchOverlay } from "../components/game/cody/polaroidEffects/CMYGlitchOverlay";
 
 const AVAILABLE_BGS = ["5-1", "6-1"];
 

@@ -1,6 +1,6 @@
 import React from "react";
-import { AppIcon } from "../common/AppIcon";
-import { PushableButton } from "../common/PushableButton";
+import { AppIcon } from "../../common/AppIcon";
+import { PushableButton } from "../../common/PushableButton";
 
 type CodyActionBarProps = {
   isFinished: boolean;

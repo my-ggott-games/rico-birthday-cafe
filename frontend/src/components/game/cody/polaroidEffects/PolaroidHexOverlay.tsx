@@ -294,7 +294,7 @@ const HEXAGONS: HexagonConfig[] = [
   },
 ];
 
-export const HexAmbientOverlay: React.FC = () => {
+export const PolaroidHexOverlay: React.FC = () => {
   return (
     <div className="beer-hex-ambient z-[120]" aria-hidden="true">
       {HEXAGONS.map((hexagon, index) => (

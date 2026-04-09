@@ -8,20 +8,20 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core";
-import { DraggableItem } from "../components/game/DraggableItem";
+import { DraggableItem } from "../components/game/cody/DraggableItem";
 import type {
   CodyItem,
   EquippedState,
   EquipmentSlot,
   MobileTabId,
-} from "../components/game/codyTypes";
+} from "../components/game/cody/codyTypes";
 import { GameContainer } from "../components/common/GameContainer";
-import { SpringBackdrop } from "../components/game/SpringEffect";
-import { FireflyOverlay } from "../components/game/FireflyEffect";
-import { getInventoryPreviewLayout } from "../components/game/codyInventoryPreviewLayout";
-import { CodyActionBar } from "../components/game/CodyActionBar";
-import { CodyDisplayStage } from "../components/game/CodyDisplayStage";
-import { CodyInventoryPanel } from "../components/game/CodyInventoryPanel";
+import { PolaroidFireflyOverlay } from "../components/game/cody/polaroidEffects/PolaroidFireflyOverlay";
+import { PolaroidSpringBackdrop } from "../components/game/cody/polaroidEffects/PolaroidSpringBackdrop";
+import { getInventoryPreviewLayout } from "../components/game/cody/codyInventoryPreviewLayout";
+import { CodyActionBar } from "../components/game/cody/CodyActionBar";
+import { CodyDisplayStage } from "../components/game/cody/CodyDisplayStage";
+import { CodyInventoryPanel } from "../components/game/cody/CodyInventoryPanel";
 import {
   CODY_CHARACTER_CANVAS,
   getCodyCharacterScale,
@@ -29,7 +29,7 @@ import {
   getCodyMannequinScale,
   getCodyPolaroidCharacterOffset,
   getCodyPolaroidCharacterStageClassName,
-} from "../components/game/codyStageLayout";
+} from "../components/game/cody/codyStageLayout";
 import { domToJpeg } from "modern-screenshot";
 import { startCodyAssetPreload } from "../utils/codyAssetPreload";
 import { AppIcon } from "../components/common/AppIcon";
@@ -612,8 +612,8 @@ const CodyGame: React.FC = () => {
       >
         {activeBackground === "spring" && !isFinished && (
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-            <SpringBackdrop isFinished={false} />
-            <FireflyOverlay isFinished={false} />
+                  <PolaroidSpringBackdrop isFinished={false} />
+                  <PolaroidFireflyOverlay isFinished={false} />
           </div>
         )}
 

@@ -7,13 +7,13 @@ import {
   PIECE_RENDER_BLEED,
   PIECE_SIZE,
   TAP_ROTATE_MAX_MS,
-} from "../../features/puzzle/constants";
-import { PUZZLE_IMAGE_URL } from "../../constants/puzzle";
+} from "../../../features/puzzle/constants";
+import { PUZZLE_IMAGE_URL } from "../../../constants/puzzle";
 import {
   createGuidelinePath,
   getScaledBounds,
-} from "../../features/puzzle/helpers";
-import type { PuzzlePiece } from "../../features/puzzle/types";
+} from "../../../features/puzzle/helpers";
+import type { PuzzlePiece } from "../../../features/puzzle/types";
 
 type PuzzlePieceComponentProps = {
   piece: PuzzlePiece;
@@ -241,7 +241,7 @@ export const FrameCorner = ({
           stroke="#c89d60"
           strokeWidth="0.8"
         />
-        {CORNER_PETAL_ROTATIONS.map((rotation) => (
+        {CORNER_PETAL_ROTATIONS.map((rotation: number) => (
           <path
             key={rotation}
             d="M 0 -19 C 3.4 -15.5 3.8 -9.5 0 -5.7 C -3.8 -9.5 -3.4 -15.5 0 -19 Z"

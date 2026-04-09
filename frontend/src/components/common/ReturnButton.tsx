@@ -14,7 +14,6 @@ interface ReturnButtonProps {
 
 const MESSAGES = [
   "{Game Name}, 그만할까?",
-  "미안... 재미없지?",
   "이제 다른 거 할까?",
   "로비로 돌아갈까?",
 ];
@@ -39,10 +38,7 @@ export const ReturnButton: React.FC<ReturnButtonProps> = ({
 
   return (
     <>
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
+      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
         <PushableButton
           onClick={handleOpen}
           variant={variant}

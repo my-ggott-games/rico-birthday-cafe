@@ -25,12 +25,12 @@ extend({
   Text: PixiText,
 });
 
-const WORLD_WIDTH = 800;
-const WORLD_HEIGHT = 400;
+// ─── Physics constants (identical to desktop – shared game rules) ───────────
+const WORLD_WIDTH = 400;
 const GROUND_Y = 318;
-const PLAYER_X = 138;
-const GRAVITY = 2150;
-const JUMP_FORCES = [660, 540, 455];
+const PLAYER_X = 75;
+const GRAVITY = 1000;
+const JUMP_FORCES = [300, 250, 200];
 const MAX_JUMPS = 2;
 const PHASE_FIVE_MAX_JUMPS = 3;
 const COYOTE_TIME_SECONDS = 0.12;
@@ -40,7 +40,7 @@ const PLAYER_SOURCE_FRAME_SIZE = 2000;
 const PLAYER_RENDER_SCALE = PLAYER_RENDER_SIZE / PLAYER_SOURCE_FRAME_SIZE;
 const PLAYER_SUPPORT_HALF_WIDTH = 6;
 const PLAYER_COLLISION_HALF_WIDTH = 18;
-const SCROLL_SPEED = 330;
+const SCROLL_SPEED = 260;
 const HOLE_MIN_WIDTH = 144;
 const HOLE_MAX_WIDTH = 220;
 const HOLE_SPAWN_DISTANCE = 300;
@@ -51,6 +51,15 @@ const SCORE_STEP = 10;
 const PHASE_ONE_HAZARD_DELAY_SECONDS = 20;
 const PHASE_TRANSITION_SAFE_SECONDS = 3;
 
+// ─── Mobile layout ───────────────────────────────────────────────────────────
+// Keep a little more breathing room below the horizon on mobile so the scene
+// reads less tall while preserving the sky/ground separation.
+const GROUND_Y_RATIO = 0.5;
+// Slightly reduce the mobile player size so the character sits more naturally
+// inside the narrower portrait framing.
+const MOBILE_PLAYER_SCALE = 1;
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 type HoleKind = "pit" | "spike" | "lava";
 
 type Hole = {
@@ -61,6 +70,7 @@ type Hole = {
   kind: HoleKind;
 };
 
+// ─── Pure helpers (same as desktop) ──────────────────────────────────────────
 const randomBetween = (min: number, max: number) =>
   min + Math.random() * (max - min);
 
@@ -118,7 +128,6 @@ const getMaxJumpsForTime = (time: number) =>
 const isPlayerOverHole = (holes: Hole[], halfWidth: number) => {
   const playerLeft = PLAYER_X - halfWidth;
   const playerRight = PLAYER_X + halfWidth;
-
   return holes.some(
     (hole) => playerRight > hole.x && playerLeft < hole.x + hole.width,
   );
@@ -131,7 +140,6 @@ const getRunSpeedMultiplier = (courseTime: number) => {
   if (courseTime <= CLEAR_SLOWDOWN_START_SECONDS) {
     return 1;
   }
-
   return clamp(
     (TOTAL_DURATION - courseTime) /
       (TOTAL_DURATION - CLEAR_SLOWDOWN_START_SECONDS),
@@ -153,7 +161,6 @@ const createHole = (id: number, startX: number, courseTime: number): Hole => {
       kind: phaseId >= 4 ? "spike" : "pit",
     };
   }
-
   if (roll < 0.55) {
     return {
       id,
@@ -165,7 +172,6 @@ const createHole = (id: number, startX: number, courseTime: number): Hole => {
       kind: phaseId >= 5 ? "lava" : "pit",
     };
   }
-
   if (roll < 0.8) {
     return {
       id,
@@ -175,7 +181,6 @@ const createHole = (id: number, startX: number, courseTime: number): Hole => {
       kind: phaseId >= 4 ? "spike" : "pit",
     };
   }
-
   return {
     id,
     x: startX,
@@ -185,7 +190,8 @@ const createHole = (id: number, startX: number, courseTime: number): Hole => {
   };
 };
 
-type RunnerSceneProps = {
+// ─── Component ───────────────────────────────────────────────────────────────
+type RunnerSceneMobileProps = {
   stageWidth: number;
   stageHeight: number;
   runState: RunState;
@@ -197,7 +203,7 @@ type RunnerSceneProps = {
   onComplete: (score: number) => void;
 };
 
-export function RunnerScene({
+export function RunnerSceneMobile({
   stageWidth,
   stageHeight,
   runState,
@@ -207,14 +213,13 @@ export function RunnerScene({
   onScoreChange,
   onGameOver,
   onComplete,
-}: RunnerSceneProps) {
+}: RunnerSceneMobileProps) {
   const [playerFrames, setPlayerFrames] = useState<Texture[]>([]);
   const backgroundRef = useRef<PixiGraphics | null>(null);
   const worldRef = useRef<PixiGraphics | null>(null);
   const shadowRef = useRef<PixiGraphics | null>(null);
   const playerRef = useRef<PixiSprite | null>(null);
   const courseTimeRef = useRef(currentCourseTime);
-
   const holesRef = useRef<Hole[]>([]);
   const nextHoleIdRef = useRef(1);
   const playerYRef = useRef(0);
@@ -228,47 +233,40 @@ export function RunnerScene({
   const animationElapsedRef = useRef(0);
   const runElapsedRef = useRef(0);
   const fallingHoleRef = useRef(false);
-  const scaleX = stageWidth / WORLD_WIDTH;
-  const scaleY = stageHeight / WORLD_HEIGHT;
-  const uniformScale = Math.min(scaleX, scaleY);
-  const viewportOffsetX = (stageWidth - WORLD_WIDTH * uniformScale) / 2;
-  const viewportOffsetY = (stageHeight - WORLD_HEIGHT * uniformScale) / 2;
-  const sx = useCallback((value: number) => value * uniformScale, [uniformScale]);
-  const sy = useCallback((value: number) => value * uniformScale, [uniformScale]);
+
+  // ── Mobile camera: fill canvas width, lock ground at GROUND_Y_RATIO ────────
+  const uniformScale = stageWidth / WORLD_WIDTH;
+  const viewportOffsetX = 0;
+  const viewportOffsetY =
+    stageHeight * GROUND_Y_RATIO - GROUND_Y * uniformScale;
+
+  const sx = useCallback((v: number) => v * uniformScale, [uniformScale]);
+  const sy = useCallback((v: number) => v * uniformScale, [uniformScale]);
   const px = useCallback(
-    (value: number) => viewportOffsetX + value * uniformScale,
+    (v: number) => viewportOffsetX + v * uniformScale,
     [uniformScale, viewportOffsetX],
   );
   const py = useCallback(
-    (value: number) => viewportOffsetY + value * uniformScale,
+    (v: number) => viewportOffsetY + v * uniformScale,
     [uniformScale, viewportOffsetY],
   );
-  const ss = useCallback(
-    (value: number) => value * uniformScale,
-    [uniformScale],
-  );
+  const ss = useCallback((v: number) => v * uniformScale, [uniformScale]);
+
+  // groundYScaled === stageHeight * GROUND_Y_RATIO exactly
   const groundYScaled = py(GROUND_Y);
   const playerXScaled = px(PLAYER_X);
   const groundSegmentBodyHeight = Math.max(0, stageHeight - py(GROUND_Y + 24));
-  const playerScaleMultiplier = 1;
   const currentPhaseId = getPhaseAtTime(currentCourseTime).id;
 
   useEffect(() => {
     let mounted = true;
-
     void Promise.all(
       ADVENTURE_PLAYER_FRAME_PATHS.map((path) =>
-        Assets.load<Texture>({
-          src: path,
-          data: { scaleMode: "nearest" },
-        }),
+        Assets.load<Texture>({ src: path, data: { scaleMode: "nearest" } }),
       ),
     ).then((frames) => {
-      if (mounted) {
-        setPlayerFrames(frames);
-      }
+      if (mounted) setPlayerFrames(frames);
     });
-
     return () => {
       mounted = false;
     };
@@ -278,196 +276,351 @@ export function RunnerScene({
     courseTimeRef.current = currentCourseTime;
   }, [currentCourseTime]);
 
+  // ── Background – portrait-native design ─────────────────────────────────────
+  // All elements are positioned in screen space using stageWidth (W) and
+  // groundYScaled (gy) so the sky area always fills the top 2/3 of the canvas
+  // regardless of device width.
   const drawBackdrop = useCallback(() => {
     const graphics = backgroundRef.current;
-    if (!graphics) {
-      return;
-    }
+    if (!graphics) return;
 
     const phase = getPhaseAtTime(courseTimeRef.current);
+    const gy = groundYScaled;
+    const W = stageWidth;
+    const H = stageHeight;
+    const sceneUnit = Math.min(W, gy);
 
     graphics.clear();
+
     switch (phase.id) {
-      case 1:
-        graphics.rect(0, 0, stageWidth, stageHeight).fill(0xf7f2e8);
-        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, py(238))).fill(0xd9eff3);
-        graphics.circle(px(108), py(82), ss(42)).fill(0xffe08b);
-        drawCloud(graphics, px(28), py(48), sx(188), sy(42), 0.55);
-        drawCloud(graphics, px(512), py(70), sx(178), sy(38), 0.46);
-        drawCloud(graphics, px(684), py(34), sx(132), sy(28), 0.38);
-        graphics.rect(0, py(258), stageWidth, sy(16)).fill({
-          color: 0xffffff,
-          alpha: 0.18,
-        });
-        graphics.rect(0, py(272), stageWidth, sy(8)).fill({
-          color: 0x5ec7a5,
-          alpha: 0.24,
-        });
+      case 1: {
+        // Pastoral dawn – pale custard base, sky-blue sky, sun top-right, clouds
+        graphics.rect(0, 0, W, H).fill(0xf7f2e8);
+        graphics.rect(0, 0, W, gy * 0.9).fill(0xd9eff3);
+        graphics.circle(W * 0.78, gy * 0.18, sceneUnit * 0.11).fill(0xffe08b);
+        drawCloud(
+          graphics,
+          W * 0.04,
+          gy * 0.09,
+          sceneUnit * 0.4,
+          sceneUnit * 0.09,
+          0.6,
+        );
+        drawCloud(
+          graphics,
+          W * 0.46,
+          gy * 0.28,
+          sceneUnit * 0.32,
+          sceneUnit * 0.07,
+          0.5,
+        );
+        drawCloud(
+          graphics,
+          W * 0.68,
+          gy * 0.06,
+          sceneUnit * 0.28,
+          sceneUnit * 0.06,
+          0.4,
+        );
+        graphics
+          .rect(0, gy * 0.82, W, gy * 0.08)
+          .fill({ color: 0xffffff, alpha: 0.18 });
+        graphics
+          .rect(0, gy * 0.88, W, gy * 0.04)
+          .fill({ color: 0x5ec7a5, alpha: 0.24 });
         break;
-      case 2:
-        graphics.rect(0, 0, stageWidth, stageHeight).fill(0xfff4dc);
-        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, py(238))).fill(0xf5c77e);
-        graphics.circle(px(680), py(86), ss(54)).fill(0xfff0ad);
-        graphics.roundRect(px(-50), py(156), sx(440), sy(108), ss(54)).fill(0xd9b572);
-        graphics.roundRect(px(262), py(172), sx(340), sy(96), ss(48)).fill(0xc68b59);
-        graphics.roundRect(px(548), py(150), sx(320), sy(114), ss(56)).fill(0xaa714f);
-        for (let index = 0; index < 4; index += 1) {
-          const baseX = index * 210 - 100;
+      }
+      case 2: {
+        // Afternoon desert – warm amber sky, sun, dune silhouettes
+        graphics.rect(0, 0, W, H).fill(0xfff4dc);
+        graphics.rect(0, 0, W, gy * 0.78).fill(0xf5c77e);
+        graphics.circle(W * 0.8, gy * 0.15, sceneUnit * 0.13).fill(0xfff0ad);
+        graphics
+          .roundRect(
+            W * -0.08,
+            gy * 0.6,
+            sceneUnit * 0.54,
+            sceneUnit * 0.28,
+            sceneUnit * 0.1,
+          )
+          .fill(0xd9b572);
+        graphics
+          .roundRect(
+            W * 0.3,
+            gy * 0.68,
+            sceneUnit * 0.44,
+            sceneUnit * 0.24,
+            sceneUnit * 0.09,
+          )
+          .fill(0xc68b59);
+        graphics
+          .roundRect(
+            W * 0.6,
+            gy * 0.58,
+            sceneUnit * 0.5,
+            sceneUnit * 0.32,
+            sceneUnit * 0.1,
+          )
+          .fill(0xaa714f);
+        for (let i = 0; i < 3; i++) {
           graphics
-            .rect(px(baseX), py(132), sx(10), sy(120))
-            .fill({ color: 0xfef3c7, alpha: 0.35 });
+            .rect(W * 0.74 + i * W * 0.055, 0, sceneUnit * 0.016, gy * 0.7)
+            .fill({ color: 0xfef3c7, alpha: 0.26 });
         }
-        graphics.rect(0, py(260), stageWidth, sy(14)).fill({
-          color: 0xffffff,
-          alpha: 0.12,
-        });
-        graphics.rect(0, py(274), stageWidth, sy(8)).fill({
-          color: 0xf7b267,
-          alpha: 0.22,
-        });
+        graphics
+          .rect(0, gy * 0.86, W, gy * 0.06)
+          .fill({ color: 0xffffff, alpha: 0.12 });
+        graphics
+          .rect(0, gy * 0.9, W, gy * 0.04)
+          .fill({ color: 0xf7b267, alpha: 0.22 });
         break;
-      case 3:
-        graphics.rect(0, 0, stageWidth, stageHeight).fill(0xe8f2de);
-        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, py(238))).fill(0x9cc8a1);
-        graphics.circle(px(120), py(70), ss(32)).fill({ color: 0xfef3c7, alpha: 0.72 });
-        for (let index = 0; index < 6; index += 1) {
-          const trunkX = index * 150 - 80;
-          graphics.rect(px(trunkX), py(118), sx(18), sy(136)).fill(0x5b4636);
-          graphics.circle(px(trunkX + 8), py(120), ss(52)).fill(0x4c7c59);
-          graphics.circle(px(trunkX - 12), py(144), ss(42)).fill(0x5f995f);
-          graphics.circle(px(trunkX + 26), py(146), ss(38)).fill(0x6aa56a);
-        }
-        graphics.rect(0, py(258), stageWidth, sy(16)).fill({
-          color: 0xe9f7ef,
-          alpha: 0.12,
-        });
-        graphics.rect(0, py(272), stageWidth, sy(8)).fill({
-          color: 0x7bb661,
-          alpha: 0.24,
-        });
-        break;
-      case 4:
-        graphics.rect(0, 0, stageWidth, stageHeight).fill(0x2d3142);
-        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, sy(238))).fill(0x4f5d75);
-        graphics.roundRect(sx(44), sy(74), sx(140), sy(118), ss(18)).fill({
-          color: 0x232936,
-          alpha: 0.88,
-        });
-        graphics.roundRect(sx(322), sy(58), sx(160), sy(128), ss(20)).fill({
-          color: 0x232936,
-          alpha: 0.88,
-        });
-        graphics.roundRect(sx(594), sy(82), sx(126), sy(112), ss(18)).fill({
-          color: 0x232936,
-          alpha: 0.88,
-        });
-        graphics.circle(sx(98), sy(140), ss(11)).fill({ color: 0xffb703, alpha: 0.62 });
-        graphics.circle(sx(388), sy(122), ss(12)).fill({ color: 0xffb703, alpha: 0.58 });
-        graphics.circle(sx(660), sy(146), ss(10)).fill({ color: 0xffb703, alpha: 0.56 });
-        for (let index = 0; index < 18; index += 1) {
-          const brickX = (index % 6) * 132;
-          const brickY = 194 + Math.floor(index / 6) * 24;
+      }
+      case 3: {
+        // Forest – green sky, small sun, tree silhouettes in mid-ground
+        graphics.rect(0, 0, W, H).fill(0xe8f2de);
+        graphics.rect(0, 0, W, gy * 0.72).fill(0x9cc8a1);
+        graphics
+          .circle(W * 0.18, gy * 0.17, sceneUnit * 0.08)
+          .fill({ color: 0xfef3c7, alpha: 0.72 });
+        const treeXs = [W * 0.02, W * 0.26, W * 0.52, W * 0.76];
+        for (const tx of treeXs) {
+          const tw = sceneUnit * 0.048;
+          graphics.rect(tx, gy * 0.56, tw, sceneUnit * 0.36).fill(0x5b4636);
           graphics
-            .roundRect(sx(brickX), sy(brickY), sx(74), sy(16), ss(4))
-            .fill({ color: 0x7d8597, alpha: 0.26 });
+            .circle(tx + tw / 2, gy * 0.54, sceneUnit * 0.13)
+            .fill(0x4c7c59);
+          graphics
+            .circle(tx + tw / 2 - sceneUnit * 0.03, gy * 0.62, sceneUnit * 0.1)
+            .fill(0x5f995f);
+          graphics
+            .circle(tx + tw / 2 + sceneUnit * 0.03, gy * 0.63, sceneUnit * 0.09)
+            .fill(0x6aa56a);
         }
-        graphics.rect(0, sy(258), stageWidth, sy(16)).fill({
-          color: 0xffffff,
-          alpha: 0.08,
-        });
-        graphics.rect(0, sy(272), stageWidth, sy(8)).fill({
-          color: 0x8d99ae,
-          alpha: 0.22,
-        });
+        graphics
+          .rect(0, gy * 0.84, W, gy * 0.06)
+          .fill({ color: 0xe9f7ef, alpha: 0.12 });
+        graphics
+          .rect(0, gy * 0.88, W, gy * 0.04)
+          .fill({ color: 0x7bb661, alpha: 0.24 });
         break;
-      case 5:
-        graphics.rect(0, 0, stageWidth, stageHeight).fill(0x28090f);
-        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, sy(238))).fill(0x8d1c31);
-        graphics.circle(sx(630), sy(92), ss(58)).fill({ color: 0xff8c42, alpha: 0.88 });
-        graphics.circle(sx(630), sy(92), ss(86)).fill({ color: 0xff8c42, alpha: 0.16 });
-        for (let index = 0; index < 7; index += 1) {
-          const smokeX = index * 150 - 100;
-          graphics.circle(sx(smokeX), sy(74 + (index % 3) * 26), ss(26)).fill({
-            color: 0x2b2d42,
-            alpha: 0.26,
-          });
+      }
+      case 4: {
+        // Dungeon night – dark sky, stars, moon, building silhouettes
+        graphics.rect(0, 0, W, H).fill(0x2d3142);
+        graphics.rect(0, 0, W, gy * 0.66).fill(0x4f5d75);
+        const stars4: [number, number][] = [
+          [0.1, 0.08],
+          [0.34, 0.14],
+          [0.6, 0.06],
+          [0.84, 0.18],
+          [0.22, 0.3],
+          [0.5, 0.22],
+          [0.76, 0.34],
+          [0.06, 0.4],
+          [0.92, 0.1],
+          [0.42, 0.42],
+        ];
+        for (const [fx, fy] of stars4) {
+          drawStar(graphics, W * fx, gy * fy, sceneUnit * 0.016, 0.6);
         }
-        for (let index = 0; index < 10; index += 1) {
-          const spikeX = index * 84;
+        graphics
+          .circle(W * 0.78, gy * 0.14, sceneUnit * 0.09)
+          .fill({ color: 0xfef3c7, alpha: 0.92 });
+        graphics
+          .roundRect(
+            W * 0.04,
+            gy * 0.5,
+            sceneUnit * 0.18,
+            sceneUnit * 0.34,
+            sceneUnit * 0.02,
+          )
+          .fill({ color: 0x232936, alpha: 0.88 });
+        graphics
+          .roundRect(
+            W * 0.28,
+            gy * 0.42,
+            sceneUnit * 0.22,
+            sceneUnit * 0.42,
+            sceneUnit * 0.02,
+          )
+          .fill({ color: 0x232936, alpha: 0.88 });
+        graphics
+          .roundRect(
+            W * 0.62,
+            gy * 0.48,
+            sceneUnit * 0.18,
+            sceneUnit * 0.36,
+            sceneUnit * 0.02,
+          )
+          .fill({ color: 0x232936, alpha: 0.88 });
+        graphics
+          .circle(W * 0.13, gy * 0.57, sceneUnit * 0.02)
+          .fill({ color: 0xffb703, alpha: 0.62 });
+        graphics
+          .circle(W * 0.39, gy * 0.5, sceneUnit * 0.02)
+          .fill({ color: 0xffb703, alpha: 0.58 });
+        graphics
+          .circle(W * 0.71, gy * 0.55, sceneUnit * 0.02)
+          .fill({ color: 0xffb703, alpha: 0.56 });
+        graphics
+          .rect(0, gy * 0.84, W, gy * 0.06)
+          .fill({ color: 0xffffff, alpha: 0.08 });
+        graphics
+          .rect(0, gy * 0.88, W, gy * 0.04)
+          .fill({ color: 0x8d99ae, alpha: 0.22 });
+        break;
+      }
+      case 5: {
+        // Inferno / boss – crimson sky, blazing sun, smoke, spike silhouettes
+        graphics.rect(0, 0, W, H).fill(0x28090f);
+        graphics.rect(0, 0, W, gy * 0.74).fill(0x8d1c31);
+        graphics
+          .circle(W * 0.72, gy * 0.17, sceneUnit * 0.22)
+          .fill({ color: 0xff8c42, alpha: 0.14 });
+        graphics
+          .circle(W * 0.72, gy * 0.17, sceneUnit * 0.14)
+          .fill({ color: 0xff8c42, alpha: 0.88 });
+        const smokeXs = [0.06, 0.22, 0.44, 0.64, 0.86];
+        for (let i = 0; i < smokeXs.length; i++) {
+          graphics
+            .circle(
+              W * smokeXs[i],
+              gy * (0.28 + (i % 3) * 0.08),
+              sceneUnit * 0.062,
+            )
+            .fill({ color: 0x2b2d42, alpha: 0.24 });
+        }
+        for (let i = 0; i < 7; i++) {
+          const spX = W * (i / 7);
           graphics
             .poly([
-              sx(spikeX),
-              sy(252),
-              sx(spikeX + 18),
-              sy(212),
-              sx(spikeX + 36),
-              sy(252),
+              spX,
+              gy * 0.8,
+              spX + sceneUnit * 0.036,
+              gy * 0.62,
+              spX + sceneUnit * 0.072,
+              gy * 0.8,
             ])
-            .fill({ color: 0x5a0c20, alpha: 0.32 });
+            .fill({ color: 0x5a0c20, alpha: 0.3 });
         }
-        graphics.rect(0, sy(258), stageWidth, sy(16)).fill({
-          color: 0xfef3c7,
-          alpha: 0.08,
-        });
-        graphics.rect(0, sy(272), stageWidth, sy(8)).fill({
-          color: 0xff8c42,
-          alpha: 0.22,
-        });
+        graphics
+          .rect(0, gy * 0.86, W, gy * 0.06)
+          .fill({ color: 0xfef3c7, alpha: 0.08 });
+        graphics
+          .rect(0, gy * 0.9, W, gy * 0.04)
+          .fill({ color: 0xff8c42, alpha: 0.22 });
         break;
-      case 6:
-        graphics.rect(0, 0, stageWidth, stageHeight).fill(0xf1fbf8);
-        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, sy(238))).fill(0xbde0fe);
-        graphics.circle(sx(118), sy(76), ss(34)).fill({ color: 0xfff4b6, alpha: 0.82 });
-        drawCloud(graphics, sx(58), sy(42), sx(178), sy(40), 0.52);
-        drawCloud(graphics, sx(454), sy(72), sx(162), sy(34), 0.44);
-        for (let index = 0; index < 12; index += 1) {
-          const flowerX = index * 74;
-          graphics.rect(sx(flowerX + 6), sy(236), sx(4), sy(34)).fill(0x4d7c0f);
-          graphics.circle(sx(flowerX + 8), sy(234), ss(8)).fill(0xf472b6);
-          graphics.circle(sx(flowerX + 2), sy(238), ss(6)).fill(0xfef08a);
-          graphics.circle(sx(flowerX + 14), sy(238), ss(6)).fill(0x86efac);
+      }
+      case 6: {
+        // Victory / spring – bright blue sky, sun, clouds, flowers on horizon
+        graphics.rect(0, 0, W, H).fill(0xf1fbf8);
+        graphics.rect(0, 0, W, gy * 0.82).fill(0xbde0fe);
+        graphics
+          .circle(W * 0.18, gy * 0.18, sceneUnit * 0.09)
+          .fill({ color: 0xfff4b6, alpha: 0.82 });
+        drawCloud(
+          graphics,
+          W * 0.08,
+          gy * 0.1,
+          sceneUnit * 0.36,
+          sceneUnit * 0.08,
+          0.52,
+        );
+        drawCloud(
+          graphics,
+          W * 0.52,
+          gy * 0.24,
+          sceneUnit * 0.32,
+          sceneUnit * 0.07,
+          0.44,
+        );
+        const flowerXs = [0.04, 0.15, 0.27, 0.39, 0.51, 0.63, 0.75, 0.87, 0.96];
+        for (const fx of flowerXs) {
+          graphics
+            .rect(W * fx, gy * 0.8, sceneUnit * 0.01, sceneUnit * 0.1)
+            .fill(0x4d7c0f);
+          graphics.circle(W * fx, gy * 0.78, sceneUnit * 0.024).fill(0xf472b6);
+          graphics
+            .circle(W * fx - sceneUnit * 0.014, gy * 0.8, sceneUnit * 0.018)
+            .fill(0xfef08a);
+          graphics
+            .circle(W * fx + sceneUnit * 0.014, gy * 0.8, sceneUnit * 0.018)
+            .fill(0x86efac);
         }
-        graphics.rect(0, sy(258), stageWidth, sy(16)).fill({
-          color: 0xffffff,
-          alpha: 0.16,
-        });
-        graphics.rect(0, sy(272), stageWidth, sy(8)).fill({
-          color: 0x7dd3c7,
-          alpha: 0.24,
-        });
+        graphics
+          .rect(0, gy * 0.84, W, gy * 0.06)
+          .fill({ color: 0xffffff, alpha: 0.16 });
+        graphics
+          .rect(0, gy * 0.88, W, gy * 0.04)
+          .fill({ color: 0x7dd3c7, alpha: 0.24 });
         break;
-      default:
-        graphics.rect(0, 0, stageWidth, stageHeight).fill(0x152238);
-        graphics.rect(0, 0, stageWidth, Math.min(stageHeight, sy(238))).fill(0x516b8b);
-        graphics.circle(sx(648), sy(72), ss(30)).fill({ color: 0xf8fafc, alpha: 0.88 });
-        for (let index = 0; index < 28; index += 1) {
-          const starX = (index * 63 + 18) % WORLD_WIDTH;
-          const starY = 26 + (index % 6) * 28;
-          drawStar(graphics, sx(starX), sy(starY), ss(1.8 + (index % 3)), 0.6);
+      }
+      default: {
+        // Epilogue / ending – deep navy, moon, stars, city silhouette
+        graphics.rect(0, 0, W, H).fill(0x152238);
+        graphics.rect(0, 0, W, gy * 0.7).fill(0x243b53);
+        graphics
+          .circle(W * 0.8, gy * 0.16, gy * 0.07)
+          .fill({ color: 0xf8fafc, alpha: 0.88 });
+        const stars7: [number, number][] = [
+          [0.1, 0.1],
+          [0.28, 0.06],
+          [0.5, 0.16],
+          [0.66, 0.08],
+          [0.18, 0.24],
+          [0.42, 0.2],
+          [0.62, 0.3],
+          [0.9, 0.14],
+          [0.34, 0.36],
+          [0.76, 0.26],
+        ];
+        for (const [fx, fy] of stars7) {
+          drawStar(graphics, W * fx, gy * fy, sceneUnit * 0.013, 0.6);
         }
-        graphics.roundRect(sx(-40), sy(164), sx(360), sy(96), ss(48)).fill(0x324a5f);
-        graphics.roundRect(sx(214), sy(148), sx(330), sy(112), ss(54)).fill(0x243b53);
-        graphics.roundRect(sx(488), sy(170), sx(360), sy(102), ss(52)).fill(0x1b2a41);
-        graphics.rect(0, sy(258), stageWidth, sy(16)).fill({
-          color: 0xffffff,
-          alpha: 0.1,
-        });
-        graphics.rect(0, sy(272), stageWidth, sy(8)).fill({
-          color: 0x90cdf4,
-          alpha: 0.2,
-        });
+        graphics
+          .roundRect(
+            W * -0.04,
+            gy * 0.5,
+            sceneUnit * 0.42,
+            sceneUnit * 0.3,
+            sceneUnit * 0.02,
+          )
+          .fill(0x324a5f);
+        graphics
+          .roundRect(
+            W * 0.26,
+            gy * 0.44,
+            sceneUnit * 0.38,
+            sceneUnit * 0.36,
+            sceneUnit * 0.02,
+          )
+          .fill(0x243b53);
+        graphics
+          .roundRect(
+            W * 0.56,
+            gy * 0.48,
+            sceneUnit * 0.5,
+            sceneUnit * 0.32,
+            sceneUnit * 0.02,
+          )
+          .fill(0x1b2a41);
+        graphics
+          .rect(0, gy * 0.84, W, gy * 0.06)
+          .fill({ color: 0xffffff, alpha: 0.1 });
+        graphics
+          .rect(0, gy * 0.88, W, gy * 0.04)
+          .fill({ color: 0x90cdf4, alpha: 0.2 });
         break;
+      }
     }
-  }, [px, py, ss, stageHeight, stageWidth, sx, sy]);
+  }, [groundYScaled, stageHeight, stageWidth]);
 
+  // ── Terrain (identical logic to desktop – uses world-coord helpers) ──────────
   const drawTerrain = useCallback(() => {
     const graphics = worldRef.current;
-    if (!graphics) {
-      return;
-    }
+    if (!graphics) return;
 
     const phase = getPhaseAtTime(courseTimeRef.current);
-
     graphics.clear();
 
     const sortedHoles = [...holesRef.current].sort((a, b) => a.x - b.x);
@@ -488,6 +641,7 @@ export function RunnerScene({
             stageHeight - py(GROUND_Y - 4),
           )
           .fill(hole.kind === "lava" ? 0x5a0c20 : 0x3d2b2c);
+
         if (hole.kind === "spike") {
           for (
             let spikeX = clampedLeft;
@@ -506,6 +660,7 @@ export function RunnerScene({
               .fill({ color: 0xd9d9d9, alpha: 0.9 });
           }
         }
+
         if (hole.kind === "lava") {
           graphics
             .rect(
@@ -524,6 +679,7 @@ export function RunnerScene({
             )
             .fill({ color: 0xffbe0b, alpha: 0.5 });
         }
+
         graphics
           .rect(
             px(clampedLeft + 12),
@@ -531,21 +687,13 @@ export function RunnerScene({
             sx(Math.max(clampedRight - clampedLeft - 24, 0)),
             sy(10),
           )
-          .fill({
-            color: 0x000000,
-            alpha: 0.16,
-          });
+          .fill({ color: 0x000000, alpha: 0.16 });
       }
 
       if (hole.x > segmentStart) {
         const segmentWidth = hole.x - segmentStart;
         graphics
-          .rect(
-            px(segmentStart),
-            py(GROUND_Y - 16),
-            sx(segmentWidth),
-            sy(40),
-          )
+          .rect(px(segmentStart), py(GROUND_Y - 16), sx(segmentWidth), sy(40))
           .fill(
             phase.id === 4
               ? 0x7d8597
@@ -588,10 +736,9 @@ export function RunnerScene({
                   ? 0x8892b0
                   : 0xf0d3ae,
           );
-        graphics.rect(px(segmentStart), py(GROUND_Y + 24), sx(segmentWidth), sy(9)).fill({
-          color: 0xffffff,
-          alpha: 0.18,
-        });
+        graphics
+          .rect(px(segmentStart), py(GROUND_Y + 24), sx(segmentWidth), sy(9))
+          .fill({ color: 0xffffff, alpha: 0.18 });
       }
 
       segmentStart = Math.max(segmentStart, hole.x + hole.width);
@@ -600,12 +747,7 @@ export function RunnerScene({
     if (segmentStart < WORLD_WIDTH) {
       const segmentWidth = WORLD_WIDTH - segmentStart;
       graphics
-        .rect(
-          px(segmentStart),
-          py(GROUND_Y - 16),
-          sx(segmentWidth),
-          sy(40),
-        )
+        .rect(px(segmentStart), py(GROUND_Y - 16), sx(segmentWidth), sy(40))
         .fill(
           phase.id === 4
             ? 0x7d8597
@@ -648,24 +790,22 @@ export function RunnerScene({
                 ? 0x8892b0
                 : 0xf0d3ae,
         );
-      graphics.rect(px(segmentStart), py(GROUND_Y + 24), sx(segmentWidth), sy(9)).fill({
-        color: 0xffffff,
-        alpha: 0.18,
-      });
+      graphics
+        .rect(px(segmentStart), py(GROUND_Y + 24), sx(segmentWidth), sy(9))
+        .fill({ color: 0xffffff, alpha: 0.18 });
     }
   }, [groundSegmentBodyHeight, px, py, stageHeight, sx, sy]);
 
+  // ── Player visuals ────────────────────────────────────────────────────────────
   const syncPlayerVisuals = useCallback(() => {
     const player = playerRef.current;
     const shadow = shadowRef.current;
-    if (!player || !shadow) {
-      return;
-    }
+    if (!player || !shadow) return;
 
     player.x = playerXScaled;
     player.y = groundYScaled - ss(playerYRef.current);
     player.rotation = rotationRef.current;
-    player.scale.set(PLAYER_RENDER_SCALE * uniformScale * playerScaleMultiplier);
+    player.scale.set(PLAYER_RENDER_SCALE * uniformScale * MOBILE_PLAYER_SCALE);
 
     const shadowScale = clamp(
       0.82 - Math.max(playerYRef.current, 0) / 220,
@@ -688,12 +828,10 @@ export function RunnerScene({
         ss(25 * shadowScale),
         ss(6.5 * shadowScale),
       )
-      .fill({
-        color: 0x102542,
-        alpha: shadowAlpha,
-      });
-  }, [groundYScaled, playerScaleMultiplier, playerXScaled, py, runState, ss, uniformScale]);
+      .fill({ color: 0x102542, alpha: shadowAlpha });
+  }, [groundYScaled, playerXScaled, py, runState, ss, uniformScale]);
 
+  // ── Scene reset ───────────────────────────────────────────────────────────────
   const resetScene = useCallback(() => {
     playerYRef.current = 0;
     velocityRef.current = 0;
@@ -714,8 +852,10 @@ export function RunnerScene({
     syncPlayerVisuals();
   }, [drawBackdrop, drawTerrain, onScoreChange, syncPlayerVisuals]);
 
+  // ── Jump ──────────────────────────────────────────────────────────────────────
   const tryJump = useCallback(() => {
-    const supported = hasGroundSupport(holesRef.current) && !fallingHoleRef.current;
+    const supported =
+      hasGroundSupport(holesRef.current) && !fallingHoleRef.current;
     const grounded = playerYRef.current <= 0.01 && supported;
     const maxJumps = getMaxJumpsForTime(courseTimeRef.current);
     const canGroundJump = grounded;
@@ -724,9 +864,7 @@ export function RunnerScene({
     const canAirJump =
       jumpCountRef.current > 0 && jumpCountRef.current < maxJumps;
 
-    if (!canGroundJump && !canCoyoteJump && !canAirJump) {
-      return;
-    }
+    if (!canGroundJump && !canCoyoteJump && !canAirJump) return;
 
     const nextJumpCount = jumpCountRef.current + 1;
     jumpCountRef.current = nextJumpCount;
@@ -736,45 +874,33 @@ export function RunnerScene({
     syncPlayerVisuals();
   }, [syncPlayerVisuals]);
 
+  // ── Effects ───────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (playerFrames.length === 0) {
-      return;
-    }
-
+    if (playerFrames.length === 0) return;
     resetScene();
   }, [playerFrames, restartNonce, resetScene]);
 
   useEffect(() => {
-    if (playerFrames.length === 0) {
-      return;
-    }
-
+    if (playerFrames.length === 0) return;
     drawTerrain();
     syncPlayerVisuals();
   }, [currentCourseTime, drawTerrain, playerFrames, syncPlayerVisuals]);
 
   useEffect(() => {
-    if (playerFrames.length === 0) {
-      return;
-    }
-
+    if (playerFrames.length === 0) return;
     drawBackdrop();
   }, [currentPhaseId, drawBackdrop, playerFrames]);
 
   useEffect(() => {
-    if (playerFrames.length === 0 || runState !== "running") {
-      return;
-    }
-
+    if (playerFrames.length === 0 || runState !== "running") return;
     tryJump();
   }, [jumpNonce, playerFrames, runState, tryJump]);
 
+  // ── Tick ──────────────────────────────────────────────────────────────────────
   useTick(
     useCallback(
       (ticker: Ticker) => {
-        if (playerFrames.length === 0) {
-          return;
-        }
+        if (playerFrames.length === 0) return;
 
         const player = playerRef.current;
         if (player) {
@@ -792,7 +918,6 @@ export function RunnerScene({
                 playerFrames.length
               : 0;
           const nextTexture = playerFrames[frameIndex];
-
           if (player.texture !== nextTexture) {
             player.texture = nextTexture;
           }
@@ -870,8 +995,7 @@ export function RunnerScene({
 
         const descendingTowardHole =
           velocityRef.current <= 0 && nextVelocity <= 0;
-        const closeEnoughToFallLatch =
-          playerYRef.current <= 6 && nextY <= 0;
+        const closeEnoughToFallLatch = playerYRef.current <= 6 && nextY <= 0;
 
         if (
           !fallingHoleRef.current &&
@@ -950,7 +1074,6 @@ export function RunnerScene({
       <pixiGraphics ref={backgroundRef} draw={() => undefined} />
       <pixiGraphics ref={worldRef} draw={() => undefined} />
       <pixiGraphics ref={shadowRef} draw={() => undefined} />
-
       {playerFrames[0] ? (
         <pixiSprite
           ref={playerRef}
@@ -960,10 +1083,9 @@ export function RunnerScene({
           anchor={{ x: 0.5, y: 1 }}
         />
       ) : null}
-
       {playerFrames.length === 0 ? (
         <pixiText
-          text="Loading runner..."
+          text="Loading..."
           x={stageWidth / 2}
           y={stageHeight / 2}
           anchor={0.5}

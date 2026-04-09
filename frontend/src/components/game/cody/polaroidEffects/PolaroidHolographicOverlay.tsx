@@ -4,7 +4,7 @@ import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
-type HolographicOverlayProps = {
+type PolaroidHolographicOverlayProps = {
   visible: boolean;
   mobileInteractive: boolean;
   orientationEnabled: boolean;
@@ -18,13 +18,13 @@ const HOLOGRAPHIC_SPRING = {
   damping: 25,
 };
 
-export const HolographicOverlay = ({
+export const PolaroidHolographicOverlay = ({
   visible,
   mobileInteractive,
   orientationEnabled,
   desktopSweep,
   imageUrl,
-}: HolographicOverlayProps) => {
+}: PolaroidHolographicOverlayProps) => {
   const mobileGyroActive = mobileInteractive && orientationEnabled;
   const noiseFilterId = useId().replace(/:/g, "");
   const targetX = useMotionValue(50);

@@ -21,11 +21,13 @@ export interface TutorialSlide {
 interface TutorialBannerProps {
   slides: TutorialSlide[];
   className?: string; // e.g. "h-[185px]"
+  onClose?: () => void;
 }
 
 export const TutorialBanner: React.FC<TutorialBannerProps> = ({
   slides,
   className = "h-[172px]",
+  onClose,
 }) => {
   const [slide, setSlide] = useState(0);
   const [direction, setDirection] = useState(1);
@@ -203,8 +205,13 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({
                 이전
               </button>
               <button
-                onClick={() => paginate(1)}
-                disabled={isLast}
+                onClick={() => {
+                  if (isLast) {
+                    onClose?.();
+                    return;
+                  }
+                  paginate(1);
+                }}
                 className="px-3 py-1.5 rounded-xl border-2 font-black text-xs transition-all active:scale-95 disabled:opacity-30 disabled:scale-100"
                 style={{
                   background: "#5EC7A5",
@@ -212,7 +219,7 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({
                   borderColor: "#3f9e80",
                 }}
               >
-                다음
+                {isLast ? "닫기" : "다음"}
               </button>
             </div>
           </div>

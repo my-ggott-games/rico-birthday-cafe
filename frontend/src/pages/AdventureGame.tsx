@@ -13,13 +13,14 @@ import { ScoreStatCard } from "../components/common/ScoreStatCard";
 import {
   AdventureModal,
   type AdventureModalAction,
-} from "../components/game/AdventureModal";
-import { AdventureGamePanel } from "../components/game/adventureSample/AdventureGamePanel";
-import { AdventureGamePanelMobile } from "../components/game/adventureSample/AdventureGamePanelMobile";
-import { AdventurePhaseGuide } from "../components/game/adventureSample/AdventurePhaseGuide";
+} from "../components/game/adventure/AdventureModal";
+import { AdventureGamePanel } from "../components/game/adventure/AdventureGamePanel";
+import { AdventureGamePanelMobile } from "../components/game/adventure/AdventureGamePanelMobile";
+import { AdventurePhaseGuide } from "../components/game/adventure/AdventurePhaseGuide";
 import { ADVENTURE_HELP_SLIDES } from "../constants/tutorialSlides";
 import { type RunState } from "../types/adventure";
 import { RunnerScene } from "../features/adventure/adventureGameCore";
+import { RunnerSceneMobile } from "../features/adventure/adventureGameCoreMobile";
 import {
   ADVENTURE_BEST_SCORE_KEY,
   ADVENTURE_PHASES,
@@ -130,10 +131,17 @@ export default function AdventureGame() {
     }
 
     const updateStageViewportSize = () => {
-      // offsetWidth/offsetHeight force layout reflow and are more reliable than
-      // getBoundingClientRect on iOS Safari where h-full resolution can be deferred.
-      const nextWidth = Math.max(1, element.offsetWidth);
-      const nextHeight = Math.max(1, element.offsetHeight);
+      // Use the larger of layout and rendered box sizes so aspect-ratio layouts
+      // do not round canvas dimensions down and leave a 1px gap on one edge.
+      const rect = element.getBoundingClientRect();
+      const nextWidth = Math.max(
+        1,
+        Math.ceil(Math.max(element.offsetWidth, rect.width)),
+      );
+      const nextHeight = Math.max(
+        1,
+        Math.ceil(Math.max(element.offsetHeight, rect.height)),
+      );
       setStageViewportSize((current) =>
         current.width === nextWidth && current.height === nextHeight
           ? current
@@ -737,7 +745,7 @@ export default function AdventureGame() {
                 gameCanvas={
                   <div
                     ref={stageViewportRef}
-                    className="absolute inset-0 overflow-hidden"
+                    className="absolute inset-0 overflow-hidden [&_canvas]:!h-full [&_canvas]:!w-full"
                   >
                     {stageViewportSize.width > 0 &&
                     stageViewportSize.height > 0 ? (
@@ -750,10 +758,9 @@ export default function AdventureGame() {
                         backgroundAlpha={0}
                         className="block h-full w-full pointer-events-none"
                       >
-                        <RunnerScene
+                        <RunnerSceneMobile
                           stageWidth={stageViewportSize.width}
                           stageHeight={stageViewportSize.height}
-                          isMobileViewport={isMobileViewport}
                           runState={runState}
                           jumpNonce={jumpNonce}
                           restartNonce={restartNonce}
@@ -780,7 +787,7 @@ export default function AdventureGame() {
                 gameCanvas={
                   <div
                     ref={stageViewportRef}
-                    className="absolute inset-0 overflow-hidden"
+                    className="absolute inset-0 overflow-hidden [&_canvas]:!h-full [&_canvas]:!w-full"
                   >
                     {stageViewportSize.width > 0 &&
                     stageViewportSize.height > 0 ? (
@@ -796,7 +803,6 @@ export default function AdventureGame() {
                         <RunnerScene
                           stageWidth={stageViewportSize.width}
                           stageHeight={stageViewportSize.height}
-                          isMobileViewport={isMobileViewport}
                           runState={runState}
                           jumpNonce={jumpNonce}
                           restartNonce={restartNonce}

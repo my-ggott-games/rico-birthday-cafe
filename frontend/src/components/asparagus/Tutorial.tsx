@@ -64,6 +64,7 @@ export const TutorialModal: React.FC = () => {
               <TutorialBanner
                 slides={ASPARAGUS_TUTORIAL_SLIDES}
                 className="min-h-[300px] shadow-2xl rounded-3xl"
+                onClose={() => setOpen(false)}
               />
             </motion.div>
           </motion.div>

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
-import { PushableButton } from "../common/PushableButton";
+import { PushableButton } from "../../common/PushableButton";
 
 export type AdventureModalAction = {
   label: string;

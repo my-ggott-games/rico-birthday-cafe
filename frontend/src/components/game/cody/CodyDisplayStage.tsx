@@ -1,13 +1,13 @@
 import React from "react";
-import { BlueButterflyOverlay } from "./ButterflyEffect";
-import { CMYGlitchOverlay } from "./CMYGlitchOverlay";
 import { DroppableCharacter } from "./DroppableCharacter";
-import { FireflyOverlay } from "./FireflyEffect";
-import { HexAmbientOverlay } from "./HexAmbientOverlay";
 import { PolaroidFrame } from "./PolaroidFrame";
-import { RainOverlay } from "./RainEffect";
-import { BlossomPetalOverlay } from "./SpringEffect";
+import { CMYGlitchOverlay } from "./polaroidEffects/CMYGlitchOverlay";
 import type { CodyItem, EquippedState } from "./codyTypes";
+import { PolaroidBlossomOverlay } from "./polaroidEffects/PolaroidBlossomOverlay";
+import { PolaroidButterflyOverlay } from "./polaroidEffects/PolaroidButterflyOverlay";
+import { PolaroidFireflyOverlay } from "./polaroidEffects/PolaroidFireflyOverlay";
+import { PolaroidHexOverlay } from "./polaroidEffects/PolaroidHexOverlay";
+import { PolaroidRainOverlay } from "./polaroidEffects/PolaroidRainOverlay";
 
 type CodyDisplayStageProps = {
   activeBackground: string | null;
@@ -109,22 +109,27 @@ export const CodyDisplayStage: React.FC<CodyDisplayStageProps> = ({
           }
           underlayContent={
             <>
-              {!isCapturing && activeBackground === "rain" && <RainOverlay />}
+              {!isCapturing && activeBackground === "rain" && (
+                <PolaroidRainOverlay />
+              )}
             </>
           }
           overlayContent={
             <>
               {!isCapturing && activeBackground === "spring" && (
-                <FireflyOverlay isFinished={true} />
+                <PolaroidFireflyOverlay isFinished={true} />
               )}
               {!isCapturing && activeBackground === "knight" && (
-                <BlueButterflyOverlay />
+                <PolaroidButterflyOverlay />
               )}
               {!isCapturing && activeBackground === "oriental" && (
-                <BlossomPetalOverlay isFinished={true} isFlyAway={isFlyAway} />
+                <PolaroidBlossomOverlay
+                  isFinished={true}
+                  isFlyAway={isFlyAway}
+                />
               )}
               {!isCapturing && activeBackground === "beer" && (
-                <HexAmbientOverlay />
+                <PolaroidHexOverlay />
               )}
               {!isCapturing && activeBackground === "training" && (
                 <CMYGlitchOverlay />

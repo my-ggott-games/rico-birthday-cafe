@@ -71,6 +71,7 @@ export const GameHelp: React.FC<GameHelpProps> = ({
               <TutorialBanner
                 slides={slides}
                 className="h-[228px] shadow-2xl rounded-3xl"
+                onClose={() => setOpen(false)}
               />
             </motion.div>
           </motion.div>
