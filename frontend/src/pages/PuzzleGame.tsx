@@ -66,15 +66,23 @@ type StoredPuzzlePiece = {
 };
 
 type StoredPuzzleProgress = {
+  ownerId: string | null;
   gridSize: PuzzleGridSize;
   pieces: StoredPuzzlePiece[];
 };
+
+const GUEST_PUZZLE_OWNER_ID = "__guest__";
+
+const getPuzzleOwnerId = (uid: string | null, isGuest: boolean) =>
+  uid ?? (isGuest ? GUEST_PUZZLE_OWNER_ID : null);
 
 const isPuzzleGridSize = (value: unknown): value is PuzzleGridSize =>
   typeof value === "number" &&
   PUZZLE_GRID_OPTIONS.includes(value as PuzzleGridSize);
 
-const readStoredPuzzleProgress = (): StoredPuzzleProgress | null => {
+const readStoredPuzzleProgress = (
+  expectedOwnerId?: string | null,
+): StoredPuzzleProgress | null => {
   if (typeof window === "undefined") {
     return null;
   }
@@ -86,11 +94,19 @@ const readStoredPuzzleProgress = (): StoredPuzzleProgress | null => {
     }
 
     const parsed = JSON.parse(raw) as Partial<StoredPuzzleProgress>;
-    if (!isPuzzleGridSize(parsed.gridSize) || !Array.isArray(parsed.pieces)) {
+    const storedOwnerId =
+      typeof parsed.ownerId === "string" ? parsed.ownerId : null;
+
+    if (
+      !isPuzzleGridSize(parsed.gridSize) ||
+      !Array.isArray(parsed.pieces) ||
+      (expectedOwnerId !== undefined && storedOwnerId !== expectedOwnerId)
+    ) {
       return null;
     }
 
     return {
+      ownerId: storedOwnerId,
       gridSize: parsed.gridSize,
       pieces: parsed.pieces.flatMap((piece) => {
         if (
@@ -133,8 +149,10 @@ const clearStoredPuzzleProgress = () => {
 
 const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   const [bgmSrc] = useState(() => pickRandomActivityBgm());
+  const { token, uid, isAdmin, isGuest } = useAuthStore();
+  const currentOwnerId = getPuzzleOwnerId(uid, isGuest);
   const [gridSize, setGridSize] = useState<PuzzleGridSize>(() => {
-    const storedProgress = readStoredPuzzleProgress();
+    const storedProgress = readStoredPuzzleProgress(currentOwnerId);
     return storedProgress?.gridSize ?? 10;
   });
 
@@ -162,16 +180,38 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   const playAreaRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const artworkRef = useRef<HTMLDivElement>(null);
+  const ownerIdRef = useRef(readStoredPuzzleProgress()?.ownerId ?? currentOwnerId);
   const puzzleAchievementAwardedRef = useRef(false);
   const completionMetaTriggeredRef = useRef(false);
   const storedProgressRef = useRef<StoredPuzzleProgress | null>(
-    readStoredPuzzleProgress(),
+    readStoredPuzzleProgress(currentOwnerId),
   );
-  const { token, isAdmin } = useAuthStore();
   const { addToast } = useToastStore();
   const isCoarsePointerDevice =
     typeof window !== "undefined" &&
     window.matchMedia("(pointer: coarse)").matches;
+
+  useEffect(() => {
+    if (ownerIdRef.current === currentOwnerId) {
+      return;
+    }
+
+    ownerIdRef.current = currentOwnerId;
+    clearStoredPuzzleProgress();
+    storedProgressRef.current = null;
+    puzzleAchievementAwardedRef.current = false;
+    completionMetaTriggeredRef.current = false;
+    setGridSize(10);
+    setCompleted(false);
+    setPhotocardModeEnabled(false);
+    setIsOpeningPhotocard(false);
+    setSensorUnavailable(false);
+    setOrientationEnabled(false);
+    setIsMagnifierActive(false);
+    setMagnifierPoint({ x: 0, y: 0 });
+    setPieces([]);
+    setLayoutVersion((prev) => prev + 1);
+  }, [currentOwnerId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -632,6 +672,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
     }
 
     const storedProgress: StoredPuzzleProgress = {
+      ownerId: currentOwnerId,
       gridSize,
       pieces: pieces.map((piece) => ({
         id: piece.id,
@@ -647,7 +688,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
       PUZZLE_PROGRESS_STORAGE_KEY,
       JSON.stringify(storedProgress),
     );
-  }, [gridSize, pieces]);
+  }, [currentOwnerId, gridSize, pieces]);
 
   useEffect(() => {
     if (!completed) {

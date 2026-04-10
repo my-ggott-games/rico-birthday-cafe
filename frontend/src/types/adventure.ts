@@ -29,7 +29,8 @@ export type AdventureGameOverReason =
   | "spike"
   | "lava"
   | "slime"
-  | "magic";
+  | "magic"
+  | "laser";
 
 export type AdventureRuntimeHole = {
   id: number;
@@ -54,4 +55,16 @@ export type AdventureRunnerSnapshot = {
   fallingHole: boolean;
   nextHoleId: number;
   holes: AdventureRuntimeHole[];
+  processedLaserEventIds: string[];
+  phase5TrapInjectedIds: string[];
+  phase5TrapSchedule: import("../features/adventure/adventureLaserShared").Phase5TrapEvent[];
+  phase5DynamicLasers: import("../features/adventure/adventureLaserShared").AdventureLaserEvent[];
+  damageSlowMultiplier: number;
+  reverseMotionUntil: number;
+  stopMotionUntil: number;
+  shakeUntil: number;
+  shakeAmplitude: number;
+  blinkUntil: number;
+  blinkInterval: number;
+  chicoUntil: number;
 };

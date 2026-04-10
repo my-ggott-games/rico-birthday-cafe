@@ -26,6 +26,7 @@ import { RunnerScene } from "../features/adventure/adventureGameCore";
 import { RunnerSceneMobile } from "../features/adventure/adventureGameCoreMobile";
 import {
   ADVENTURE_BEST_SCORE_KEY,
+  ADVENTURE_SERVER_STAGE_KEY,
   ADVENTURE_PHASES,
   TOTAL_DURATION,
   YOUTUBE_VIDEO_ID,
@@ -34,6 +35,8 @@ import {
   getPhaseAtTime,
   getRetryPhase,
 } from "../features/adventure/adventureGameShared";
+import { useAuthStore } from "../store/useAuthStore";
+import { fetchWithAuth } from "../utils/api";
 
 type AdventurePlayerInstance = {
   destroy: () => void;
@@ -69,6 +72,7 @@ export default function AdventureGame() {
   const ytContainerRef = useRef<HTMLDivElement | null>(null);
   const pendingMusicStartRef = useRef(false);
   const pendingMusicStartTimeRef = useRef(0);
+  const seekTimestampRef = useRef(0);
   const rafRef = useRef<number | null>(null);
   const courseTimeSyncActiveRef = useRef(false);
   const stageViewportRef = useRef<HTMLDivElement | null>(null);
@@ -87,6 +91,9 @@ export default function AdventureGame() {
   const [retryStartTime, setRetryStartTime] = useState(0);
   const [volume, setVolume] = useState(55);
   const [debugUnlockAll, setDebugUnlockAll] = useState(false);
+  const [maxClearedPhaseId, setMaxClearedPhaseId] = useState(0);
+  const serverStageRef = useRef(0);
+  const { isGuest } = useAuthStore();
   const [gameOverReason, setGameOverReason] =
     useState<AdventureGameOverReason>("pit");
   const [stageViewportSize, setStageViewportSize] = useState({
@@ -109,6 +116,30 @@ export default function AdventureGame() {
         : Math.min(window.devicePixelRatio || 1, 2),
     [],
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined" || isGuest) {
+      return;
+    }
+
+    const cached = window.localStorage.getItem(ADVENTURE_SERVER_STAGE_KEY);
+    const cachedStage = Number(cached);
+    if (Number.isFinite(cachedStage) && cachedStage > 0) {
+      serverStageRef.current = cachedStage;
+      setMaxClearedPhaseId((prev) => Math.max(prev, cachedStage));
+      return;
+    }
+
+    fetchWithAuth("/adventure/stage")
+      .then((res) => (res.ok ? res.json() : 0))
+      .then((stage: unknown) => {
+        const resolved = typeof stage === "number" && stage > 0 ? stage : 0;
+        serverStageRef.current = resolved;
+        window.localStorage.setItem(ADVENTURE_SERVER_STAGE_KEY, String(resolved));
+        setMaxClearedPhaseId((prev) => Math.max(prev, resolved));
+      })
+      .catch(() => {});
+  }, [isGuest]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -268,6 +299,7 @@ export default function AdventureGame() {
             if (pendingMusicStartRef.current) {
               player.seekTo(pendingMusicStartTimeRef.current, true);
               player.playVideo();
+              seekTimestampRef.current = performance.now();
               pendingMusicStartRef.current = false;
             }
           },
@@ -292,6 +324,7 @@ export default function AdventureGame() {
 
       musicPlayerRef.current.seekTo(pendingMusicStartTimeRef.current, true);
       musicPlayerRef.current.playVideo();
+      seekTimestampRef.current = performance.now();
       pendingMusicStartRef.current = false;
     },
     [playerReady],
@@ -389,6 +422,24 @@ export default function AdventureGame() {
     [],
   );
 
+  const postAdventureStage = useCallback(
+    (clearedPhaseId: number) => {
+      if (isGuest || clearedPhaseId <= serverStageRef.current) {
+        return;
+      }
+      serverStageRef.current = clearedPhaseId;
+      window.localStorage.setItem(
+        ADVENTURE_SERVER_STAGE_KEY,
+        String(clearedPhaseId),
+      );
+      fetchWithAuth("/adventure/stage", {
+        method: "POST",
+        body: JSON.stringify({ stage: clearedPhaseId }),
+      }).catch(() => {});
+    },
+    [isGuest],
+  );
+
   const handleGameOver = useCallback(
     (endedScore: number, reason: AdventureGameOverReason) => {
       const resolvedScore = Math.max(endedScore, liveScoreRef.current, score);
@@ -401,6 +452,7 @@ export default function AdventureGame() {
         TOTAL_DURATION,
       );
       const nextRetryPhase = getRetryPhase(resolvedCourseTime);
+      const clearedPhaseId = getClearedPhaseId(resolvedCourseTime);
 
       pauseMusic();
       liveScoreRef.current = resolvedScore;
@@ -410,14 +462,20 @@ export default function AdventureGame() {
       setBestScore((current) => Math.max(current, resolvedScore));
       setHudCourseTime(resolvedCourseTime);
       setRetryStartTime(nextRetryPhase.start);
+      setMaxClearedPhaseId((prev) => {
+        const next = Math.max(prev, clearedPhaseId);
+        postAdventureStage(next);
+        return next;
+      });
       setRunState("gameover");
     },
-    [pauseMusic, score],
+    [pauseMusic, postAdventureStage, score],
   );
 
   const handleGameComplete = useCallback(
     (clearedScore: number) => {
       const resolvedScore = Math.max(clearedScore, liveScoreRef.current, score);
+      const finalPhaseId = ADVENTURE_PHASES[ADVENTURE_PHASES.length - 1].id;
       pauseMusic();
       desktopSceneSnapshotRef.current = null;
       mobileSceneSnapshotRef.current = null;
@@ -427,9 +485,14 @@ export default function AdventureGame() {
       setBestScore((current) => Math.max(current, resolvedScore));
       setHudCourseTime(TOTAL_DURATION);
       setRetryStartTime(ADVENTURE_PHASES[ADVENTURE_PHASES.length - 1].start);
+      setMaxClearedPhaseId((prev) => {
+        const next = Math.max(prev, finalPhaseId);
+        postAdventureStage(next);
+        return next;
+      });
       setRunState("completed");
     },
-    [pauseMusic, score],
+    [pauseMusic, postAdventureStage, score],
   );
 
   useEffect(() => {
@@ -454,7 +517,10 @@ export default function AdventureGame() {
         return;
       }
 
-      const playerTime = musicPlayerRef.current?.getCurrentTime();
+      const seekCooldownActive = performance.now() - seekTimestampRef.current < 300;
+      const playerTime = seekCooldownActive
+        ? undefined
+        : musicPlayerRef.current?.getCurrentTime();
       const nextTime = clamp(
         Number.isFinite(playerTime ?? Number.NaN)
           ? (playerTime as number)
@@ -491,7 +557,7 @@ export default function AdventureGame() {
   const readyModalActions: AdventureModalAction[] = [
     {
       label: "게임 시작하기",
-      onClick: () => startGame(0),
+      onClick: () => startGame(retryStartTime),
     },
   ];
 
@@ -507,12 +573,10 @@ export default function AdventureGame() {
     setDebugUnlockAll(true);
   }, []);
 
-  const handlePhaseStart = useCallback(
-    (startTime: number) => {
-      startGame(startTime);
-    },
-    [startGame],
-  );
+  const handlePhaseStart = useCallback((startTime: number) => {
+    setRetryStartTime(startTime);
+    setHudCourseTime(startTime);
+  }, []);
 
   const pauseModalActions: AdventureModalAction[] = [
     {
@@ -629,7 +693,7 @@ export default function AdventureGame() {
   const activePhase = getPhaseAtTime(displayTime);
   const activePhaseId = activePhase.id;
   const unlockedPhaseId = Math.min(
-    getClearedPhaseId(hudCourseTime) + 1,
+    maxClearedPhaseId + 1,
     ADVENTURE_PHASES.length,
   );
   const maxUnlockedPhaseId = debugUnlockAll
@@ -652,7 +716,11 @@ export default function AdventureGame() {
           ? isMobileViewport
             ? "일시정지 버튼을 누르면 쉴 수 있어"
             : "P 키/일시정지 버튼을 누르면 쉴 수 있어"
-          : null;
+          : displayTime >= 277 && displayTime < 282
+            ? "치코의 의지가 깃듭니다... 3단 점프 봉인 해제"
+            : null;
+  const introMessageOpacity =
+    activePhaseId === 1 ? introOverlayOpacity : introInstructionMessage ? 1 : 0;
 
   const renderVolumeControls = (compact = false) =>
     isMobileViewport ? null : (
@@ -723,7 +791,9 @@ export default function AdventureGame() {
               ? "함정이라니 비겁하다!"
               : gameOverReason === "lava"
                 ? "용암에 빠졌어"
-                : "함정에 빠졌어..."
+                : gameOverReason === "laser"
+                  ? "마왕의 공격에 당했어"
+                  : "함정에 빠졌어..."
         }
         title={`Score ${resultScore}`}
         description={
@@ -733,7 +803,9 @@ export default function AdventureGame() {
               ? "마왕녀석, 정정당당하게 싸워라!!"
               : gameOverReason === "lava"
                 ? "꺄아악!! 뜨거워!!!"
-                : "거기 누구 없어요? 도와주세요!!"
+                : gameOverReason === "laser"
+                  ? "으악!! 레이저다!!"
+                  : "거기 누구 없어요? 도와주세요!!"
         }
         actions={gameOverModalActions}
       >
@@ -799,7 +871,7 @@ export default function AdventureGame() {
               <AdventureGamePanelMobile
                 runState={runState}
                 introInstructionMessage={introInstructionMessage}
-                introOverlayOpacity={introOverlayOpacity}
+                introMessageOpacity={introMessageOpacity}
                 onPauseToggle={handlePauseToggle}
                 overlayModal={overlayModal}
                 gameCanvas={
@@ -843,6 +915,7 @@ export default function AdventureGame() {
                 runState={runState}
                 introInstructionMessage={introInstructionMessage}
                 introOverlayOpacity={introOverlayOpacity}
+                introMessageOpacity={introMessageOpacity}
                 showMapVolumeUi={showMapVolumeUi}
                 onPauseToggle={handlePauseToggle}
                 mapVolumeControls={renderVolumeControls()}

@@ -6,13 +6,14 @@ import {
   clamp,
   getPhaseAtTime,
 } from "./adventureGameShared";
+import { ADVENTURE_TRIPLE_JUMP_UNLOCK_TIME } from "./adventureLaserShared";
 
 // ─── Physics constants ────────────────────────────────────────────────────────
 export const WORLD_WIDTH = 400;
 export const GROUND_Y = 318;
 export const PLAYER_X = 75;
 export const GRAVITY = 1000;
-export const JUMP_FORCES = [300, 250, 200];
+export const JUMP_FORCES = [300, 250, 245];
 export const MAX_JUMPS = 2;
 export const PHASE_FIVE_MAX_JUMPS = 3;
 export const COYOTE_TIME_SECONDS = 0.12;
@@ -99,14 +100,16 @@ export const randomizeHazardGapForPhase = (
     phaseId,
   );
 
-export const isHazardLockedAtTime = (time: number) =>
-  time < PHASE_ONE_HAZARD_DELAY_SECONDS ||
-  ADVENTURE_PHASES.some(
-    (phase) =>
-      phase.id > 2 &&
-      time >= phase.start - PHASE_TRANSITION_SAFE_SECONDS &&
-      time < phase.start + PHASE_TRANSITION_SAFE_SECONDS,
-  );
+export const isHazardLockedAtTime = (time: number) => {
+  if (time < PHASE_ONE_HAZARD_DELAY_SECONDS) return true;
+  return ADVENTURE_PHASES.some((phase) => {
+    if (phase.id <= 2) return false;
+    const safeBefore =
+      phase.id === 5 ? 6 : PHASE_TRANSITION_SAFE_SECONDS;
+    const safeAfter = PHASE_TRANSITION_SAFE_SECONDS;
+    return time >= phase.start - safeBefore && time < phase.start + safeAfter;
+  });
+};
 
 export const drawCloud = (
   graphics: PixiGraphics,
@@ -148,7 +151,11 @@ export const getJumpForce = (jumpCount: number) =>
   );
 
 export const getMaxJumpsForTime = (time: number) =>
-  getPhaseAtTime(time).id === 5 ? PHASE_FIVE_MAX_JUMPS : MAX_JUMPS;
+  time >= ADVENTURE_TRIPLE_JUMP_UNLOCK_TIME
+    ? PHASE_FIVE_MAX_JUMPS
+    : getPhaseAtTime(time).id === 5
+      ? PHASE_FIVE_MAX_JUMPS
+      : MAX_JUMPS;
 
 export const isGapHazard = (hole: Hole) =>
   hole.kind === "pit" || hole.kind === "spike" || hole.kind === "lava";
@@ -232,9 +239,14 @@ export const getSolidHazardTouchingPlayer = (holes: Hole[], playerY: number) => 
 
 export const getRunSpeedMultiplier = (courseTime: number) => {
   const phaseId = getPhaseAtTime(courseTime).id;
-  const phaseSpeedMultiplier =
+  let phaseSpeedMultiplier =
     PHASE_SPEED_MULTIPLIERS[phaseId - 1] ??
     PHASE_SPEED_MULTIPLIERS[PHASE_SPEED_MULTIPLIERS.length - 1];
+
+  // Phase 6 is the "Battle Ended" scene, so we slow down significantly.
+  if (phaseId === 6) {
+    phaseSpeedMultiplier *= 0.5;
+  }
 
   if (courseTime <= CLEAR_SLOWDOWN_START_SECONDS) {
     return phaseSpeedMultiplier;

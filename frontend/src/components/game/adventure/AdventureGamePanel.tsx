@@ -5,6 +5,7 @@ type AdventureGamePanelProps = {
   runState: "ready" | "running" | "paused" | "gameover" | "completed";
   introInstructionMessage: string | null;
   introOverlayOpacity: number;
+  introMessageOpacity: number;
   showMapVolumeUi: boolean;
   onPauseToggle: () => void;
   gameCanvas: ReactNode;
@@ -16,6 +17,7 @@ export function AdventureGamePanel({
   runState,
   introInstructionMessage,
   introOverlayOpacity,
+  introMessageOpacity,
   showMapVolumeUi,
   onPauseToggle,
   gameCanvas,
@@ -51,7 +53,7 @@ export function AdventureGamePanel({
         (runState === "running" || runState === "paused") ? (
           <div
             className="pointer-events-none absolute left-1/2 top-4 z-[11] -translate-x-1/2 transition-opacity duration-700"
-            style={{ opacity: introOverlayOpacity }}
+            style={{ opacity: introMessageOpacity }}
           >
             <div
               className="rounded-full border-[3px] px-5 py-2 text-center text-xs font-bold shadow-[0_10px_26px_rgba(17,37,67,0.25)] backdrop-blur-sm sm:text-sm"

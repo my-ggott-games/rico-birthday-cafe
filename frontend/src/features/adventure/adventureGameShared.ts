@@ -3,6 +3,7 @@ import type { RunState } from "../../types/adventure";
 export { type RunState };
 
 export const ADVENTURE_BEST_SCORE_KEY = "birthday-cafe-adventure-best";
+export const ADVENTURE_SERVER_STAGE_KEY = "birthday-cafe-adventure-server-stage";
 export const ADVENTURE_PLAYER_ELEMENT_ID = "rico-adventure-player";
 export const YOUTUBE_VIDEO_ID = "J3B0k47f0Fs";
 
@@ -45,7 +46,7 @@ export const ADVENTURE_PHASES = [
     start: 274,
     end: 310,
     theme: "결투",
-    description: "짧고 거대한 결전 구간입니다.",
+    description: "3단 점프",
   },
   {
     id: 6,

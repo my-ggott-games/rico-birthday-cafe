@@ -14,8 +14,13 @@ import type {
   AdventureRunnerSnapshot,
   RunState,
 } from "../../types/adventure";
-import { TOTAL_DURATION, clamp, getPhaseAtTime } from "./adventureGameShared";
-import { ADVENTURE_PLAYER_FRAME_PATHS } from "./adventureAssets";
+import {
+  ADVENTURE_PHASES,
+  TOTAL_DURATION,
+  clamp,
+  getPhaseAtTime,
+} from "./adventureGameShared";
+import { ADVENTURE_PLAYER_TEXTURE_PATHS } from "./adventureAssets";
 import {
   COYOTE_TIME_SECONDS,
   FALL_OUT_THRESHOLD,
@@ -25,6 +30,7 @@ import {
   MOBILE_PLAYER_SCALE,
   PLAYER_ANIMATION_FPS,
   PLAYER_COLLISION_HALF_WIDTH,
+  PLAYER_COLLISION_HEIGHT,
   PLAYER_RENDER_SCALE,
   PLAYER_X,
   SCORE_STEP,
@@ -38,6 +44,7 @@ import {
   getGapHazardUnderPlayer,
   getJumpForce,
   getMaxJumpsForTime,
+  getPlayerBounds,
   getRunSpeedMultiplier,
   getSolidHazardTouchingPlayer,
   hasGroundSupport,
@@ -47,6 +54,24 @@ import {
   type Hole,
   type HoleKind,
 } from "./adventureGameMobileConstants";
+import {
+  ANGER_SPRITE_END_TIME,
+  CHICO_SAVE_TIME,
+  CHICO_SILHOUETTE_CENTER_X_RATIO,
+  CHICO_SILHOUETTE_FADE_OUT_DURATION,
+  drawLaserOverlay,
+  getSwordAuraState,
+  getActiveLaserEventAtTime,
+  getLaserStateAtTime,
+  getPlayerSpecialStateAtTime,
+  isLaserTouchingPlayer,
+  generatePhase5CombatSchedule,
+  PHASE_FIVE_SCROLL_RESUME_TIME,
+  type AdventureLaserEvent,
+  type AdventureLaserHitBehavior,
+  type AdventurePlayerSpecialState,
+  type Phase5TrapEvent,
+} from "./adventureLaserShared";
 
 extend({
   Container: PixiContainer,
@@ -70,6 +95,16 @@ type RunnerSceneMobileProps = {
   onComplete: (score: number) => void;
 };
 
+type AdventurePlayerTextureSet = {
+  default: Texture[];
+  shock: Texture[];
+  anger: Texture[];
+  swordAura: Texture | null;
+  chikoDefense: Texture | null;
+  chikoHurt: Texture | null;
+  chikoDefault: Texture | null;
+};
+
 export function RunnerSceneMobile({
   stageWidth,
   stageHeight,
@@ -83,11 +118,24 @@ export function RunnerSceneMobile({
   onGameOver,
   onComplete,
 }: RunnerSceneMobileProps) {
-  const [playerFrames, setPlayerFrames] = useState<Texture[]>([]);
+  const [playerTextures, setPlayerTextures] = useState<AdventurePlayerTextureSet>({
+    default: [],
+    shock: [],
+    anger: [],
+    swordAura: null,
+    chikoDefense: null,
+    chikoHurt: null,
+    chikoDefault: null,
+  });
   const backgroundRef = useRef<PixiGraphics | null>(null);
   const worldRef = useRef<PixiGraphics | null>(null);
+  const effectsRef = useRef<PixiGraphics | null>(null);
   const shadowRef = useRef<PixiGraphics | null>(null);
+  const glowRef = useRef<PixiGraphics | null>(null);
   const playerRef = useRef<PixiSprite | null>(null);
+  const swordAuraRef = useRef<PixiSprite | null>(null);
+  const chicoRef = useRef<PixiSprite | null>(null);
+  const chikoFollowerRef = useRef<PixiSprite | null>(null);
   const courseTimeRef = useRef(currentCourseTime);
   const lastHandledJumpNonceRef = useRef(jumpNonce);
   const holesRef = useRef<Hole[]>([]);
@@ -101,9 +149,28 @@ export function RunnerSceneMobile({
   const scoreTickTimerRef = useRef(0);
   const gameOverSentRef = useRef(false);
   const fallHazardKindRef = useRef<HoleKind>("pit");
+  const phase5TrapInjectedRef = useRef<string[]>([]);
+  const phase5TrapScheduleRef = useRef<Phase5TrapEvent[]>([]);
+  const phase5DynamicLasersRef = useRef<AdventureLaserEvent[]>([]);
   const animationElapsedRef = useRef(0);
+  const angerStartCourseTimeRef = useRef(-1);
   const runElapsedRef = useRef(0);
   const fallingHoleRef = useRef(false);
+  const processedLaserEventIdsRef = useRef<string[]>([]);
+  const damageSlowMultiplierRef = useRef(1);
+  const reverseMotionUntilRef = useRef(0);
+  const stopMotionUntilRef = useRef(0);
+  const shakeUntilRef = useRef(0);
+  const shakeAmplitudeRef = useRef(0);
+  const blinkUntilRef = useRef(0);
+  const blinkIntervalRef = useRef(0.12);
+  const chicoUntilRef = useRef(0);
+  const chikoFollowerYRef = useRef(0);
+  const chikoFollowerVelocityRef = useRef(0);
+  const chikoFollowerJumpQueueRef = useRef<number[]>([]);
+  const chikoFollowerDefenseUntilRef = useRef(0);
+  const cameraShakeXRef = useRef(0);
+  const cameraShakeYRef = useRef(0);
 
   // ── Mobile camera: fill canvas width, lock ground at GROUND_Y_RATIO ────────
   const uniformScale = stageWidth / WORLD_WIDTH;
@@ -128,6 +195,34 @@ export function RunnerSceneMobile({
   const playerXScaled = px(PLAYER_X);
   const groundSegmentBodyHeight = Math.max(0, stageHeight - py(GROUND_Y + 24));
   const currentPhaseId = getPhaseAtTime(currentCourseTime).id;
+  const arePlayerTexturesReady =
+    playerTextures.default.length > 0 &&
+    playerTextures.shock.length > 0 &&
+    playerTextures.anger.length > 0 &&
+    !!playerTextures.swordAura;
+
+  const getPlayerFramesForState = useCallback(
+    (state: AdventurePlayerSpecialState) =>
+      state === "shock"
+        ? playerTextures.shock
+        : state === "anger"
+          ? playerTextures.anger
+          : playerTextures.default,
+    [playerTextures],
+  );
+
+  const getCurrentCameraShake = useCallback((time: number) => {
+    if (time >= shakeUntilRef.current || shakeAmplitudeRef.current <= 0) {
+      return { x: 0, y: 0 };
+    }
+
+    const progress = 1 - (shakeUntilRef.current - time) / 0.45;
+    const amplitude = shakeAmplitudeRef.current * Math.max(0.18, 1 - progress);
+    return {
+      x: Math.sin(time * 78) * amplitude,
+      y: Math.cos(time * 62) * amplitude * 0.7,
+    };
+  }, []);
 
   const emitSnapshot = useCallback(() => {
     onSceneSnapshotChange({
@@ -143,18 +238,74 @@ export function RunnerSceneMobile({
       fallingHole: fallingHoleRef.current,
       nextHoleId: nextHoleIdRef.current,
       holes: holesRef.current.map((hole) => ({ ...hole })),
+      processedLaserEventIds: [...processedLaserEventIdsRef.current],
+      phase5TrapInjectedIds: [...phase5TrapInjectedRef.current],
+      phase5TrapSchedule: [...phase5TrapScheduleRef.current],
+      phase5DynamicLasers: [...phase5DynamicLasersRef.current],
+      damageSlowMultiplier: damageSlowMultiplierRef.current,
+      reverseMotionUntil: reverseMotionUntilRef.current,
+      stopMotionUntil: stopMotionUntilRef.current,
+      shakeUntil: shakeUntilRef.current,
+      shakeAmplitude: shakeAmplitudeRef.current,
+      blinkUntil: blinkUntilRef.current,
+      blinkInterval: blinkIntervalRef.current,
+      chicoUntil: chicoUntilRef.current,
     });
   }, [onSceneSnapshotChange]);
 
   useEffect(() => {
     let mounted = true;
-    void Promise.all(
-      ADVENTURE_PLAYER_FRAME_PATHS.map((path) =>
-        Assets.load<Texture>({ src: path, data: { scaleMode: "nearest" } }),
-      ),
-    ).then((frames) => {
-      if (mounted) setPlayerFrames(frames);
-    });
+
+    const loadFrames = (paths: readonly string[]) =>
+      Promise.all(
+        paths.map((path) =>
+          Assets.load<Texture>({ src: path, data: { scaleMode: "nearest" } }),
+        ),
+      );
+
+    void Promise.all([
+      loadFrames(ADVENTURE_PLAYER_TEXTURE_PATHS.default),
+      loadFrames(ADVENTURE_PLAYER_TEXTURE_PATHS.shock),
+      loadFrames(ADVENTURE_PLAYER_TEXTURE_PATHS.anger),
+      Assets.load<Texture>({
+        src: "/assets/adventuregame/sword-aura.png",
+        data: { scaleMode: "linear" },
+      }),
+      Assets.load<Texture>({
+        src: "/assets/adventuregame/chiko-defense.png",
+        data: { scaleMode: "linear" },
+      }),
+      Assets.load<Texture>({
+        src: "/assets/adventuregame/chiko-hurt.png",
+        data: { scaleMode: "linear" },
+      }),
+      Assets.load<Texture>({
+        src: "/assets/adventuregame/chiko-default.png",
+        data: { scaleMode: "linear" },
+      }),
+    ]).then(
+      ([
+        defaultFrames,
+        shockFrames,
+        angerFrames,
+        swordAuraTexture,
+        chikoDefenseTexture,
+        chikoHurtTexture,
+        chikoDefaultTexture,
+      ]) => {
+        if (mounted) {
+          setPlayerTextures({
+            default: defaultFrames,
+            shock: shockFrames,
+            anger: angerFrames,
+            swordAura: swordAuraTexture,
+            chikoDefense: chikoDefenseTexture,
+            chikoHurt: chikoHurtTexture,
+            chikoDefault: chikoDefaultTexture,
+          });
+        }
+      },
+    );
     return () => {
       mounted = false;
     };
@@ -212,29 +363,9 @@ export function RunnerSceneMobile({
         graphics.rect(0, gy * 0.88, W, gy * 0.04).fill({ color: 0x7bb661, alpha: 0.24 });
         break;
       }
-      case 4: {
-        graphics.rect(0, 0, W, H).fill(0x2d3142);
-        graphics.rect(0, 0, W, gy * 0.66).fill(0x4f5d75);
-        const stars4: [number, number][] = [
-          [0.1, 0.08], [0.34, 0.14], [0.6, 0.06], [0.84, 0.18],
-          [0.22, 0.3], [0.5, 0.22], [0.76, 0.34], [0.06, 0.4],
-          [0.92, 0.1], [0.42, 0.42],
-        ];
-        for (const [fx, fy] of stars4) {
-          drawStar(graphics, W * fx, gy * fy, sceneUnit * 0.016, 0.6);
-        }
-        graphics.circle(W * 0.78, gy * 0.14, sceneUnit * 0.09).fill({ color: 0xfef3c7, alpha: 0.92 });
-        graphics.roundRect(W * 0.04, gy * 0.5, sceneUnit * 0.18, sceneUnit * 0.34, sceneUnit * 0.02).fill({ color: 0x232936, alpha: 0.88 });
-        graphics.roundRect(W * 0.28, gy * 0.42, sceneUnit * 0.22, sceneUnit * 0.42, sceneUnit * 0.02).fill({ color: 0x232936, alpha: 0.88 });
-        graphics.roundRect(W * 0.62, gy * 0.48, sceneUnit * 0.18, sceneUnit * 0.36, sceneUnit * 0.02).fill({ color: 0x232936, alpha: 0.88 });
-        graphics.circle(W * 0.13, gy * 0.57, sceneUnit * 0.02).fill({ color: 0xffb703, alpha: 0.62 });
-        graphics.circle(W * 0.39, gy * 0.5, sceneUnit * 0.02).fill({ color: 0xffb703, alpha: 0.58 });
-        graphics.circle(W * 0.71, gy * 0.55, sceneUnit * 0.02).fill({ color: 0xffb703, alpha: 0.56 });
-        graphics.rect(0, gy * 0.84, W, gy * 0.06).fill({ color: 0xffffff, alpha: 0.08 });
-        graphics.rect(0, gy * 0.88, W, gy * 0.04).fill({ color: 0x8d99ae, alpha: 0.22 });
-        break;
-      }
-      case 5: {
+      case 4:
+      case 5:
+      case 6: {
         graphics.rect(0, 0, W, H).fill(0x28090f);
         graphics.rect(0, 0, W, gy * 0.74).fill(0x8d1c31);
         graphics.circle(W * 0.72, gy * 0.17, sceneUnit * 0.22).fill({ color: 0xff8c42, alpha: 0.14 });
@@ -251,7 +382,7 @@ export function RunnerSceneMobile({
         graphics.rect(0, gy * 0.9, W, gy * 0.04).fill({ color: 0xff8c42, alpha: 0.22 });
         break;
       }
-      case 6: {
+      default: {
         graphics.rect(0, 0, W, H).fill(0xf1fbf8);
         graphics.rect(0, 0, W, gy * 0.82).fill(0xbde0fe);
         graphics.circle(W * 0.18, gy * 0.18, sceneUnit * 0.09).fill({ color: 0xfff4b6, alpha: 0.82 });
@@ -268,27 +399,57 @@ export function RunnerSceneMobile({
         graphics.rect(0, gy * 0.88, W, gy * 0.04).fill({ color: 0x7dd3c7, alpha: 0.24 });
         break;
       }
-      default: {
-        graphics.rect(0, 0, W, H).fill(0x152238);
-        graphics.rect(0, 0, W, gy * 0.7).fill(0x243b53);
-        graphics.circle(W * 0.8, gy * 0.16, gy * 0.07).fill({ color: 0xf8fafc, alpha: 0.88 });
-        const stars7: [number, number][] = [
-          [0.1, 0.1], [0.28, 0.06], [0.5, 0.16], [0.66, 0.08],
-          [0.18, 0.24], [0.42, 0.2], [0.62, 0.3], [0.9, 0.14],
-          [0.34, 0.36], [0.76, 0.26],
-        ];
-        for (const [fx, fy] of stars7) {
-          drawStar(graphics, W * fx, gy * fy, sceneUnit * 0.013, 0.6);
-        }
-        graphics.roundRect(W * -0.04, gy * 0.5, sceneUnit * 0.42, sceneUnit * 0.3, sceneUnit * 0.02).fill(0x324a5f);
-        graphics.roundRect(W * 0.26, gy * 0.44, sceneUnit * 0.38, sceneUnit * 0.36, sceneUnit * 0.02).fill(0x243b53);
-        graphics.roundRect(W * 0.56, gy * 0.48, sceneUnit * 0.5, sceneUnit * 0.32, sceneUnit * 0.02).fill(0x1b2a41);
-        graphics.rect(0, gy * 0.84, W, gy * 0.06).fill({ color: 0xffffff, alpha: 0.1 });
-        graphics.rect(0, gy * 0.88, W, gy * 0.04).fill({ color: 0x90cdf4, alpha: 0.2 });
-        break;
+    }
+    graphics.x = cameraShakeXRef.current;
+    graphics.y = cameraShakeYRef.current;
+  }, [groundYScaled, stageHeight, stageWidth]);
+
+  const drawLaserEffects = useCallback(() => {
+    const graphics = effectsRef.current;
+    if (!graphics) return;
+
+    graphics.clear();
+    const activeLaserEvent =
+      getActiveLaserEventAtTime(courseTimeRef.current) ??
+      phase5DynamicLasersRef.current.find(
+        (e) => getLaserStateAtTime(e, courseTimeRef.current) !== null,
+      );
+    if (activeLaserEvent) {
+      const laserState = getLaserStateAtTime(activeLaserEvent, courseTimeRef.current);
+      if (laserState) {
+        drawLaserOverlay({
+          graphics,
+          event: activeLaserEvent,
+          state: laserState,
+          worldWidth: WORLD_WIDTH,
+          px,
+          py,
+          sx,
+          sy,
+          ss,
+        });
       }
     }
-  }, [groundYScaled, stageHeight, stageWidth]);
+
+    if (courseTimeRef.current < chicoUntilRef.current) {
+      // Chico sprite handles its own rendering and animation in syncPlayerVisuals
+    }
+
+    const swordAuraState = getSwordAuraState(
+      courseTimeRef.current,
+      PLAYER_X,
+      WORLD_WIDTH,
+    );
+    if (swordAuraState?.whiteFade) {
+      graphics.rect(0, 0, stageWidth, stageHeight).fill({
+        color: 0xffffff,
+        alpha: swordAuraState.whiteFade,
+      });
+    }
+
+    graphics.x = cameraShakeXRef.current;
+    graphics.y = cameraShakeYRef.current;
+  }, [px, py, ss, stageHeight, stageWidth, sx, sy]);
 
   // ── Terrain ───────────────────────────────────────────────────────────────────
   const drawTerrain = useCallback(() => {
@@ -441,18 +602,47 @@ export function RunnerSceneMobile({
           .stroke({ color: 0xd64545, alpha: 0.42, width: ss(2.2) });
       }
     }
-  }, [groundSegmentBodyHeight, px, py, stageHeight, sx, sy]);
+    graphics.x = cameraShakeXRef.current;
+    graphics.y = cameraShakeYRef.current;
+  }, [groundSegmentBodyHeight, px, py, ss, stageHeight, sx, sy]);
 
   // ── Player visuals ────────────────────────────────────────────────────────────
   const syncPlayerVisuals = useCallback(() => {
     const player = playerRef.current;
+    const swordAura = swordAuraRef.current;
     const shadow = shadowRef.current;
     if (!player || !shadow) return;
 
-    player.x = playerXScaled;
-    player.y = groundYScaled - ss(playerYRef.current);
+    player.x = playerXScaled + cameraShakeXRef.current;
+    player.y = groundYScaled - ss(playerYRef.current) + cameraShakeYRef.current;
     player.rotation = rotationRef.current;
     player.scale.set(PLAYER_RENDER_SCALE * uniformScale * MOBILE_PLAYER_SCALE);
+    const isBlinking = courseTimeRef.current < blinkUntilRef.current;
+    player.alpha = isBlinking
+      ? Math.sin(courseTimeRef.current / blinkIntervalRef.current) > 0
+        ? 0.34
+        : 0.96
+      : 1;
+
+    if (swordAura && playerTextures.swordAura) {
+      const swordAuraState = getSwordAuraState(
+        courseTimeRef.current,
+        PLAYER_X,
+        WORLD_WIDTH,
+      );
+      if (swordAuraState) {
+        swordAura.visible = true;
+        swordAura.x = px(swordAuraState.auraWorldX) + cameraShakeXRef.current;
+        swordAura.y =
+          player.y - ss(PLAYER_COLLISION_HEIGHT * 0.52) + cameraShakeYRef.current;
+        swordAura.width = sx(132 * swordAuraState.scale);
+        swordAura.height = sy(180 * swordAuraState.scale);
+        swordAura.alpha = swordAuraState.alpha;
+      } else {
+        swordAura.visible = false;
+        swordAura.alpha = 0;
+      }
+    }
 
     const shadowScale = clamp(
       0.82 - Math.max(playerYRef.current, 0) / 220,
@@ -469,9 +659,75 @@ export function RunnerSceneMobile({
 
     shadow.clear();
     shadow
-      .ellipse(playerXScaled, py(GROUND_Y - 10), ss(25 * shadowScale), ss(6.5 * shadowScale))
+      .ellipse(
+        playerXScaled + cameraShakeXRef.current,
+        py(GROUND_Y - 10) + cameraShakeYRef.current,
+        ss(25 * shadowScale),
+        ss(6.5 * shadowScale),
+      )
       .fill({ color: 0x102542, alpha: shadowAlpha });
-  }, [groundYScaled, playerXScaled, py, runState, ss, uniformScale]);
+
+    const glow = glowRef.current;
+    if (glow) {
+      glow.clear();
+      const t = courseTimeRef.current;
+      const glowStart = CHICO_SAVE_TIME + 2;
+      if (t >= glowStart && t < 310) {
+        const a = Math.min((t - glowStart) / 1.5, 1);
+        const isTripleJump = jumpCountRef.current >= 3;
+        const boost = isTripleJump ? 2.2 : 1;
+        const gx = player.x;
+        const gy = player.y - ss(PLAYER_COLLISION_HEIGHT * 0.5);
+        glow
+          .circle(gx, gy, ss(65))
+          .fill({ color: 0x7fff4f, alpha: 0.06 * a * boost });
+        glow
+          .circle(gx, gy, ss(46))
+          .fill({ color: 0x7fff4f, alpha: 0.13 * a * boost });
+        glow
+          .circle(gx, gy, ss(30))
+          .fill({ color: 0x9eff68, alpha: 0.22 * a * boost });
+        glow
+          .circle(gx, gy, ss(18))
+          .fill({ color: 0xc4ff8f, alpha: 0.3 * a * boost });
+        if (isTripleJump) {
+          glow.circle(gx, gy, ss(10)).fill({ color: 0xffffff, alpha: 0.55 * a });
+        }
+      }
+    }
+
+    const chico = chicoRef.current;
+    if (chico && playerTextures.chikoDefense && playerTextures.chikoHurt) {
+      const t = courseTimeRef.current;
+      if (t < chicoUntilRef.current) {
+        const chicoAlpha = Math.min(
+          1,
+          Math.max(
+            0,
+            (chicoUntilRef.current - t) / CHICO_SILHOUETTE_FADE_OUT_DURATION,
+          ),
+        );
+        const centerX = WORLD_WIDTH * CHICO_SILHOUETTE_CENTER_X_RATIO;
+
+        // Switch texture after 1 second (CHICO_SAVE_TIME + 1.0)
+        const isHurt = t >= CHICO_SAVE_TIME + 1.0;
+        chico.texture = isHurt ? playerTextures.chikoHurt : playerTextures.chikoDefense;
+
+        // Shake animation
+        const shakeX = Math.sin(t * 85) * 2.5;
+        const shakeY = Math.cos(t * 72) * 1.8;
+
+        chico.visible = true;
+        chico.alpha = chicoAlpha;
+        chico.x = px(centerX) + cameraShakeXRef.current + sx(shakeX);
+        chico.y = groundYScaled + cameraShakeYRef.current + sy(shakeY);
+        chico.scale.set(uniformScale * 0.32);
+        chico.anchor.set(0.5, 1);
+      } else {
+        chico.visible = false;
+      }
+    }
+  }, [groundYScaled, playerTextures.swordAura, playerXScaled, px, py, runState, ss, sx, sy, uniformScale]);
 
   // ── Scene reset ───────────────────────────────────────────────────────────────
   const resetScene = useCallback(() => {
@@ -487,14 +743,34 @@ export function RunnerSceneMobile({
     animationElapsedRef.current = 0;
     runElapsedRef.current = 0;
     fallingHoleRef.current = false;
+    processedLaserEventIdsRef.current = [];
+    damageSlowMultiplierRef.current = 1;
+    reverseMotionUntilRef.current = 0;
+    stopMotionUntilRef.current = 0;
+    shakeUntilRef.current = 0;
+    shakeAmplitudeRef.current = 0;
+    blinkUntilRef.current = 0;
+    blinkIntervalRef.current = 0.12;
+    chicoUntilRef.current = 0;
+    chikoFollowerYRef.current = 0;
+    chikoFollowerVelocityRef.current = 0;
+    chikoFollowerJumpQueueRef.current = [];
+    chikoFollowerDefenseUntilRef.current = 0;
+    cameraShakeXRef.current = 0;
+    cameraShakeYRef.current = 0;
     nextHoleIdRef.current = 1;
     holesRef.current = [];
+    phase5TrapInjectedRef.current = [];
+    const p5schedule = generatePhase5CombatSchedule();
+    phase5TrapScheduleRef.current = p5schedule.traps;
+    phase5DynamicLasersRef.current = p5schedule.lasers;
     onScoreChange(0);
     drawBackdrop();
     drawTerrain();
+    drawLaserEffects();
     syncPlayerVisuals();
     emitSnapshot();
-  }, [drawBackdrop, drawTerrain, emitSnapshot, onScoreChange, syncPlayerVisuals]);
+  }, [drawBackdrop, drawLaserEffects, drawTerrain, emitSnapshot, onScoreChange, syncPlayerVisuals]);
 
   const restoreScene = useCallback(
     (snapshot: AdventureRunnerSnapshot) => {
@@ -508,20 +784,53 @@ export function RunnerSceneMobile({
       animationElapsedRef.current = snapshot.animationElapsed;
       runElapsedRef.current = snapshot.runElapsed;
       fallingHoleRef.current = snapshot.fallingHole;
+      processedLaserEventIdsRef.current = [...snapshot.processedLaserEventIds];
+      damageSlowMultiplierRef.current = snapshot.damageSlowMultiplier;
+      reverseMotionUntilRef.current = snapshot.reverseMotionUntil;
+      stopMotionUntilRef.current = snapshot.stopMotionUntil;
+      shakeUntilRef.current = snapshot.shakeUntil;
+      shakeAmplitudeRef.current = snapshot.shakeAmplitude;
+      blinkUntilRef.current = snapshot.blinkUntil;
+      blinkIntervalRef.current = snapshot.blinkInterval;
+      chicoUntilRef.current = snapshot.chicoUntil;
+      const shake = getCurrentCameraShake(courseTimeRef.current);
+      const swordAuraState = getSwordAuraState(
+        courseTimeRef.current,
+        PLAYER_X,
+        WORLD_WIDTH,
+      );
+      const swordAuraShake = swordAuraState?.shakeIntensity ?? 0;
+      cameraShakeXRef.current =
+        shake.x + Math.sin(courseTimeRef.current * 52) * 7 * swordAuraShake;
+      cameraShakeYRef.current =
+        shake.y + Math.cos(courseTimeRef.current * 44) * 4 * swordAuraShake;
       nextHoleIdRef.current = snapshot.nextHoleId;
       holesRef.current = snapshot.holes.map((hole) => ({ ...hole }));
+      phase5TrapInjectedRef.current = [...snapshot.phase5TrapInjectedIds];
+      phase5TrapScheduleRef.current = [...snapshot.phase5TrapSchedule];
+      phase5DynamicLasersRef.current = [...snapshot.phase5DynamicLasers];
       gameOverSentRef.current = false;
       onScoreChange(snapshot.score);
       drawBackdrop();
       drawTerrain();
+      drawLaserEffects();
       syncPlayerVisuals();
       emitSnapshot();
     },
-    [drawBackdrop, drawTerrain, emitSnapshot, onScoreChange, syncPlayerVisuals],
+    [drawBackdrop, drawLaserEffects, drawTerrain, emitSnapshot, getCurrentCameraShake, onScoreChange, syncPlayerVisuals],
   );
 
   // ── Jump ──────────────────────────────────────────────────────────────────────
   const tryJump = useCallback(() => {
+    const t = courseTimeRef.current;
+    if (getPhaseAtTime(t).id === 5 && t < PHASE_FIVE_SCROLL_RESUME_TIME) {
+      return;
+    }
+
+    if (t >= CHICO_SAVE_TIME && t < ANGER_SPRITE_END_TIME) {
+      return;
+    }
+
     const supported =
       hasGroundSupport(holesRef.current) && !fallingHoleRef.current;
     const grounded = playerYRef.current <= 0.01 && supported;
@@ -539,58 +848,149 @@ export function RunnerSceneMobile({
     coyoteTimeRef.current = 0;
     velocityRef.current = getJumpForce(nextJumpCount);
     rotationRef.current = nextJumpCount > 1 ? 0.05 : -0.18;
+    chikoFollowerJumpQueueRef.current.push(t + 0.3);
     syncPlayerVisuals();
   }, [syncPlayerVisuals]);
 
+  const hasProcessedLaserEvent = useCallback(
+    (eventId: string) => processedLaserEventIdsRef.current.includes(eventId),
+    [],
+  );
+
+  const markLaserEventProcessed = useCallback((eventId: string) => {
+    if (!processedLaserEventIdsRef.current.includes(eventId)) {
+      processedLaserEventIdsRef.current = [
+        ...processedLaserEventIdsRef.current,
+        eventId,
+      ];
+    }
+  }, []);
+
+  const applyLaserBehavior = useCallback(
+    (event: AdventureLaserEvent, behavior: AdventureLaserHitBehavior) => {
+      if (behavior === "damage-step-1") {
+        rotationRef.current = -0.1;
+        shakeUntilRef.current = event.fireTime + 0.45;
+        shakeAmplitudeRef.current = 8;
+        blinkUntilRef.current = event.fireTime + 0.9;
+        blinkIntervalRef.current = 0.12;
+        return;
+      }
+
+      if (behavior === "damage-step-2") {
+        rotationRef.current = -0.17;
+        shakeUntilRef.current = event.fireTime + 0.65;
+        shakeAmplitudeRef.current = 12;
+        blinkUntilRef.current = event.fireTime + 1.2;
+        blinkIntervalRef.current = 0.22;
+        chikoFollowerDefenseUntilRef.current = event.fireTime + 0.6;
+        return;
+      }
+
+      if (behavior === "chico-save") {
+        velocityRef.current = getJumpForce(1);
+        rotationRef.current = -0.3;
+        jumpCountRef.current = 1;
+        coyoteTimeRef.current = 0;
+        reverseMotionUntilRef.current = event.fireTime + 0.32;
+        stopMotionUntilRef.current = event.fireTime + 0.72;
+        shakeUntilRef.current = event.fireTime + 1.5;
+        shakeAmplitudeRef.current = 10;
+        chicoUntilRef.current = CHICO_SAVE_TIME + 3;
+      }
+    },
+    [],
+  );
+
   // ── Effects ───────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (playerFrames.length === 0) return;
+    if (!arePlayerTexturesReady) return;
     if (sceneSnapshot) {
       restoreScene(sceneSnapshot);
       return;
     }
     resetScene();
-  }, [playerFrames, restartNonce, resetScene, restoreScene, sceneSnapshot]);
+  }, [arePlayerTexturesReady, restartNonce, resetScene, restoreScene, sceneSnapshot]);
 
   useEffect(() => {
-    if (playerFrames.length === 0) return;
+    if (!arePlayerTexturesReady) return;
     drawTerrain();
+    drawLaserEffects();
     syncPlayerVisuals();
-  }, [currentCourseTime, drawTerrain, playerFrames, syncPlayerVisuals]);
+  }, [arePlayerTexturesReady, currentCourseTime, drawLaserEffects, drawTerrain, syncPlayerVisuals]);
 
   useEffect(() => {
-    if (playerFrames.length === 0) return;
+    if (!arePlayerTexturesReady) return;
     drawBackdrop();
-  }, [currentPhaseId, drawBackdrop, playerFrames]);
+  }, [arePlayerTexturesReady, currentPhaseId, drawBackdrop]);
 
   useEffect(() => {
-    if (playerFrames.length === 0 || runState !== "running") return;
+    if (!arePlayerTexturesReady || runState !== "running") return;
     if (jumpNonce === lastHandledJumpNonceRef.current) return;
     lastHandledJumpNonceRef.current = jumpNonce;
     tryJump();
-  }, [jumpNonce, playerFrames, runState, tryJump]);
+  }, [arePlayerTexturesReady, jumpNonce, runState, tryJump]);
 
   // ── Tick ──────────────────────────────────────────────────────────────────────
   const onTick = useCallback(
     (ticker: Ticker) => {
-      if (playerFrames.length === 0) return;
+      if (!arePlayerTexturesReady) return;
 
       const player = playerRef.current;
       if (player) {
-        const speedMultiplier = getRunSpeedMultiplier(courseTimeRef.current);
-        if (runState === "running") {
+        const baseRunSpeedMultiplier = getRunSpeedMultiplier(courseTimeRef.current);
+        const motionScale =
+          courseTimeRef.current < reverseMotionUntilRef.current
+            ? 0.22
+            : courseTimeRef.current < stopMotionUntilRef.current
+              ? 0.08
+              : Math.max(damageSlowMultiplierRef.current, 0.08);
+        const visualSpeedMultiplier = baseRunSpeedMultiplier * motionScale;
+        const specialState = getPlayerSpecialStateAtTime(courseTimeRef.current);
+        const activeFrames = getPlayerFramesForState(specialState);
+        if (specialState !== "anger") {
+          angerStartCourseTimeRef.current = -1;
+        } else if (angerStartCourseTimeRef.current < 0) {
+          angerStartCourseTimeRef.current = courseTimeRef.current;
+        }
+        const angerElapsed =
+          specialState === "anger" && angerStartCourseTimeRef.current >= 0
+            ? courseTimeRef.current - angerStartCourseTimeRef.current
+            : 0;
+        const angerFrozen = specialState === "anger" && angerElapsed < 1;
+        const angerBoost =
+          specialState === "anger" && !angerFrozen
+            ? Math.min((angerElapsed - 1) / 1, 1) * 2.0
+            : specialState === "anger"
+              ? 0
+              : 1;
+
+        if (runState === "running" && specialState !== "shock" && !angerFrozen) {
+          const swordAuraState = getSwordAuraState(
+            courseTimeRef.current,
+            PLAYER_X,
+            WORLD_WIDTH,
+          );
+          const phase5SpeedBoost =
+            courseTimeRef.current >= PHASE_FIVE_SCROLL_RESUME_TIME ? 1.5 : 1;
+          const phase6Slowdown = getPhaseAtTime(courseTimeRef.current).id === 6 ? 0.5 : 1;
           animationElapsedRef.current +=
-            (ticker.deltaMS / 1000) * Math.max(0.24, speedMultiplier);
-        } else if (runState !== "paused") {
+            (ticker.deltaMS / 1000) *
+            Math.max(0.24, Math.abs(visualSpeedMultiplier)) *
+            phase5SpeedBoost *
+            angerBoost *
+            phase6Slowdown *
+            (swordAuraState?.animationRate ?? 1);
+        } else if (runState !== "paused" && specialState !== "shock" && !angerFrozen) {
           animationElapsedRef.current = 0;
         }
 
         const frameIndex =
-          runState === "running"
+          runState === "running" && specialState !== "shock" && !angerFrozen
             ? Math.floor(animationElapsedRef.current * PLAYER_ANIMATION_FPS) %
-              playerFrames.length
+              activeFrames.length
             : 0;
-        const nextTexture = playerFrames[frameIndex];
+        const nextTexture = activeFrames[frameIndex] ?? activeFrames[0];
         if (player.texture !== nextTexture) {
           player.texture = nextTexture;
         }
@@ -600,6 +1000,7 @@ export function RunnerSceneMobile({
         if (runState === "ready") {
           drawBackdrop();
           drawTerrain();
+          drawLaserEffects();
           syncPlayerVisuals();
           emitSnapshot();
         }
@@ -607,20 +1008,54 @@ export function RunnerSceneMobile({
       }
 
       const deltaSeconds = Math.min(ticker.deltaMS / 1000, 1 / 20);
-      const speedMultiplier = getRunSpeedMultiplier(courseTimeRef.current);
+      const currentPhaseId = getPhaseAtTime(courseTimeRef.current).id;
+      if (currentPhaseId >= 5) {
+        damageSlowMultiplierRef.current = 1;
+      }
+      const shake = getCurrentCameraShake(courseTimeRef.current);
+      const swordAuraState = getSwordAuraState(
+        courseTimeRef.current,
+        PLAYER_X,
+        WORLD_WIDTH,
+      );
+      const swordAuraShake = swordAuraState?.shakeIntensity ?? 0;
+      cameraShakeXRef.current =
+        shake.x + Math.sin(courseTimeRef.current * 52) * 7 * swordAuraShake;
+      cameraShakeYRef.current =
+        shake.y + Math.cos(courseTimeRef.current * 44) * 4 * swordAuraShake;
+      const baseSpeedMultiplier = getRunSpeedMultiplier(courseTimeRef.current);
+      const motionDirectionScale =
+        currentPhaseId === 5 &&
+        courseTimeRef.current < PHASE_FIVE_SCROLL_RESUME_TIME
+          ? 0
+          : courseTimeRef.current < reverseMotionUntilRef.current
+          ? -0.28
+          : courseTimeRef.current < stopMotionUntilRef.current
+            ? 0
+            : damageSlowMultiplierRef.current;
+      const speedMultiplier = baseSpeedMultiplier * motionDirectionScale;
       const holeDeltaSeconds = deltaSeconds * speedMultiplier;
       runElapsedRef.current += deltaSeconds;
-      const obstaclesEnabled = !isHazardLockedAtTime(courseTimeRef.current);
+      const obstaclesEnabled =
+        currentPhaseId !== 5 && !isHazardLockedAtTime(courseTimeRef.current);
 
-      let nextHoles: Hole[] = holesRef.current
-        .map((hole) => ({
-          ...hole,
-          x: hole.x - SCROLL_SPEED * holeDeltaSeconds,
-        }))
-        .filter((hole) => hole.x + hole.width > -80);
+      const nextHoles: Hole[] =
+        currentPhaseId === 5
+          ? holesRef.current
+              .filter((hole) => hole.id < 0)
+              .map((hole) => ({
+                ...hole,
+                x: hole.x - SCROLL_SPEED * holeDeltaSeconds,
+              }))
+              .filter((hole) => hole.x + hole.width > -80)
+          : holesRef.current
+              .map((hole) => ({
+                ...hole,
+                x: hole.x - SCROLL_SPEED * holeDeltaSeconds,
+              }))
+              .filter((hole) => hole.x + hole.width > -80);
 
       if (obstaclesEnabled) {
-        const currentPhaseId = getPhaseAtTime(courseTimeRef.current).id;
         const lastHole = nextHoles[nextHoles.length - 1];
         const canSpawnNextHole =
           currentPhaseId === 1
@@ -642,6 +1077,68 @@ export function RunnerSceneMobile({
         }
       }
       holesRef.current = nextHoles;
+
+      if (currentPhaseId === 5) {
+        for (const trap of phase5TrapScheduleRef.current) {
+          if (
+            courseTimeRef.current >= trap.injectTime &&
+            !phase5TrapInjectedRef.current.includes(trap.id)
+          ) {
+            phase5TrapInjectedRef.current = [...phase5TrapInjectedRef.current, trap.id];
+            holesRef.current = [
+              ...holesRef.current,
+              {
+                id: trap.holeId,
+                x: WORLD_WIDTH + 120,
+                width: trap.width,
+                gapAfter: 0,
+                kind: "magic" as HoleKind,
+                height: trap.height,
+                y: trap.laneTop,
+              },
+            ];
+          }
+        }
+      }
+
+      const activeLaserEvent = getActiveLaserEventAtTime(courseTimeRef.current);
+      if (activeLaserEvent && !hasProcessedLaserEvent(activeLaserEvent.id)) {
+        const laserState = getLaserStateAtTime(activeLaserEvent, courseTimeRef.current);
+        if (laserState === "firing") {
+          if (activeLaserEvent.onHitBehavior === "chico-save") {
+            applyLaserBehavior(activeLaserEvent, activeLaserEvent.onHitBehavior);
+            markLaserEventProcessed(activeLaserEvent.id);
+          } else if (
+            isLaserTouchingPlayer(
+              activeLaserEvent,
+              getPlayerBounds(playerYRef.current),
+              WORLD_WIDTH,
+            )
+          ) {
+            if (activeLaserEvent.onHitBehavior === "instant-gameover") {
+              markLaserEventProcessed(activeLaserEvent.id);
+              gameOverSentRef.current = true;
+              onGameOver(scoreRef.current, "laser");
+              return;
+            }
+            applyLaserBehavior(activeLaserEvent, activeLaserEvent.onHitBehavior);
+            markLaserEventProcessed(activeLaserEvent.id);
+          }
+        }
+      }
+
+      for (const dynLaser of phase5DynamicLasersRef.current) {
+        if (hasProcessedLaserEvent(dynLaser.id)) continue;
+        const laserState = getLaserStateAtTime(dynLaser, courseTimeRef.current);
+        if (laserState === "firing") {
+          if (isLaserTouchingPlayer(dynLaser, getPlayerBounds(playerYRef.current), WORLD_WIDTH)) {
+            markLaserEventProcessed(dynLaser.id);
+            gameOverSentRef.current = true;
+            onGameOver(scoreRef.current, "laser");
+            return;
+          }
+        }
+      }
 
       let nextVelocity = velocityRef.current - GRAVITY * deltaSeconds;
       let nextY = playerYRef.current + nextVelocity * deltaSeconds;
@@ -716,6 +1213,66 @@ export function RunnerSceneMobile({
       }
 
       drawTerrain();
+      drawLaserEffects();
+
+      // ─── CHIKO FOLLOWER LOGIC ───
+      const chikoFollower = chikoFollowerRef.current;
+      if (chikoFollower && playerTextures.chikoDefault) {
+        const t = courseTimeRef.current;
+        const phase3StartTime = ADVENTURE_PHASES[2].start;
+        const p5StartTime = ADVENTURE_PHASES[4].start;
+        const chikoAppearTime = phase3StartTime + 10;
+
+        if (t >= chikoAppearTime && t < p5StartTime) {
+          chikoFollower.visible = true;
+          chikoFollower.alpha = 1;
+
+          // X-position entrance and following
+          const targetX = PLAYER_X - 80;
+          const entranceProgress = Math.min((t - chikoAppearTime) / 1.5, 1);
+          const startX = -60;
+          const currentX = startX + (targetX - startX) * entranceProgress;
+
+          // Delayed Jumping
+          while (
+            chikoFollowerJumpQueueRef.current.length > 0 &&
+            t >= chikoFollowerJumpQueueRef.current[0]
+          ) {
+            chikoFollowerJumpQueueRef.current.shift();
+            chikoFollowerVelocityRef.current = getJumpForce(1) * 0.92;
+          }
+
+          // Gravity and Vertical Motion
+          const dt = ticker.deltaTime / 60;
+          chikoFollowerVelocityRef.current -= GRAVITY * dt;
+          chikoFollowerYRef.current = Math.max(
+            0,
+            chikoFollowerYRef.current + chikoFollowerVelocityRef.current * dt,
+          );
+
+          // Tick-like Bobbing (alternates every 0.5s)
+          const bobOffset = (Math.floor(t * 2) % 2) * 6;
+          const baseFloat = 12;
+
+          // Orientation and Visuals
+          const isDefense = t < chikoFollowerDefenseUntilRef.current;
+          chikoFollower.texture = isDefense
+            ? playerTextures.chikoDefense!
+            : playerTextures.chikoDefault;
+          chikoFollower.x = px(currentX) + cameraShakeXRef.current;
+          chikoFollower.y =
+            groundYScaled -
+            ss(chikoFollowerYRef.current + baseFloat) +
+            sy(bobOffset) +
+            cameraShakeYRef.current;
+          chikoFollower.height = ss(PLAYER_COLLISION_HEIGHT * 0.5);
+          chikoFollower.scale.x = chikoFollower.scale.y;
+          chikoFollower.anchor.set(0.5, 1);
+        } else {
+          chikoFollower.visible = false;
+        }
+      }
+
       syncPlayerVisuals();
       emitSnapshot();
 
@@ -746,14 +1303,20 @@ export function RunnerSceneMobile({
     },
     [
       drawBackdrop,
+      drawLaserEffects,
       drawTerrain,
       emitSnapshot,
+      getCurrentCameraShake,
+      getPlayerFramesForState,
+      hasProcessedLaserEvent,
+      applyLaserBehavior,
+      markLaserEventProcessed,
       onComplete,
       onGameOver,
       onScoreChange,
       runState,
       syncPlayerVisuals,
-      playerFrames,
+      arePlayerTexturesReady,
     ],
   );
   useTick(onTick);
@@ -762,17 +1325,52 @@ export function RunnerSceneMobile({
     <pixiContainer>
       <pixiGraphics ref={backgroundRef} draw={() => undefined} />
       <pixiGraphics ref={worldRef} draw={() => undefined} />
+      {playerTextures.swordAura ? (
+        <pixiSprite
+          ref={swordAuraRef}
+          texture={playerTextures.swordAura}
+          x={px(PLAYER_X + 120)}
+          y={groundYScaled - ss(PLAYER_COLLISION_HEIGHT * 0.52)}
+          width={sx(132)}
+          height={sy(180)}
+          alpha={0}
+          visible={false}
+          anchor={{ x: 0.5, y: 0.5 }}
+        />
+      ) : null}
       <pixiGraphics ref={shadowRef} draw={() => undefined} />
-      {playerFrames[0] ? (
+      <pixiGraphics ref={glowRef} draw={() => undefined} />
+
+      <pixiGraphics ref={effectsRef} draw={() => undefined} />
+
+      {playerTextures.chikoDefault ? (
+        <pixiSprite
+          ref={chikoFollowerRef}
+          texture={playerTextures.chikoDefault}
+          visible={false}
+          alpha={0}
+        />
+      ) : null}
+
+      {playerTextures.chikoDefense ? (
+        <pixiSprite
+          ref={chicoRef}
+          texture={playerTextures.chikoDefense}
+          visible={false}
+          alpha={0}
+        />
+      ) : null}
+
+      {playerTextures.default[0] ? (
         <pixiSprite
           ref={playerRef}
-          texture={playerFrames[0]}
+          texture={playerTextures.default[0]}
           x={playerXScaled}
           y={groundYScaled}
           anchor={{ x: 0.5, y: 1 }}
         />
       ) : null}
-      {playerFrames.length === 0 ? (
+      {!arePlayerTexturesReady ? (
         <pixiText
           text="Loading..."
           x={stageWidth / 2}

@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 type AdventureGamePanelMobileProps = {
   runState: "ready" | "running" | "paused" | "gameover" | "completed";
   introInstructionMessage: string | null;
-  introOverlayOpacity: number;
+  introMessageOpacity: number;
   onPauseToggle: () => void;
   gameCanvas: ReactNode;
   overlayModal: ReactNode;
@@ -13,7 +13,7 @@ type AdventureGamePanelMobileProps = {
 export function AdventureGamePanelMobile({
   runState,
   introInstructionMessage,
-  introOverlayOpacity,
+  introMessageOpacity,
   onPauseToggle,
   gameCanvas,
   overlayModal,
@@ -48,7 +48,7 @@ export function AdventureGamePanelMobile({
           (runState === "running" || runState === "paused") ? (
             <div
               className="pointer-events-none absolute left-1/2 top-3 z-[11] w-[calc(100%-4rem)] -translate-x-1/2 transition-opacity duration-700"
-              style={{ opacity: introOverlayOpacity }}
+              style={{ opacity: introMessageOpacity }}
             >
               <div
                 className="rounded-full border-[3px] px-4 py-2 text-center text-[11px] font-bold leading-tight shadow-[0_10px_24px_rgba(17,37,67,0.25)] backdrop-blur-sm"
