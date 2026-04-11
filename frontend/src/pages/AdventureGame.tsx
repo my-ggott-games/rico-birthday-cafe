@@ -135,7 +135,10 @@ export default function AdventureGame() {
       .then((stage: unknown) => {
         const resolved = typeof stage === "number" && stage > 0 ? stage : 0;
         serverStageRef.current = resolved;
-        window.localStorage.setItem(ADVENTURE_SERVER_STAGE_KEY, String(resolved));
+        window.localStorage.setItem(
+          ADVENTURE_SERVER_STAGE_KEY,
+          String(resolved),
+        );
         setMaxClearedPhaseId((prev) => Math.max(prev, resolved));
       })
       .catch(() => {});
@@ -517,7 +520,8 @@ export default function AdventureGame() {
         return;
       }
 
-      const seekCooldownActive = performance.now() - seekTimestampRef.current < 300;
+      const seekCooldownActive =
+        performance.now() - seekTimestampRef.current < 300;
       const playerTime = seekCooldownActive
         ? undefined
         : musicPlayerRef.current?.getCurrentTime();
@@ -804,7 +808,7 @@ export default function AdventureGame() {
               : gameOverReason === "lava"
                 ? "꺄아악!! 뜨거워!!!"
                 : gameOverReason === "laser"
-                  ? "으악!! 레이저다!!"
+                  ? "용사는 포기하지 않아!"
                   : "거기 누구 없어요? 도와주세요!!"
         }
         actions={gameOverModalActions}
@@ -815,7 +819,7 @@ export default function AdventureGame() {
       <AdventureModal
         embedded
         status="배경음악이 끝났어"
-        title="모험 성공!"
+        title="THE END"
         description="용사 리코의 이야기가 해피엔딩으로 마무리됐어."
         actions={completedModalActions}
       >

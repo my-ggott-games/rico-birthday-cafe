@@ -279,15 +279,6 @@ const getTerrainBaseColor = (phaseId: number) =>
       ? 0xf0d3ae
       : 0xf0d3ae;
 
-const getTerrainTopColor = (phaseId: number) =>
-  phaseId === 3
-    ? 0x7bb661
-    : phaseId === 4 || phaseId === 5 || phaseId === 6
-      ? 0xff8c42
-      : phaseId === 7
-        ? 0x7dd3c7
-        : 0x5ec7a5;
-
 export const drawTerrainScene = ({
   graphics,
   holes,
@@ -305,7 +296,6 @@ export const drawTerrainScene = ({
   const sortedHoles = [...holes].sort((a, b) => a.x - b.x);
   const gapHoles = sortedHoles.filter(isGapHazard);
   const terrainBaseColor = getTerrainBaseColor(phaseId);
-  const terrainTopColor = getTerrainTopColor(phaseId);
   let segmentStart = 0;
 
   for (const hole of gapHoles) {
@@ -374,9 +364,6 @@ export const drawTerrainScene = ({
         .rect(px(segmentStart), py(GROUND_Y - 16), sx(segmentWidth), sy(40))
         .fill(terrainBaseColor);
       graphics
-        .rect(px(segmentStart), py(GROUND_Y - 18), sx(segmentWidth), sy(14))
-        .fill(terrainTopColor);
-      graphics
         .rect(
           px(segmentStart),
           py(GROUND_Y + 24),
@@ -384,9 +371,6 @@ export const drawTerrainScene = ({
           groundSegmentBodyHeight,
         )
         .fill(terrainBaseColor);
-      graphics
-        .rect(px(segmentStart), py(GROUND_Y + 24), sx(segmentWidth), sy(9))
-        .fill({ color: 0xffffff, alpha: 0.18 });
     }
 
     segmentStart = Math.max(segmentStart, hole.x + hole.width);
@@ -398,9 +382,6 @@ export const drawTerrainScene = ({
       .rect(px(segmentStart), py(GROUND_Y - 16), sx(segmentWidth), sy(40))
       .fill(terrainBaseColor);
     graphics
-      .rect(px(segmentStart), py(GROUND_Y - 18), sx(segmentWidth), sy(14))
-      .fill(terrainTopColor);
-    graphics
       .rect(
         px(segmentStart),
         py(GROUND_Y + 24),
@@ -408,9 +389,6 @@ export const drawTerrainScene = ({
         groundSegmentBodyHeight,
       )
       .fill(terrainBaseColor);
-    graphics
-      .rect(px(segmentStart), py(GROUND_Y + 24), sx(segmentWidth), sy(9))
-      .fill({ color: 0xffffff, alpha: 0.18 });
   }
 
   for (const hole of sortedHoles) {

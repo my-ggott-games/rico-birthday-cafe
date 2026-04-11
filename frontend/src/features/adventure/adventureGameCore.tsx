@@ -22,6 +22,7 @@ import {
 } from "./adventureGameShared";
 import { ADVENTURE_PLAYER_TEXTURE_PATHS } from "./adventureAssets";
 import {
+  CLEAR_SLOWDOWN_START_SECONDS,
   COYOTE_TIME_SECONDS,
   FALL_OUT_THRESHOLD,
   GRAVITY,
@@ -38,7 +39,6 @@ import {
   WORLD_WIDTH,
   createHole,
   drawCloud,
-  drawStar,
   drawTerrainScene,
   getGameOverReasonForHoleKind,
   getGapHazardUnderPlayer,
@@ -403,14 +403,6 @@ export function RunnerScene({
         drawCloud(graphics, px(28), py(48), sx(188), sy(42), 0.55);
         drawCloud(graphics, px(512), py(70), sx(178), sy(38), 0.46);
         drawCloud(graphics, px(684), py(34), sx(132), sy(28), 0.38);
-        graphics.rect(0, py(258), stageWidth, sy(16)).fill({
-          color: 0xffffff,
-          alpha: 0.18,
-        });
-        graphics.rect(0, py(272), stageWidth, sy(8)).fill({
-          color: 0x5ec7a5,
-          alpha: 0.24,
-        });
         break;
       case 3:
         graphics.rect(0, 0, stageWidth, stageHeight).fill(0xe8f2de);
@@ -427,14 +419,6 @@ export function RunnerScene({
           graphics.circle(px(trunkX - 12), py(144), ss(42)).fill(0x5f995f);
           graphics.circle(px(trunkX + 26), py(146), ss(38)).fill(0x6aa56a);
         }
-        graphics.rect(0, py(258), stageWidth, sy(16)).fill({
-          color: 0xe9f7ef,
-          alpha: 0.12,
-        });
-        graphics.rect(0, py(272), stageWidth, sy(8)).fill({
-          color: 0x7bb661,
-          alpha: 0.24,
-        });
         break;
       case 4:
       case 5:
@@ -469,14 +453,6 @@ export function RunnerScene({
             ])
             .fill({ color: 0x5a0c20, alpha: 0.32 });
         }
-        graphics.rect(0, sy(258), stageWidth, sy(16)).fill({
-          color: 0xfef3c7,
-          alpha: 0.08,
-        });
-        graphics.rect(0, sy(272), stageWidth, sy(8)).fill({
-          color: 0xff8c42,
-          alpha: 0.22,
-        });
         break;
       default:
         graphics.rect(0, 0, stageWidth, stageHeight).fill(0xf1fbf8);
@@ -495,14 +471,6 @@ export function RunnerScene({
           graphics.circle(sx(flowerX + 2), sy(238), ss(6)).fill(0xfef08a);
           graphics.circle(sx(flowerX + 14), sy(238), ss(6)).fill(0x86efac);
         }
-        graphics.rect(0, sy(258), stageWidth, sy(16)).fill({
-          color: 0xffffff,
-          alpha: 0.16,
-        });
-        graphics.rect(0, sy(272), stageWidth, sy(8)).fill({
-          color: 0x7dd3c7,
-          alpha: 0.24,
-        });
     }
     graphics.x = cameraShakeXRef.current;
     graphics.y = cameraShakeYRef.current;
@@ -1041,8 +1009,13 @@ export function RunnerScene({
         const speedMultiplier = baseSpeedMultiplier * motionDirectionScale;
         const holeDeltaSeconds = deltaSeconds * speedMultiplier;
         runElapsedRef.current += deltaSeconds;
+        const isPhase7ClearSlowdown =
+          currentPhaseId === 7 &&
+          courseTimeRef.current >= CLEAR_SLOWDOWN_START_SECONDS;
         const obstaclesEnabled =
-          currentPhaseId !== 5 && !isHazardLockedAtTime(courseTimeRef.current);
+          currentPhaseId !== 5 &&
+          !isHazardLockedAtTime(courseTimeRef.current) &&
+          !isPhase7ClearSlowdown;
 
         const nextHoles: Hole[] =
           currentPhaseId === 5

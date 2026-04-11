@@ -22,6 +22,7 @@ import {
 } from "./adventureGameShared";
 import { ADVENTURE_PLAYER_TEXTURE_PATHS } from "./adventureAssets";
 import {
+  CLEAR_SLOWDOWN_START_SECONDS,
   COYOTE_TIME_SECONDS,
   FALL_OUT_THRESHOLD,
   GRAVITY,
@@ -39,7 +40,6 @@ import {
   WORLD_WIDTH,
   createHole,
   drawCloud,
-  drawStar,
   getGameOverReasonForHoleKind,
   getGapHazardUnderPlayer,
   getJumpForce,
@@ -343,8 +343,6 @@ export function RunnerSceneMobile({
         drawCloud(graphics, W * 0.04, gy * 0.09, sceneUnit * 0.4, sceneUnit * 0.09, 0.6);
         drawCloud(graphics, W * 0.46, gy * 0.28, sceneUnit * 0.32, sceneUnit * 0.07, 0.5);
         drawCloud(graphics, W * 0.68, gy * 0.06, sceneUnit * 0.28, sceneUnit * 0.06, 0.4);
-        graphics.rect(0, gy * 0.82, W, gy * 0.08).fill({ color: 0xffffff, alpha: 0.18 });
-        graphics.rect(0, gy * 0.88, W, gy * 0.04).fill({ color: 0x5ec7a5, alpha: 0.24 });
         break;
       }
       case 3: {
@@ -359,8 +357,6 @@ export function RunnerSceneMobile({
           graphics.circle(tx + tw / 2 - sceneUnit * 0.03, gy * 0.62, sceneUnit * 0.1).fill(0x5f995f);
           graphics.circle(tx + tw / 2 + sceneUnit * 0.03, gy * 0.63, sceneUnit * 0.09).fill(0x6aa56a);
         }
-        graphics.rect(0, gy * 0.84, W, gy * 0.06).fill({ color: 0xe9f7ef, alpha: 0.12 });
-        graphics.rect(0, gy * 0.88, W, gy * 0.04).fill({ color: 0x7bb661, alpha: 0.24 });
         break;
       }
       case 4:
@@ -378,8 +374,6 @@ export function RunnerSceneMobile({
           const spX = W * (i / 7);
           graphics.poly([spX, gy * 0.8, spX + sceneUnit * 0.036, gy * 0.62, spX + sceneUnit * 0.072, gy * 0.8]).fill({ color: 0x5a0c20, alpha: 0.3 });
         }
-        graphics.rect(0, gy * 0.86, W, gy * 0.06).fill({ color: 0xfef3c7, alpha: 0.08 });
-        graphics.rect(0, gy * 0.9, W, gy * 0.04).fill({ color: 0xff8c42, alpha: 0.22 });
         break;
       }
       default: {
@@ -395,8 +389,6 @@ export function RunnerSceneMobile({
           graphics.circle(W * fx - sceneUnit * 0.014, gy * 0.8, sceneUnit * 0.018).fill(0xfef08a);
           graphics.circle(W * fx + sceneUnit * 0.014, gy * 0.8, sceneUnit * 0.018).fill(0x86efac);
         }
-        graphics.rect(0, gy * 0.84, W, gy * 0.06).fill({ color: 0xffffff, alpha: 0.16 });
-        graphics.rect(0, gy * 0.88, W, gy * 0.04).fill({ color: 0x7dd3c7, alpha: 0.24 });
         break;
       }
     }
@@ -504,18 +496,10 @@ export function RunnerSceneMobile({
             phase.id === 4 ? 0x7d8597 : phase.id === 5 ? 0x9c6644 : phase.id === 7 ? 0x8892b0 : 0xf0d3ae,
           );
         graphics
-          .rect(px(segmentStart), py(GROUND_Y - 18), sx(segmentWidth), sy(14))
-          .fill(
-            phase.id === 3 ? 0x7bb661 : phase.id === 4 ? 0xa9b4c2 : phase.id === 5 ? 0xff8c42 : phase.id === 6 ? 0x7dd3c7 : phase.id === 7 ? 0x90cdf4 : 0x5ec7a5,
-          );
-        graphics
           .rect(px(segmentStart), py(GROUND_Y + 24), sx(segmentWidth), groundSegmentBodyHeight)
           .fill(
             phase.id === 4 ? 0x7d8597 : phase.id === 5 ? 0x9c6644 : phase.id === 7 ? 0x8892b0 : 0xf0d3ae,
           );
-        graphics
-          .rect(px(segmentStart), py(GROUND_Y + 24), sx(segmentWidth), sy(9))
-          .fill({ color: 0xffffff, alpha: 0.18 });
       }
 
       segmentStart = Math.max(segmentStart, hole.x + hole.width);
@@ -529,18 +513,10 @@ export function RunnerSceneMobile({
           phase.id === 4 ? 0x7d8597 : phase.id === 5 ? 0x9c6644 : phase.id === 7 ? 0x8892b0 : 0xf0d3ae,
         );
       graphics
-        .rect(px(segmentStart), py(GROUND_Y - 18), sx(segmentWidth), sy(14))
-        .fill(
-          phase.id === 3 ? 0x7bb661 : phase.id === 4 ? 0xa9b4c2 : phase.id === 5 ? 0xff8c42 : phase.id === 6 ? 0x7dd3c7 : phase.id === 7 ? 0x90cdf4 : 0x5ec7a5,
-        );
-      graphics
         .rect(px(segmentStart), py(GROUND_Y + 24), sx(segmentWidth), groundSegmentBodyHeight)
         .fill(
           phase.id === 4 ? 0x7d8597 : phase.id === 5 ? 0x9c6644 : phase.id === 7 ? 0x8892b0 : 0xf0d3ae,
         );
-      graphics
-        .rect(px(segmentStart), py(GROUND_Y + 24), sx(segmentWidth), sy(9))
-        .fill({ color: 0xffffff, alpha: 0.18 });
     }
 
     for (const hole of sortedHoles) {
@@ -1036,8 +1012,13 @@ export function RunnerSceneMobile({
       const speedMultiplier = baseSpeedMultiplier * motionDirectionScale;
       const holeDeltaSeconds = deltaSeconds * speedMultiplier;
       runElapsedRef.current += deltaSeconds;
+      const isPhase7ClearSlowdown =
+        currentPhaseId === 7 &&
+        courseTimeRef.current >= CLEAR_SLOWDOWN_START_SECONDS;
       const obstaclesEnabled =
-        currentPhaseId !== 5 && !isHazardLockedAtTime(courseTimeRef.current);
+        currentPhaseId !== 5 &&
+        !isHazardLockedAtTime(courseTimeRef.current) &&
+        !isPhase7ClearSlowdown;
 
       const nextHoles: Hole[] =
         currentPhaseId === 5
