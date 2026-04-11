@@ -19,7 +19,6 @@ export default function AdventureGame() {
     score,
     bestScore,
     displaySpeedTier,
-    trapStructure,
     resultScore,
     stageScale,
     introInstructionMessage,
@@ -48,7 +47,6 @@ export default function AdventureGame() {
       <AdventureStageScene
         stageViewportRef={stageViewportRef}
         stageScale={stageScale}
-        trapStructure={trapStructure}
         playerYRef={playerYRef}
         playerFrameRef={playerFrameRef}
         trapsRef={trapsRef}
@@ -62,13 +60,7 @@ export default function AdventureGame() {
       />
     ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      stageScale,
-      trapStructure,
-      isMobile,
-      handleStagePointerDown,
-      handleStagePointerUp,
-    ],
+    [stageScale, isMobile, handleStagePointerDown, handleStagePointerUp],
   );
 
   const overlayModal =
@@ -97,10 +89,12 @@ export default function AdventureGame() {
         status={`${resultScore}점`}
         title={
           resultScore >= 1000
-            ? "오늘 유산소도 알찼다"
+            ? "오늘 운동도 알찼다"
             : "케이크 한 조각 정도는..."
         }
-        description={resultScore >= 1000 ? "줄여서 오운R" : "안 돼! 정신차려!!"}
+        description={
+          resultScore >= 1000 ? "줄여서 오운R" : "안 돼! 정신 차려!!"
+        }
         actions={[{ label: "다시 달리기", onClick: restartGame }]}
       >
         <div className="grid grid-cols-2 gap-3">

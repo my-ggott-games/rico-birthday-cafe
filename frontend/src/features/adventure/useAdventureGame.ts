@@ -57,7 +57,6 @@ export function useAdventureGame() {
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
   const [displaySpeedTier, setDisplaySpeedTier] = useState(0);
-  const [trapStructure, setTrapStructure] = useState<Trap[]>([]);
   const [resultScore, setResultScore] = useState(0);
   const [stageScale, setStageScale] = useState(1);
   const [speedMessage, setSpeedMessage] = useState<string | null>(null);
@@ -67,7 +66,6 @@ export function useAdventureGame() {
   // Refs for per-frame state — bypasses React re-renders
   const scoreRef = useRef(0);
   const renderCallbackRef = useRef<(() => void) | null>(null);
-  const prevTrapCountRef = useRef(0);
   const prevScoreRef = useRef(-1);
   const prevDisplaySpeedTierRef = useRef(-1);
 
@@ -154,7 +152,6 @@ export function useAdventureGame() {
     lastAnnouncedSpeedTierRef.current = 0;
     jumpHeldRef.current = false;
     scoreRef.current = 0;
-    prevTrapCountRef.current = 0;
     prevScoreRef.current = -1;
     prevDisplaySpeedTierRef.current = -1;
 
@@ -164,7 +161,6 @@ export function useAdventureGame() {
 
     setScore(0);
     setDisplaySpeedTier(0);
-    setTrapStructure([]);
     setSpeedMessage(null);
     setShowIntroMessage(true);
   }, []);
@@ -348,6 +344,20 @@ export function useAdventureGame() {
       let collided = false;
       let remainingDeltaSeconds = frameDeltaSeconds;
 
+      // Per-frame constants — invariant across sub-steps
+      const isMobile = isMobileRef.current;
+      const verticalScale = isMobile ? MOBILE_WORLD_SCALE : 1;
+      const trapScale = isMobile ? TRAP_MOBILE_SCALE : 1;
+      const playerScale = isMobile ? PLAYER_MOBILE_SCALE : 1;
+      const scaledPlayerWidth = PLAYER_WIDTH * playerScale;
+      const scaledPlayerHeight = PLAYER_HEIGHT * playerScale;
+      const playerVisualLeft = PLAYER_X + (PLAYER_WIDTH - scaledPlayerWidth) / 2;
+      const playerHInset = (scaledPlayerWidth * (1 - PLAYER_HITBOX_WIDTH_RATIO)) / 2;
+      const playerHitboxWidth = scaledPlayerWidth * PLAYER_HITBOX_WIDTH_RATIO;
+      const playerLeftTrim = isMobile ? playerHitboxWidth * 0.5 : 0;
+      const playerLeft = playerVisualLeft + playerHInset + playerLeftTrim;
+      const playerRight = playerVisualLeft + scaledPlayerWidth - playerHInset;
+
       while (remainingDeltaSeconds > 0 && !collided) {
         const deltaSeconds = Math.min(remainingDeltaSeconds, 1 / 60);
         remainingDeltaSeconds -= deltaSeconds;
@@ -374,14 +384,12 @@ export function useAdventureGame() {
         if (jumpHeldRef.current && velocityRef.current > 0) {
           const holdMs = timestamp - jumpHeldStartRef.current;
           if (holdMs < JUMP_HOLD_MAX_MS) {
-            const verticalScale = isMobileRef.current ? MOBILE_WORLD_SCALE : 1;
             velocityRef.current += JUMP_HOLD_BOOST * verticalScale * deltaSeconds;
           }
         }
 
         if (playerYRef.current > 0 || velocityRef.current > 0) {
           playerYRef.current += velocityRef.current * deltaSeconds;
-          const verticalScale = isMobileRef.current ? MOBILE_WORLD_SCALE : 1;
           velocityRef.current -= GRAVITY * verticalScale * deltaSeconds;
           if (playerYRef.current <= 0) {
             playerYRef.current = 0;
@@ -394,63 +402,44 @@ export function useAdventureGame() {
         spawnDelayRef.current -= deltaSeconds;
         if (spawnDelayRef.current <= 0) {
           const kind = pickTrapKind(speedTier);
-          trapsRef.current = [
-            ...trapsRef.current,
-            createTrap(trapIdRef.current, kind, speedTier, isMobileRef.current),
-          ];
+          trapsRef.current.push(createTrap(trapIdRef.current, kind, speedTier, isMobile));
           trapIdRef.current += 1;
           spawnDelayRef.current = getNextSpawnDelay(speedTier);
         }
 
-        const movedTraps = trapsRef.current
-          .map((trap) => ({
-            ...trap,
-            x: trap.x - scrollSpeed * deltaSeconds,
-          }))
-          .filter((trap) => trap.x + trap.width > -48);
+        // Mutate trap x in place — avoids per-frame object/array allocation
+        const traps = trapsRef.current;
+        let wi = 0;
+        for (let i = 0; i < traps.length; i++) {
+          traps[i].x -= scrollSpeed * deltaSeconds;
+          if (traps[i].x + traps[i].width > -48) {
+            traps[wi++] = traps[i];
+          }
+        }
+        traps.length = wi;
 
-        trapsRef.current = movedTraps;
-
-        const playerScale = isMobileRef.current ? PLAYER_MOBILE_SCALE : 1;
-        const scaledPlayerWidth = PLAYER_WIDTH * playerScale;
-        const scaledPlayerHeight = PLAYER_HEIGHT * playerScale;
-        const playerVisualLeft =
-          PLAYER_X + (PLAYER_WIDTH - scaledPlayerWidth) / 2;
-        const playerHorizontalInset =
-          (scaledPlayerWidth * (1 - PLAYER_HITBOX_WIDTH_RATIO)) / 2;
-        const playerLeft = playerVisualLeft + playerHorizontalInset;
-        const playerRight =
-          playerVisualLeft + scaledPlayerWidth - playerHorizontalInset;
         const playerHitboxBottom =
           playerYRef.current +
           PLAYER_GROUND_OFFSET +
           scaledPlayerHeight * PLAYER_HITBOX_BOTTOM_OFFSET_RATIO;
         const playerHitboxTop =
           playerHitboxBottom + scaledPlayerHeight * PLAYER_HITBOX_HEIGHT_RATIO;
-        const isMobile = isMobileRef.current;
-        const trapScale = isMobile ? TRAP_MOBILE_SCALE : 1;
-        const trapHInset = TRAP_HITBOX_HORIZONTAL_INSET_RATIO_MOBILE;
-        const trapBottomOffset = TRAP_HITBOX_BOTTOM_OFFSET_RATIO_MOBILE;
-        const trapHeightRatio = TRAP_HITBOX_HEIGHT_RATIO_MOBILE;
-        collided = movedTraps.some((trap) => {
+
+        collided = traps.some((trap) => {
           const scaledWidth = trap.width * trapScale;
           const scaledHeight = trap.height * trapScale;
           const trapVisualLeft = trap.x + (trap.width - scaledWidth) / 2;
-          const trapHitboxLeft = trapVisualLeft + scaledWidth * trapHInset;
+          const trapHitboxLeft =
+            trapVisualLeft + scaledWidth * TRAP_HITBOX_HORIZONTAL_INSET_RATIO_MOBILE;
           const trapHitboxRight =
-            trapVisualLeft + scaledWidth * (1 - trapHInset);
+            trapVisualLeft + scaledWidth * (1 - TRAP_HITBOX_HORIZONTAL_INSET_RATIO_MOBILE);
           const trapHitboxBottom =
-            trap.bottomFromGround + scaledHeight * trapBottomOffset;
+            trap.bottomFromGround + scaledHeight * TRAP_HITBOX_BOTTOM_OFFSET_RATIO_MOBILE;
           const trapHitboxTop =
-            trapHitboxBottom + scaledHeight * trapHeightRatio;
+            trapHitboxBottom + scaledHeight * TRAP_HITBOX_HEIGHT_RATIO_MOBILE;
 
-          if (trapHitboxLeft >= playerRight || trapHitboxRight <= playerLeft) {
-            return false;
-          }
-          return (
-            playerHitboxBottom < trapHitboxTop &&
-            playerHitboxTop > trapHitboxBottom
-          );
+          if (trapHitboxLeft >= playerRight || trapHitboxRight <= playerLeft) return false;
+          return playerHitboxBottom < trapHitboxTop && playerHitboxTop > trapHitboxBottom;
         });
       }
 
@@ -459,13 +448,6 @@ export function useAdventureGame() {
 
       // Update scoreRef for direct DOM use in scene
       scoreRef.current = nextScore;
-
-      // Sync trap structure to React state only on add/remove
-      const currentTrapCount = trapsRef.current.length;
-      if (currentTrapCount !== prevTrapCountRef.current) {
-        prevTrapCountRef.current = currentTrapCount;
-        setTrapStructure([...trapsRef.current]);
-      }
 
       // Sync score/speedTier to React state only when value changes
       if (nextScore !== prevScoreRef.current) {
@@ -524,7 +506,6 @@ export function useAdventureGame() {
     score,
     bestScore,
     displaySpeedTier,
-    trapStructure,
     resultScore,
     stageScale,
     introInstructionMessage,
