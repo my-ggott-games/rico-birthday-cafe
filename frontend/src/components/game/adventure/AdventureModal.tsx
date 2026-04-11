@@ -41,13 +41,13 @@ export function AdventureModal({
         data-ui-control="true"
         onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
-        className="w-full max-w-[18rem] rounded-[1.6rem] border-4 border-[#102542]/10 bg-[#fffaf2] p-4 shadow-[0_24px_48px_rgba(0,0,0,0.22)] sm:max-w-sm sm:rounded-[2rem] sm:p-6 sm:shadow-[0_30px_60px_rgba(0,0,0,0.22)]"
+        className="w-full max-w-[14rem] rounded-[1.4rem] border-4 border-[#102542]/10 bg-[#fffaf2] p-3 shadow-[0_24px_48px_rgba(0,0,0,0.22)] sm:max-w-sm sm:rounded-[2rem] sm:p-6"
       >
         <div className="text-center">
-          <h3 className="text-xl font-black text-[#102542] sm:text-2xl">{title}</h3>
-          <div className="mt-2 text-lg sm:mt-3 sm:text-xl">{status}</div>
+          <h3 className="text-lg font-black text-[#102542] sm:text-2xl">{title}</h3>
+          <div className="mt-1.5 text-base sm:mt-3 sm:text-xl">{status}</div>
           {description ? (
-            <p className="text-sm font-bold text-[#365486] sm:text-base">{description}</p>
+            <p className="text-xs font-bold text-[#365486] sm:text-base">{description}</p>
           ) : null}
         </div>
 
@@ -64,6 +64,7 @@ export function AdventureModal({
             <PushableButton
               key={action.label}
               type="button"
+              tabIndex={-1}
               data-ui-control="true"
               onPointerDown={(event) => event.stopPropagation()}
               onClick={action.onClick}

@@ -129,7 +129,7 @@ export const GlobalAudioToggle: React.FC = () => {
         <button
           type="button"
           onClick={toggleMuted}
-          className={`flex items-center gap-2 rounded-2xl border-2 px-4 py-3 text-sm font-black backdrop-blur-sm transition-transform hover:-translate-y-0.5 ${
+          className={`flex select-none items-center gap-2 rounded-2xl border-2 px-4 py-3 text-sm font-black backdrop-blur-sm transition-transform hover:-translate-y-0.5 ${
             isCodyGame
               ? "border-[#D8B98C] bg-[#FFF8EA]/95 text-[#166D77] shadow-[0_10px_30px_rgba(216,185,140,0.22)]"
               : "border-[#5EC7A5] bg-white/90 text-[#166D77] shadow-[0_10px_30px_rgba(22,109,119,0.14)]"

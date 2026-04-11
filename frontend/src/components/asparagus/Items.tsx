@@ -43,7 +43,7 @@ export const Items: React.FC<ItemsProps> = ({
           disabled={undoCount <= 0 || historyLength === 0}
           className={`${BTN_BASE} ${
             undoCount > 0 && historyLength > 0
-              ? "bg-white text-rico-dark-teal border-[#89dccd] shadow-lg"
+              ? "bg-white text-rico-dark-teal border-[#89dccd]"
               : "bg-gray-200 text-gray-400 border-gray-300 opacity-50 cursor-not-allowed"
           }`}
         >
@@ -67,7 +67,7 @@ export const Items: React.FC<ItemsProps> = ({
             swapCount > 0
               ? isSwapMode
                 ? "bg-[#5EC7A5] text-white border-[#89dccd] shadow-inner"
-                : "bg-white text-rico-dark-teal border-[#89dccd] shadow-lg"
+                : "bg-white text-rico-dark-teal border-[#89dccd]"
               : "bg-gray-200 text-gray-400 border-gray-300 opacity-50 cursor-not-allowed"
           }`}
         >
@@ -86,7 +86,7 @@ export const Items: React.FC<ItemsProps> = ({
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onRestart}
-          className={`${BTN_BASE} bg-[#166D77] text-white shadow-md border-white/20 hover:bg-[#2d6a4f]`}
+          className={`${BTN_BASE} bg-[#166D77] text-white border-white/20 hover:bg-[#2d6a4f]`}
         >
           <AppIcon name="RefreshCw" size={24} className="mb-1" />
           <span className="text-[9px] opacity-50 uppercase tracking-tighter">

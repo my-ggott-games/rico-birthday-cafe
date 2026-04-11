@@ -6,7 +6,7 @@ import { Items } from "../components/asparagus/Items";
 import { CommonModal } from "../components/common/CommonModal";
 import { GameContainer } from "../components/common/GameContainer";
 import { PushableButton } from "../components/common/PushableButton";
-import { ScoreStatCard } from "../components/common/ScoreStatCard";
+import { ScoreStatGroup } from "../components/common/ScoreStatGroup";
 import { useAsparagusGame } from "../hooks/useAsparagusGame";
 import { usePageBgm } from "../hooks/usePageBgm";
 import { type Direction } from "../components/asparagus/types";
@@ -98,19 +98,23 @@ const AsparagusMerge: React.FC = () => {
         {/* [Center] Board: swipe only on the board element */}
         <div className="flex min-h-0 flex-col items-center justify-center gap-4 lg:min-h-[calc(100dvh-260px)]">
           <div className="flex w-full justify-center lg:justify-center">
-            <div className="flex w-full max-w-[min(100%,520px)] items-end justify-end gap-3">
-              <ScoreStatCard
-                label="Score"
-                value={debugMode ? 0 : score}
-                background="#166D77"
-                className="min-w-[7rem] flex-1 sm:flex-none"
-              />
-              <ScoreStatCard
-                label="Best"
-                value={best}
-                background="#5EC7A5"
-                className="min-w-[7rem] flex-1 sm:flex-none"
-                labelClassName="opacity-80"
+            <div className="flex w-full max-w-[min(100%,520px)] justify-end">
+              <ScoreStatGroup
+                items={[
+                  {
+                    label: "Score",
+                    value: debugMode ? 0 : score,
+                    background: "#166D77",
+                    className: "min-w-[7rem] flex-1 sm:flex-none",
+                  },
+                  {
+                    label: "Best",
+                    value: best,
+                    background: "#5EC7A5",
+                    className: "min-w-[7rem] flex-1 sm:flex-none",
+                    labelClassName: "opacity-80",
+                  },
+                ]}
               />
             </div>
           </div>

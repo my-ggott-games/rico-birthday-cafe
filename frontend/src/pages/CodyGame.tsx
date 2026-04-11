@@ -831,24 +831,6 @@ const CodyGame: React.FC = () => {
                   void capturePolaroid();
                 }
               }}
-              onShare={() => {
-                const shareData = {
-                  title: "팬메이드 유즈하 리코 생일카페",
-                  text: "유즈하 리코 생일카페에 초대합니다!",
-                  url: window.location.origin,
-                };
-
-                if (navigator.share) {
-                  navigator
-                    .share(shareData)
-                    .catch((err) => console.log("Error sharing:", err));
-                } else {
-                  navigator.clipboard
-                    .writeText(window.location.origin)
-                    .then(() => alert("링크 복사 완료!"))
-                    .catch(() => alert("링크 복사 실패"));
-                }
-              }}
             />
           </div>
 

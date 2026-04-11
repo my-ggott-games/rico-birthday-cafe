@@ -2,32 +2,32 @@ import type { TutorialSlide } from "../components/common/TutorialBanner";
 
 export const ADVENTURE_HELP_SLIDES: TutorialSlide[] = [
   {
-    title: "무한 달리기",
+    title: "용사 리코 이야기 1",
     titleIcon: "Sword",
     lines: [
-      "이번엔 긴 이야기 없이 바로 달린다!",
-      "스테이지 없이 마법 함정이 나올 때까지",
-      "리코가 계속 전진하는 간단한 러너 모드야",
+      "마왕을 물리치기 위해",
+      "사람들의 행복을 지키기 위해",
+      "리코의 체력을 단련시키자",
     ],
     showArrows: false,
   },
   {
-    title: "점프로 버티기",
-    titleIcon: "Sparkles",
+    title: "케이크의 유혹",
+    titleIcon: "CakeSlice",
     lines: [
-      "클릭, 탭, 스페이스바로 점프할 수 있어",
-      "2단 점프가 가능하니까 함정 높이에 맞춰 써보자",
-      "속도가 빨라질수록 점프 템포도 같이 빨라져",
+      "멋진 용사는 유산소 도중 케이크를 먹지 않아",
+      "점프해서 케이크를 피하자!",
+      "화면을 탭하거나 스페이스바로 점프할 수 있어",
     ],
     showArrows: false,
   },
   {
-    title: "100점마다 더 빠르게",
-    titleIcon: "Shield",
+    title: "점점 빨리 달릴 거야",
+    titleIcon: "SportShoe",
     lines: [
-      "점수는 1초당 10점씩 올라가",
-      "100점마다 맵 속도와 리코 애니메이션이 조금씩 빨라져",
-      "1000점 이상에서 게임오버 되면 R전드 용사 업적을 얻어",
+      "그래야 운동이 된다 이 말씀!",
+      "'점진성의 원리'라고 할 수 있지",
+      "1000점을 달성하면 좋은 일이 생길지도?",
     ],
     showArrows: false,
   },

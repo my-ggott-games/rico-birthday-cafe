@@ -180,7 +180,9 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   const playAreaRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const artworkRef = useRef<HTMLDivElement>(null);
-  const ownerIdRef = useRef(readStoredPuzzleProgress()?.ownerId ?? currentOwnerId);
+  const ownerIdRef = useRef(
+    readStoredPuzzleProgress()?.ownerId ?? currentOwnerId,
+  );
   const puzzleAchievementAwardedRef = useRef(false);
   const completionMetaTriggeredRef = useRef(false);
   const storedProgressRef = useRef<StoredPuzzleProgress | null>(
@@ -679,8 +681,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
         rotation: piece.rotation,
         isPlaced: piece.isPlaced,
         currentXRatio: piece.isPlaced ? null : piece.currentX / containerWidth,
-        currentYRatio:
-          piece.isPlaced ? null : piece.currentY / containerHeight,
+        currentYRatio: piece.isPlaced ? null : piece.currentY / containerHeight,
       })),
     };
 
@@ -1018,7 +1019,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   return (
     <GameContainer
       title="퍼즐 맞추기"
-      desc="리코야 생일상 차려놨어 밥 굶으면 안돼"
+      desc="리코야 생일상 차려놨어 밥 굶으면 안 돼"
       gameName="퍼즐 맞추기"
       helpSlides={PUZZLE_TUTORIAL_SLIDES}
       className="bg-[#FFFFF8]"
