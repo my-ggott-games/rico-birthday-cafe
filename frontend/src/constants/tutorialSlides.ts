@@ -2,33 +2,32 @@ import type { TutorialSlide } from "../components/common/TutorialBanner";
 
 export const ADVENTURE_HELP_SLIDES: TutorialSlide[] = [
   {
-    title: "용사 리코 이야기",
+    title: "무한 달리기",
     titleIcon: "Sword",
     lines: [
-      "이세계 주민들은 리코 덕분에 행복을 되찾았어!",
-      "그들은 용사를 영원히 기억하기 위해",
-      "용사의 업적을 이야기로 남겼지",
-      "이세계 구전설화를 게임으로 즐겨보자",
+      "이번엔 긴 이야기 없이 바로 달린다!",
+      "스테이지 없이 마법 함정이 나올 때까지",
+      "리코가 계속 전진하는 간단한 러너 모드야",
     ],
     showArrows: false,
   },
   {
-    title: "멋진 용사는 점프를 잘한대",
+    title: "점프로 버티기",
     titleIcon: "Sparkles",
     lines: [
-      "클릭 또는 스페이스바로 점프할 수 있어",
-      "2단 점프도 가능하니까, 타이밍을 잘 맞춰보자",
-      "힘내서 마왕을 무찌르자!",
+      "클릭, 탭, 스페이스바로 점프할 수 있어",
+      "2단 점프가 가능하니까 함정 높이에 맞춰 써보자",
+      "속도가 빨라질수록 점프 템포도 같이 빨라져",
     ],
     showArrows: false,
   },
   {
-    title: "함정에 빠지지 않게 조심해!",
+    title: "100점마다 더 빠르게",
     titleIcon: "Shield",
     lines: [
-      "함정에 빠지면 이야기가 끝나버려...",
-      "함정을 잘 피해서 달려보자!",
-      "힘들면 P 키나 일시정지 버튼을 눌러 잠시 쉴 수 있어",
+      "점수는 1초당 10점씩 올라가",
+      "100점마다 맵 속도와 리코 애니메이션이 조금씩 빨라져",
+      "1000점 이상에서 게임오버 되면 R전드 용사 업적을 얻어",
     ],
     showArrows: false,
   },

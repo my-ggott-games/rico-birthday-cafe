@@ -23,8 +23,7 @@ public class AchievementSeeder implements CommandLineRunner {
     seedAchievement("THANK_YOU_ALL", "Who Made This?!", "엔딩 크레딧을 끝까지 봤다", "Clapperboard");
     seedAchievement("LUCKY_RICO_MOMENT", "행운과 함께", "오늘의 운세에서 대길을 뽑았다", "ScrollText");
     seedAchievement("FIRST_PUZZLE", "퍼즐 첫 완성", "퍼즐을 완성했다", "Puzzle");
-    seedAchievement("LEGEND-HERO", "레전드 용사", "용사 리코 이야기를 해금했다", "Sword");
-    seedAchievement("R-GEND-HERO", "R전드 용사", "레전드보다 R전드가 좋은거죠?", "Swords");
+    seedAchievement("R-GEND-HERO", "R전드 용사", "1000점 이상 달린 뒤 마법 함정과 마주쳤다", "Swords");
     seedAchievement("RICO_DEBUT_DATE", "관리자 권한에 접근한 자", "정답은 리코 데뷔 날짜였습니다~", "Eye");
     seedAchievement("WHO_ARE_YOU", "??? 예요.", "내 별은 영원히 너야", "Rose");
     seedAchievement("LOST_IN_THE_WAY", "길을 잃었다~", "어딜 가야 할까~", "FileQuestionMark");

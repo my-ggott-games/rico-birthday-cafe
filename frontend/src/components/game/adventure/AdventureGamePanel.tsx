@@ -36,7 +36,7 @@ export function AdventureGamePanel({
       className="rounded-[2rem] border-4 border-[#102542]/10 bg-white/80 p-3.5 shadow-[0_24px_60px_rgba(17,24,39,0.12)] sm:p-5"
     >
       <div
-        className="relative flex flex-col overflow-hidden rounded-[1.75rem] border-4 border-white/80 bg-[#102542] shadow-[0_18px_50px_rgba(17,24,39,0.18)]"
+        className="relative flex flex-col overflow-hidden rounded-[1.75rem] border-4 border-white/80 bg-transparent shadow-[0_18px_50px_rgba(17,24,39,0.18)]"
         onContextMenu={(event) => event.preventDefault()}
         style={{
           touchAction: "none",
@@ -45,7 +45,7 @@ export function AdventureGamePanel({
           WebkitTouchCallout: "none",
         }}
       >
-        <div className="relative mx-auto aspect-[2/1] w-full max-w-[62rem] flex-none touch-none overscroll-none">
+        <div className="relative aspect-[2/1] w-full flex-none touch-none overscroll-none">
           {gameCanvas}
         </div>
 

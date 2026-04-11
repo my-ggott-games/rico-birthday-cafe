@@ -34,7 +34,7 @@ URLs: Frontend `http://localhost:5173` · Backend `http://localhost:8080` · DB 
 | Layer | Stack |
 |---|---|
 | Frontend | React 18, TypeScript, Vite, Tailwind CSS, Zustand, Framer Motion |
-| Game rendering | Pixi.js + @pixi/react |
+| Game rendering | React + DOM/CSS |
 | Drag & drop | @dnd-kit |
 | Backend | Spring Boot 3, Java 17, Spring Security + JWT |
 | Database | PostgreSQL (Docker in local dev, Render in prod) |
