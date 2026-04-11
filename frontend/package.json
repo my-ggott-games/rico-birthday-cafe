@@ -23,6 +23,7 @@
     "k-celebrate-slogan": "^1.2.5",
     "lucide-react": "^1.7.0",
     "modern-screenshot": "^4.6.8",
+    "pixi.js": "^8.17.1",
     "react": "^19.2.0",
     "react-confetti": "^6.4.0",
     "react-dom": "^19.2.0",

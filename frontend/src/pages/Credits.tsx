@@ -61,7 +61,10 @@ const CREDITS_SECTIONS: CreditSection[] = [
       },
       {
         label: "용사 리코 이야기",
-        credits: [{ role: "캐릭터 도트", name: "당근오이" }],
+        credits: [
+          { role: "캐릭터 도트", name: "당근오이" },
+          { role: "케이크 도트", name: "Pikurā" },
+        ],
       },
       {
         label: "브랜딩 & 공간 연출",
@@ -134,20 +137,6 @@ const CREDITS_SECTIONS: CreditSection[] = [
       {
         label: "효과음 「diriring」",
         credits: [{ role: "작곡", name: "U+003AU+27B4" }],
-      },
-      {
-        label: "용사 리코 이야기 BGM",
-        credits: [
-          { role: "제목", name: "Exodus (Arr. A. Reed)" },
-          { role: "작곡", name: "Ernest Gold" },
-          { role: "편곡", name: "Alfred Reed" },
-          {
-            role: "연주",
-            name: "Japan Air Self-Defense Force Western Air Band",
-          },
-          { role: "지휘", name: "Hiroyuki Kayo" },
-          { role: "℗ 2018 CAFUA", name: "" },
-        ],
       },
     ],
   },

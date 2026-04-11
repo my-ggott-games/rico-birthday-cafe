@@ -1,4 +1,12 @@
 import {
+  Application,
+  Assets,
+  Container,
+  Sprite,
+  Texture,
+  type ApplicationOptions,
+} from "pixi.js";
+import {
   memo,
   useEffect,
   useRef,
@@ -19,42 +27,47 @@ import {
   PLAYER_HITBOX_HEIGHT_RATIO,
   PLAYER_HITBOX_BOTTOM_OFFSET_RATIO,
   PLAYER_GROUND_OFFSET,
-  TRAP_HITBOX_BOTTOM_OFFSET_RATIO_MOBILE,
-  TRAP_HITBOX_HEIGHT_RATIO_MOBILE,
-  TRAP_HITBOX_HORIZONTAL_INSET_RATIO_MOBILE,
+  GROUND_HEIGHT,
   TRAP_MOBILE_SCALE,
-  getEffectiveGroundHeight,
 } from "./adventureConstants";
 import {
   ADVENTURE_CAKE_ASSET_PATHS,
   ADVENTURE_PLAYER_FRAME_PATHS,
 } from "./adventureAssets";
 
-const SHOW_COLLISION_DEBUG = import.meta.env.DEV;
-const TRAP_POOL_SIZE = 20;
-
 const GLOW_WIDTH = PLAYER_WIDTH * PLAYER_HITBOX_WIDTH_RATIO + 100;
 const GLOW_HEIGHT = PLAYER_HEIGHT * PLAYER_HITBOX_HEIGHT_RATIO + 48;
 const GLOW_LEFT =
   PLAYER_X + (PLAYER_WIDTH * (1 - PLAYER_HITBOX_WIDTH_RATIO)) / 2 - 50;
+const TRAP_POOL_SIZE = 20;
 
 const getBackgroundGradient = (score: number) => {
   const hue = (Math.floor(score / 500) * 137.5) % 360;
   return `linear-gradient(180deg, hsl(${hue}, 70%, 94%) 0%, #ffffff 100%)`;
 };
 
-type TrapSlotRefs = {
-  container: HTMLDivElement | null;
-  cakePrimary: HTMLImageElement | null;
-  cakeSecondary: HTMLImageElement | null;
-  hitbox: HTMLDivElement | null;
+const isLowEndMobileDevice = () => {
+  if (typeof navigator === "undefined") return false;
+
+  const deviceMemory = "deviceMemory" in navigator
+    ? (navigator as Navigator & { deviceMemory?: number }).deviceMemory
+    : undefined;
+  const hardwareConcurrency = navigator.hardwareConcurrency;
+
+  return (
+    (typeof deviceMemory === "number" && deviceMemory <= 4) ||
+    (typeof hardwareConcurrency === "number" && hardwareConcurrency <= 4)
+  );
 };
 
-type TrapSlotSnapshot = {
+type TrapSpriteSlot = {
+  container: Container;
+  primary: Sprite;
+  secondary: Sprite;
   trapId: number | null;
-  kind: Trap["kind"] | null;
   cakeIndex: number | null;
   cakeIndex2: number | null;
+  kind: Trap["kind"] | null;
 };
 
 type Props = {
@@ -87,190 +100,255 @@ export const AdventureStageScene = memo(function AdventureStageScene({
   onPointerUp,
 }: Props) {
   const [jumpZonePressed, setJumpZonePressed] = useState(false);
-  const effectiveGroundHeight = getEffectiveGroundHeight(isMobile);
-  const initialPlayerTopBase =
-    WORLD_HEIGHT - effectiveGroundHeight - PLAYER_GROUND_OFFSET - PLAYER_HEIGHT;
-  const initialCharacterScale = isMobile ? PLAYER_MOBILE_SCALE : 1;
-
-  const playerDivRef = useRef<HTMLDivElement>(null);
-  const playerImgRef = useRef<HTMLImageElement>(null);
-  const glowDivRef = useRef<HTMLDivElement>(null);
-  const trapSlotRefs = useRef<TrapSlotRefs[]>(
-    Array.from({ length: TRAP_POOL_SIZE }, () => ({
-      container: null,
-      cakePrimary: null,
-      cakeSecondary: null,
-      hitbox: null,
-    })),
-  );
-  const trapSlotSnapshots = useRef<TrapSlotSnapshot[]>(
-    Array.from({ length: TRAP_POOL_SIZE }, () => ({
-      trapId: null,
-      kind: null,
-      cakeIndex: null,
-      cakeIndex2: null,
-    })),
-  );
-  const trapIdToSlotIndexRef = useRef(new Map<number, number>());
+  const pixiMountRef = useRef<HTMLDivElement | null>(null);
+  const glowDivRef = useRef<HTMLDivElement | null>(null);
   const prevBgTierRef = useRef(-1);
   const prevFrameIndexRef = useRef(-1);
 
   useEffect(() => {
-    renderCallbackRef.current = () => {
-      const mobile = isMobileRef.current;
-      const egh = getEffectiveGroundHeight(mobile);
-      const trapTopBase = WORLD_HEIGHT - egh;
-      const playerTopBase =
-        WORLD_HEIGHT - egh - PLAYER_GROUND_OFFSET - PLAYER_HEIGHT;
-      const characterScale = mobile ? PLAYER_MOBILE_SCALE : 1;
-      const trapScale = mobile ? TRAP_MOBILE_SCALE : 1;
+    const mountNode = pixiMountRef.current;
+    if (!mountNode) return;
 
-      const playerY = playerYRef.current;
-      const frameIndex = playerFrameRef.current;
-      const traps = trapsRef.current;
-      const score = scoreRef.current;
-      const state = runStateRef.current;
+    let isDisposed = false;
+    let app: Application | null = null;
 
-      const bgTier = Math.floor(score / 500);
-      if (bgTier !== prevBgTierRef.current) {
-        prevBgTierRef.current = bgTier;
-        const viewport = stageViewportRef.current;
-        if (viewport) {
-          viewport.style.background = getBackgroundGradient(score);
+    const boot = async () => {
+      const lowEndMobile = isMobileRef.current && isLowEndMobileDevice();
+      const resolution = lowEndMobile
+        ? 1
+        : Math.min(window.devicePixelRatio || 1, 2);
+
+      const nextApp = new Application();
+      const appOptions: Partial<ApplicationOptions> = {
+        width: WORLD_WIDTH,
+        height: WORLD_HEIGHT,
+        antialias: false,
+        autoStart: false,
+        backgroundAlpha: 0,
+        hello: false,
+        preference: "webgl",
+        powerPreference: "high-performance",
+        resolution,
+        sharedTicker: false,
+        textureGCActive: false,
+        textureGCCheckCountMax: Number.MAX_SAFE_INTEGER,
+        textureGCMaxIdle: Number.MAX_SAFE_INTEGER,
+      };
+
+      await nextApp.init(appOptions);
+      if (isDisposed) {
+        nextApp.destroy(true, {
+          children: true,
+          texture: false,
+          textureSource: false,
+        });
+        return;
+      }
+
+      app = nextApp;
+      mountNode.appendChild(nextApp.canvas);
+      nextApp.canvas.style.width = "100%";
+      nextApp.canvas.style.height = "100%";
+      nextApp.canvas.style.display = "block";
+      nextApp.canvas.style.pointerEvents = "none";
+
+      const [playerTextures, cakeTextures] = await Promise.all([
+        Promise.all(
+          ADVENTURE_PLAYER_FRAME_PATHS.map(
+            async (path) => (await Assets.load(path)) as Texture,
+          ),
+        ),
+        Promise.all(
+          ADVENTURE_CAKE_ASSET_PATHS.map(
+            async (path) => (await Assets.load(path)) as Texture,
+          ),
+        ),
+      ]);
+
+      if (isDisposed || !app) return;
+
+      const playerContainer = new Container();
+      playerContainer.pivot.set(PLAYER_WIDTH / 2, PLAYER_HEIGHT);
+      playerContainer.position.set(
+        PLAYER_X + PLAYER_WIDTH / 2,
+        WORLD_HEIGHT - GROUND_HEIGHT - PLAYER_GROUND_OFFSET,
+      );
+
+      const playerSprite = new Sprite(playerTextures[0]);
+      playerSprite.width = PLAYER_WIDTH;
+      playerSprite.height = PLAYER_HEIGHT;
+      playerContainer.addChild(playerSprite);
+
+      const trapLayer = new Container();
+      const trapSlots: TrapSpriteSlot[] = Array.from(
+        { length: TRAP_POOL_SIZE },
+        () => {
+          const container = new Container();
+          const primary = new Sprite(cakeTextures[0]);
+          const secondary = new Sprite(cakeTextures[1]);
+
+          primary.visible = true;
+          secondary.visible = false;
+          container.visible = false;
+          container.addChild(primary);
+          container.addChild(secondary);
+          trapLayer.addChild(container);
+
+          return {
+            container,
+            primary,
+            secondary,
+            trapId: null,
+            cakeIndex: null,
+            cakeIndex2: null,
+            kind: null,
+          };
+        },
+      );
+
+      const trapIdToSlotIndex = new Map<number, number>();
+
+      app.stage.addChild(trapLayer);
+      app.stage.addChild(playerContainer);
+
+      const renderScene = () => {
+        const playerY = playerYRef.current;
+        const frameIndex = playerFrameRef.current;
+        const traps = trapsRef.current;
+        const score = scoreRef.current;
+        const isRunning = runStateRef.current === "running";
+        const mobile = isMobileRef.current;
+        const characterScale = mobile ? PLAYER_MOBILE_SCALE : 1;
+        const trapScale = mobile ? TRAP_MOBILE_SCALE : 1;
+        const trapTopBase = WORLD_HEIGHT - GROUND_HEIGHT;
+        const playerTopBase =
+          WORLD_HEIGHT - GROUND_HEIGHT - PLAYER_GROUND_OFFSET - PLAYER_HEIGHT;
+
+        const bgTier = Math.floor(score / 500);
+        if (bgTier !== prevBgTierRef.current) {
+          prevBgTierRef.current = bgTier;
+          const viewport = stageViewportRef.current;
+          if (viewport) {
+            viewport.style.background = getBackgroundGradient(score);
+          }
         }
-      }
 
-      if (playerDivRef.current) {
-        playerDivRef.current.style.transform = `translate3d(${PLAYER_X}px, ${playerTopBase - playerY}px, 0) scale(${characterScale})`;
-      }
-
-      if (playerImgRef.current) {
         if (frameIndex !== prevFrameIndexRef.current) {
           prevFrameIndexRef.current = frameIndex;
-          playerImgRef.current.src = ADVENTURE_PLAYER_FRAME_PATHS[frameIndex];
+          playerSprite.texture = playerTextures[frameIndex];
         }
-        playerImgRef.current.style.transform =
-          state === "running" && playerY === 0
-            ? "translate3d(0, 2px, 0)"
-            : "translate3d(0, 0, 0)";
-      }
 
-      if (glowDivRef.current) {
-        if (score >= 1000) {
-          const glowTopBase =
-            WORLD_HEIGHT -
-            egh -
-            PLAYER_GROUND_OFFSET -
-            PLAYER_HEIGHT * PLAYER_HITBOX_BOTTOM_OFFSET_RATIO +
-            24 -
-            GLOW_HEIGHT;
-          glowDivRef.current.style.opacity = "1";
-          glowDivRef.current.style.transform = `translate3d(${GLOW_LEFT}px, ${glowTopBase - playerY}px, 0)`;
-        } else {
-          glowDivRef.current.style.opacity = "0";
+        playerContainer.position.set(
+          PLAYER_X + PLAYER_WIDTH / 2,
+          playerTopBase - playerY + PLAYER_HEIGHT,
+        );
+        playerContainer.scale.set(characterScale);
+        playerSprite.position.set(0, 0);
+        playerSprite.y = isRunning && playerY === 0 ? 2 : 0;
+
+        if (glowDivRef.current) {
+          if (score >= 1000) {
+            const glowTopBase =
+              WORLD_HEIGHT -
+              GROUND_HEIGHT -
+              PLAYER_GROUND_OFFSET -
+              PLAYER_HEIGHT * PLAYER_HITBOX_BOTTOM_OFFSET_RATIO +
+              24 -
+              GLOW_HEIGHT;
+            glowDivRef.current.style.opacity = "1";
+            glowDivRef.current.style.transform = `translate(${GLOW_LEFT}px, ${glowTopBase - playerY}px)`;
+          } else {
+            glowDivRef.current.style.opacity = "0";
+          }
         }
-      }
 
-      const activeTrapIds = new Set<number>();
+        const activeTrapIds = new Set<number>();
 
-      for (const trap of traps) {
-        activeTrapIds.add(trap.id);
+        for (const trap of traps) {
+          activeTrapIds.add(trap.id);
+          let slotIndex = trapIdToSlotIndex.get(trap.id);
+          if (slotIndex == null) {
+            slotIndex = trapSlots.findIndex((slot) => slot.trapId == null);
+            if (slotIndex === -1) continue;
+            trapIdToSlotIndex.set(trap.id, slotIndex);
+          }
 
-        let slotIndex = trapIdToSlotIndexRef.current.get(trap.id);
-        if (slotIndex == null) {
-          slotIndex = trapSlotSnapshots.current.findIndex(
-            (snapshot) => snapshot.trapId == null,
+          const slot = trapSlots[slotIndex];
+          const isNewAssignment = slot.trapId !== trap.id;
+          const isTwoCakes = trap.kind === "long";
+
+          slot.container.visible = true;
+          slot.container.pivot.set(trap.width / 2, trap.height);
+          slot.container.position.set(
+            trap.x + trap.width / 2,
+            trapTopBase - trap.bottomFromGround,
           );
-          if (slotIndex === -1) {
+          slot.container.scale.set(trapScale);
+
+          if (isNewAssignment || slot.cakeIndex !== trap.cakeIndex) {
+            slot.primary.texture = cakeTextures[trap.cakeIndex];
+          }
+          slot.primary.position.set(0, 0);
+          slot.primary.width = isTwoCakes ? trap.width / 2 : trap.width;
+          slot.primary.height = trap.height;
+
+          if (isTwoCakes) {
+            if (isNewAssignment || slot.cakeIndex2 !== (trap.cakeIndex2 ?? 1)) {
+              slot.secondary.texture = cakeTextures[trap.cakeIndex2 ?? 1];
+            }
+            slot.secondary.visible = true;
+            slot.secondary.position.set(trap.width / 2, 0);
+            slot.secondary.width = trap.width / 2;
+            slot.secondary.height = trap.height;
+          } else {
+            slot.secondary.visible = false;
+          }
+
+          slot.trapId = trap.id;
+          slot.cakeIndex = trap.cakeIndex;
+          slot.cakeIndex2 = trap.cakeIndex2 ?? null;
+          slot.kind = trap.kind;
+        }
+
+        for (const slot of trapSlots) {
+          if (slot.trapId == null || activeTrapIds.has(slot.trapId)) {
             continue;
           }
-          trapIdToSlotIndexRef.current.set(trap.id, slotIndex);
+
+          trapIdToSlotIndex.delete(slot.trapId);
+          slot.trapId = null;
+          slot.cakeIndex = null;
+          slot.cakeIndex2 = null;
+          slot.kind = null;
+          slot.container.visible = false;
+          slot.secondary.visible = false;
         }
 
-        const slot = trapSlotRefs.current[slotIndex];
-        const snapshot = trapSlotSnapshots.current[slotIndex];
-        const container = slot.container;
+        app?.render();
+      };
 
-        if (!container) {
-          continue;
-        }
-
-        const isTwoCakes = trap.kind === "long";
-        container.style.opacity = "1";
-        container.style.transform = `translate3d(${trap.x}px, ${trapTopBase - trap.bottomFromGround - trap.height}px, 0) scale(${trapScale})`;
-
-        if (slot.hitbox) {
-          slot.hitbox.style.display = SHOW_COLLISION_DEBUG ? "" : "none";
-        }
-
-        const isNewTrapAssignment = snapshot.trapId !== trap.id;
-        if (isNewTrapAssignment) {
-          container.style.width = `${trap.width}px`;
-          container.style.height = `${trap.height}px`;
-        }
-
-        if (slot.cakePrimary) {
-          if (isNewTrapAssignment || snapshot.cakeIndex !== trap.cakeIndex) {
-            slot.cakePrimary.src = ADVENTURE_CAKE_ASSET_PATHS[trap.cakeIndex];
-          }
-          if (isNewTrapAssignment || snapshot.kind !== trap.kind) {
-            slot.cakePrimary.style.width = isTwoCakes
-              ? `${trap.width / 2}px`
-              : `${trap.width}px`;
-            slot.cakePrimary.style.height = `${trap.height}px`;
-          }
-        }
-
-        if (slot.cakeSecondary) {
-          if (isTwoCakes) {
-            if (isNewTrapAssignment || snapshot.cakeIndex2 !== (trap.cakeIndex2 ?? 1)) {
-              slot.cakeSecondary.src =
-                ADVENTURE_CAKE_ASSET_PATHS[trap.cakeIndex2 ?? 1];
-            }
-            if (isNewTrapAssignment || snapshot.kind !== trap.kind) {
-              slot.cakeSecondary.style.display = "block";
-              slot.cakeSecondary.style.width = `${trap.width / 2}px`;
-              slot.cakeSecondary.style.height = `${trap.height}px`;
-            }
-          } else if (snapshot.kind === "long" || isNewTrapAssignment) {
-            slot.cakeSecondary.style.display = "none";
-          }
-        }
-
-        snapshot.trapId = trap.id;
-        snapshot.kind = trap.kind;
-        snapshot.cakeIndex = trap.cakeIndex;
-        snapshot.cakeIndex2 = trap.cakeIndex2 ?? null;
-      }
-
-      for (let index = 0; index < trapSlotRefs.current.length; index += 1) {
-        const snapshot = trapSlotSnapshots.current[index];
-        if (snapshot.trapId == null || activeTrapIds.has(snapshot.trapId)) {
-          continue;
-        }
-
-        trapIdToSlotIndexRef.current.delete(snapshot.trapId);
-        snapshot.trapId = null;
-        snapshot.kind = null;
-        snapshot.cakeIndex = null;
-        snapshot.cakeIndex2 = null;
-
-        const slot = trapSlotRefs.current[index];
-        const container = slot.container;
-        if (container) {
-          container.style.opacity = "0";
-          container.style.transform = `translate3d(${WORLD_WIDTH + 200}px, 0, 0)`;
-        }
-        if (slot.cakeSecondary) {
-          slot.cakeSecondary.style.display = "none";
-        }
-      }
+      renderCallbackRef.current = renderScene;
+      renderScene();
     };
+
+    void boot();
 
     return () => {
+      isDisposed = true;
       renderCallbackRef.current = null;
+      prevBgTierRef.current = -1;
+      prevFrameIndexRef.current = -1;
+
+      if (app) {
+        app.destroy(true, {
+          children: true,
+          texture: false,
+          textureSource: false,
+        });
+      }
     };
   }, [
+    isMobile,
     isMobileRef,
     playerFrameRef,
     playerYRef,
@@ -290,7 +368,6 @@ export const AdventureStageScene = memo(function AdventureStageScene({
       onPointerCancel={onPointerUp}
       style={{
         background: getBackgroundGradient(0),
-        transition: isMobile ? "none" : "background 1s ease-in-out",
         contain: "layout paint",
       }}
     >
@@ -329,84 +406,16 @@ export const AdventureStageScene = memo(function AdventureStageScene({
       >
         <div
           className="absolute inset-x-0 bottom-0"
-          style={{
-            height: effectiveGroundHeight * 0.84,
-            backgroundColor: "#8b5a2b",
-          }}
+          style={{ height: GROUND_HEIGHT * 0.84, backgroundColor: "#8b5a2b" }}
         />
         <div
           className="absolute inset-x-0 bottom-0 border-t-[10px] border-[#59a94a]"
-          style={{ height: effectiveGroundHeight, backgroundColor: "#8b5a2b" }}
+          style={{ height: GROUND_HEIGHT, backgroundColor: "#8b5a2b" }}
         />
         <div
           className="absolute inset-x-0 bg-[#59a94a]"
-          style={{ bottom: effectiveGroundHeight, height: 4 }}
+          style={{ bottom: GROUND_HEIGHT, height: 4 }}
         />
-
-        {Array.from({ length: TRAP_POOL_SIZE }, (_, index) => (
-          <div
-            key={index}
-            ref={(element) => {
-              trapSlotRefs.current[index].container = element;
-            }}
-            className={
-              SHOW_COLLISION_DEBUG
-                ? "absolute border border-black/10"
-                : "absolute"
-            }
-            style={{
-              top: 0,
-              left: 0,
-              width: 64,
-              height: 64,
-              opacity: 0,
-              display: "flex",
-              flexDirection: "row",
-              transform: `translate3d(${WORLD_WIDTH + 200}px, 0, 0)`,
-              transformOrigin: "bottom center",
-              willChange: "transform, opacity",
-            }}
-          >
-            {SHOW_COLLISION_DEBUG ? (
-              <div
-                ref={(element) => {
-                  trapSlotRefs.current[index].hitbox = element;
-                }}
-                className="absolute bg-red-500/40 border border-red-600/60"
-                style={{
-                  left: `${TRAP_HITBOX_HORIZONTAL_INSET_RATIO_MOBILE * 100}%`,
-                  bottom: `${TRAP_HITBOX_BOTTOM_OFFSET_RATIO_MOBILE * 100}%`,
-                  width: `${(1 - TRAP_HITBOX_HORIZONTAL_INSET_RATIO_MOBILE * 2) * 100}%`,
-                  height: `${TRAP_HITBOX_HEIGHT_RATIO_MOBILE * 100}%`,
-                }}
-              />
-            ) : null}
-            <img
-              ref={(element) => {
-                trapSlotRefs.current[index].cakePrimary = element;
-              }}
-              src={ADVENTURE_CAKE_ASSET_PATHS[0]}
-              alt="함정"
-              draggable={false}
-              loading="eager"
-              decoding="async"
-              className="select-none object-contain"
-              style={{ width: 64, height: 64 }}
-            />
-            <img
-              ref={(element) => {
-                trapSlotRefs.current[index].cakeSecondary = element;
-              }}
-              src={ADVENTURE_CAKE_ASSET_PATHS[1]}
-              alt="함정"
-              draggable={false}
-              loading="eager"
-              decoding="async"
-              className="select-none object-contain"
-              style={{ display: "none", width: 64, height: 64 }}
-            />
-          </div>
-        ))}
 
         <div
           ref={glowDivRef}
@@ -424,38 +433,9 @@ export const AdventureStageScene = memo(function AdventureStageScene({
         />
 
         <div
-          ref={playerDivRef}
-          className="absolute"
-          style={{
-            top: 0,
-            left: 0,
-            width: PLAYER_WIDTH,
-            height: PLAYER_HEIGHT,
-            transform: `translate3d(${PLAYER_X}px, ${initialPlayerTopBase}px, 0) scale(${initialCharacterScale})`,
-            transformOrigin: "bottom center",
-            willChange: "transform",
-          }}
-        >
-          {SHOW_COLLISION_DEBUG ? (
-            <div
-              className="absolute bg-blue-500/30 border border-blue-500/50"
-              style={{
-                left: `${((1 - PLAYER_HITBOX_WIDTH_RATIO) / 2) * 100}%`,
-                bottom: `${PLAYER_HITBOX_BOTTOM_OFFSET_RATIO * 100}%`,
-                width: `${PLAYER_HITBOX_WIDTH_RATIO * 100}%`,
-                height: `${PLAYER_HITBOX_HEIGHT_RATIO * 100}%`,
-              }}
-            />
-          ) : null}
-          <img
-            ref={playerImgRef}
-            src={ADVENTURE_PLAYER_FRAME_PATHS[0]}
-            alt="달리는 리코"
-            draggable={false}
-            className="relative z-[1] h-full w-full select-none object-contain"
-            style={{ imageRendering: "auto", willChange: "transform" }}
-          />
-        </div>
+          ref={pixiMountRef}
+          className="absolute inset-0 pointer-events-none"
+        />
       </div>
     </div>
   );
