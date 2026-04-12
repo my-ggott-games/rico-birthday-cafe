@@ -74,7 +74,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   enterGuest: () => {
     localStorage.removeItem("token");
     localStorage.removeItem(AUTH_UID_STORAGE_KEY);
-    localStorage.setItem(AUTH_GUEST_STORAGE_KEY, "true");
+    localStorage.removeItem(AUTH_GUEST_STORAGE_KEY);
     set({
       token: null,
       uid: null,

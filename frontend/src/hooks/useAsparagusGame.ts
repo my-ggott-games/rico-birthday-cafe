@@ -44,8 +44,8 @@ export const useAsparagusGame = () => {
 
   // Items Logic
   const [history, setHistory] = useState<{ grid: Grid; score: number }[]>([]);
-  const [undoCount, setUndoCount] = useState(3);
-  const [swapCount, setSwapCount] = useState(3);
+  const [undoCount, setUndoCount] = useState(5);
+  const [swapCount, setSwapCount] = useState(5);
   const [isSwapMode, setIsSwapMode] = useState(false);
   const [selection, setSelection] = useState<{ r: number; c: number } | null>(
     null,
@@ -71,8 +71,8 @@ export const useAsparagusGame = () => {
     setWon(false);
     setContinueAfterWin(false);
     setHistory([]);
-    setUndoCount(3);
-    setSwapCount(3);
+    setUndoCount(5);
+    setSwapCount(5);
     setIsSwapMode(false);
     setSelection(null);
   }, []);

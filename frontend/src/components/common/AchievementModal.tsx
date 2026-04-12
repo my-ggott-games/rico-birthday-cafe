@@ -115,8 +115,11 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
 
   if (!isOpen) return null;
 
-  const earnedCount = achievements.filter((a) => a.earned).length;
-  const sortedAchievements = [...achievements].sort((a, b) => {
+  const visibleAchievements = achievements.filter(
+    (a) => a.code !== "WHO_ARE_YOU" || a.earned,
+  );
+  const earnedCount = visibleAchievements.filter((a) => a.earned).length;
+  const sortedAchievements = [...visibleAchievements].sort((a, b) => {
     if (a.earned !== b.earned) {
       return a.earned ? -1 : 1;
     }
@@ -192,7 +195,7 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
                 업적
               </h3>
               <span className="text-sm font-bold text-[#5EC7A5]">
-                {earnedCount} / {achievements.length} 달성
+                {earnedCount} / {visibleAchievements.length} 달성
               </span>
             </div>
           </div>
