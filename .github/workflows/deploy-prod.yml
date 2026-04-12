@@ -1,0 +1,35 @@
+name: Deploy to VM (prod)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy prod over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            set -e
+
+            # prod 코드 갱신
+            cd /home/deploy/app_prod
+            git fetch origin
+            git checkout main
+            git pull origin main
+
+            # prod 서비스만 재배포
+            cd /home/deploy
+            docker compose -f deploy-compose.yml up -d --build app-prod
+
+            # 확인
+            docker ps
+            curl http://localhost:8000/actuator/health
