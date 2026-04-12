@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy over SSH
+      - name: Deploy dev over SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VM_HOST }}
@@ -19,10 +19,27 @@ jobs:
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
             set -e
-            cd ${{ secrets.DEPLOY_PATH }}
+
+            cd /home/deploy/app
             git fetch origin
             git checkout dev
             git pull origin dev
-            docker compose down
-            docker compose up -d --build
+
+            cd /home/deploy
+            docker compose -f deploy-compose.yml up -d --build app-dev
+
             docker ps
+
+            # dev health check with retry
+            for i in {1..20}; do
+              if curl -fsS http://localhost:8001/actuator/health; then
+                echo "Dev health check passed"
+                exit 0
+              fi
+              echo "Waiting for dev app to be ready... ($i/20)"
+              sleep 5
+            done
+
+            echo "Dev health check failed"
+            docker logs rico-backend-dev --tail=100
+            exit 1
