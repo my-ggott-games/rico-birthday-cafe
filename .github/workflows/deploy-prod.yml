@@ -20,16 +20,26 @@ jobs:
           script: |
             set -e
 
-            # prod 코드 갱신
             cd /home/deploy/app_prod
             git fetch origin
             git checkout main
             git pull origin main
 
-            # prod 서비스만 재배포
             cd /home/deploy
             docker compose -f deploy-compose.yml up -d --build app-prod
 
-            # 확인
             docker ps
-            curl http://localhost:8000/actuator/health
+
+            # prod health check with retry
+            for i in {1..20}; do
+              if curl -fsS http://localhost:8000/actuator/health; then
+                echo "Prod health check passed"
+                exit 0
+              fi
+              echo "Waiting for prod app to be ready... ($i/20)"
+              sleep 5
+            done
+
+            echo "Prod health check failed"
+            docker logs rico-backend-prod --tail=100
+            exit 1
