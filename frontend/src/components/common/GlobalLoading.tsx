@@ -29,7 +29,6 @@ const GlobalLoading: React.FC = () => {
     const validRoutes = [
       "/lobby",
       "/game/cody",
-      "/game/itabag",
       "/game/baseball",
       "/game/puzzle",
       "/game/adventure",

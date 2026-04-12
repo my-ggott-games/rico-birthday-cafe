@@ -231,6 +231,46 @@ const CodyGame: React.FC = () => {
   const { addToast } = useToastStore();
 
   React.useEffect(() => {
+    if (!token) {
+      codyAchievementAwardedRef.current = false;
+      return;
+    }
+
+    let cancelled = false;
+
+    const hydrateCodyAchievement = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/achievements/all`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok || cancelled) {
+          return;
+        }
+
+        const achievements = (await response.json()) as Array<{
+          code?: string;
+          earned?: boolean;
+        }>;
+
+        codyAchievementAwardedRef.current = achievements.some(
+          (achievement) =>
+            achievement.code === CODY_LEGEND_ACHIEVEMENT_CODE &&
+            achievement.earned,
+        );
+      } catch (error) {
+        console.error("Failed to hydrate Cody achievement state", error);
+      }
+    };
+
+    void hydrateCodyAchievement();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  React.useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     startCodyAssetPreload();
@@ -524,8 +564,8 @@ const CodyGame: React.FC = () => {
                 : "inset-0 items-center"
             }`}
           >
-            <span className="bg-pale-custard/95 text-[#166D77] px-3 py-1 rounded-full text-xs font-bold shadow-sm border border-[#166D77]/10">
-              <span className="inline-flex items-center gap-1">
+            <span className="whitespace-nowrap bg-pale-custard/95 text-[#166D77] px-3 py-1 rounded-full text-xs font-bold shadow-sm border border-[#166D77]/10">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap">
                 <AppIcon name="Sparkles" size={12} />
                 장착 중
               </span>

@@ -34,10 +34,6 @@ public class User {
     @Column(name = "active_achievement_code", length = 50)
     private String activeAchievementCode;
 
-    @Column(name = "adventure_stage", nullable = false)
-    @Builder.Default
-    private int adventureStage = 0;
-
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

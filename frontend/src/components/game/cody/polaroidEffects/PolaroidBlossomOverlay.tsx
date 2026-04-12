@@ -109,26 +109,14 @@ class BlossomPetal {
 export const PolaroidBlossomOverlay: React.FC<{
   isFinished?: boolean;
   isFlyAway?: boolean;
-}> = ({ isFinished, isFlyAway }) => {
+}> = ({ isFlyAway }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [showPetals, setShowPetals] = useState(!isFinished);
+  const [showPetals, setShowPetals] = useState(!isFlyAway);
 
   useEffect(() => {
-    if (isFinished && !isFlyAway) {
-      const timer = setTimeout(() => setShowPetals(true), 7500);
-      return () => clearTimeout(timer);
-    }
-
-    if (!isFinished) {
-      setShowPetals(true);
-      return;
-    }
-
-    if (isFlyAway) {
-      setShowPetals(false);
-    }
-  }, [isFinished, isFlyAway]);
+    setShowPetals(!isFlyAway);
+  }, [isFlyAway]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -191,7 +179,7 @@ export const PolaroidBlossomOverlay: React.FC<{
       <motion.canvas
         data-html2canvas-ignore
         ref={canvasRef}
-        initial={{ opacity: isFinished ? 0 : 1 }}
+        initial={{ opacity: isFlyAway ? 0 : 1 }}
         animate={{ opacity: showPetals ? 1 : 0 }}
         transition={{ duration: 0.8, ease: "easeIn" }}
         className="absolute inset-0 w-full h-full pointer-events-none"

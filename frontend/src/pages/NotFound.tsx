@@ -9,11 +9,18 @@ import { PushableButton } from "../components/common/PushableButton";
 const NotFound: React.FC = () => {
   const navigate = useNavigate();
   const token = useAuthStore((state) => state.token);
+  const uid = useAuthStore((state) => state.uid);
   const addToast = useToastStore((state) => state.addToast);
   const hasRequestedAwardRef = useRef(false);
+  const awardStorageKey = uid ? `achievement-awarded-LOST_IN_THE_WAY-${uid}` : "";
 
   useEffect(() => {
-    if (!token || hasRequestedAwardRef.current) {
+    if (
+      !token ||
+      hasRequestedAwardRef.current ||
+      (awardStorageKey &&
+        window.localStorage.getItem(awardStorageKey) === "true")
+    ) {
       return;
     }
 
@@ -35,6 +42,9 @@ const NotFound: React.FC = () => {
 
         const newlyAwarded = (await response.json()) === true;
         if (newlyAwarded) {
+          if (awardStorageKey) {
+            window.localStorage.setItem(awardStorageKey, "true");
+          }
           addToast({
             title: "길을 잃었다~",
             description: "어딜 가야 할까~",
@@ -65,7 +75,7 @@ const NotFound: React.FC = () => {
       window.removeEventListener("touchstart", handleInteraction);
       window.removeEventListener("keydown", handleInteraction);
     };
-  }, [addToast, token]);
+  }, [addToast, awardStorageKey, token]);
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-[#FFFFF8] flex flex-col items-center justify-center font-handwriting">

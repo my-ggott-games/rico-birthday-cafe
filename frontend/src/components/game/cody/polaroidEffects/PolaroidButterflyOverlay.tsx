@@ -12,7 +12,7 @@ const createButterflyConfig = (): ButterflyConfig => ({
   scale: 0.4 + Math.random() * 0.16, // slightly larger
   flapDelay: `${(Math.random() * 1.2).toFixed(2)}s`,
   flapDuration: `${(500 + Math.random() * 500).toFixed(0)}ms`,
-  wanderSpeed: 7 + Math.random() * 8, // 7~15s slow wander
+  wanderSpeed: 13 + Math.random() * 2, // 13~15s gentler wander
 });
 
 const WanderingButterfly: React.FC<{

@@ -10,13 +10,16 @@ type RainDropVars = React.CSSProperties & {
   "--stem-opacity"?: string;
   "--stem-duration"?: string;
   "--stem-top"?: string;
+  "--splat-opacity"?: string;
+  "--splat-border-opacity"?: string;
+  "--splat-shadow-opacity"?: string;
 };
 
 type RainDropConfig = {
   frameStyle: RainDropVars;
   bodyStyle: RainDropVars;
   stemStyle: RainDropVars;
-  splatStyle: React.CSSProperties;
+  splatStyle: RainDropVars;
   showStem: boolean;
   showSplat: boolean;
 };
@@ -46,7 +49,16 @@ const createDropConfig = (isBackRow: boolean): RainDropConfig => {
     (isBackRow ? 8 : 10) + Math.random() * (isBackRow ? 8 : 10)
   ).toFixed(1);
   const stemOpacity = (
-    (isBackRow ? 0.80 : 0.90) + Math.random() * (isBackRow ? 0.05 : 0.05)
+    (isBackRow ? 0.88 : 0.96) + Math.random() * (isBackRow ? 0.07 : 0.04)
+  ).toFixed(2);
+  const splatOpacity = (
+    (isBackRow ? 0.72 : 0.84) + Math.random() * (isBackRow ? 0.1 : 0.08)
+  ).toFixed(2);
+  const splatBorderOpacity = (
+    (isBackRow ? 0.82 : 0.94) + Math.random() * (isBackRow ? 0.08 : 0.06)
+  ).toFixed(2);
+  const splatShadowOpacity = (
+    (isBackRow ? 0.26 : 0.34) + Math.random() * (isBackRow ? 0.08 : 0.08)
   ).toFixed(2);
   const stemDelayShift = ((Math.random() - 0.5) * 0.18).toFixed(2);
   const splatDelayShift = ((Math.random() - 0.5) * 0.08).toFixed(2);
@@ -77,6 +89,9 @@ const createDropConfig = (isBackRow: boolean): RainDropConfig => {
     splatStyle: {
       animationDelay: `-${(delay + Number(splatDelayShift)).toFixed(2)}s`,
       animationDuration: `${duration.toFixed(2)}s`,
+      "--splat-opacity": splatOpacity,
+      "--splat-border-opacity": splatBorderOpacity,
+      "--splat-shadow-opacity": splatShadowOpacity,
     },
     // stem 빈도를 낮게 유지 (front ~25%, back ~18%)
     showStem: stemChance > (isBackRow ? 0.82 : 0.75),

@@ -16,14 +16,7 @@ export const PolaroidFireflyOverlay: React.FC<{ isFinished?: boolean }> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [showFireflies, setShowFireflies] = React.useState(!isFinished);
-
-  React.useEffect(() => {
-    if (isFinished) {
-      const timer = setTimeout(() => setShowFireflies(true), 7500);
-      return () => clearTimeout(timer);
-    }
-  }, [isFinished]);
+  const [showFireflies] = React.useState(true);
 
   useEffect(() => {
     if (!showFireflies) return;
@@ -106,7 +99,7 @@ export const PolaroidFireflyOverlay: React.FC<{ isFinished?: boolean }> = ({
   return (
     <div ref={containerRef} className="absolute inset-0 pointer-events-none">
       <motion.canvas
-        initial={{ opacity: 0 }}
+        initial={{ opacity: isFinished ? 0 : 1 }}
         animate={{ opacity: showFireflies ? 1 : 0 }}
         transition={{ duration: 2 }}
         ref={canvasRef}

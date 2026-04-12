@@ -111,7 +111,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
   const { login } = useAuthStore();
   const { addToast } = useToastStore();
-  const { token } = useAuthStore();
+  const { token, uid } = useAuthStore();
+  const debutDateAwardStorageKey = uid
+    ? `achievement-awarded-RICO_DEBUT_DATE-${uid}`
+    : "";
 
   const inputRef = useRef<HTMLInputElement>(null);
   const lastAcceptedKeyRef = useRef<number | null>(null);
@@ -170,11 +173,27 @@ export const AdminModal: React.FC<AdminModalProps> = ({
           onAccessGranted?.("easter_egg");
 
           // Trigger achievement for Easter Egg
-          if (token) {
+          if (
+            token &&
+            (!debutDateAwardStorageKey ||
+              window.localStorage.getItem(debutDateAwardStorageKey) !== "true")
+          ) {
             fetch(`${BASE_URL}/achievements/award/RICO_DEBUT_DATE`, {
               method: "POST",
               headers: { Authorization: `Bearer ${token}` },
-            }).catch(console.error);
+            })
+              .then(async (response) => {
+                if (!response.ok) {
+                  return false;
+                }
+                return (await response.json()) === true;
+              })
+              .then((newlyAwarded) => {
+                if (newlyAwarded && debutDateAwardStorageKey) {
+                  window.localStorage.setItem(debutDateAwardStorageKey, "true");
+                }
+              })
+              .catch(console.error);
           }
 
           addToast({

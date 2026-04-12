@@ -184,6 +184,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
     readStoredPuzzleProgress()?.ownerId ?? currentOwnerId,
   );
   const puzzleAchievementAwardedRef = useRef(false);
+  const completionWhileAuthenticatedRef = useRef(false);
   const completionMetaTriggeredRef = useRef(false);
   const storedProgressRef = useRef<StoredPuzzleProgress | null>(
     readStoredPuzzleProgress(currentOwnerId),
@@ -202,6 +203,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
     clearStoredPuzzleProgress();
     storedProgressRef.current = null;
     puzzleAchievementAwardedRef.current = false;
+    completionWhileAuthenticatedRef.current = false;
     completionMetaTriggeredRef.current = false;
     setGridSize(10);
     setCompleted(false);
@@ -305,7 +307,12 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   }, [completed]);
 
   useEffect(() => {
-    if (!completed || !token || puzzleAchievementAwardedRef.current) {
+    if (
+      !completed ||
+      !token ||
+      !completionWhileAuthenticatedRef.current ||
+      puzzleAchievementAwardedRef.current
+    ) {
       return;
     }
 
@@ -593,6 +600,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   const handleReplay = React.useCallback(() => {
     clearStoredPuzzleProgress();
     storedProgressRef.current = null;
+    completionWhileAuthenticatedRef.current = false;
     setCompleted(false);
     setPhotocardModeEnabled(false);
     setIsOpeningPhotocard(false);
@@ -608,6 +616,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
     (nextGridSize: PuzzleGridSize) => {
       clearStoredPuzzleProgress();
       storedProgressRef.current = null;
+      completionWhileAuthenticatedRef.current = false;
       setGridSize(nextGridSize);
       setCompleted(false);
       setPhotocardModeEnabled(false);
@@ -657,9 +666,10 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
 
   useEffect(() => {
     if (pieces.length > 0 && pieces.every((piece) => piece.isPlaced)) {
+      completionWhileAuthenticatedRef.current = Boolean(token);
       setCompleted(true);
     }
-  }, [pieces]);
+  }, [pieces, token]);
 
   useEffect(() => {
     if (typeof window === "undefined" || pieces.length === 0) {

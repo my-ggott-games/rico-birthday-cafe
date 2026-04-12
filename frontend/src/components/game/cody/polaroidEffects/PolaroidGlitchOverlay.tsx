@@ -128,7 +128,7 @@ const createRandomBlocks = (): GlitchBlock[] => {
   });
 };
 
-export const CMYGlitchOverlay: React.FC = () => {
+export const PolaroidGlitchOverlay: React.FC = () => {
   const [frameIndex, setFrameIndex] = useState(0);
   const [isBursting, setIsBursting] = useState(true);
   const [glitchBlocks, setGlitchBlocks] = useState<GlitchBlock[]>(() =>

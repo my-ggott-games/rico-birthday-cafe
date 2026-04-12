@@ -63,7 +63,6 @@ const LOBBY_NOTE_CONTENT: Record<LobbyNoteKey, NoteModalContent> = {
       <>
         <p>한국인은 밥심이죠. 한국에 있는 이세계인에게도 예외는 없어요.</p>
         <p>맛있는 음식 많이 먹고 행복한 하루 보냈으면 좋겠어요.</p>
-        <p>(모바일 자이로센서 재도전?)</p>
         <p>
           뭘 좋아할지 몰라 다 차려봤어요. 제일 먼저 먹고싶은 음식은 무엇인가요?
         </p>
@@ -82,6 +81,7 @@ const LOBBY_NOTE_CONTENT: Record<LobbyNoteKey, NoteModalContent> = {
       <>
         <p>아스파라거스의 실제 성장 과정을 참고해 단계를 구상했어요.</p>
         <p>사실 성검 아스파라거스... 저도 못 만들었어요... 너무 어렵네요.</p>
+        <p>아이템 사용도 3번까지였는데 5번으로 늘렸어요.</p>
         <p>언젠가 어디선가 누군가 나타나서 어떻게든 깨주지 않으려나...</p>
       </>
     ),
@@ -222,7 +222,7 @@ const Lobby: React.FC = () => {
   );
   const [happyBirthdayClickCount, setHappyBirthdayClickCount] = useState(0);
   const [sloganClickCount, setSloganClickCount] = useState(0);
-  const [, setIsSloganCollectorUnlocked] = useState(
+  const [isSloganCollectorUnlocked, setIsSloganCollectorUnlocked] = useState(
     window.localStorage.getItem(SLOGAN_COLLECTOR_STORAGE_KEY) === "true",
   );
   const [isHappyBirthdayDropping, setIsHappyBirthdayDropping] = useState(false);
@@ -329,7 +329,12 @@ const Lobby: React.FC = () => {
   }, [sloganControls]);
 
   const unlockSloganCollectorAchievement = useCallback(async () => {
-    if (isGuest || !token) {
+    if (
+      isGuest ||
+      !token ||
+      isSloganCollectorUnlocked ||
+      window.localStorage.getItem(SLOGAN_COLLECTOR_STORAGE_KEY) === "true"
+    ) {
       return;
     }
 
@@ -628,7 +633,7 @@ const Lobby: React.FC = () => {
           )}
         </div>
         <div
-          className={`flex-1 relative ${isMobile ? "mt-2 grid grid-cols-2 gap-x-3 gap-y-4 place-items-center content-start pb-8" : "mt-6 flex flex-wrap justify-center items-center gap-6 pb-8"}`}
+          className={`flex-1 relative ${isMobile ? "mt-2 grid grid-cols-2 gap-x-3 gap-y-4 place-items-center content-center pb-8" : "mt-6 flex flex-wrap justify-center items-center gap-6 pb-8"}`}
         >
           {/* Hotspot: TPO Cody (Paper Doll Table) */}
           <LobbyHotspot
@@ -648,24 +653,6 @@ const Lobby: React.FC = () => {
               />
             </motion.div>
           </LobbyHotspot>
-
-          {/* Hotspot: Itabag (Display Table)
-          <Link
-            to="/game/itabag"
-            className="relative group w-full flex justify-center"
-            style={{ width: isMobile ? undefined : "auto" }}
-          >
-            <motion.div whileHover={{ scale: 1.05 }} className="group">
-              <LobbyIconTile
-                name="이타백 꾸미기"
-                icon="Handbag"
-                isMobile={isMobile}
-                className="border-[#e5dcc7] bg-[#fff8e8]/30 group-hover:bg-[#fff8e8]/85"
-                iconClassName="text-[#166D77]"
-              />
-            </motion.div>
-          </Link>
-          */}
 
           {/* Hotspot: Mini Game (Puzzle) */}
           <LobbyHotspot

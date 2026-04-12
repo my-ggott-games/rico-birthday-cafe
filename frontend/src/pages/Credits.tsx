@@ -368,7 +368,7 @@ export default function Credits() {
   };
 
   const awardAchievement = async () => {
-    if (!token) {
+    if (!token || claimed || loading) {
       return;
     }
     setLoading(true);
@@ -380,15 +380,18 @@ export default function Credits() {
         },
       });
       if (res.ok) {
+        const newlyAwarded = (await res.json()) === true;
         setClaimed(true);
         setManualScrollEnabled(true);
         setHighlightClaim(false);
-        void playDiriringSfx();
-        addToast({
-          title: "엔딩 크레딧 시청 완료",
-          description: "THANK_YOU_ALL 업적이 추가되었어요.",
-          icon: "BadgeCheck",
-        });
+        if (newlyAwarded) {
+          void playDiriringSfx();
+          addToast({
+            title: "엔딩 크레딧 시청 완료",
+            description: "THANK_YOU_ALL 업적이 추가되었어요.",
+            icon: "BadgeCheck",
+          });
+        }
       } else {
         console.error("Failed to claim achievement");
       }

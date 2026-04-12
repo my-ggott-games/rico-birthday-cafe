@@ -49,7 +49,7 @@ export const ASPARAGUS_TUTORIAL_SLIDES: TutorialSlide[] = [
     showArrows: false,
   },
   {
-    title: "처음엔 많이 어려울거야.",
+    title: "처음엔 많이 어려울거야",
     titleIcon: "Wrench",
     lines: [
       "비료를 사용해봐, 얼마 없으니 아껴써야 해!",
@@ -113,29 +113,8 @@ export const CODY_TUTORIAL_SLIDES: TutorialSlide[] = [
     title: "특별한 조합을 찾아보자",
     titleIcon: "Sparkles",
     lines: [
-      "특별한 조합은 총 6가지야.",
+      "특별한 조합은 총 6가지야",
       "모든 조합을 찾으면 좋은 일이 생길지도?",
-    ],
-    showArrows: false,
-  },
-];
-
-export const ITABAG_TUTORIAL_SLIDES: TutorialSlide[] = [
-  {
-    title: "이타백 꾸미기",
-    titleIcon: "Ribbon",
-    lines: [
-      "아래 뱃지를 눌러 가방에 추가해요.",
-      "드래그해서 원하는 위치로 이동해요.",
-    ],
-    showArrows: false,
-  },
-  {
-    title: "배치 편집",
-    titleIcon: "WandSparkles",
-    lines: [
-      "탭하면 회전하고, 더블탭하면 삭제해요.",
-      "완성 후 저장 버튼으로 레이아웃을 보관해요.",
     ],
     showArrows: false,
   },

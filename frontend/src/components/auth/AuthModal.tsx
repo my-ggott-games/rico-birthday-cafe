@@ -20,6 +20,16 @@ type AuthApiResponse = {
 
 type Step = "main" | "set-pin";
 
+class AuthRequestError extends Error {
+  readonly canEnterGuest: boolean;
+
+  constructor(message: string, canEnterGuest = false) {
+    super(message);
+    this.name = "AuthRequestError";
+    this.canEnterGuest = canEnterGuest;
+  }
+}
+
 const PIN_REGEX = /^[0-9]{4}$/;
 const UID_REGEX = /^chiko_[a-zA-Z0-9]{8}$/;
 const ADMIN_UID = "chiko_03240324";
@@ -73,6 +83,31 @@ const readStoredNumber = (key: string): number | null => {
   }
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : null;
+};
+
+const isServerErrorStatus = (code?: number) =>
+  typeof code === "number" && code >= 500;
+
+const isNetworkOrTimeoutError = (error: unknown) => {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  if (error.name === "AbortError") {
+    return true;
+  }
+
+  return /expected pattern|load failed|failed to fetch|networkerror/i.test(
+    error.message,
+  );
+};
+
+const canEnterGuestAfterError = (error: unknown) => {
+  if (error instanceof AuthRequestError) {
+    return error.canEnterGuest;
+  }
+
+  return isNetworkOrTimeoutError(error);
 };
 
 const getFriendlyErrorMessage = (error: unknown, fallbackMessage: string) => {
@@ -337,13 +372,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   const getLoginErrorMessage = (code?: number) => {
+    if (isServerErrorStatus(code)) {
+      return "카페 문 닫았어요.\n지금은 번호표를 확인할 수 없어요.";
+    }
+
     switch (code) {
       case 400:
         return "번호표를 다시 확인해주세요.";
       case 401:
         return "번호표나 비밀번호가 일치하지 않아요.";
-      case 500:
-        return "카페 문 닫았어요.\n지금은 번호표를 확인할 수 없어요.";
       default:
         return "로그인 중 문제가 생겼어요.\n잠시 후 다시 시도해주세요.";
     }
@@ -447,19 +484,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }
 
       if (!res.ok) {
-        if ((data?.code ?? res.status) === 500) {
-          setShowGuestEntry(true);
-        }
-        throw new Error(getLoginErrorMessage(data?.code ?? res.status));
+        const errorCode = data?.code ?? res.status;
+        throw new AuthRequestError(
+          getLoginErrorMessage(errorCode),
+          isServerErrorStatus(errorCode),
+        );
       }
 
       if (data?.code !== 200 || !data.token) {
-        throw new Error(getLoginErrorMessage(data?.code));
+        throw new AuthRequestError(
+          getLoginErrorMessage(data?.code),
+          isServerErrorStatus(data?.code),
+        );
       }
 
       login(data.token, data.username ?? null);
       onSuccess();
     } catch (err: unknown) {
+      setShowGuestEntry(canEnterGuestAfterError(err));
       setError(
         getFriendlyErrorMessage(
           err,
@@ -482,15 +524,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     setLoading(true);
     setError("");
+    setShowGuestEntry(false);
 
     try {
       const res = await fetchWithTimeout(`${BASE_URL}/auth/issue-uid`, {
         method: "POST",
       });
-      const data = (await res.json()) as AuthApiResponse;
+      let data: AuthApiResponse | null = null;
+      try {
+        data = (await res.json()) as AuthApiResponse;
+      } catch {
+        data = null;
+      }
 
-      if (!res.ok || data.code !== 200 || !data.username || !data.token) {
-        throw new Error(data.message || "번호표 발급 실패");
+      if (!res.ok || data?.code !== 200 || !data.username || !data.token) {
+        const errorCode = data?.code ?? res.status;
+        throw new AuthRequestError(
+          data?.message || "번호표 발급 실패",
+          isServerErrorStatus(errorCode),
+        );
       }
 
       setIssuedUid(data.username);
@@ -503,6 +555,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setPinError("");
       setStep("set-pin");
     } catch (err: unknown) {
+      setShowGuestEntry(canEnterGuestAfterError(err));
       setError(
         getFriendlyErrorMessage(
           err,
@@ -556,14 +609,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           issueToken: issuedUidToken,
         }),
       });
-      const data = (await res.json()) as AuthApiResponse;
+      let data: AuthApiResponse | null = null;
+      try {
+        data = (await res.json()) as AuthApiResponse;
+      } catch {
+        data = null;
+      }
 
-      if (!res.ok || data.code !== 200 || !data.token) {
-        if ((data.code ?? res.status) === 500) {
-          setShowGuestEntry(true);
-        }
-        throw new Error(
-          getRegisterErrorMessage(data.message, data.code ?? res.status),
+      if (!res.ok || data?.code !== 200 || !data.token) {
+        const errorCode = data?.code ?? res.status;
+        throw new AuthRequestError(
+          getRegisterErrorMessage(data?.message, errorCode),
+          isServerErrorStatus(errorCode),
         );
       }
 
@@ -571,6 +628,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       resetAll();
       onSuccess();
     } catch (err: unknown) {
+      setShowGuestEntry(canEnterGuestAfterError(err));
       setPinError(
         getFriendlyErrorMessage(
           err,
@@ -644,13 +702,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   </div>
                 )}
                 {showGuestEntry && (
-                  <button
-                    type="button"
+                  <PushableButton
                     onClick={handleEnterGuestMode}
-                    className="mb-4 w-full rounded-xl border-2 border-[#166D77]/25 bg-[#166D77] py-3 text-sm font-black text-pale-custard transition-all hover:brightness-110 md:text-base"
+                    variant="cream"
+                    fullWidth
+                    className="mb-4 py-3 text-sm md:text-base"
                   >
                     게스트 모드로 입장하기
-                  </button>
+                  </PushableButton>
                 )}
 
                 <form onSubmit={handleSetPin} className="flex flex-col gap-3">
@@ -707,16 +766,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     {error}
                   </div>
                 )}
-                {showGuestEntry && (
-                  <button
-                    type="button"
-                    onClick={handleEnterGuestMode}
-                    className="mb-4 w-full rounded-xl border-2 border-[#166D77]/25 bg-[#166D77] py-3 text-sm font-black text-pale-custard transition-all hover:brightness-110 md:text-base"
-                  >
-                    게스트 모드로 입장하기
-                  </button>
-                )}
-
                 <div className="flex flex-col gap-4">
                   <form
                     onSubmit={handleExistingTicketLogin}
@@ -778,13 +827,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         : "새 번호표 뽑기"}
                   </PushableButton>
 
-                  <button
-                    type="button"
-                    onClick={handleEnterGuestMode}
-                    className="w-full rounded-xl border-2 border-[#166D77]/20 bg-[#166D77]/10 py-3 text-sm font-black text-[#166D77] transition-all hover:bg-[#166D77]/15 md:text-base"
-                  >
-                    (임시) 게스트 모드로 입장
-                  </button>
+                  {showGuestEntry && (
+                    <PushableButton
+                      onClick={handleEnterGuestMode}
+                      variant="cream"
+                      fullWidth
+                      className="py-3 text-sm md:text-base"
+                    >
+                      게스트 모드로 입장하기
+                    </PushableButton>
+                  )}
                 </div>
               </>
             )}

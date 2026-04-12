@@ -14,7 +14,6 @@ import LandingCompareSample from "./pages/LandingCompareSample";
 import AchievementListShowcase from "./pages/AchievementListShowcase";
 
 const CodyGame = lazy(() => import("./pages/CodyGame"));
-const ItabagGame = lazy(() => import("./pages/ItabagGame"));
 const AdventureGame = lazy(() => import("./pages/AdventureGame"));
 const CodySample = lazy(() => import("./pages/CodySample"));
 const PuzzleGame = lazy(() => import("./pages/PuzzleGame"));
@@ -39,7 +38,6 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/lobby" element={<Lobby />} />
               <Route path="/game/cody" element={<CodyGame />} />
-              <Route path="/game/itabag" element={<ItabagGame />} />
               <Route path="/game/adventure" element={<AdventureGame />} />
               <Route path="/game/puzzle" element={<PuzzleGame />} />
               <Route path="/game/asparagus" element={<AsparagusMerge />} />

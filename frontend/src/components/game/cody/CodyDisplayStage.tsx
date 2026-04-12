@@ -1,7 +1,7 @@
 import React from "react";
 import { DroppableCharacter } from "./DroppableCharacter";
 import { PolaroidFrame } from "./PolaroidFrame";
-import { CMYGlitchOverlay } from "./polaroidEffects/CMYGlitchOverlay";
+import { PolaroidGlitchOverlay } from "./polaroidEffects/PolaroidGlitchOverlay";
 import type { CodyItem, EquippedState } from "./codyTypes";
 import { PolaroidBlossomOverlay } from "./polaroidEffects/PolaroidBlossomOverlay";
 import { PolaroidButterflyOverlay } from "./polaroidEffects/PolaroidButterflyOverlay";
@@ -132,7 +132,7 @@ export const CodyDisplayStage: React.FC<CodyDisplayStageProps> = ({
                 <PolaroidHexOverlay />
               )}
               {!isCapturing && activeBackground === "training" && (
-                <CMYGlitchOverlay />
+                <PolaroidGlitchOverlay />
               )}
             </>
           }

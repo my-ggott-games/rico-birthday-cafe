@@ -8,6 +8,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice(assignableTypes = AuthController.class)
 public class AuthExceptionAdvice {
@@ -31,6 +32,15 @@ public class AuthExceptionAdvice {
     public ResponseEntity<AuthResponse> handleInvalidAuthRequest(Exception ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new AuthResponse(400, null, "Invalid auth request", null));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<AuthResponse> handleAuthStatusError(ResponseStatusException ex) {
+        int statusCode = ex.getStatusCode().value();
+        String message = ex.getReason() == null ? ex.getMessage() : ex.getReason();
+
+        return ResponseEntity.status(ex.getStatusCode())
+                .body(new AuthResponse(statusCode, null, message, null));
     }
 
     @ExceptionHandler(Exception.class)

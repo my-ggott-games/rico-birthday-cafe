@@ -16,4 +16,6 @@ public interface UserAchievementRepository extends JpaRepository<UserAchievement
     boolean existsByUserAndAchievement(User user, Achievement achievement);
 
     boolean existsByUserAndAchievement_Code(User user, String code);
+
+    void deleteAllByAchievement(Achievement achievement);
 }

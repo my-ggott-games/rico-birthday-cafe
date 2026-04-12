@@ -7,7 +7,6 @@ import { NoteModal, type NoteModalContent } from "./NoteModal";
 const AUDIO_ENABLED_ROUTES = [
   "/lobby",
   "/game/cody",
-  "/game/itabag",
   "/game/puzzle",
   "/game/adventure",
   "/game/asparagus",

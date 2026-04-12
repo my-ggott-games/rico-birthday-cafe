@@ -50,7 +50,7 @@ import {
 } from "./adventureAssets";
 
 export function useAdventureGame() {
-  const { isGuest } = useAuthStore();
+  const { token, isGuest } = useAuthStore();
   const addToast = useToastStore((state) => state.addToast);
 
   const [runState, setRunState] = useState<RunState>("ready");
@@ -177,7 +177,7 @@ export function useAdventureGame() {
   }, []);
 
   const awardLegendAchievement = useCallback(async () => {
-    if (achievementAwardRequestedRef.current || isGuest) return;
+    if (achievementAwardRequestedRef.current || isGuest || !token) return;
     achievementAwardRequestedRef.current = true;
 
     try {
@@ -197,13 +197,13 @@ export function useAdventureGame() {
       );
       addToast({
         title: "R전드 용사",
-        description: "1000점을 넘긴 채 마법 함정까지 버텨냈다!",
+        description: "레전드보다 R전드가 좋은거죠?",
         icon: "Crown",
       });
     } catch (error) {
       console.error("Failed to award adventure achievement", error);
     }
-  }, [addToast, isGuest]);
+  }, [addToast, isGuest, token]);
 
   const finishRun = useCallback(
     (finalScore: number) => {
@@ -214,11 +214,11 @@ export function useAdventureGame() {
         finalScore > currentBest ? finalScore : currentBest,
       );
 
-      if (finalScore >= 1000) {
+      if (finalScore >= 1000 && token && !isGuest) {
         void awardLegendAchievement();
       }
     },
-    [awardLegendAchievement],
+    [awardLegendAchievement, isGuest, token],
   );
 
   const startGame = useCallback(() => {
@@ -351,8 +351,10 @@ export function useAdventureGame() {
       const playerScale = isMobile ? PLAYER_MOBILE_SCALE : 1;
       const scaledPlayerWidth = PLAYER_WIDTH * playerScale;
       const scaledPlayerHeight = PLAYER_HEIGHT * playerScale;
-      const playerVisualLeft = PLAYER_X + (PLAYER_WIDTH - scaledPlayerWidth) / 2;
-      const playerHInset = (scaledPlayerWidth * (1 - PLAYER_HITBOX_WIDTH_RATIO)) / 2;
+      const playerVisualLeft =
+        PLAYER_X + (PLAYER_WIDTH - scaledPlayerWidth) / 2;
+      const playerHInset =
+        (scaledPlayerWidth * (1 - PLAYER_HITBOX_WIDTH_RATIO)) / 2;
       const playerHitboxWidth = scaledPlayerWidth * PLAYER_HITBOX_WIDTH_RATIO;
       const playerLeftTrim = isMobile ? playerHitboxWidth * 0.5 : 0;
       const playerLeft = playerVisualLeft + playerHInset + playerLeftTrim;
@@ -384,7 +386,8 @@ export function useAdventureGame() {
         if (jumpHeldRef.current && velocityRef.current > 0) {
           const holdMs = timestamp - jumpHeldStartRef.current;
           if (holdMs < JUMP_HOLD_MAX_MS) {
-            velocityRef.current += JUMP_HOLD_BOOST * verticalScale * deltaSeconds;
+            velocityRef.current +=
+              JUMP_HOLD_BOOST * verticalScale * deltaSeconds;
           }
         }
 
@@ -402,7 +405,9 @@ export function useAdventureGame() {
         spawnDelayRef.current -= deltaSeconds;
         if (spawnDelayRef.current <= 0) {
           const kind = pickTrapKind(speedTier);
-          trapsRef.current.push(createTrap(trapIdRef.current, kind, speedTier, isMobile));
+          trapsRef.current.push(
+            createTrap(trapIdRef.current, kind, speedTier, isMobile),
+          );
           trapIdRef.current += 1;
           spawnDelayRef.current = getNextSpawnDelay(speedTier);
         }
@@ -430,16 +435,23 @@ export function useAdventureGame() {
           const scaledHeight = trap.height * trapScale;
           const trapVisualLeft = trap.x + (trap.width - scaledWidth) / 2;
           const trapHitboxLeft =
-            trapVisualLeft + scaledWidth * TRAP_HITBOX_HORIZONTAL_INSET_RATIO_MOBILE;
+            trapVisualLeft +
+            scaledWidth * TRAP_HITBOX_HORIZONTAL_INSET_RATIO_MOBILE;
           const trapHitboxRight =
-            trapVisualLeft + scaledWidth * (1 - TRAP_HITBOX_HORIZONTAL_INSET_RATIO_MOBILE);
+            trapVisualLeft +
+            scaledWidth * (1 - TRAP_HITBOX_HORIZONTAL_INSET_RATIO_MOBILE);
           const trapHitboxBottom =
-            trap.bottomFromGround + scaledHeight * TRAP_HITBOX_BOTTOM_OFFSET_RATIO_MOBILE;
+            trap.bottomFromGround +
+            scaledHeight * TRAP_HITBOX_BOTTOM_OFFSET_RATIO_MOBILE;
           const trapHitboxTop =
             trapHitboxBottom + scaledHeight * TRAP_HITBOX_HEIGHT_RATIO_MOBILE;
 
-          if (trapHitboxLeft >= playerRight || trapHitboxRight <= playerLeft) return false;
-          return playerHitboxBottom < trapHitboxTop && playerHitboxTop > trapHitboxBottom;
+          if (trapHitboxLeft >= playerRight || trapHitboxRight <= playerLeft)
+            return false;
+          return (
+            playerHitboxBottom < trapHitboxTop &&
+            playerHitboxTop > trapHitboxBottom
+          );
         });
       }
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppIcon } from "./AppIcon";
 import type { AppIconName } from "./appIconRegistry";
@@ -29,10 +29,27 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({
   className = "h-[172px]",
   onClose,
 }) => {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth <= 767 : false,
+  );
   const [slide, setSlide] = useState(0);
   const [direction, setDirection] = useState(1);
   const total = slides?.length ?? 0;
   const isLast = slide === total - 1;
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const updateIsMobile = () => {
+      setIsMobile(window.innerWidth <= 767);
+    };
+
+    updateIsMobile();
+    window.addEventListener("resize", updateIsMobile);
+    return () => window.removeEventListener("resize", updateIsMobile);
+  }, []);
 
   // Guard against empty or undefined slides to avoid runtime errors.
   if (!total) {
@@ -116,8 +133,8 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({
               ))}
             </div>
 
-            {s.showArrows && (
-              <div className="mt-2 flex w-full items-center justify-center gap-2 md:gap-3">
+            {s.showArrows && !isMobile && (
+              <div className="mt-2 flex w-full items-center justify-center gap-2.5 md:gap-3">
                 {(["left", "up", "down", "right"] as Direction[]).map((d) => {
                   const icons: Record<Direction, AppIconName> = {
                     left: "ArrowBigLeft",
@@ -128,13 +145,13 @@ export const TutorialBanner: React.FC<TutorialBannerProps> = ({
                   return (
                     <PushableButton
                       key={d}
-                      className="h-[60px] w-[60px] px-0 py-0 md:h-[72px] md:w-[72px]"
+                      className="h-[68px] w-[68px] px-0 py-0 md:h-[72px] md:w-[72px]"
                       aria-hidden="true"
                       tabIndex={-1}
                     >
                       <AppIcon
                         name={icons[d]}
-                        size={40}
+                        size={46}
                         strokeWidth={2.4}
                         style={{ color: "#FFFFF8" }}
                       />
