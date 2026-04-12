@@ -29,7 +29,7 @@ const CLICK_SHAKE_MILESTONES = new Set(
   Array.from({ length: 10 }, (_, index) => index * 10).concat(1),
 );
 
-type LobbyNoteKey = "cody" | "puzzle" | "asparagus" | "fortune" | "adventure";
+type LobbyNoteKey = "cody" | "puzzle" | "asparagus" | "adventure";
 
 const LOBBY_NOTE_CONTENT: Record<LobbyNoteKey, NoteModalContent> = {
   cody: {
@@ -87,26 +87,9 @@ const LOBBY_NOTE_CONTENT: Record<LobbyNoteKey, NoteModalContent> = {
     ),
     signature: "CODE NAME: G",
   },
-  fortune: {
-    title: "비하인드 스토리",
-    eyebrow: "Riko's Fortune",
-    icon: "StickyNote",
-    accentColor: "#b79880",
-    backgroundColor: "#F7EEE8",
-    bodyBackgroundColor: "rgba(255,255,255,0.82)",
-    content: (
-      <>
-        <p>
-          좋은 운세는 믿고, 애매한 운세는 재해석하고, 나쁜 운세는 웃어넘길 것.
-        </p>
-        <p>결국 오늘을 만드는 건 뽑은 종이보다 지금 기분에 더 가깝다.</p>
-      </>
-    ),
-    signature: "CODE NAME: G",
-  },
   adventure: {
     title: "비하인드 스토리",
-    eyebrow: "용사 리코 이야기",
+    eyebrow: "용사 리코 이야기 1",
     icon: "StickyNote",
     accentColor: "#aebed7",
     backgroundColor: "#EEF3FB",
@@ -114,9 +97,9 @@ const LOBBY_NOTE_CONTENT: Record<LobbyNoteKey, NoteModalContent> = {
     content: (
       <>
         <p>치코는 오케스트라 소속 단원으로 활동하고 있어요.</p>
-        <p>새 악보를 받아 이 게임의 배경음악을 연주하는 그 순간,</p>
+        <p>한 OST 악보를 받아 합주하던 그 순간,</p>
         <p>리코가 이세계에서 마왕을 잡는 이야기가 떠올랐어요.</p>
-        <p>상상하던 이야기를 모두에게 들려줄 수 있게 되어 기쁩니다!</p>
+        <p>상상하던 이야기의 프롤로그입니다.</p>
       </>
     ),
     signature: "CODE NAME: G",
@@ -188,28 +171,32 @@ const LobbyHotspot = ({
   onOpenNote: (key: LobbyNoteKey) => void;
   children: React.ReactNode;
   isMobile: boolean;
-}) => (
-  <div
-    className="relative flex w-full justify-center"
-    style={{ width: isMobile ? undefined : "auto" }}
-  >
-    <Link to={to} className="relative group flex w-full justify-center">
-      {children}
-    </Link>
-    <button
-      type="button"
-      aria-label={`${LOBBY_NOTE_CONTENT[noteKey].title} 열기`}
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        onOpenNote(noteKey);
-      }}
-      className={`absolute right-[calc(50%-3.6rem)] top-[-0.7rem] z-10 rounded-2xl border-2 border-[#D6B089] bg-[#FFF4D8] p-2 text-[#9B6A3D] shadow-[0_8px_18px_rgba(128,87,40,0.2)] transition-transform duration-150 hover:-translate-y-0.5 ${noteVisible ? "block" : "hidden"}`}
+}) => {
+  return (
+    <div
+      className="relative flex w-full justify-center"
+      style={{ width: isMobile ? undefined : "auto" }}
     >
-      <AppIcon name="StickyNote" size={isMobile ? 16 : 18} />
-    </button>
-  </div>
-);
+      <Link to={to} className="relative group flex w-full justify-center">
+        {children}
+      </Link>
+      {noteVisible && (
+        <button
+          type="button"
+          aria-label={`${LOBBY_NOTE_CONTENT[noteKey].title} 열기`}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            onOpenNote(noteKey);
+          }}
+          className="absolute right-[calc(50%-3.6rem)] top-[-0.7rem] z-10 rounded-2xl border-2 border-[#D6B089] bg-[#FFF4D8] p-2 text-[#9B6A3D] shadow-[0_8px_18px_rgba(128,87,40,0.2)] transition-transform duration-150 hover:-translate-y-0.5"
+        >
+          <AppIcon name="StickyNote" size={isMobile ? 16 : 18} />
+        </button>
+      )}
+    </div>
+  );
+};
 
 const Lobby: React.FC = () => {
   usePageBgm(LOBBY_BGM_SRC);
@@ -722,25 +709,6 @@ const Lobby: React.FC = () => {
                 isMobile={isMobile}
                 className="border-[#aad0b2] bg-[#d4edda]/85 group-hover:bg-[#d4edda]/85"
                 iconClassName="text-[#2d6a4f]"
-              />
-            </motion.div>
-          </LobbyHotspot>
-
-          {/* Hotspot: Riko's Fortune (Omikuji) */}
-          <LobbyHotspot
-            to="/game/fortune"
-            noteKey="fortune"
-            noteVisible={canViewSecretNotes}
-            onOpenNote={setActiveNoteKey}
-            isMobile={isMobile}
-          >
-            <motion.div whileHover={{ scale: 1.05 }} className="group">
-              <LobbyIconTile
-                name="오늘의 운세"
-                icon="ScrollText"
-                isMobile={isMobile}
-                className="border-[#b79880] bg-[#D6C0B0]/85 group-hover:bg-[#D6C0B0]/85"
-                iconClassName="text-[#8B5A2B]"
               />
             </motion.div>
           </LobbyHotspot>

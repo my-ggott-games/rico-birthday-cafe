@@ -33,7 +33,6 @@ const GlobalLoading: React.FC = () => {
       "/game/baseball",
       "/game/puzzle",
       "/game/adventure",
-      "/game/fortune",
       "/game/asparagus",
     ];
 

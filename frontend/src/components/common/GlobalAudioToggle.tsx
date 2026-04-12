@@ -10,7 +10,6 @@ const AUDIO_ENABLED_ROUTES = [
   "/game/itabag",
   "/game/puzzle",
   "/game/adventure",
-  "/game/fortune",
   "/game/asparagus",
   "/credits",
 ];

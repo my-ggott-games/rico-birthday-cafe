@@ -8,7 +8,6 @@ const ACHIEVEMENT_ICONS: Record<string, AppIconName> = {
   FIRST_PUZZLE: "Puzzle",
   "LEGEND-HERO": "Sword",
   "R-GEND-HERO": "Crown",
-  LUCKY_RICO_MOMENT: "ScrollText",
   RICO_DEBUT_DATE: "Eye",
   THANK_YOU_ALL: "Clapperboard",
   WHO_ARE_YOU: "KeyRound",

@@ -5,9 +5,10 @@ export const ADVENTURE_HELP_SLIDES: TutorialSlide[] = [
     title: "용사 리코 이야기 1",
     titleIcon: "Sword",
     lines: [
-      "마왕을 물리치기 위해",
-      "사람들의 행복을 지키기 위해",
-      "리코의 체력을 단련시키자",
+      "이세계 주민들은 리코 덕분에 행복을 되찾았어!",
+      "그들은 용사를 영원히 기억하기 위해",
+      "용사의 업적을 이야기로 남겼지",
+      "이세계 구전설화를 게임으로 즐겨보자",
     ],
     showArrows: false,
   },
@@ -25,9 +26,9 @@ export const ADVENTURE_HELP_SLIDES: TutorialSlide[] = [
     title: "점점 빨리 달릴 거야",
     titleIcon: "SportShoe",
     lines: [
-      "그래야 운동이 된다 이 말씀!",
-      "'점진성의 원리'라고 할 수 있지",
-      "1000점을 달성하면 좋은 일이 생길지도?",
+      "마왕을 물리치기 위해",
+      "사람들의 행복을 지키기 위해",
+      "오늘도 훈련이다!",
     ],
     showArrows: false,
   },
@@ -82,24 +83,6 @@ export const PUZZLE_TUTORIAL_SLIDES: TutorialSlide[] = [
   {
     title: "어떤 그림일까?",
     lines: ["제한 시간은 없으니 여유롭게 즐겨줘!"],
-    showArrows: false,
-  },
-];
-
-export const FORTUNE_TUTORIAL_SLIDES: TutorialSlide[] = [
-  {
-    title: "오늘의 운세",
-    titleIcon: "ScrollText",
-    lines: ["통을 클릭하거나 버튼을 눌러 운세를 뽑아보세요."],
-    showArrows: false,
-  },
-  {
-    title: "대길 업적",
-    titleIcon: "Sparkles",
-    lines: [
-      "대길을 뽑으면 업적이 지급돼요.",
-      "원할 때 다시 뽑아서 오늘의 기분을 확인해요.",
-    ],
     showArrows: false,
   },
 ];

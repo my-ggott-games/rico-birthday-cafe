@@ -69,15 +69,6 @@ const SAMPLE_ACHIEVEMENTS: SampleAchievement[] = [
     unlockedAt: "2026-03-31T12:00:00.000Z",
   },
   {
-    code: "LUCKY_RICO_MOMENT",
-    title: "행운과 함께",
-    description: "오늘의 리코 운세에서 대길을 뽑았다!",
-    iconUrl: "ScrollText",
-    earned: false,
-    active: false,
-    unlockedAt: null,
-  },
-  {
     code: "LEGEND-HERO",
     title: "레전드 용사",
     description: "마왕 토벌을 끝마쳤다.",
