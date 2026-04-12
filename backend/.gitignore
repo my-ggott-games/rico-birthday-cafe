@@ -35,3 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
+.env*
+!.env.supabase.example
+!.env.render.example
+.gradle-local/

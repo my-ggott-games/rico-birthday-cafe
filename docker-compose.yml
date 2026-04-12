@@ -1,15 +1,11 @@
 services:
-  postgres:
-    image: postgres:15
-    container_name: rico-birthday-cafe-db
-    environment:
-      POSTGRES_DB: birthday_cafe
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rico-backend
+    restart: unless-stopped
+    env_file:
+      - .env
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
+      - "8000:8080"

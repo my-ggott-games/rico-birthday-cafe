@@ -1,0 +1,121 @@
+import type { TutorialSlide } from "../components/common/TutorialBanner";
+
+export const ADVENTURE_HELP_SLIDES: TutorialSlide[] = [
+  {
+    title: "용사 리코 이야기 1",
+    titleIcon: "Sword",
+    lines: [
+      "이세계 주민들은 리코 덕분에 행복을 되찾았어!",
+      "그들은 용사를 영원히 기억하기 위해",
+      "용사의 업적을 이야기로 남겼지",
+      "이세계 구전설화를 게임으로 즐겨보자",
+    ],
+    showArrows: false,
+  },
+  {
+    title: "케이크의 유혹",
+    titleIcon: "CakeSlice",
+    lines: [
+      "멋진 용사는 유산소 도중 케이크를 먹지 않아",
+      "점프해서 케이크를 피하자!",
+      "화면을 탭하거나 스페이스바로 점프할 수 있어",
+    ],
+    showArrows: false,
+  },
+  {
+    title: "점점 빨리 달릴 거야",
+    titleIcon: "SportShoe",
+    lines: [
+      "마왕을 물리치기 위해",
+      "사람들의 행복을 지키기 위해",
+      "오늘도 훈련이다!",
+    ],
+    showArrows: false,
+  },
+];
+
+export const ASPARAGUS_TUTORIAL_SLIDES: TutorialSlide[] = [
+  {
+    title: "아스파라거스를 키워보자",
+    titleIcon: "Sprout",
+    lines: ["화살표 버튼, 키보드, 모바일 스와이프 모두 OK!"],
+    showArrows: true,
+  },
+  {
+    title: "같은 단계를 합치면 성장해",
+    titleIcon: "Leaf",
+    lines: ["무럭무럭 잘 자란다구!"],
+    highlight: { a: "씨앗", b: "씨앗", result: "어린 순" },
+    showArrows: false,
+  },
+  {
+    title: "처음엔 많이 어려울거야",
+    titleIcon: "Wrench",
+    lines: [
+      "비료를 사용해봐, 얼마 없으니 아껴써야 해!",
+      "되돌리기: 마지막 이동을 되돌릴 수 있어",
+      "바꾸기: 두 타일의 위치를 바꿀 수 있어",
+    ],
+    showArrows: false,
+  },
+  {
+    title: "그럼 잘 부탁해!",
+    titleIcon: "Sprout",
+    lines: ["아스파라거스를 끝까지 키우면 좋은 일이 생길지도?"],
+    highlight: null,
+    showArrows: false,
+  },
+];
+
+export const PUZZLE_TUTORIAL_SLIDES: TutorialSlide[] = [
+  {
+    title: "퍼즐 맞추기",
+    titleIcon: "Puzzle",
+    lines: ["조각을 꾸~욱 눌러 퍼즐을 맞추자", "알맞은 위치에 놓아줘!"],
+    showArrows: false,
+  },
+  {
+    title: "탭하면 회전",
+    titleIcon: "RefreshCw",
+    lines: ["조각을 탭해서 올바른 방향으로 바꾸자"],
+    showArrows: false,
+  },
+  {
+    title: "어떤 그림일까?",
+    lines: ["제한 시간은 없으니 여유롭게 즐겨줘!"],
+    showArrows: false,
+  },
+];
+
+export const CODY_TUTORIAL_SLIDES: TutorialSlide[] = [
+  {
+    title: "옷을 고르자!",
+    titleIcon: "Shirt",
+    lines: [
+      "PC: 아이템을 드래그해서 리코에게 전해주자",
+      "모바일: 아이템을 탭해봐!",
+    ],
+    showArrows: false,
+  },
+  {
+    title: "코디가 끝났다면",
+    titleIcon: "Camera",
+    lines: ['"코디 끝!" 버튼을 눌러줘', "사진을 찍어줄게!"],
+    showArrows: false,
+  },
+  {
+    title: "사진을 저장하자!",
+    titleIcon: "Save",
+    lines: ["코디가 끝나면 이미지 저장 버튼으로", "추억을 남기자!"],
+    showArrows: false,
+  },
+  {
+    title: "특별한 조합을 찾아보자",
+    titleIcon: "Sparkles",
+    lines: [
+      "특별한 조합은 총 6가지야",
+      "모든 조합을 찾으면 좋은 일이 생길지도?",
+    ],
+    showArrows: false,
+  },
+];

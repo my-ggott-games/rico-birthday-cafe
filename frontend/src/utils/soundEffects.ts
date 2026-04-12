@@ -1,0 +1,52 @@
+import { useAudioStore } from "../store/useAudioStore";
+
+const DIRIRING_SRC = "/sound/diriring.mp3";
+
+let diriringAudio: HTMLAudioElement | null = null;
+let lastPlayedAt = 0;
+
+const getDiriringAudio = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  if (!diriringAudio) {
+    diriringAudio = new Audio(DIRIRING_SRC);
+    diriringAudio.preload = "auto";
+  }
+
+  return diriringAudio;
+};
+
+export const playDiriringSfx = async () => {
+  if (useAudioStore.getState().isMuted) {
+    return;
+  }
+
+  const audio = getDiriringAudio();
+  if (!audio) return;
+
+  const now = Date.now();
+  if (now - lastPlayedAt < 150) {
+    return;
+  }
+
+  lastPlayedAt = now;
+
+  try {
+    audio.pause();
+    audio.currentTime = 0;
+    audio.muted = false;
+    await audio.play();
+  } catch (error) {
+    console.warn("Failed to play diriring effect", {
+      src: DIRIRING_SRC,
+      error,
+    });
+  }
+};
+
+export const preloadDiriringSfx = () => {
+  const audio = getDiriringAudio();
+  audio?.load();
+};

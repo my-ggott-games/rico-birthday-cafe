@@ -1,10 +1,25 @@
 spring:
   application:
     name: birthday-cafe
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:.env.local[.properties]
+      - optional:file:.env.properties
+      - optional:file:.env.local.properties
+      - optional:file:../.env[.properties]
+      - optional:file:../.env.local[.properties]
+      - optional:file:../.env.properties
+      - optional:file:../.env.local.properties
   datasource:
-    url: jdbc:postgresql://localhost:5432/birthday_cafe
-    username: postgres
-    password: password
+    # Priority:
+    # 1) SPRING_DATASOURCE_*
+    # 2) Render/Railway JDBC URL vars (avoid non-JDBC DATABASE_URL parsing issues)
+    # 3) SUPABASE_DB_* (recommended for Supabase)
+    # 4) Generic DATABASE_* fallbacks
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -18,3 +33,33 @@ logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+app:
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://192.168.*:*,http://10.*:*,http://172.*:*,https://dev-rico-cafe.netlify.app}
+  admin:
+    # Prefer ADMIN_PASSCODE_HASH (bcrypt). ADMIN_PASSCODE is also supported as a
+    # plain-text fallback for deployments where env hashing was misconfigured.
+    # For local dev, keep secrets out of the repo by putting either
+    # `app.admin.passcode-hash=` or `app.admin.passcode=` in an ignored
+    # `.env.local.properties` file.
+    passcode: ${ADMIN_PASSCODE:}
+    passcode-hash: ${ADMIN_PASSCODE_HASH:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: when_authorized
+  health:
+    db:
+      enabled: true
+
+jwt:
+  # JWT_SECRET must be set in the environment; no fallback — application will fail to start without it.
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION_MS:86400000}
+  uid-issue-expiration-ms: ${JWT_UID_ISSUE_EXPIRATION_MS:300000}

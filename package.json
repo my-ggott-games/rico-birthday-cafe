@@ -1,0 +1,7 @@
+{
+  "name": "rico-birthday-cafe",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix frontend run build"
+  }
+}

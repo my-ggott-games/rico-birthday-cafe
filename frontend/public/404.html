@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>비공식 팬메이드 유즈하 리코 사이버 생일카페</title>
+  <script>
+    const { pathname, search, hash } = window.location;
+    const redirectTarget = pathname + search + hash;
+    window.location.replace('/?redirect=' + encodeURIComponent(redirectTarget));
+  </script>
+</head>
+<body></body>
+</html>

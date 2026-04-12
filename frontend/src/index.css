@@ -1,13 +1,44 @@
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@400;700;900&display=swap");
+
+@theme {
+  --color-pale-custard: #fffff8;
+  --color-rico-sage: #a8cda4;
+  --color-rico-mint: #5ec7a5;
+  --color-rico-teal: #1d8e8e;
+  --color-rico-dark-teal: #166d77;
+  --color-polar-haze: #f5f7fd;
+  --color-soft-winter: #fcfcf5;
+  --color-arctic-veil: #fafdfe;
+  --color-egg-shell: #faffff;
+  --color-blanc-de-blanc: #f6f6f6;
+  --color-cream: var(--color-cream);
+}
+
+/* 
+ Globally hide the default cursor so only the custom cursor is visible 
+* {
+  cursor: none !important;
+}
+*/
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* Cafe Theme Palette */
+  --color-cream: #fffff8;
+  --color-winter: #fcfcf5;
+  --color-sage: #a8cda4;
+  --color-mint: #5ec7a5;
+  --color-dark-teal: #166d77;
+  --color-latte: #d6c0b0;
+
+  --font-sans: "OneStoreMobilePop", system-ui, sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color-scheme: light;
+  color: var(--color-dark-teal);
+  background-color: var(--color-cream);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -15,59 +46,630 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background-color: var(--color-cream);
+  background-image:
+    radial-gradient(var(--color-winter) 1px, transparent 1px),
+    radial-gradient(var(--color-winter) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position:
+    0 0,
+    10px 10px;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+.font-handwriting {
+  font-family: "OneStoreMobilePop", "Gaegu", cursive;
+  font-weight: 400;
+  letter-spacing: 0.02em;
 }
 
+a {
+  font-weight: 700;
+  color: var(--color-mint);
+  text-decoration: inherit;
+  transition: all 0.2s;
+}
+
+a:hover {
+  color: var(--color-sage);
+  transform: translateY(-2px);
+}
+
+/* --- Global Button Theme --- */
+/* Common attributes shared by all variants */
+.btn-primary,
+.btn-secondary,
+.btn-disabled {
+  @apply rounded-2xl font-bold transition-all active:scale-95 shadow-md flex items-center justify-center border-2;
+  @apply px-4 py-2 text-sm;
+  /* Default (Mobile) size */
+}
+
+@media (min-width: 768px) {
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-disabled {
+    @apply px-8 py-3 text-base;
+    /* PC size */
+  }
+}
+
+/* Variants */
+.btn-primary {
+  @apply bg-[#166D77] text-pale-custard border-[#166D77] hover:scale-105 shadow-xl;
+}
+
+.btn-secondary {
+  @apply bg-pale-custard text-[#166D77] border-[#166D77]/10;
+}
+
+.btn-disabled {
+  @apply bg-[#9ca3af] text-pale-custard cursor-not-allowed opacity-70;
+}
+
+/* Original tag styling simplified or removed to prevent conflicts */
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
+  font-family: inherit;
 }
 
-button:hover {
-  border-color: #646cff;
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+::-webkit-scrollbar-thumb {
+  background: var(--color-sage);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-mint);
+}
+
+@font-face {
+  font-family: "OneStoreMobilePop";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-POP.woff") format("woff");
+  font-weight: normal;
+  font-display: swap;
+}
+
+@keyframes pinwheel-spin {
+  from {
+    transform: rotate(0deg);
   }
 
-  a:hover {
-    color: #747bff;
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes drop {
+  0% {
+    transform: translate3d(0, 0, 0);
   }
 
-  button {
-    background-color: #f9f9f9;
+  38% {
+    transform: translate3d(var(--drop-mid-drift, -2px),
+        /* --drop-travel은 JS에서 calc(100% + 82px) 등 px 기반으로 전달됨 */
+        calc(var(--drop-travel, 110vh) * 0.38),
+        0);
+  }
+
+  100% {
+    transform: translate3d(var(--drop-end-drift, -6px),
+        var(--drop-travel, 110vh),
+        0);
+  }
+}
+
+@keyframes stem {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.25);
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  82% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scaleY(0.55);
+  }
+}
+
+@keyframes splat {
+
+  0%,
+  78% {
+    opacity: 0;
+    transform: scale(0);
+  }
+
+  88% {
+    opacity: var(--splat-opacity, 0.9);
+    transform: scale(1);
+  }
+
+  96% {
+    opacity: calc(var(--splat-opacity, 0.9) * 0.72);
+    transform: scale(1.35);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
+@keyframes phase-transition-wash {
+  0% {
+    opacity: 0;
+  }
+
+  28% {
+    opacity: 1;
+  }
+
+  56% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes phase-transition-card {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.92);
+    filter: blur(8px);
+  }
+
+  24% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+
+  64% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-14px) scale(1.04);
+    filter: blur(2px);
+  }
+}
+
+@keyframes beer-hex-pulse {
+  0% {
+    opacity: calc(var(--beer-hex-opacity, 0.3) * 0.42);
+  }
+
+  35% {
+    opacity: var(--beer-hex-opacity, 0.3);
+  }
+
+  100% {
+    opacity: calc(var(--beer-hex-opacity, 0.3) * 0.42);
+  }
+}
+
+.beer-hex-ambient {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.beer-hex-ambient__hex {
+  position: absolute;
+  display: block;
+  border-radius: 2px;
+  clip-path: polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0 50%);
+  box-shadow:
+    0 0 8px rgba(255, 255, 255, 0.1),
+    0 0 18px rgba(255, 255, 255, 0.08);
+  mix-blend-mode: screen;
+  --beer-hex-opacity: 0.3;
+  animation-name: beer-hex-pulse;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  will-change: opacity;
+}
+
+.phase-transition-blackout {
+  background: #000;
+  animation: phase-transition-wash 3.4s ease-in-out forwards;
+}
+
+.phase-transition-card {
+  animation: phase-transition-card 3.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.rain-wrapper {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* contain:paint로 box-shadow glow가 컨테이너 밖으로 나가지 않도록 */
+  contain: paint;
+}
+
+.rain {
+  position: absolute;
+  inset: 0;
+}
+
+.front-row {
+  z-index: 1;
+  opacity: 0.62;
+}
+
+.back-row {
+  z-index: 0;
+  opacity: 0.32;
+  filter: blur(0.6px);
+}
+
+.drop {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 16px;
+}
+
+.drop-body {
+  position: absolute;
+  top: var(--drop-start-top, -10%);
+  left: 0;
+  width: 16px;
+  height: 78px;
+  overflow: hidden;
+  contain: paint;
+  /* filter 있는 자식도 overflow:hidden 영역 밖으로 나가지 않도록 강제 클립 */
+  animation-name: drop;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+/* drop-body의 % top은 부모(.drop)의 height(=컨테이너 full height) 기준이므로 정상 */
+
+.stem {
+  position: absolute;
+  top: var(--stem-top, 12px);
+  left: var(--stem-offset, 7.5px);
+  width: 1.5px;
+  height: var(--stem-height, 80px);
+  transform-origin: top center;
+  background: linear-gradient(to bottom,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, var(--stem-opacity, 0.95)));
+  box-shadow: 0 0 3px rgba(255, 255, 255, 0.18);
+  /* filter 제거 — filter가 있으면 부모의 overflow:hidden 무시됨 */
+  animation-name: stem;
+  animation-duration: var(--stem-duration, 0.45s);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+
+.splat {
+  position: absolute;
+  left: 50%;
+  bottom: 3px;
+  display: none;
+  width: 15px;
+  height: 10px;
+  border-top: 2px dotted rgba(255, 255, 255, var(--splat-border-opacity, 0.95));
+  border-radius: 50%;
+  translate: -50% 0;
+  transform: scale(0);
+  transform-origin: center;
+  box-shadow: 0 0 6px rgba(255, 255, 255, var(--splat-shadow-opacity, 0.32));
+  animation-name: splat;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.splat-toggle .splat {
+  display: block;
+}
+
+/* 로비 슬로건 border 오버라이드 */
+.lobby-slogan-stage {
+  isolation: isolate;
+}
+
+.lobby-slogan-stage__happy-birthday {
+  z-index: 30;
+}
+
+.lobby-slogan-stage__banner {
+  z-index: 20;
+}
+
+.slogan-lobby .k-celebrate-slogan-container>div {
+  border-color: rgba(0, 0, 0, 0.05);
+}
+
+/* ─── Butterfly Effect (knight combination) ─────────────────────────── */
+
+.bf-wrapper {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  contain: paint;
+}
+
+/* Butterfly container - overall scale applied inline */
+.bf-butterfly {
+  position: absolute;
+  /* 2D only — no 3D transforms on this element */
+  overflow: visible;
+  animation: bf-hover 800ms ease-in-out infinite alternate;
+}
+
+.bf-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  translate: -50% -50%;
+  border-radius: 999px;
+  z-index: 0;
+  background: radial-gradient(
+    circle,
+    #f0f8ff 0%,
+    rgba(240, 248, 255, 0.78) 34%,
+    rgba(240, 248, 255, 0.34) 62%,
+    rgba(240, 248, 255, 0) 100%
+  );
+  filter: blur(3px);
+}
+
+
+/* ── Wing containers — hinge at body spine ── */
+.bf-wing {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  z-index: 1;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  animation-fill-mode: both;
+}
+
+/* Left wing: pivot on the RIGHT edge */
+.bf-wing--left {
+  right: 50%;
+  transform-origin: right center;
+  animation-name: bf-flap-left;
+}
+
+/* Right wing: pivot on the LEFT edge */
+.bf-wing--right {
+  left: 50%;
+  transform-origin: left center;
+  animation-name: bf-flap-right;
+}
+
+/* ── Bits: 3:1 elongated ellipses ── */
+
+/* Left wing bits: attached at the RIGHT edge (spine) */
+.bf-wing--left .bf-bit {
+  position: absolute;
+  right: 0;
+  border-radius: 50%;
+  background: rgba(180, 218, 255, 0.94);
+  transform-origin: 100% 50%;
+}
+
+/* Right wing bits: mirror — attached at the LEFT edge (spine) */
+.bf-wing--right .bf-bit {
+  position: absolute;
+  left: 0;
+  border-radius: 50%;
+  background: rgba(180, 218, 255, 0.94);
+  transform-origin: 0% 50%;
+  /* pivot at left center */
+}
+
+/* Upper wing: Shifted DOWN to criss-cross with lower wing */
+.bf-bit--upper {
+  width: 42px;
+  height: 14px;
+  top: -3px; /* was -7px, so pushed 4px down */
+  transform: rotate(25deg);
+}
+
+/* Right wing upper: mirror angle */
+.bf-wing--right .bf-bit--upper {
+  transform: rotate(-25deg);
+}
+
+/* Lower wing: Shifted UP to criss-cross with upper wing */
+.bf-bit--lower {
+  width: 30px;
+  height: 10px;
+  top: -7px; /* was -6px, so pushed 1px up from center, crossing upper */
+  transform: rotate(-25deg);
+}
+
+/* Right wing lower: mirror angle */
+.bf-wing--right .bf-bit--lower {
+  transform: rotate(25deg);
+}
+
+.bf-bit::after {
+  content: none;
+}
+
+/* ── Keyframes ── */
+@keyframes bf-hover {
+  0% {
+    translate: 0 0;
+  }
+
+  100% {
+    translate: 0 -2px;
+  }
+}
+
+/* Flap the wings by compressing them horizontally toward the body spine. */
+@keyframes bf-flap-left {
+  0%   { transform: scaleX(0.5); }
+  100% { transform: scaleX(0.15); }
+}
+
+@keyframes bf-flap-right {
+  0%   { transform: scaleX(0.5); }
+  100% { transform: scaleX(0.15); }
+}
+
+@keyframes cmy-glitch-wiggle {
+  0% {
+    transform: translate(0, 0) skewX(0deg);
+  }
+
+  18% {
+    transform: translate(-8px, 0) skewX(14deg);
+  }
+
+  32% {
+    transform: translate(10px, -1px) skewX(-6deg);
+  }
+
+  47% {
+    transform: translate(-12px, 1px) skewX(18deg);
+  }
+
+  68% {
+    transform: translate(14px, -1px) skewX(-22deg);
+  }
+
+  84% {
+    transform: translate(-6px, 0) skewX(10deg);
+  }
+
+  100% {
+    transform: translate(0, 0) skewX(0deg);
+  }
+}
+
+.cmy-glitch-overlay {
+  overflow: hidden;
+  contain: paint;
+}
+
+.cmy-glitch-stage {
+  will-change: transform;
+  transform-origin: center;
+}
+
+.cmy-glitch-stage--burst {
+  animation: cmy-glitch-wiggle 0.4s steps(2, end) 1;
+}
+
+.cmy-glitch-block {
+  overflow: hidden;
+  border-radius: 1px;
+}
+
+.cmy-glitch-block::before,
+.cmy-glitch-block::after {
+  content: none;
+}
+
+@keyframes landing-door-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes auth-loading-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(-0.08em);
+  }
+}
+
+.landing-enter-text-stroke {
+  position: relative;
+  z-index: 0;
+  display: inline-block;
+}
+
+.landing-enter-text-stroke::before {
+  content: attr(data-content);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  font: inherit;
+  letter-spacing: inherit;
+  white-space: nowrap;
+  pointer-events: none;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 8px rgba(255, 255, 255);
+}
+
+.landing-door-pulse {
+  animation: landing-door-pulse 2.4s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.auth-loading-dot {
+  display: inline-block;
+  animation: auth-loading-dot 1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-door-pulse {
+    animation: none;
+  }
+
+  .auth-loading-dot {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }

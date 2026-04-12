@@ -1,19 +1,72 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import LandingPage from './pages/LandingPage';
-import Lobby from './pages/Lobby';
+import { lazy, Suspense } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import LandingPage from "./pages/LandingPage";
+import Lobby from "./pages/Lobby";
+
+import { CursorManager } from "./components/game/CursorManager";
+import GlobalLoading from "./components/common/GlobalLoading";
+import { AchievementToast } from "./components/common/AchievementToast";
+import { GlobalAudioToggle } from "./components/common/GlobalAudioToggle";
+import NotFound from "./pages/NotFound";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
+import LandingCompareSample from "./pages/LandingCompareSample";
+import AchievementListShowcase from "./pages/AchievementListShowcase";
+
+const CodyGame = lazy(() => import("./pages/CodyGame"));
+const AdventureGame = lazy(() => import("./pages/AdventureGame"));
+const CodySample = lazy(() => import("./pages/CodySample"));
+const PuzzleGame = lazy(() => import("./pages/PuzzleGame"));
+const PuzzleSandbox = lazy(() => import("./pages/PuzzleSandbox"));
+const HologramPlayground = lazy(() => import("./pages/HologramPlayground"));
+const AsparagusMerge = lazy(() => import("./pages/AsparagusMerge"));
+const AsparagusShowcase = lazy(() => import("./pages/AsparagusShowcase"));
+const Credits = lazy(() => import("./pages/Credits"));
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/lobby" element={<Lobby />} />
-        {/* Route placeholders for games */}
-        <Route path="/game/cody" element={<div className="min-h-screen bg-black text-white flex items-center justify-center text-2xl font-bold">TPO Cody Game (Coming Soon)</div>} />
-        <Route path="/game/itabag" element={<div className="min-h-screen bg-black text-white flex items-center justify-center text-2xl font-bold">Itabag Decoration (Coming Soon)</div>} />
-        <Route path="/game/baseball" element={<div className="min-h-screen bg-black text-white flex items-center justify-center text-2xl font-bold">Number Baseball (Coming Soon)</div>} />
-      </Routes>
-    </Router>
+    <div>
+      <AchievementToast />
+      <CursorManager />
+      <Router>
+        <GlobalLoading />
+        <GlobalAudioToggle />
+        <Suspense fallback={null}>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+
+            <Route element={<ProtectedRoute />}>
+              <Route path="/lobby" element={<Lobby />} />
+              <Route path="/game/cody" element={<CodyGame />} />
+              <Route path="/game/adventure" element={<AdventureGame />} />
+              <Route path="/game/puzzle" element={<PuzzleGame />} />
+              <Route path="/game/asparagus" element={<AsparagusMerge />} />
+              <Route path="/credits" element={<Credits />} />
+            </Route>
+
+            <Route element={<AdminOnlyRoute />}>
+              <Route
+                path="/sample/landing-compare"
+                element={<LandingCompareSample />}
+              />
+              <Route
+                path="/sample/achievements"
+                element={<AchievementListShowcase />}
+              />
+              ``
+              <Route path="/sample/cody" element={<CodySample />} />
+              <Route path="/sample/adventure" element={<AdventureGame />} />
+              <Route path="/sample/puzzle" element={<PuzzleSandbox />} />
+              <Route path="/sample/hologram" element={<HologramPlayground />} />
+              <Route path="/sample/asparagus" element={<AsparagusShowcase />} />
+            </Route>
+
+            {/* 404 Not Found */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </Router>
+    </div>
   );
 }
 
