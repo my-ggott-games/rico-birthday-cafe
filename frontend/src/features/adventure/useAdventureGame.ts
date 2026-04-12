@@ -49,6 +49,16 @@ import {
   startAdventureAssetPreload,
 } from "./adventureAssets";
 
+const submitAdventureBestScore = (bestScore: number) => {
+  fetchWithAuth(`/adventure/score`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ bestScore }),
+  }).catch((error) =>
+    console.warn("Failed to save adventure best score", error),
+  );
+};
+
 export function useAdventureGame() {
   const { token, isGuest } = useAuthStore();
   const addToast = useToastStore((state) => state.addToast);
@@ -100,6 +110,33 @@ export function useAdventureGame() {
       setBestScore(parsed);
     }
   }, []);
+
+  useEffect(() => {
+    if (isGuest || !token) return;
+
+    const fetchBestScore = async () => {
+      try {
+        const response = await fetchWithAuth(`/adventure/score`);
+        if (!response.ok) return;
+
+        const serverBestScore = await response.json();
+        if (
+          typeof serverBestScore !== "number" ||
+          !Number.isFinite(serverBestScore)
+        ) {
+          return;
+        }
+
+        setBestScore((currentBestScore) =>
+          Math.max(currentBestScore, serverBestScore),
+        );
+      } catch (error) {
+        console.warn("Failed to fetch adventure best score", error);
+      }
+    };
+
+    void fetchBestScore();
+  }, [isGuest, token]);
 
   useEffect(() => {
     startAdventureAssetPreload();
@@ -213,6 +250,10 @@ export function useAdventureGame() {
       setBestScore((currentBest) =>
         finalScore > currentBest ? finalScore : currentBest,
       );
+
+      if (token && !isGuest) {
+        submitAdventureBestScore(finalScore);
+      }
 
       if (finalScore >= 1000 && token && !isGuest) {
         void awardLegendAchievement();
