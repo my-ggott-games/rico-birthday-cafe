@@ -105,6 +105,7 @@ const CREDITS_SECTIONS: CreditSection[] = [
           { role: "", name: "송파 황제 Harlockius" },
           { role: "", name: "금자C" },
           { role: "", name: "HE" },
+          { role: "", name: "슈슉" },
           { role: "", name: "CODE NAME: G" },
         ],
       },
