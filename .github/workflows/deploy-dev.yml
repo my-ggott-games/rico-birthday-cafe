@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy over SSH
+      - name: Deploy dev over SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VM_HOST }}
@@ -19,10 +19,17 @@ jobs:
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
             set -e
-            cd ${{ secrets.DEPLOY_PATH }}
+
+            # dev 코드 갱신
+            cd /home/deploy/app
             git fetch origin
             git checkout dev
             git pull origin dev
-            docker compose down
-            docker compose up -d --build
+
+            # dev 서비스만 재배포
+            cd /home/deploy
+            docker compose -f deploy-compose.yml up -d --build app-dev
+
+            # 확인
             docker ps
+            curl http://localhost:8001/actuator/health
