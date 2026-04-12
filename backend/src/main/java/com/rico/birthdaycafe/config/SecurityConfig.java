@@ -9,7 +9,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -19,21 +18,11 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-
-    private static final List<String> DEFAULT_ALLOWED_ORIGINS = List.of(
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
-            "http://192.168.*:*",
-            "http://10.*:*",
-            "http://172.*:*",
-            "https://dev-rico-cafe.netlify.app"
-    );
 
     private final JwtTokenProvider tokenProvider;
 
@@ -74,13 +63,7 @@ public class SecurityConfig {
                         .filter(origin -> !origin.isEmpty())
                         .toList();
 
-        List<String> effectiveOriginPatterns = Stream.concat(
-                        DEFAULT_ALLOWED_ORIGINS.stream(),
-                        configuredOrigins.stream())
-                .distinct()
-                .toList();
-
-        configuration.setAllowedOriginPatterns(effectiveOriginPatterns);
+        configuration.setAllowedOriginPatterns(configuredOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
