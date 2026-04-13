@@ -366,7 +366,7 @@ const Lobby: React.FC = () => {
       setIsSloganCollectorUnlocked(true);
 
       if (awardResult.awarded) {
-        addAchievementToast(addToast, awardResult.achievement);
+        addAchievementToast(addToast, awardResult.achievement, "lobby");
       }
     } catch (error) {
       console.error("Failed to award slogan collector achievement", error);

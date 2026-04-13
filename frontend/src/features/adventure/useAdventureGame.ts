@@ -236,7 +236,7 @@ export function useAdventureGame() {
           detail: { code: R_GEND_HERO_CODE },
         }),
       );
-      addAchievementToast(addToast, awardResult.achievement);
+      addAchievementToast(addToast, awardResult.achievement, "adventure");
     } catch (error) {
       console.error("Failed to award adventure achievement", error);
     }

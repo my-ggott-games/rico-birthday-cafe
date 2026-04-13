@@ -349,7 +349,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
 
         const awardResult = await parseAchievementAwardResponse(response);
         if (awardResult?.awarded) {
-          addAchievementToast(addToast, awardResult.achievement);
+          addAchievementToast(addToast, awardResult.achievement, "puzzle");
         }
       } catch (error) {
         console.error("Failed to award puzzle achievement", error);

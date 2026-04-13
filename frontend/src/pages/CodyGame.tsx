@@ -852,6 +852,7 @@ const CodyGame: React.FC = () => {
                                   addAchievementToast(
                                     addToast,
                                     awardResult.achievement,
+                                    "cody",
                                   );
                                 }
                               }

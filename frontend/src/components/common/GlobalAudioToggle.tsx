@@ -1,6 +1,7 @@
 import React from "react";
 import { matchPath, useLocation } from "react-router-dom";
 import { useAudioStore } from "../../store/useAudioStore";
+import { pushEvent } from "../../utils/analytics";
 import { AppIcon } from "./AppIcon";
 import { NoteModal, type NoteModalContent } from "./NoteModal";
 
@@ -126,7 +127,10 @@ export const GlobalAudioToggle: React.FC = () => {
 
         <button
           type="button"
-          onClick={toggleMuted}
+          onClick={() => {
+            pushEvent("toggle_audio", { is_muted: !isMuted });
+            toggleMuted();
+          }}
           className={`flex select-none items-center gap-2 rounded-2xl border-2 px-4 py-3 text-sm font-black backdrop-blur-sm transition-transform hover:-translate-y-0.5 ${
             isCodyGame
               ? "border-[#D8B98C] bg-[#FFF8EA]/95 text-[#166D77] shadow-[0_10px_30px_rgba(216,185,140,0.22)]"
