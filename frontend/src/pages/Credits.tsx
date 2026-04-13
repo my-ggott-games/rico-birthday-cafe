@@ -4,6 +4,10 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { useToastStore } from "../store/useToastStore";
+import {
+  addAchievementToast,
+  parseAchievementAwardResponse,
+} from "../utils/achievementAwards";
 import { BASE_URL } from "../utils/api";
 import { ReturnButton } from "../components/common/ReturnButton";
 import { AppIcon } from "../components/common/AppIcon";
@@ -381,17 +385,18 @@ export default function Credits() {
         },
       });
       if (res.ok) {
-        const newlyAwarded = (await res.json()) === true;
+        const awardResult = await parseAchievementAwardResponse(res);
+        if (!awardResult) {
+          console.error("Failed to parse achievement award response");
+          return;
+        }
+
         setClaimed(true);
         setManualScrollEnabled(true);
         setHighlightClaim(false);
-        if (newlyAwarded) {
+        if (awardResult.awarded) {
           void playDiriringSfx();
-          addToast({
-            title: "엔딩 크레딧 시청 완료",
-            description: "THANK_YOU_ALL 업적이 추가되었어요.",
-            icon: "BadgeCheck",
-          });
+          addAchievementToast(addToast, awardResult.achievement);
         }
       } else {
         console.error("Failed to claim achievement");

@@ -5,6 +5,10 @@ import { fetchWithAuth } from "../utils/api";
 import { useAuthStore } from "../store/useAuthStore";
 import { useToastStore } from "../store/useToastStore";
 import { PushableButton } from "../components/common/PushableButton";
+import {
+  addAchievementToast,
+  parseAchievementAwardResponse,
+} from "../utils/achievementAwards";
 
 const NotFound: React.FC = () => {
   const navigate = useNavigate();
@@ -40,16 +44,12 @@ const NotFound: React.FC = () => {
           return;
         }
 
-        const newlyAwarded = (await response.json()) === true;
-        if (newlyAwarded) {
+        const awardResult = await parseAchievementAwardResponse(response);
+        if (awardResult?.awarded) {
           if (awardStorageKey) {
             window.localStorage.setItem(awardStorageKey, "true");
           }
-          addToast({
-            title: "길을 잃었다~",
-            description: "어딜 가야 할까~",
-            icon: "FileQuestionMark",
-          });
+          addAchievementToast(addToast, awardResult.achievement);
         }
       } catch (error) {
         console.error("Failed to award not-found achievement", error);

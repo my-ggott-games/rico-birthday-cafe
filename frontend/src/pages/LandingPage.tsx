@@ -5,6 +5,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { AuthModal } from "../components/auth/AuthModal";
 import ProgressiveBackground from "../components/common/ProgressiveBackground";
 import ProgressiveImage from "../components/common/ProgressiveImage";
+import { pushEvent } from "../utils/analytics";
 
 const LANDING_IMAGE_ASPECT = "aspect-[3847/2885]";
 const MOBILE_DOOR_FRAME_CLASS =
@@ -18,6 +19,10 @@ const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  useEffect(() => {
+    pushEvent("view_home");
+  }, []);
   const [isMobileViewport, setIsMobileViewport] = useState(
     () => window.innerWidth < 768,
   );
@@ -46,6 +51,9 @@ const LandingPage: React.FC = () => {
     if (isOpen) {
       return;
     }
+
+    pushEvent("click_enter_site");
+    pushEvent("click_cta_main");
 
     if (isAuthenticated) {
       triggerEnterAnimation();

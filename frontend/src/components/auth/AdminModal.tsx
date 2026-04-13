@@ -4,6 +4,11 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { useToastStore } from "../../store/useToastStore";
 import { EASTER_EGG_NOTE_ACCESS_STORAGE_KEY } from "../../constants/noteAccess";
 import { BASE_URL } from "../../utils/api";
+import { pushEvent } from "../../utils/analytics";
+import {
+  addAchievementToast,
+  parseAchievementAwardResponse,
+} from "../../utils/achievementAwards";
 
 const ASCII_INPUT_REGEX = /^[A-Za-z0-9]$/;
 const KOREAN_TO_ENGLISH_MAP: Record<string, string> = {
@@ -153,6 +158,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
     async (currentInputs: string[]) => {
       const passcode = buildPasscode(currentInputs);
 
+      pushEvent("admin_login_attempt");
       setLoading(true);
       try {
         const res = await fetch(`${BASE_URL}/auth/admin`, {
@@ -182,25 +188,18 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               method: "POST",
               headers: { Authorization: `Bearer ${token}` },
             })
-              .then(async (response) => {
-                if (!response.ok) {
-                  return false;
-                }
-                return (await response.json()) === true;
-              })
-              .then((newlyAwarded) => {
-                if (newlyAwarded && debutDateAwardStorageKey) {
+              .then((response) => parseAchievementAwardResponse(response))
+              .then((awardResult) => {
+                if (awardResult?.awarded && debutDateAwardStorageKey) {
                   window.localStorage.setItem(debutDateAwardStorageKey, "true");
+                }
+
+                if (awardResult?.awarded) {
+                  addAchievementToast(addToast, awardResult.achievement);
                 }
               })
               .catch(console.error);
           }
-
-          addToast({
-            title: "관리자 권한에 접근한 자",
-            description: "정답은 리코 데뷔 날짜였습니다~",
-            icon: "Eye",
-          });
 
           setTimeout(() => {
             onClose();
@@ -225,21 +224,16 @@ export const AdminModal: React.FC<AdminModalProps> = ({
             },
           },
         );
-        const achievementAwarded = achievementRes.ok
-          ? await achievementRes.json()
-          : false;
+        const achievementAwardResult =
+          await parseAchievementAwardResponse(achievementRes);
 
         addToast({
           title: "시스템 권한 획득",
           description: "관리자 모드로 입장합니다.",
           icon: "KeyRound",
         });
-        if (achievementAwarded) {
-          addToast({
-            title: "??? 예요.",
-            description: "내 별은 영원히 너야.",
-            icon: "Rose",
-          });
+        if (achievementAwardResult?.awarded) {
+          addAchievementToast(addToast, achievementAwardResult.achievement);
         }
 
         setTimeout(() => {

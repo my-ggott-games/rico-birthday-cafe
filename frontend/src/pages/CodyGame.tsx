@@ -39,6 +39,12 @@ import { pickRandomActivityBgm } from "../utils/bgm";
 import { BASE_URL } from "../utils/api";
 import { useAuthStore } from "../store/useAuthStore";
 import { useToastStore } from "../store/useToastStore";
+import {
+  addAchievementToast,
+  parseAchievementAwardResponse,
+} from "../utils/achievementAwards";
+import { pushEvent } from "../utils/analytics";
+import { useViewEvent } from "../hooks/usePageTracking";
 
 type ShareNavigator = Navigator & {
   canShare?: (data?: ShareData) => boolean;
@@ -64,7 +70,7 @@ const INVALID_POLAROID_SCALE = 0.5;
 const VALID_POLAROID_SCALE = 1;
 const PNG_ASSET = (name: string) => `/assets/codygame/${name}.png`;
 
-const CODY_LEGEND_ACHIEVEMENT_CODE = "CODY_LEGEND_COORDINATOR";
+const LEGEND_ACHIEVEMENT_CODE = "LEGEND_COORDINATOR";
 const CODY_DISCOVERED_COMBOS_KEY = "cody_discovered_combos";
 const TOTAL_VALID_COMBOS = 5; // training 제외, 유효한 조합 수
 
@@ -226,9 +232,28 @@ const CodyGame: React.FC = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [activeTab, setActiveTab] = useState<MobileTabId>("hair");
   const codyAchievementAwardedRef = React.useRef(false);
+  const hasStartedRef = React.useRef(false);
+  const completedEventFiredRef = React.useRef(false);
+
+  useViewEvent("view_game", { game_name: "리코의 외출 준비" });
 
   const { token } = useAuthStore();
   const { addToast } = useToastStore();
+
+  React.useEffect(() => {
+    const hasAnyEquipped = Object.values(equippedIds).some(Boolean);
+    if (hasAnyEquipped && !hasStartedRef.current) {
+      hasStartedRef.current = true;
+      pushEvent("start_game", { game_name: "리코의 외출 준비" });
+    }
+  }, [equippedIds]);
+
+  React.useEffect(() => {
+    if (isFinished && !completedEventFiredRef.current) {
+      completedEventFiredRef.current = true;
+      pushEvent("complete_game", { game_name: "리코의 외출 준비" });
+    }
+  }, [isFinished]);
 
   React.useEffect(() => {
     if (!token) {
@@ -255,8 +280,7 @@ const CodyGame: React.FC = () => {
 
         codyAchievementAwardedRef.current = achievements.some(
           (achievement) =>
-            achievement.code === CODY_LEGEND_ACHIEVEMENT_CODE &&
-            achievement.earned,
+            achievement.code === LEGEND_ACHIEVEMENT_CODE && achievement.earned,
         );
       } catch (error) {
         console.error("Failed to hydrate Cody achievement state", error);
@@ -317,6 +341,9 @@ const CodyGame: React.FC = () => {
 
   const handleReset = () => {
     if (isFinished) {
+      pushEvent("retry_game", { game_name: "리코의 외출 준비" });
+      hasStartedRef.current = false;
+      completedEventFiredRef.current = false;
       // "Fly away" animation first
       setIsFlyAway(true);
       setShowButtons(false);
@@ -503,8 +530,7 @@ const CodyGame: React.FC = () => {
     const isDragging = !isMobile && activeId === item.id;
     const isDisabled = isItemDisabled(item);
     const showRaisedEquippedBadge =
-      !isMobile &&
-      ["top", "skirt", "dress", "jacket"].includes(item.category);
+      !isMobile && ["top", "skirt", "dress", "jacket"].includes(item.category);
     const handleClick = () => {
       if (isEquipped) {
         setEquippedItems((prev) => ({
@@ -613,6 +639,7 @@ const CodyGame: React.FC = () => {
           shareNavigator.share &&
           shareNavigator.canShare?.({ files: [file] })
         ) {
+          pushEvent("click_share", { game_name: "리코의 외출 준비" });
           await shareNavigator.share({
             title: "유즈하 리코 생일 기념 리코의 외출 준비",
             text: "나만의 리코 외출 준비를 해봤어요! 여러분도 함께 축하해주세요.",
@@ -652,8 +679,8 @@ const CodyGame: React.FC = () => {
       >
         {activeBackground === "spring" && !isFinished && (
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                  <PolaroidSpringBackdrop isFinished={false} />
-                  <PolaroidFireflyOverlay isFinished={false} />
+            <PolaroidSpringBackdrop isFinished={false} />
+            <PolaroidFireflyOverlay isFinished={false} />
           </div>
         )}
 
@@ -765,9 +792,7 @@ const CodyGame: React.FC = () => {
                           ][Math.floor(Math.random() * 3)],
                         );
                       } else if (matchedCombo.backgroundClass === "beer") {
-                        setOrientalBgUrl(
-                          "/assets/codygame/background_6-1.jpg",
-                        );
+                        setOrientalBgUrl("/assets/codygame/background_6-1.jpg");
                       } else if (matchedCombo.backgroundClass === "knight") {
                         setOrientalBgUrl(
                           [
@@ -814,22 +839,20 @@ const CodyGame: React.FC = () => {
                           void (async () => {
                             try {
                               const res = await fetch(
-                                `${BASE_URL}/achievements/award/${CODY_LEGEND_ACHIEVEMENT_CODE}`,
+                                `${BASE_URL}/achievements/award/${LEGEND_ACHIEVEMENT_CODE}`,
                                 {
                                   method: "POST",
                                   headers: { Authorization: `Bearer ${token}` },
                                 },
                               );
                               if (res.ok) {
-                                const newlyAwarded =
-                                  (await res.json()) === true;
-                                if (newlyAwarded) {
-                                  addToast({
-                                    title: "전설의 코디네이터",
-                                    description:
-                                      "특별한 코디 조합을 전부 찾아냈다.",
-                                    icon: "Shirt",
-                                  });
+                                const awardResult =
+                                  await parseAchievementAwardResponse(res);
+                                if (awardResult?.awarded) {
+                                  addAchievementToast(
+                                    addToast,
+                                    awardResult.achievement,
+                                  );
                                 }
                               }
                             } catch {

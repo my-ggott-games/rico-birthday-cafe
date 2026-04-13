@@ -21,6 +21,10 @@ import { LOBBY_BGM_SRC } from "../utils/bgm";
 import { useAuthStore } from "../store/useAuthStore";
 import { BASE_URL, fetchWithAuth } from "../utils/api";
 import { useToastStore } from "../store/useToastStore";
+import {
+  addAchievementToast,
+  parseAchievementAwardResponse,
+} from "../utils/achievementAwards";
 
 const SLOGAN_COLLECTOR_CODE = "SLOGAN_COLLECTOR";
 const SLOGAN_COLLECTOR_STORAGE_KEY = "lobby_slogan_collector_unlocked";
@@ -204,7 +208,7 @@ const Lobby: React.FC = () => {
   const isAdmin = useAuthStore((state) => state.isAdmin);
   const token = useAuthStore((state) => state.token);
   const navigate = useNavigate();
-  const { addToast } = useToastStore();
+  const addToast = useToastStore((state) => state.addToast);
 
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [backgroundSrc, setBackgroundSrc] = useState(
@@ -353,21 +357,21 @@ const Lobby: React.FC = () => {
         return;
       }
 
-      const newlyAwarded = (await response.json()) === true;
+      const awardResult = await parseAchievementAwardResponse(response);
+      if (!awardResult) {
+        return;
+      }
+
       window.localStorage.setItem(SLOGAN_COLLECTOR_STORAGE_KEY, "true");
       setIsSloganCollectorUnlocked(true);
 
-      if (newlyAwarded) {
-        addToast({
-          title: "슬로건을 탐낸 자",
-          description: "카페 소품을 소중히 다뤄주세요!",
-          icon: "Hand",
-        });
+      if (awardResult.awarded) {
+        addAchievementToast(addToast, awardResult.achievement);
       }
     } catch (error) {
       console.error("Failed to award slogan collector achievement", error);
     }
-  }, [addToast, isGuest, token]);
+  }, [addToast, isGuest, isSloganCollectorUnlocked, token]);
 
   const triggerHappyBirthdayDrop = useCallback(() => {
     if (isHappyBirthdayDropping || isHappyBirthdayHidden) {

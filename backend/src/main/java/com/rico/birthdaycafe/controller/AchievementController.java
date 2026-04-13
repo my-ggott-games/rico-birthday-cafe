@@ -1,6 +1,7 @@
 package com.rico.birthdaycafe.controller;
 
 import com.rico.birthdaycafe.dto.AchievementDto;
+import com.rico.birthdaycafe.dto.AchievementAwardResponse;
 import com.rico.birthdaycafe.entity.User;
 import com.rico.birthdaycafe.entity.UserAchievement;
 import com.rico.birthdaycafe.security.CustomUserDetails;
@@ -62,11 +63,13 @@ public class AchievementController {
      * Service layer handles idempotency (ignores if already earned).
      */
     @PostMapping("/award/{code}")
-    public ResponseEntity<Boolean> awardAchievement(
+    public ResponseEntity<AchievementAwardResponse> awardAchievement(
             @PathVariable String code,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        boolean awarded = achievementService.awardAchievement(userDetails.getUser(), code);
-        return ResponseEntity.ok(awarded);
+        User user = userDetails.getUser();
+        boolean awarded = achievementService.awardAchievement(user, code);
+        AchievementDto achievement = achievementService.getAchievementWithStatus(user, code).orElse(null);
+        return ResponseEntity.ok(new AchievementAwardResponse(awarded, achievement));
     }
 
     @PostMapping("/active/{code}")
