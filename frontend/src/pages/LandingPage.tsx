@@ -23,19 +23,7 @@ const LandingPage: React.FC = () => {
   useEffect(() => {
     pushEvent("view_home");
   }, []);
-  const [isMobileViewport, setIsMobileViewport] = useState(
-    () => window.innerWidth < 768,
-  );
   const { isAuthenticated } = useAuthStore();
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobileViewport(window.innerWidth < 768);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   const preventDrag = (event: React.DragEvent<HTMLElement>) => {
     event.preventDefault();
