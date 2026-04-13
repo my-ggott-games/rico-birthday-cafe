@@ -26,8 +26,6 @@ const LandingPage: React.FC = () => {
   const [isMobileViewport, setIsMobileViewport] = useState(
     () => window.innerWidth < 768,
   );
-  const [isBackgroundReady, setIsBackgroundReady] = useState(false);
-  const [isMobileFrameReady, setIsMobileFrameReady] = useState(false);
   const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
@@ -42,10 +40,6 @@ const LandingPage: React.FC = () => {
   const preventDrag = (event: React.DragEvent<HTMLElement>) => {
     event.preventDefault();
   };
-
-  const isEnterButtonReady = isMobileViewport
-    ? isBackgroundReady && isMobileFrameReady
-    : isBackgroundReady;
 
   const handleEnter = () => {
     if (isOpen) {
@@ -102,7 +96,7 @@ const LandingPage: React.FC = () => {
           overlayClassName="bg-transparent"
           imageClassName="object-cover object-center"
           showVignette={false}
-          onHighResVisible={() => setIsBackgroundReady(true)}
+
         />
 
         <div className="pointer-events-none absolute inset-0 z-10 bg-[#05080c] md:hidden">
@@ -114,10 +108,10 @@ const LandingPage: React.FC = () => {
               alt=""
               className="h-full w-full"
               imageClassName="object-cover object-center"
-              onHighResVisible={() => setIsMobileFrameReady(true)}
+
             />
 
-            {!isOpen && isEnterButtonReady && (
+            {!isOpen && (
               <motion.div
                 onClick={handleEnter}
                 className={MOBILE_DOOR_FRAME_CLASS}
@@ -151,7 +145,7 @@ const LandingPage: React.FC = () => {
 
         <div className="absolute left-1/2 top-0 hidden -translate-x-1/2 md:block">
           <div className={DESKTOP_LANDING_FRAME_CLASS}>
-            {!isOpen && isEnterButtonReady && (
+            {!isOpen && (
               <motion.div
                 onClick={handleEnter}
                 className={`${DESKTOP_DOOR_FRAME_CLASS} cursor-pointer`}

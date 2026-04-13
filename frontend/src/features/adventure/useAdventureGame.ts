@@ -74,7 +74,7 @@ export function useAdventureGame() {
   const [resultScore, setResultScore] = useState(0);
   const [stageScale, setStageScale] = useState(1);
   const [speedMessage, setSpeedMessage] = useState<string | null>(null);
-  const [showIntroMessage, setShowIntroMessage] = useState(true);
+  const [introMessageStep, setIntroMessageStep] = useState<0 | 1 | null>(0);
   const [isMobile, setIsMobile] = useState(false);
 
   // Refs for per-frame state — bypasses React re-renders
@@ -203,7 +203,7 @@ export function useAdventureGame() {
     setScore(0);
     setDisplaySpeedTier(0);
     setSpeedMessage(null);
-    setShowIntroMessage(true);
+    setIntroMessageStep(0);
   }, []);
 
   useEffect(() => {
@@ -267,8 +267,11 @@ export function useAdventureGame() {
     runStateRef.current = "running";
     setRunState("running");
     introMessageTimeoutRef.current = window.setTimeout(() => {
-      setShowIntroMessage(false);
-    }, 5000);
+      setIntroMessageStep(1);
+      introMessageTimeoutRef.current = window.setTimeout(() => {
+        setIntroMessageStep(null);
+      }, 1500);
+    }, 1500);
   }, [resetStage]);
 
   const restartGame = useCallback(() => {
@@ -551,7 +554,11 @@ export function useAdventureGame() {
   const introInstructionMessage =
     runState === "running"
       ? (speedMessage ??
-        (showIntroMessage ? "탭, 클릭, 스페이스바로 점프" : null))
+        (introMessageStep === 0
+          ? "탭, 클릭, 스페이스바로 점프"
+          : introMessageStep === 1
+            ? "꾸욱 눌러 높게 점프"
+            : null))
       : null;
 
   return {
