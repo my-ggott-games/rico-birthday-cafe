@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { GameContainer } from "../components/common/GameContainer";
 import { ScoreStatCard } from "../components/common/ScoreStatCard";
 import { ScoreStatGroup } from "../components/common/ScoreStatGroup";
@@ -9,10 +9,15 @@ import { AdventureStageScene } from "../features/adventure/AdventureStageScene";
 import { useAdventureGame } from "../features/adventure/useAdventureGame";
 import { usePageBgm } from "../hooks/usePageBgm";
 import { pickRandomActivityBgm } from "../utils/bgm";
+import { pushEvent } from "../utils/analytics";
+import { useViewEvent } from "../hooks/usePageTracking";
 
 export default function AdventureGame() {
   const [bgmSrc] = useState(() => pickRandomActivityBgm());
   usePageBgm(bgmSrc, { volume: 0.48 });
+  useViewEvent("view_game", { game_name: "용사 리코 이야기 1" });
+
+  const gameOverFiredRef = useRef(false);
 
   const {
     runState,
@@ -38,6 +43,16 @@ export default function AdventureGame() {
     handleStagePointerDown,
     handleStagePointerUp,
   } = useAdventureGame();
+
+  useEffect(() => {
+    if (runState === "gameover" && !gameOverFiredRef.current) {
+      gameOverFiredRef.current = true;
+      pushEvent("complete_game", { game_name: "용사 리코 이야기 1", score: resultScore });
+    }
+    if (runState === "ready") {
+      gameOverFiredRef.current = false;
+    }
+  }, [runState, resultScore]);
 
   const targetProgress = Math.min(100, (score / 1000) * 100);
 
@@ -70,7 +85,7 @@ export default function AdventureGame() {
         status="유산소 시작이다!"
         title="준비됐어?"
         description="마왕을 물리치려면 이 정도는 기본이지"
-        actions={[{ label: "시작하기", onClick: startGame }]}
+        actions={[{ label: "시작하기", onClick: () => { pushEvent("start_game", { game_name: "용사 리코 이야기 1" }); startGame(); } }]}
       />
     ) : runState === "paused" ? (
       <AdventureModal
@@ -80,7 +95,7 @@ export default function AdventureGame() {
         description="다시 훈련에 집중해볼까?"
         actions={[
           { label: "이어서 달리기", onClick: resumeGame },
-          { label: "처음부터", onClick: restartGame, tone: "secondary" },
+          { label: "처음부터", onClick: () => { pushEvent("retry_game", { game_name: "용사 리코 이야기 1" }); restartGame(); }, tone: "secondary" },
         ]}
       />
     ) : runState === "gameover" ? (
@@ -95,7 +110,7 @@ export default function AdventureGame() {
         description={
           resultScore >= 1000 ? "줄여서 오운R" : "안 돼! 정신 차려!!"
         }
-        actions={[{ label: "다시 달리기", onClick: restartGame }]}
+        actions={[{ label: "다시 달리기", onClick: () => { pushEvent("retry_game", { game_name: "용사 리코 이야기 1" }); restartGame(); } }]}
       >
         <div className="grid grid-cols-2 gap-3">
           <ScoreStatCard

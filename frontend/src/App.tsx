@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import Lobby from "./pages/Lobby";
+import { usePageTracking } from "./hooks/usePageTracking";
 
 import { CursorManager } from "./components/game/CursorManager";
 import GlobalLoading from "./components/common/GlobalLoading";
@@ -11,7 +12,6 @@ import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
 import LandingCompareSample from "./pages/LandingCompareSample";
-import AchievementListShowcase from "./pages/AchievementListShowcase";
 
 const CodyGame = lazy(() => import("./pages/CodyGame"));
 const AdventureGame = lazy(() => import("./pages/AdventureGame"));
@@ -23,12 +23,18 @@ const AsparagusMerge = lazy(() => import("./pages/AsparagusMerge"));
 const AsparagusShowcase = lazy(() => import("./pages/AsparagusShowcase"));
 const Credits = lazy(() => import("./pages/Credits"));
 
+function PageTracker() {
+  usePageTracking();
+  return null;
+}
+
 function App() {
   return (
     <div>
       <AchievementToast />
       <CursorManager />
       <Router>
+        <PageTracker />
         <GlobalLoading />
         <GlobalAudioToggle />
         <Suspense fallback={null}>
@@ -49,11 +55,6 @@ function App() {
                 path="/sample/landing-compare"
                 element={<LandingCompareSample />}
               />
-              <Route
-                path="/sample/achievements"
-                element={<AchievementListShowcase />}
-              />
-              ``
               <Route path="/sample/cody" element={<CodySample />} />
               <Route path="/sample/adventure" element={<AdventureGame />} />
               <Route path="/sample/puzzle" element={<PuzzleSandbox />} />

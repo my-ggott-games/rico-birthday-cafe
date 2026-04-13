@@ -10,6 +10,10 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { useToastStore } from "../../store/useToastStore";
 import { fetchWithAuth } from "../../utils/api";
 import {
+  addAchievementToast,
+  parseAchievementAwardResponse,
+} from "../../utils/achievementAwards";
+import {
   type RunState,
   ADVENTURE_BEST_SCORE_KEY,
   R_GEND_HERO_CODE,
@@ -224,19 +228,15 @@ export function useAdventureGame() {
       );
       if (!response.ok) return;
 
-      const awarded = (await response.json()) === true;
-      if (!awarded) return;
+      const awardResult = await parseAchievementAwardResponse(response);
+      if (!awardResult?.awarded) return;
 
       window.dispatchEvent(
         new CustomEvent("achievement-unlocked", {
           detail: { code: R_GEND_HERO_CODE },
         }),
       );
-      addToast({
-        title: "R전드 용사",
-        description: "레전드보다 R전드가 좋은거죠?",
-        icon: "Crown",
-      });
+      addAchievementToast(addToast, awardResult.achievement);
     } catch (error) {
       console.error("Failed to award adventure achievement", error);
     }

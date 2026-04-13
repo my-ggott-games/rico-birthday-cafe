@@ -46,6 +46,40 @@ public class AchievementService {
     }
 
     @Transactional(readOnly = true)
+    public Optional<AchievementDto> getAchievementWithStatus(User user, String achievementCode) {
+        String activeAchievementCode = user.getActiveAchievementCode();
+        boolean isAdminUser = "chiko_03240324".equals(user.getUsername());
+
+        return achievementRepository.findByCode(achievementCode)
+                .map(achievement -> {
+                    if (isAdminUser) {
+                        return new AchievementDto(
+                                achievement.getCode(),
+                                achievement.getTitle(),
+                                achievement.getDescription(),
+                                achievement.getIconUrl(),
+                                java.time.LocalDateTime.now(),
+                                true,
+                                achievement.getCode().equals(activeAchievementCode)
+                        );
+                    }
+
+                    Optional<UserAchievement> userAchievement =
+                            userAchievementRepository.findByUserAndAchievement(user, achievement);
+
+                    return new AchievementDto(
+                            achievement.getCode(),
+                            achievement.getTitle(),
+                            achievement.getDescription(),
+                            achievement.getIconUrl(),
+                            userAchievement.map(UserAchievement::getUnlockedAt).orElse(null),
+                            userAchievement.isPresent(),
+                            achievement.getCode().equals(activeAchievementCode)
+                    );
+                });
+    }
+
+    @Transactional(readOnly = true)
     public List<UserAchievement> getUserAchievements(User user) {
         return userAchievementRepository.findByUserOrderByUnlockedAtDesc(user);
     }

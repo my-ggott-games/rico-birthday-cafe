@@ -4,6 +4,7 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { BASE_URL } from "../../utils/api";
 import { AppIcon } from "../common/AppIcon";
 import { PushableButton } from "../common/PushableButton";
+import { pushEvent } from "../../utils/analytics";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -359,6 +360,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const copyToClipboard = async (text: string) => {
     await navigator.clipboard.writeText(text);
+    pushEvent("copy_link");
     setCopied(true);
 
     if (copyResetTimerRef.current !== null) {
@@ -445,6 +447,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   // ── Login with existing ticket ──────────────────────────────────────────────
   const handleExistingTicketLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    pushEvent("click_start_button");
     setError("");
     setShowGuestEntry(false);
 

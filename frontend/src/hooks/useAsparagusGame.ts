@@ -1,6 +1,12 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
 import { fetchWithAuth } from "../utils/api";
+import { useAuthStore } from "../store/useAuthStore";
+import { useToastStore } from "../store/useToastStore";
+import {
+  addAchievementToast,
+  parseAchievementAwardResponse,
+} from "../utils/achievementAwards";
 import { playDiriringSfx, preloadDiriringSfx } from "../utils/soundEffects";
 import { type Grid, type Direction } from "../components/asparagus/types";
 import {
@@ -10,6 +16,8 @@ import {
   checkGameOver,
   checkWin,
 } from "../components/asparagus/Logic";
+
+const LEGEND_GARDENER_CODE = "LEGEND_GARDENER";
 
 // Submit best score to server — called only on game over
 const submitBestScore = (bestScore: number) => {
@@ -21,6 +29,10 @@ const submitBestScore = (bestScore: number) => {
 };
 
 export const useAsparagusGame = () => {
+  const token = useAuthStore((state) => state.token);
+  const isGuest = useAuthStore((state) => state.isGuest);
+  const addToast = useToastStore((state) => state.addToast);
+
   // ID for device
   const getUid = () => {
     let uid = localStorage.getItem("user-uid");
@@ -54,6 +66,7 @@ export const useAsparagusGame = () => {
 
   // Touch tracking
   const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const legendAchievementAwardRequestedRef = useRef(false);
 
   const startGame = useCallback((debug = false) => {
     let g = createEmptyGrid();
@@ -105,6 +118,29 @@ export const useAsparagusGame = () => {
   useEffect(() => {
     preloadDiriringSfx();
   }, []);
+
+  const awardLegendGardenerAchievement = useCallback(async () => {
+    if (legendAchievementAwardRequestedRef.current || isGuest || !token) {
+      return;
+    }
+
+    legendAchievementAwardRequestedRef.current = true;
+
+    try {
+      const response = await fetchWithAuth(
+        `/achievements/award/${LEGEND_GARDENER_CODE}`,
+        { method: "POST" },
+      );
+      const awardResult = await parseAchievementAwardResponse(response);
+
+      if (awardResult?.awarded) {
+        addAchievementToast(addToast, awardResult.achievement);
+      }
+    } catch (error) {
+      legendAchievementAwardRequestedRef.current = false;
+      console.error("Failed to award legend gardener achievement", error);
+    }
+  }, [addToast, isGuest, token]);
 
   const triggerConfetti = () => {
     confetti({
@@ -178,6 +214,7 @@ export const useAsparagusGame = () => {
       const didWin = !continueAfterWin && checkWin(nextGrid);
       if (didWin) {
         setWon(true);
+        void awardLegendGardenerAchievement();
         void playDiriringSfx();
         setTimeout(triggerConfetti, 200);
         setTimeout(() => {
@@ -211,7 +248,7 @@ export const useAsparagusGame = () => {
       grid,
       isSwapMode,
       score,
-      uid,
+      awardLegendGardenerAchievement,
       won,
     ],
   );

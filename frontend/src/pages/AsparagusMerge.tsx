@@ -14,6 +14,8 @@ import { AppIcon } from "../components/common/AppIcon";
 import { ASPARAGUS_TUTORIAL_SLIDES } from "../constants/tutorialSlides";
 import { pickRandomActivityBgm } from "../utils/bgm";
 import { useAuthStore } from "../store/useAuthStore";
+import { pushEvent } from "../utils/analytics";
+import { useViewEvent } from "../hooks/usePageTracking";
 
 const AsparagusMerge: React.FC = () => {
   const [bgmSrc] = React.useState(() => pickRandomActivityBgm());
@@ -21,6 +23,7 @@ const AsparagusMerge: React.FC = () => {
   const navigate = useNavigate();
 
   usePageBgm(bgmSrc);
+  useViewEvent("view_game", { game_name: "아스파라거스 키우기" });
 
   const {
     grid,
@@ -45,6 +48,16 @@ const AsparagusMerge: React.FC = () => {
     startDebugGame,
     touchStart: touchStartRef,
   } = useAsparagusGame();
+
+  useEffect(() => {
+    pushEvent("start_game", { game_name: "아스파라거스 키우기" });
+  }, []);
+
+  useEffect(() => {
+    if (won) {
+      pushEvent("complete_game", { game_name: "아스파라거스 키우기", score });
+    }
+  }, [won, score]);
 
   // Keyboard
   useEffect(() => {
@@ -144,7 +157,7 @@ const AsparagusMerge: React.FC = () => {
                 setIsSwapMode(!isSwapMode);
                 setSelection(null);
               }}
-              onRestart={() => startGame()}
+              onRestart={() => { pushEvent("retry_game", { game_name: "아스파라거스 키우기" }); startGame(); }}
               onDebugStart={startDebugGame}
             />
           </div>
@@ -174,7 +187,7 @@ const AsparagusMerge: React.FC = () => {
               계속하기
             </PushableButton>
             <PushableButton
-              onClick={() => startGame()}
+              onClick={() => { pushEvent("retry_game", { game_name: "아스파라거스 키우기" }); startGame(); }}
               variant="cream"
               className="w-full px-0 py-3"
             >
@@ -199,7 +212,7 @@ const AsparagusMerge: React.FC = () => {
 
       <CommonModal
         isOpen={gameOver}
-        onClose={() => startGame()}
+        onClose={() => { pushEvent("retry_game", { game_name: "아스파라거스 키우기" }); startGame(); }}
         icon={<AppIcon name="Flower2" size={32} />}
         title="아스파라거스가 시들었어"
         panelClassName="border-[#5EC7A5] px-8 py-8 shadow-[0_30px_80px_rgba(22,109,119,0.16)]"
@@ -209,7 +222,7 @@ const AsparagusMerge: React.FC = () => {
         footer={
           <>
             <PushableButton
-              onClick={() => startGame()}
+              onClick={() => { pushEvent("retry_game", { game_name: "아스파라거스 키우기" }); startGame(); }}
               className="flex-1 px-0 py-3"
             >
               재도전

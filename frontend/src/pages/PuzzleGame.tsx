@@ -15,6 +15,10 @@ import { BASE_URL } from "../utils/api";
 import { playDiriringSfx, preloadDiriringSfx } from "../utils/soundEffects";
 import { useAuthStore } from "../store/useAuthStore";
 import { useToastStore } from "../store/useToastStore";
+import {
+  addAchievementToast,
+  parseAchievementAwardResponse,
+} from "../utils/achievementAwards";
 import { PolaroidHolographicOverlay } from "../components/game/cody/polaroidEffects/PolaroidHolographicOverlay";
 import { PushableButton } from "../components/common/PushableButton";
 import { MagnifyingGlass } from "../components/game/puzzle/MagnifyingGlass";
@@ -50,6 +54,8 @@ import {
 } from "../features/puzzle/helpers";
 import type { PuzzlePiece } from "../features/puzzle/types";
 import { pickRandomActivityBgm } from "../utils/bgm";
+import { pushEvent } from "../utils/analytics";
+import { useViewEvent } from "../hooks/usePageTracking";
 
 type PuzzleGameProps = {
   embedInContainer?: boolean;
@@ -157,6 +163,12 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   });
 
   usePageBgm(bgmSrc);
+  useViewEvent("view_game", { game_name: "퍼즐 맞추기" });
+
+  useEffect(() => {
+    pushEvent("start_game", { game_name: "퍼즐 맞추기" });
+  }, []);
+
   const boardConfig = getPuzzleBoardConfig(gridSize);
   const { cols, rows, boardWidth, boardHeight } = boardConfig;
 
@@ -286,6 +298,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
 
   useEffect(() => {
     if (completed) {
+      pushEvent("complete_game", { game_name: "퍼즐 맞추기" });
       triggerFireworks();
       void playDiriringSfx();
     }
@@ -334,13 +347,9 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
           return;
         }
 
-        const newlyAwarded = (await response.json()) === true;
-        if (newlyAwarded) {
-          addToast({
-            title: "퍼즐 완성",
-            description: "퍼즐을 처음으로 완성했다!",
-            icon: "Puzzle",
-          });
+        const awardResult = await parseAchievementAwardResponse(response);
+        if (awardResult?.awarded) {
+          addAchievementToast(addToast, awardResult.achievement);
         }
       } catch (error) {
         console.error("Failed to award puzzle achievement", error);
