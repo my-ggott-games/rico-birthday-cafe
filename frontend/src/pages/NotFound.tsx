@@ -49,7 +49,7 @@ const NotFound: React.FC = () => {
           if (awardStorageKey) {
             window.localStorage.setItem(awardStorageKey, "true");
           }
-          addAchievementToast(addToast, awardResult.achievement);
+          addAchievementToast(addToast, awardResult.achievement, "not_found");
         }
       } catch (error) {
         console.error("Failed to award not-found achievement", error);

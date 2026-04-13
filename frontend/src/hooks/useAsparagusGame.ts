@@ -134,7 +134,7 @@ export const useAsparagusGame = () => {
       const awardResult = await parseAchievementAwardResponse(response);
 
       if (awardResult?.awarded) {
-        addAchievementToast(addToast, awardResult.achievement);
+        addAchievementToast(addToast, awardResult.achievement, "asparagus");
       }
     } catch (error) {
       legendAchievementAwardRequestedRef.current = false;

@@ -195,7 +195,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                 }
 
                 if (awardResult?.awarded) {
-                  addAchievementToast(addToast, awardResult.achievement);
+                  addAchievementToast(addToast, awardResult.achievement, "admin");
                 }
               })
               .catch(console.error);
@@ -233,7 +233,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
           icon: "KeyRound",
         });
         if (achievementAwardResult?.awarded) {
-          addAchievementToast(addToast, achievementAwardResult.achievement);
+          addAchievementToast(addToast, achievementAwardResult.achievement, "admin");
         }
 
         setTimeout(() => {

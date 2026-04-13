@@ -1,6 +1,7 @@
 import type { AppIconName } from "../components/common/appIconRegistry";
 import { isAppIconName } from "../components/common/appIconRegistry";
 import type { ToastMessage } from "../store/useToastStore";
+import { pushEvent } from "./analytics";
 
 export interface AchievementPayload {
   code: string;
@@ -41,10 +42,17 @@ export const parseAchievementAwardResponse = async (
 export const addAchievementToast = (
   addToast: (toast: Omit<ToastMessage, "id">) => void,
   achievement: AchievementPayload | null,
+  game_name?: string,
 ) => {
   if (!achievement) {
     return;
   }
+
+  pushEvent("unlock_achievement", {
+    achievement_id: achievement.code,
+    achievement_name: achievement.title,
+    game_name: game_name ?? "unknown",
+  });
 
   const toast = {
     title: achievement.title,

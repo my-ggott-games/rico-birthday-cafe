@@ -121,22 +121,22 @@ const CREDITS_SECTIONS: CreditSection[] = [
       {
         label: "「감자튀김 옴뇸뇸」",
         credits: [
-          { role: "작곡", name: "U+003AU+27B4" },
-          { role: "편곡", name: "CODE NAME: G" },
+          { role: "작사 & 작곡", name: "U+003AU+27B4" },
+          { role: "편곡\n(iOS GarageBand)", name: "CODE NAME: G" },
         ],
       },
       {
         label: "「꽃 하나 aka.밤바밤바」",
         credits: [
-          { role: "작곡", name: "U+003AU+27B4" },
-          { role: "편곡", name: "CODE NAME: G" },
+          { role: "작사 & 작곡", name: "U+003AU+27B4" },
+          { role: "편곡\n(iOS GarageBand)", name: "CODE NAME: G" },
         ],
       },
       {
         label: "「그 날, 감자튀김」",
         credits: [
-          { role: "작곡", name: "U+003AU+27B4" },
-          { role: "편곡", name: "CODE NAME: G" },
+          { role: "작사 & 작곡", name: "U+003AU+27B4" },
+          { role: "편곡\n(iOS GarageBand)", name: "CODE NAME: G" },
         ],
       },
       {
@@ -396,7 +396,7 @@ export default function Credits() {
         setHighlightClaim(false);
         if (awardResult.awarded) {
           void playDiriringSfx();
-          addAchievementToast(addToast, awardResult.achievement);
+          addAchievementToast(addToast, awardResult.achievement, "credits");
         }
       } else {
         console.error("Failed to claim achievement");
