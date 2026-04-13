@@ -170,11 +170,11 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
           {/* UID Section */}
           <div className="mb-5 shrink-0 rounded-2xl border-2 border-[#5EC7A5]/40 bg-[#ECFFF2] p-4">
             <p className="text-xs font-bold uppercase tracking-widest text-[#166D77]/50 mb-2">
-              내 번호표
+              내 티켓
             </p>
             <div className="flex items-center gap-3">
               <code className="flex-1 truncate rounded-xl border border-[#5EC7A5]/40 bg-white px-3 py-2 font-mono text-base font-bold tracking-widest text-[#166D77]">
-                {hasUid ? uid : "번호표 정보 없음"}
+                {hasUid ? uid : "티켓 정보 없음"}
               </code>
               <PushableButton
                 onClick={handleCopyUid}

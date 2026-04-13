@@ -286,9 +286,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     clearIssuedUid();
     setStep("main");
-    setError(
-      "몇 번을 불렀는데 이제 오시면 어떡해요!\n다시 번호표를 뽑아주세요.",
-    );
+    setError("몇 번을 불렀는데 이제 오시면 어떡해요!\n다시 티켓을 뽑아주세요.");
   }, [isIssuedUidExpired, issuedAtMs, step]);
 
   useEffect(() => {
@@ -375,14 +373,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const getLoginErrorMessage = (code?: number) => {
     if (isServerErrorStatus(code)) {
-      return "카페 문 닫았어요.\n지금은 번호표를 확인할 수 없어요.";
+      return "카페 문 닫았어요.\n지금은 티켓을 확인할 수 없어요.";
     }
 
     switch (code) {
       case 400:
-        return "번호표를 다시 확인해주세요.";
+        return "티켓을 다시 확인해주세요.";
       case 401:
-        return "번호표나 비밀번호가 일치하지 않아요.";
+        return "티켓이나 비밀번호가 일치하지 않아요.";
       default:
         return "로그인 중 문제가 생겼어요.\n잠시 후 다시 시도해주세요.";
     }
@@ -390,11 +388,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const getRegisterErrorMessage = (message?: string, code?: number) => {
     if (message?.includes("INVALID_UID_FORMAT_OR_RESERVED")) {
-      return "번호표는 chiko_ 로 시작하는데...";
+      return "티켓은 chiko_ 로 시작하는데...";
     }
 
     if (message?.includes("UID_ISSUE_TOKEN_INVALID_OR_EXPIRED")) {
-      return "몇 번을 불렀는데 이제 오시면 어떡해요! 새 번호표를 발급받아주세요.";
+      return "몇 번을 불렀는데 이제 오시면 어떡해요! 새 티켓을 발급받아주세요.";
     }
 
     if (message?.includes("PIN_FORMAT_INVALID")) {
@@ -406,11 +404,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     if (message?.includes("UID_ALREADY_REGISTERED_OR_REPLAYED")) {
-      return "몇 번을 불렀는데 이제 오시면 어떡해요!\n다시 번호표를 뽑아주세요.";
+      return "몇 번을 불렀는데 이제 오시면 어떡해요!\n다시 티켓을 뽑아주세요.";
     }
 
     if (code === 401) {
-      return "번호표 인증이 만료됐어요.\n새 번호표를 다시 뽑아주세요.";
+      return "티켓 인증이 만료됐어요.\n새 티켓을 다시 뽑아주세요.";
     }
 
     return "비밀번호 설정 중 문제가 생겼어요.\n잠시 후 다시 시도해주세요.";
@@ -452,15 +450,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setShowGuestEntry(false);
 
     if (!uidInput.trim()) {
-      setError("번호표를 입력해주세요.");
+      setError("티켓을 입력해주세요.");
       return;
     }
     if (!UID_REGEX.test(uidInput.trim())) {
-      setError("번호표는 chiko_(8글자 영문+숫자 조합)이어야 해요.");
+      setError("티켓은 chiko_(8글자 영문+숫자 조합)이어야 해요.");
       return;
     }
     if (uidInput.trim() === ADMIN_UID) {
-      setError("이 번호표는 관리자 전용이라 여기서 로그인할 수 없어요.");
+      setError("이 티켓은 관리자 전용이라 여기서 로그인할 수 없어요.");
       return;
     }
     if (!PIN_REGEX.test(pinInput)) {
@@ -508,7 +506,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setError(
         getFriendlyErrorMessage(
           err,
-          "번호표 기계에 문제가 생겼어요.\n잠시 후 다시 시도해주세요.",
+          "티켓 기계에 문제가 생겼어요.\n잠시 후 다시 시도해주세요.",
         ),
       );
     } finally {
@@ -520,7 +518,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleIssueUid = async () => {
     if (isIssueCooldownActive) {
       setError(
-        `새 번호표는 ${formatRemainingTime(cooldownRemainingMs)} 후 다시 뽑을 수 있어요.`,
+        `새 티켓은 ${formatRemainingTime(cooldownRemainingMs)} 후 다시 뽑을 수 있어요.`,
       );
       return;
     }
@@ -543,7 +541,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       if (!res.ok || data?.code !== 200 || !data.username || !data.token) {
         const errorCode = data?.code ?? res.status;
         throw new AuthRequestError(
-          data?.message || "번호표 발급 실패",
+          data?.message || "티켓 발급 실패",
           isServerErrorStatus(errorCode),
         );
       }
@@ -562,7 +560,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setError(
         getFriendlyErrorMessage(
           err,
-          "번호표 발급 중 문제가 생겼어요.\n잠시 후 다시 시도해주세요.",
+          "티켓 발급 중 문제가 생겼어요.\n잠시 후 다시 시도해주세요.",
         ),
       );
     } finally {
@@ -588,13 +586,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       clearIssuedUid();
       setStep("main");
       setError(
-        "몇 번을 불렀는데 이제 오시면 어떡해요!\n다시 번호표를 뽑아주세요.",
+        "몇 번을 불렀는데 이제 오시면 어떡해요!\n다시 티켓을 뽑아주세요.",
       );
       return;
     }
     if (!issuedUidToken) {
       setPinError(
-        "몇 번을 불렀는데 이제 오시면 어떡해요!\n다시 번호표를 뽑아주세요.",
+        "몇 번을 불렀는데 이제 오시면 어떡해요!\n다시 티켓을 뽑아주세요.",
       );
       return;
     }
@@ -670,7 +668,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             {step === "set-pin" ? (
               <div className="text-center py-2">
                 <h2 className="mb-2 break-keep text-2xl font-black text-[#166D77] md:text-3xl">
-                  번호표를 발급받았어요!
+                  티켓을 발급받았어요!
                 </h2>
                 <p className="mb-1 break-keep text-sm text-[#166D77]/60 md:text-base">
                   잃어버리면 누군지 알 수 없으니 새로 뽑아야 해요.
@@ -761,7 +759,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               /* ── Step: Main (login or issue uid) ── */
               <>
                 <h2 className="mb-4 break-keep text-center text-3xl font-black text-[#166D77] md:text-4xl">
-                  번호표 보여주세요!
+                  티켓 보여주세요!
                 </h2>
 
                 {error && (
@@ -776,7 +774,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   >
                     <input
                       type="text"
-                      placeholder="번호표 입력"
+                      placeholder="티켓 입력"
                       value={uidInput}
                       onChange={(e) => setUidInput(e.target.value)}
                       className="w-full rounded-xl border-2 border-[#166D77]/10 px-4 py-3 text-center font-bold tracking-wider text-[#166D77] outline-none focus:border-[#5EC7A5] md:text-lg"
@@ -812,7 +810,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <div className="relative flex items-center py-4">
                     <div className="flex-grow border-t border-[#166D77]/10"></div>
                     <span className="mx-4 flex-shrink-0 text-sm font-bold uppercase tracking-widest text-[#166D77]/50 md:text-base">
-                      번호표가 없으신가요?
+                      티켓이 없으신가요?
                     </span>
                     <div className="flex-grow border-t border-[#166D77]/10"></div>
                   </div>
@@ -826,8 +824,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     {loading && !uidInput
                       ? renderLoadingLabel("잠시만요")
                       : isIssueCooldownActive
-                        ? `새 번호표 뽑기 (${formatRemainingTime(cooldownRemainingMs)})`
-                        : "새 번호표 뽑기"}
+                        ? `새 티켓 뽑기 (${formatRemainingTime(cooldownRemainingMs)})`
+                        : "새 티켓 뽑기"}
                   </PushableButton>
 
                   {showGuestEntry && (

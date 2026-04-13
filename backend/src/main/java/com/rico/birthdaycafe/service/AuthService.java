@@ -162,6 +162,6 @@ public class AuthService {
     }
 
     throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-        "번호표 발급 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.");
+        "티켓 발급 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.");
   }
 }
