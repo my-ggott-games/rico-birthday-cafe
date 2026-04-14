@@ -14,7 +14,8 @@ export const addRandomTile = (grid: Grid): Grid => {
   if (!empty.length) return grid;
   const [r, c] = empty[Math.floor(Math.random() * empty.length)];
   const next = grid.map((row) => [...row]) as Grid;
-  next[r][c] = Math.random() < 0.9 ? 1 : 2;
+  const roll = Math.random();
+  next[r][c] = roll < 0.6 ? 1 : roll < 0.9 ? 2 : 4;
   return next;
 };
 
