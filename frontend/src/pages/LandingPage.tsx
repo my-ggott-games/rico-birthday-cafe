@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../store/useAuthStore";
-import { AuthModal } from "../components/auth/AuthModal";
 import ProgressiveBackground from "../components/common/ProgressiveBackground";
 import ProgressiveImage from "../components/common/ProgressiveImage";
 import { pushEvent } from "../utils/analytics";
@@ -18,12 +16,10 @@ const ENTER_ANIMATION_DURATION_MS = 1850;
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   useEffect(() => {
     pushEvent("view_home");
   }, []);
-  const { isAuthenticated } = useAuthStore();
 
   const preventDrag = (event: React.DragEvent<HTMLElement>) => {
     event.preventDefault();
@@ -36,17 +32,10 @@ const LandingPage: React.FC = () => {
 
     pushEvent("click_enter_site");
     pushEvent("click_cta_main");
-
-    if (isAuthenticated) {
-      triggerEnterAnimation();
-      return;
-    }
-
-    setIsAuthModalOpen(true);
+    triggerEnterAnimation();
   };
 
   const triggerEnterAnimation = () => {
-    setIsAuthModalOpen(false);
     setIsOpen(true);
     setTimeout(() => {
       navigate("/lobby");
@@ -177,11 +166,6 @@ const LandingPage: React.FC = () => {
         />
       </motion.div>
 
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onSuccess={triggerEnterAnimation}
-      />
     </div>
   );
 };

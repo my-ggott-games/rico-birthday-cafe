@@ -116,7 +116,7 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
   if (!isOpen) return null;
 
   const visibleAchievements = achievements.filter(
-    (a) => a.code !== "WHO_ARE_YOU" || a.earned,
+    (a) => a.code !== "WHO_ARE_YOU",
   );
   const earnedCount = visibleAchievements.filter((a) => a.earned).length;
   const sortedAchievements = [...visibleAchievements].sort((a, b) => {
@@ -277,7 +277,7 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
                       </div>
                     </button>
                   ) : (
-                    /* ── UNEARNED: greyed-out, masked ── */
+                    /* ── UNEARNED: greyed-out, description masked ── */
                     <div
                       key={ach.code}
                       className="flex select-none items-center gap-4 rounded-2xl border-2 border-[#9BD8B0]/40 bg-[#EAF8EF] p-4 opacity-70 shadow-sm"
@@ -291,7 +291,7 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({
                       </div>
                       <div className="min-w-0 flex-1">
                         <h4 className="text-base font-black text-[#7BA08A]">
-                          {maskAchievementText(ach.title)}
+                          {ach.title}
                         </h4>
                         <p className="mt-0.5 text-sm font-medium leading-tight text-[#7BA08A]">
                           {maskAchievementText(ach.description)}

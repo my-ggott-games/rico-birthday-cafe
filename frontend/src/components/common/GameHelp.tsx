@@ -1,17 +1,34 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TutorialBanner, type TutorialSlide } from "./TutorialBanner";
 
 interface GameHelpProps {
   slides: TutorialSlide[];
   buttonClassName?: string;
+  /** localStorage key; if provided, auto-opens once on first visit */
+  autoShowHelpKey?: string;
 }
 
 export const GameHelp: React.FC<GameHelpProps> = ({
   slides,
   buttonClassName = "",
+  autoShowHelpKey,
 }) => {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!autoShowHelpKey || !slides.length) return;
+    if (localStorage.getItem(autoShowHelpKey) !== "true") {
+      setOpen(true);
+    }
+  }, [autoShowHelpKey, slides.length]);
+
+  const handleClose = () => {
+    setOpen(false);
+    if (autoShowHelpKey) {
+      localStorage.setItem(autoShowHelpKey, "true");
+    }
+  };
 
   if (!slides.length) {
     return null;
@@ -46,7 +63,7 @@ export const GameHelp: React.FC<GameHelpProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setOpen(false)}
+            onClick={handleClose}
           >
             <motion.div
               initial={{ scale: 0.92, opacity: 0, y: 8 }}
@@ -57,7 +74,7 @@ export const GameHelp: React.FC<GameHelpProps> = ({
               onClick={(e) => e.stopPropagation()}
             >
               <button
-                onClick={() => setOpen(false)}
+                onClick={handleClose}
                 className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border-2 font-black text-xl"
                 style={{
                   background: "#166D77",
@@ -71,7 +88,7 @@ export const GameHelp: React.FC<GameHelpProps> = ({
               <TutorialBanner
                 slides={slides}
                 className="h-[228px] shadow-2xl rounded-3xl"
-                onClose={() => setOpen(false)}
+                onClose={handleClose}
               />
             </motion.div>
           </motion.div>

@@ -673,6 +673,7 @@ const CodyGame: React.FC = () => {
         desc="어떤 옷이 어울릴까?"
         gameName="리코의 외출 준비"
         helpSlides={CODY_TUTORIAL_SLIDES}
+        autoShowHelpKey="game_help_seen_cody"
         className="h-screen font-sans relative select-none bg-[#FFFFF8]"
         headerHidden={!showButtons}
         mainClassName="relative overflow-x-hidden md:overflow-y-auto"

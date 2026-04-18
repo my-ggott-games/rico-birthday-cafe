@@ -74,6 +74,8 @@ const getDefaultBaseUrl = () => {
 export const BASE_URL =
   normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL) || getDefaultBaseUrl();
 
+const FETCH_TIMEOUT_MS = 10_000;
+
 type FetchOptions = RequestInit;
 
 export const fetchWithAuth = async (
@@ -82,11 +84,12 @@ export const fetchWithAuth = async (
 ) => {
   const { token, isGuest } = useAuthStore.getState();
 
-  if (isGuest) {
+  // Block guests and unauthenticated users — no server calls needed
+  if (isGuest || !token) {
     return new Response(
       JSON.stringify({
         code: 403,
-        message: "GUEST_MODE_BLOCKED: this request requires an authenticated uid",
+        message: "UNAUTHENTICATED: this request requires an authenticated uid",
       }),
       {
         status: 403,
@@ -96,10 +99,7 @@ export const fetchWithAuth = async (
   }
 
   const headers = new Headers(options.headers || {});
-
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
+  headers.set("Authorization", `Bearer ${token}`);
 
   // Default to JSON if not specified and body exists
   if (
@@ -110,18 +110,35 @@ export const fetchWithAuth = async (
     headers.set("Content-Type", "application/json");
   }
 
-  const config: RequestInit = {
-    ...options,
-    headers,
-  };
+  const config: RequestInit = { ...options, headers };
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, config);
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(
+    () => controller.abort(),
+    FETCH_TIMEOUT_MS,
+  );
 
-  // Auto logout on 401 Unauthorized
-  if (response.status === 401 && !useAuthStore.getState().isGuest) {
-    useAuthStore.getState().logout();
-    window.location.href = "/"; // redirect to login/landing
+  try {
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      ...config,
+      signal: controller.signal,
+    });
+
+    // Auto-logout on 401 (expired / invalid token) — no redirect so user stays in place
+    if (response.status === 401) {
+      useAuthStore.getState().logout();
+    }
+
+    return response;
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      return new Response(
+        JSON.stringify({ code: 408, message: "REQUEST_TIMEOUT" }),
+        { status: 408, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    throw err;
+  } finally {
+    window.clearTimeout(timeoutId);
   }
-
-  return response;
 };

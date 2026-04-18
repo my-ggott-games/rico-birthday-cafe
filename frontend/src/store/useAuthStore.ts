@@ -40,7 +40,28 @@ interface AuthState {
   logout: () => void;
 }
 
-const initialToken = localStorage.getItem("token");
+const isTokenExpired = (token: string): boolean => {
+  try {
+    const payload = JSON.parse(
+      decodeBase64Url(token.split(".")[1] ?? ""),
+    ) as { exp?: unknown };
+    if (typeof payload.exp !== "number") return false;
+    return Date.now() / 1000 > payload.exp;
+  } catch {
+    return false;
+  }
+};
+
+const initialToken = (() => {
+  const t = localStorage.getItem("token");
+  if (t && isTokenExpired(t)) {
+    localStorage.removeItem("token");
+    localStorage.removeItem(AUTH_UID_STORAGE_KEY);
+    return null;
+  }
+  return t;
+})();
+
 const initialGuest =
   localStorage.getItem(AUTH_GUEST_STORAGE_KEY) === "true" && !initialToken;
 const initialUid =

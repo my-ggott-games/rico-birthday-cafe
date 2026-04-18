@@ -51,6 +51,7 @@ import {
   clampPiecePosition,
   createPieces,
   getDisplayPieceSize,
+  requestSensorPermission,
 } from "../features/puzzle/helpers";
 import type { PuzzlePiece } from "../features/puzzle/types";
 import { pickRandomActivityBgm } from "../utils/bgm";
@@ -589,12 +590,8 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
         return;
       }
 
-      // Gyro sensor permission flow is intentionally disabled for now.
-      // Revisit this later when we want to restore DeviceOrientation access.
-      //
-      // const permissionGranted = await requestSensorPermission();
-      // const canUseOrientation = window.isSecureContext && permissionGranted;
-      const canUseOrientation = false;
+      const permissionGranted = await requestSensorPermission();
+      const canUseOrientation = window.isSecureContext && permissionGranted;
 
       // Even when denied, enable photocard mode so the overlay (Case 3) shows
       // and the button flips to "홀로그램 끄기".
@@ -1041,6 +1038,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
       desc="리코야 생일상 차려놨어 밥 굶으면 안 돼"
       gameName="퍼즐 맞추기"
       helpSlides={PUZZLE_TUTORIAL_SLIDES}
+      autoShowHelpKey="game_help_seen_puzzle"
       className="bg-[#FFFFF8]"
       mainClassName="relative overflow-hidden"
     >

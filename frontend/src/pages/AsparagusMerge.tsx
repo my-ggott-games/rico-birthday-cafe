@@ -104,6 +104,7 @@ const AsparagusMerge: React.FC = () => {
       desc="아스파라거스도 리코도 건강만 해다오"
       gameName="아스파라거스 키우기"
       helpSlides={ASPARAGUS_TUTORIAL_SLIDES}
+      autoShowHelpKey="game_help_seen_asparagus"
       className="select-none"
     >
       {/* ─── Main Content: Horizontal 3 DIV ─── */}

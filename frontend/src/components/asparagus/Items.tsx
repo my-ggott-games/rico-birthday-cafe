@@ -15,8 +15,8 @@ interface ItemsProps {
   onDebugStart: () => void;
 }
 
-// Unified button size so text never wraps on mobile
-const BTN_BASE = `w-[96px] h-[96px] rounded-2xl font-black text-sm border-2 flex flex-col items-center justify-center transition-all`;
+// Mobile: 96×96 px. Desktop (lg+): 128×128 px.
+const BTN_BASE = `w-24 h-24 lg:w-32 lg:h-32 rounded-2xl lg:rounded-3xl font-black text-sm border-2 flex flex-col items-center justify-center transition-all`;
 
 export const Items: React.FC<ItemsProps> = ({
   undoCount,

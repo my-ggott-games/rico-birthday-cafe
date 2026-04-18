@@ -4,6 +4,7 @@ import { motion, useAnimationControls } from "framer-motion";
 import { KCelebrateSlogan } from "k-celebrate-slogan";
 import { AchievementModal } from "../components/common/AchievementModal";
 import { AdminModal } from "../components/auth/AdminModal";
+import { AuthModal } from "../components/auth/AuthModal";
 import {
   NoteModal,
   type NoteModalContent,
@@ -25,6 +26,74 @@ import {
   addAchievementToast,
   parseAchievementAwardResponse,
 } from "../utils/achievementAwards";
+
+// ── Colour utilities ──────────────────────────────────────────────────────────
+
+const hexToHsl = (hex: string): [number, number, number] => {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16) / 255;
+  const g = parseInt(h.slice(2, 4), 16) / 255;
+  const b = parseInt(h.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const delta = max - min;
+  let hue = 0;
+  if (delta !== 0) {
+    if (max === r) hue = ((g - b) / delta) % 6;
+    else if (max === g) hue = (b - r) / delta + 2;
+    else hue = (r - g) / delta + 4;
+    hue = (hue * 60 + 360) % 360;
+  }
+  const lightness = (max + min) / 2;
+  const saturation =
+    delta === 0 ? 0 : delta / (1 - Math.abs(2 * lightness - 1));
+  return [hue, saturation * 100, lightness * 100];
+};
+
+const hslToHex = (h: number, s: number, l: number): string => {
+  const sf = s / 100;
+  const lf = l / 100;
+  const c = (1 - Math.abs(2 * lf - 1)) * sf;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = lf - c / 2;
+  let r = 0,
+    g = 0,
+    b = 0;
+  if (h < 60) {
+    r = c;
+    g = x;
+  } else if (h < 120) {
+    r = x;
+    g = c;
+  } else if (h < 180) {
+    g = c;
+    b = x;
+  } else if (h < 240) {
+    g = x;
+    b = c;
+  } else if (h < 300) {
+    r = x;
+    b = c;
+  } else {
+    r = c;
+    b = x;
+  }
+  return (
+    "#" +
+    [r, g, b]
+      .map((v) =>
+        Math.round(Math.max(0, Math.min(255, (v + m) * 255)))
+          .toString(16)
+          .padStart(2, "0"),
+      )
+      .join("")
+  );
+};
+
+const darkenHex = (hex: string, lightnessDelta: number): string => {
+  const [h, s, l] = hexToHsl(hex);
+  return hslToHex(h, s, Math.max(0, l - lightnessDelta));
+};
 
 const SLOGAN_COLLECTOR_CODE = "SLOGAN_COLLECTOR";
 const SLOGAN_COLLECTOR_STORAGE_KEY = "lobby_slogan_collector_unlocked";
@@ -134,32 +203,39 @@ const LobbyIconTile = ({
   name,
   icon,
   isMobile,
-  className,
-  iconClassName,
+  bgColor,
+  borderColor,
+  iconColor,
 }: {
   name: string;
   icon: AppIconName;
   isMobile: boolean;
-  className: string;
-  iconClassName?: string;
-}) => (
-  <div className="flex flex-col items-center">
-    <div
-      className={`flex items-center justify-center rounded-[1.35rem] border-4 opacity-100 shadow-xl transition-transform transition-colors group-hover:-translate-y-0.5 ${isMobile ? "h-20 w-20" : "h-24 w-24"} ${className}`}
-    >
-      <AppIcon
-        name={icon}
-        size={isMobile ? 28 : 34}
-        className={iconClassName}
-      />
+  bgColor: string;
+  borderColor?: string;
+  iconColor?: string;
+}) => {
+  const resolvedBorder = borderColor ?? darkenHex(bgColor, 14);
+  const resolvedIcon = iconColor ?? darkenHex(bgColor, 42);
+  return (
+    <div className="flex flex-col items-center">
+      <div
+        className={`flex items-center justify-center rounded-[1.35rem] border-4 opacity-100 shadow-xl transition-transform group-hover:-translate-y-0.5 ${isMobile ? "h-20 w-20" : "h-24 w-24"}`}
+        style={{ backgroundColor: `${bgColor}d9`, borderColor: resolvedBorder }}
+      >
+        <AppIcon
+          name={icon}
+          size={isMobile ? 28 : 34}
+          style={{ color: resolvedIcon }}
+        />
+      </div>
+      <div
+        className={`mt-2 rounded-xl border-2 border-[#D6C0B0] bg-pale-custard opacity-100 font-bold text-[#166D77] shadow-md transition-colors ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-2"}`}
+      >
+        {name}
+      </div>
     </div>
-    <div
-      className={`mt-2 rounded-xl border-2 border-[#D6C0B0] bg-pale-custard opacity-100 font-bold text-[#166D77] shadow-md transition-colors ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-2"}`}
-    >
-      {name}
-    </div>
-  </div>
-);
+  );
+};
 
 const LobbyHotspot = ({
   to,
@@ -216,6 +292,7 @@ const Lobby: React.FC = () => {
   );
   const [isAchievementOpen, setIsAchievementOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isEasterEggNoteAccess, setIsEasterEggNoteAccess] = useState(
     window.localStorage.getItem(EASTER_EGG_NOTE_ACCESS_STORAGE_KEY) === "true",
   );
@@ -488,13 +565,19 @@ const Lobby: React.FC = () => {
   ) : null;
   const profileButton = (
     <PushableButton
-      onClick={() => setIsAchievementOpen(true)}
-      disabled={isGuest}
+      onClick={() => {
+        if (token) {
+          setIsAchievementOpen(true);
+        } else {
+          setIsAuthOpen(true);
+        }
+      }}
       variant="mint"
-      className={`${isMobile ? "min-h-9 px-3 py-1 text-sm" : "px-6 py-2"} rounded-full disabled:cursor-not-allowed`}
+      className={`${isMobile ? "min-h-9 px-3 py-1 text-sm" : "min-h-[2.75rem] px-7 py-2 text-base"} rounded-full`}
     >
       <span className="flex items-center gap-1.5">
-        <AppIcon name="IdCardLanyard" size={16} /> 프로필
+        <AppIcon name="IdCardLanyard" size={16} />
+        {token ? "프로필" : "로그인"}
       </span>
     </PushableButton>
   );
@@ -502,7 +585,7 @@ const Lobby: React.FC = () => {
     <PushableButton
       onClick={() => navigate("/credits")}
       variant="cream"
-      className={`${isMobile ? "min-h-9 px-3 py-1 text-sm" : "px-6 py-2"} rounded-full`}
+      className={`${isMobile ? "min-h-9 px-3 py-1 text-sm" : "min-h-[2.75rem] px-7 py-2 text-base"} rounded-full`}
     >
       <span className="flex items-center gap-1.5">
         <AppIcon name="Clapperboard" size={16} /> Who Made This?!
@@ -513,7 +596,7 @@ const Lobby: React.FC = () => {
     <PushableButton
       onClick={() => setIsAdminOpen(true)}
       variant="black"
-      className={`${isMobile ? "fixed bottom-4 left-4 z-20 px-3 py-1 text-sm" : "px-5 py-2"} rounded-full font-mono tracking-tighter`}
+      className={`${isMobile ? "fixed bottom-4 left-4 z-20 px-3 py-1 text-sm" : "min-h-[2.75rem] px-5 py-2 text-base"} rounded-full font-mono tracking-tighter`}
     >
       <span className="inline-block">who am I?</span>
     </PushableButton>
@@ -546,24 +629,32 @@ const Lobby: React.FC = () => {
                 {profileButton}
               </div>
             ) : (
-              <div className="flex gap-2">
+              <div className="flex items-center gap-3 rounded-2xl border border-white/60 bg-white/50 px-4 py-2.5 shadow-[0_4px_24px_rgba(22,109,119,0.10)] backdrop-blur-sm">
                 {noteToggleButton}
                 {creditsButton}
                 {profileButton}
                 {adminButton}
               </div>
             )}
-            {isGuest && !isMobile && (
-              <p className="rounded-full border border-[#166D77]/20 bg-[#166D77]/10 px-3 py-1 text-xs font-bold text-[#166D77]">
-                게스트 모드: 프로필/업적/기록 저장 사용 불가
-              </p>
+            {!token && !isMobile && (
+              <button
+                type="button"
+                onClick={() => setIsAuthOpen(true)}
+                className="rounded-full border border-[#166D77]/20 bg-[#166D77]/8 px-3 py-1 text-xs font-bold text-[#166D77]/70 transition-colors hover:bg-[#166D77]/14 hover:text-[#166D77]"
+              >
+                로그인하면 업적과 점수를 저장할 수 있어요
+              </button>
             )}
           </div>
         </header>
-        {isGuest && isMobile && (
-          <p className="mb-3 self-center rounded-full border border-[#166D77]/20 bg-[#166D77]/10 px-3 py-1 text-xs font-bold text-[#166D77]">
-            게스트 모드: 프로필/업적/기록 저장 사용 불가
-          </p>
+        {!token && isMobile && (
+          <button
+            type="button"
+            onClick={() => setIsAuthOpen(true)}
+            className="mb-3 self-center rounded-full border border-[#166D77]/20 bg-[#166D77]/8 px-3 py-1 text-xs font-bold text-[#166D77]/70"
+          >
+            로그인하면 업적과 점수를 저장할 수 있어요
+          </button>
         )}
 
         {/* Slogan */}
@@ -652,8 +743,9 @@ const Lobby: React.FC = () => {
                 name="리코의 외출 준비"
                 icon="Shirt"
                 isMobile={isMobile}
-                className="border-[#e7bcc2] bg-[#FFE4E6]/85 group-hover:bg-[#FFE4E6]/85"
-                iconClassName="text-[#cf9aa3]"
+                bgColor="#FFE4E6"
+                borderColor="#e7bcc2"
+                iconColor="#cf9aa3"
               />
             </motion.div>
           </LobbyHotspot>
@@ -671,15 +763,14 @@ const Lobby: React.FC = () => {
                 name="퍼즐 맞추기"
                 icon="Puzzle"
                 isMobile={isMobile}
-                className={
-                  isMobile || isPuzzleMuseumUnlocked
-                    ? "border-[#ddd1bf] bg-[#f5ecdd]/85 group-hover:bg-[#f5ecdd]/85"
-                    : "border-[#84bf2e] bg-[#a3e635]/85 group-hover:bg-[#a3e635]/85"
+                bgColor={
+                  isMobile || isPuzzleMuseumUnlocked ? "#f5ecdd" : "#a3e635"
                 }
-                iconClassName={
-                  isMobile || isPuzzleMuseumUnlocked
-                    ? "text-[#b9ab97]"
-                    : "text-[#6e9f23]"
+                borderColor={
+                  isMobile || isPuzzleMuseumUnlocked ? "#ddd1bf" : "#84bf2e"
+                }
+                iconColor={
+                  isMobile || isPuzzleMuseumUnlocked ? "#b9ab97" : "#6e9f23"
                 }
               />
             </motion.div>
@@ -698,8 +789,9 @@ const Lobby: React.FC = () => {
                 name="아스파라거스 키우기"
                 icon="Sprout"
                 isMobile={isMobile}
-                className="border-[#aad0b2] bg-[#d4edda]/85 group-hover:bg-[#d4edda]/85"
-                iconClassName="text-[#2d6a4f]"
+                bgColor="#d4edda"
+                borderColor="#aad0b2"
+                iconColor="#2d6a4f"
               />
             </motion.div>
           </LobbyHotspot>
@@ -716,8 +808,9 @@ const Lobby: React.FC = () => {
                 name="용사 리코 이야기"
                 icon="Swords"
                 isMobile={isMobile}
-                className="border-[#aebed7] bg-[#d8e4f7]/85 group-hover:bg-[#d8e4f7]/85"
-                iconClassName="text-[#102542]"
+                bgColor="#d8e4f7"
+                borderColor="#aebed7"
+                iconColor="#102542"
               />
             </motion.div>
           </LobbyHotspot>
@@ -728,6 +821,12 @@ const Lobby: React.FC = () => {
       <AchievementModal
         isOpen={isAchievementOpen}
         onClose={() => setIsAchievementOpen(false)}
+      />
+
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        onSuccess={() => setIsAuthOpen(false)}
       />
 
       <AdminModal

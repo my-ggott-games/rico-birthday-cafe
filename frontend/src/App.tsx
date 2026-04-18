@@ -9,7 +9,6 @@ import GlobalLoading from "./components/common/GlobalLoading";
 import { AchievementToast } from "./components/common/AchievementToast";
 import { GlobalAudioToggle } from "./components/common/GlobalAudioToggle";
 import NotFound from "./pages/NotFound";
-import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
 import LandingCompareSample from "./pages/LandingCompareSample";
 
@@ -41,14 +40,12 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
 
-            <Route element={<ProtectedRoute />}>
-              <Route path="/lobby" element={<Lobby />} />
-              <Route path="/game/cody" element={<CodyGame />} />
-              <Route path="/game/adventure" element={<AdventureGame />} />
-              <Route path="/game/puzzle" element={<PuzzleGame />} />
-              <Route path="/game/asparagus" element={<AsparagusMerge />} />
-              <Route path="/credits" element={<Credits />} />
-            </Route>
+            <Route path="/lobby" element={<Lobby />} />
+            <Route path="/game/cody" element={<CodyGame />} />
+            <Route path="/game/adventure" element={<AdventureGame />} />
+            <Route path="/game/puzzle" element={<PuzzleGame />} />
+            <Route path="/game/asparagus" element={<AsparagusMerge />} />
+            <Route path="/credits" element={<Credits />} />
 
             <Route element={<AdminOnlyRoute />}>
               <Route

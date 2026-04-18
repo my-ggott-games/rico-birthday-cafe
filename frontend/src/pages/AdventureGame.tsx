@@ -166,6 +166,7 @@ export default function AdventureGame() {
       desc="용사의 훈련은 계속된다"
       gameName="용사 리코 이야기 1"
       helpSlides={ADVENTURE_HELP_SLIDES}
+      autoShowHelpKey="game_help_seen_adventure"
       className="bg-[linear-gradient(180deg,#fffdf7_0%,#fff6e2_100%)]"
       mainClassName="px-4 pb-10 sm:px-6"
       returnButtonVariant="mint"
