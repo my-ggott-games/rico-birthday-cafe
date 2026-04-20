@@ -226,6 +226,7 @@ const AsparagusShowcase: React.FC = () => {
                 <Items
                   undoCount={1}
                   swapCount={1}
+                  shuffleCount={1}
                   historyLength={1}
                   isSwapMode={isSwapMode}
                   isAdmin
@@ -235,7 +236,7 @@ const AsparagusShowcase: React.FC = () => {
                     setIsSwapMode((prev) => !prev);
                     setSelection(null);
                   }}
-                  onRestart={resetPreview}
+                  onShuffle={resetPreview}
                   onDebugStart={() =>
                     setPreviewGrid([
                       [256, 512, 1024, 2048],

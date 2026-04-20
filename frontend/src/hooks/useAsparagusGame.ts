@@ -58,6 +58,7 @@ export const useAsparagusGame = () => {
   const [history, setHistory] = useState<{ grid: Grid; score: number }[]>([]);
   const [undoCount, setUndoCount] = useState(5);
   const [swapCount, setSwapCount] = useState(5);
+  const [shuffleCount, setShuffleCount] = useState(5);
   const [isSwapMode, setIsSwapMode] = useState(false);
   const [selection, setSelection] = useState<{ r: number; c: number } | null>(
     null,
@@ -86,6 +87,7 @@ export const useAsparagusGame = () => {
     setHistory([]);
     setUndoCount(5);
     setSwapCount(5);
+    setShuffleCount(5);
     setIsSwapMode(false);
     setSelection(null);
   }, []);
@@ -161,6 +163,24 @@ export const useAsparagusGame = () => {
     setGameOver(false);
     setWon(false);
   }, [undoCount, history]);
+
+  const handleShuffle = useCallback(() => {
+    if (shuffleCount <= 0) return;
+    setHistory((prev) => [...prev, { grid, score }]);
+    const values: (number | null)[] = [];
+    for (let r = 0; r < 4; r++)
+      for (let c = 0; c < 4; c++) values.push(grid[r][c]);
+    for (let i = values.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [values[i], values[j]] = [values[j], values[i]];
+    }
+    const newGrid = createEmptyGrid();
+    let idx = 0;
+    for (let r = 0; r < 4; r++)
+      for (let c = 0; c < 4; c++) newGrid[r][c] = values[idx++];
+    setGrid(newGrid);
+    setShuffleCount((c) => c - 1);
+  }, [shuffleCount, grid, score]);
 
   const handleTileClick = (r: number, c: number) => {
     if (!isSwapMode || swapCount <= 0 || gameOver) return;
@@ -263,12 +283,14 @@ export const useAsparagusGame = () => {
     history,
     undoCount,
     swapCount,
+    shuffleCount,
     isSwapMode,
     selection,
     debugMode,
     startGame,
     startDebugGame: () => startGame(true),
     handleUndo,
+    handleShuffle,
     handleTileClick,
     move,
     setContinueAfterWin,

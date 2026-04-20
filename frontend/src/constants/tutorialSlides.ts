@@ -55,6 +55,7 @@ export const ASPARAGUS_TUTORIAL_SLIDES: TutorialSlide[] = [
       "비료를 사용해봐, 얼마 없으니 아껴써야 해!",
       "되돌리기: 마지막 이동을 되돌릴 수 있어",
       "바꾸기: 두 타일의 위치를 바꿀 수 있어",
+      "갈아엎기: 모든 타일 위치를 무작위로 바꿔버려",
     ],
     showArrows: false,
   },
