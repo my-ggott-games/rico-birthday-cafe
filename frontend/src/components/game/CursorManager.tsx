@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Club } from "lucide-react";
 
 interface Particle {
@@ -94,78 +93,51 @@ export const CursorManager: React.FC = () => {
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[9999999]">
-      {/* Custom Cursor: Light Green Club - Disabled to fix Naver Whale bug
-            <AnimatePresence>
-                {window.innerWidth > 768 && (
-                    <motion.div
-                        className="fixed top-0 left-0 pointer-events-none z-[10001] flex items-center justify-center"
-                        animate={{
-                            x: mousePos.x - 20, // Center the cursor (40px / 2 = 20)
-                            y: mousePos.y - 20,
-                        }}
-                        transition={{ type: 'spring', damping: 40, stiffness: 800, mass: 0.3 }}
-                    >
-                        Club cursor preview
-                    </motion.div>
-                )}
-            </AnimatePresence>
-            */}
-
-      {/* Click Burst Effects: Small Clovers */}
-      <AnimatePresence>
-        {particles.map((p) => (
-          <motion.div
-            key={p.id}
-            initial={{
-              x: p.x - p.size / 2,
-              y: p.y - p.size / 2,
-              scale: 1,
-              opacity: 1,
-              rotate: p.rotation,
-            }}
-            animate={{
-              x: p.x - p.size / 2 + Math.cos(p.angle) * p.velocity,
-              y: p.y - p.size / 2 + Math.sin(p.angle) * p.velocity,
-              scale: 0.72,
-              opacity: 0,
-              rotate: p.rotation + 120,
-            }}
-            transition={{ duration: 0.62, ease: "easeOut" }}
-            className="fixed select-none"
-            style={{
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          className="cursor-burst-particle fixed select-none"
+          style={
+            {
+              left: p.x - p.size / 2,
+              top: p.y - p.size / 2,
               width: p.size * 2.8,
               height: p.size * 2.8,
+              "--particle-translate-x": `${Math.cos(p.angle) * p.velocity}px`,
+              "--particle-translate-y": `${Math.sin(p.angle) * p.velocity}px`,
+              "--particle-rotate-start": `${p.rotation}deg`,
+              "--particle-rotate-end": `${p.rotation + 120}deg`,
+            } as React.CSSProperties
+          }
+        >
+          <div
+            className="relative flex h-full w-full items-center justify-center"
+            style={{
+              filter: `drop-shadow(0 0 8px ${p.glow}) drop-shadow(0 0 18px ${p.glow})`,
             }}
           >
             <div
-              className="relative flex h-full w-full items-center justify-center"
+              className="absolute rounded-full"
               style={{
-                filter: `drop-shadow(0 0 8px ${p.glow}) drop-shadow(0 0 18px ${p.glow})`,
+                width: p.size * 1.65,
+                height: p.size * 1.65,
+                background: `radial-gradient(circle, ${p.glow} 0%, rgba(217,249,157,0.22) 42%, rgba(217,249,157,0) 76%)`,
               }}
-            >
-              <div
-                className="absolute rounded-full"
-                style={{
-                  width: p.size * 1.65,
-                  height: p.size * 1.65,
-                  background: `radial-gradient(circle, ${p.glow} 0%, rgba(217,249,157,0.22) 42%, rgba(217,249,157,0) 76%)`,
-                }}
-              />
-              <Club
-                aria-hidden
-                strokeWidth={1.75}
-                style={{
-                  width: p.size,
-                  height: p.size,
-                  color: p.color,
-                  fill: p.fillColor,
-                  fillOpacity: 0.96,
-                }}
-              />
-            </div>
-          </motion.div>
-        ))}
-      </AnimatePresence>
+            />
+            <Club
+              aria-hidden
+              strokeWidth={1.75}
+              style={{
+                width: p.size,
+                height: p.size,
+                color: p.color,
+                fill: p.fillColor,
+                fillOpacity: 0.96,
+              }}
+            />
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

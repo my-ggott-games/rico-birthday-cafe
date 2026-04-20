@@ -215,6 +215,24 @@ button {
   }
 }
 
+@keyframes cursor-burst {
+  from {
+    transform: translate3d(0, 0, 0) scale(1) rotate(var(--particle-rotate-start, 0deg));
+    opacity: 1;
+  }
+
+  to {
+    transform: translate3d(var(--particle-translate-x, 0), var(--particle-translate-y, 0), 0) scale(0.72) rotate(var(--particle-rotate-end, 120deg));
+    opacity: 0;
+  }
+}
+
+.cursor-burst-particle {
+  animation: cursor-burst 620ms ease-out forwards;
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
 @keyframes phase-transition-wash {
   0% {
     opacity: 0;
