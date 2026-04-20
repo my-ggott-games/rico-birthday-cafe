@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@400;700;900&display=swap");
 
 @theme {
   --color-pale-custard: #fffff8;
@@ -61,7 +60,7 @@ body {
 }
 
 .font-handwriting {
-  font-family: "OneStoreMobilePop", "Gaegu", cursive;
+  font-family: "OneStoreMobilePop", system-ui, sans-serif;
   font-weight: 400;
   letter-spacing: 0.02em;
 }

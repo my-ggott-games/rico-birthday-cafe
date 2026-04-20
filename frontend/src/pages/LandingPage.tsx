@@ -78,7 +78,7 @@ const LandingPage: React.FC = () => {
         {/* Background Layers */}
         <ProgressiveBackground
           thumbnailSrc="/pages/landing/background-thumb.jpg"
-          fullSrc="/pages/landing/background.jpg"
+          fullSrc="/pages/landing/background.webp"
           previewFetchPriority="high"
           className="z-0"
           overlayClassName="bg-transparent"
@@ -91,8 +91,8 @@ const LandingPage: React.FC = () => {
           <div className="absolute left-1/2 top-1/2 h-full aspect-[3847/2885] -translate-x-1/2 -translate-y-1/2 scale-[0.75]">
             <ProgressiveImage
               thumbnailSrc="/pages/landing/background-thumb.jpg"
-              fullSrc="/pages/landing/background.jpg"
-              previewFetchPriority="low"
+              fullSrc="/pages/landing/background.webp"
+              previewFetchPriority="high"
               alt=""
               className="h-full w-full"
               imageClassName="object-cover object-center"

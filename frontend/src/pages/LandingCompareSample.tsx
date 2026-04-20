@@ -3,7 +3,7 @@ import { useState } from "react";
 type CompareMode = "compare" | "landing" | "landing1";
 
 const IMAGE_SOURCES = {
-  landing: "/pages/landing/background.jpg",
+  landing: "/pages/landing/background.webp",
   landing1: "/landing1.jpg",
 } as const;
 
