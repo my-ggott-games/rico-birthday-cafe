@@ -15,6 +15,7 @@ import {
   FrameCorner,
 } from "../../components/game/puzzle/PuzzleBoardElements";
 import { HolographicCard } from "../../components/common/HolographicCard";
+import { HoloPointerHint } from "../../components/game/puzzle/HoloPointerHint";
 import { PolaroidHolographicOverlay } from "../../components/game/cody/polaroidEffects/PolaroidHolographicOverlay";
 import {
   PUZZLE_GRID_OPTIONS,
@@ -41,14 +42,12 @@ type PuzzleGameBoardViewProps = {
   completed: boolean;
   pieces: PuzzlePiece[];
   boardConfig: PuzzleBoardConfig;
-  sensorUnavailable: boolean;
   isMagnifierActive: boolean;
   magnifierPoint: { x: number; y: number };
   updateMagnifierPoint: (clientX: number, clientY: number) => void;
   setIsMagnifierActive: React.Dispatch<React.SetStateAction<boolean>>;
   photocardModeEnabled: boolean;
-  isOpeningPhotocard: boolean;
-  handlePhotocardMode: () => Promise<void>;
+  handlePhotocardMode: () => void;
   handleReplay: () => void;
   handleRotate: (id: number) => void;
   isAdmin: boolean;
@@ -72,13 +71,11 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
   completed,
   pieces,
   boardConfig,
-  sensorUnavailable,
   isMagnifierActive,
   magnifierPoint,
   updateMagnifierPoint,
   setIsMagnifierActive,
   photocardModeEnabled,
-  isOpeningPhotocard,
   handlePhotocardMode,
   handleReplay,
   handleRotate,
@@ -266,12 +263,21 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                   </div>
                   {photocardModeEnabled && (
                     <div className="absolute inset-0 z-[60] flex items-center justify-center">
-                      <HolographicCard
-                        imageSrc={PUZZLE_IMAGE_URL}
-                        width={`${displayPieceSize * cols}px`}
-                        height={`${displayPieceSize * rows}px`}
-                        foilType="holo"
-                      />
+                      <div
+                        className="relative"
+                        style={{
+                          width: `${displayPieceSize * cols}px`,
+                          height: `${displayPieceSize * rows}px`,
+                        }}
+                      >
+                        <HolographicCard
+                          imageSrc={PUZZLE_IMAGE_URL}
+                          width={`${displayPieceSize * cols}px`}
+                          height={`${displayPieceSize * rows}px`}
+                          foilType="holo"
+                        />
+                        <HoloPointerHint active={photocardModeEnabled} />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -289,16 +295,11 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                   </motion.div>
                   <div className="flex w-full items-center gap-3">
                       <PushableButton
-                        onClick={() => void handlePhotocardMode()}
-                        disabled={isOpeningPhotocard}
+                        onClick={handlePhotocardMode}
                         className="flex-1 justify-center"
                         variant="mint"
                       >
-                        {isOpeningPhotocard
-                          ? "준비 중..."
-                          : photocardModeEnabled
-                            ? "홀로그램 끄기"
-                            : "홀로그램 모드"}
+                        {photocardModeEnabled ? "홀로그램 끄기" : "홀로그램 모드"}
                       </PushableButton>
                     <PushableButton
                       onClick={handleReplay}
@@ -329,16 +330,11 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                     <MuseumPlaque className="mt-0" />
                   </motion.div>
                     <PushableButton
-                      onClick={() => void handlePhotocardMode()}
-                      disabled={isOpeningPhotocard}
+                      onClick={handlePhotocardMode}
                       className="w-full justify-center"
                       variant="mint"
                     >
-                      {isOpeningPhotocard
-                        ? "준비 중..."
-                        : photocardModeEnabled
-                          ? "홀로그램 끄기"
-                          : "홀로그램 모드"}
+                      {photocardModeEnabled ? "홀로그램 끄기" : "홀로그램 모드"}
                     </PushableButton>
                   <PushableButton
                     onClick={handleReplay}
@@ -356,22 +352,7 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
         <div
           className="relative flex h-[180px] w-full items-end justify-center bg-[rgba(240,253,244,0.1)] px-4 pb-6 sm:h-[200px]"
           id="area-bottom"
-        >
-          {completed && (
-            <motion.div
-              initial={{ y: 28, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="flex w-full max-w-md flex-col items-center gap-3 lg:hidden"
-            >
-              {sensorUnavailable && (
-                <p className="rounded-full bg-[#fff1f1]/92 px-4 py-2 text-center text-xs leading-5 text-[#A14646] backdrop-blur-sm">
-                  센서 권한을 받지 못했거나 HTTPS 환경이 아니라서 기울임 효과를
-                  켤 수 없어.
-                </p>
-              )}
-            </motion.div>
-          )}
-        </div>
+        />
 
         <div className="absolute inset-0 pointer-events-none z-[30]">
           <div className="pointer-events-auto">

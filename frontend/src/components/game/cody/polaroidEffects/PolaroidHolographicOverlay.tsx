@@ -44,10 +44,10 @@ export const PolaroidHolographicOverlay = ({
 
   const palette = useMemo(
     () => ({
-      cyan: "hsla(192, 100%, 54%, 1)",
-      pink: "hsla(324, 100%, 62%, 0.96)",
-      violet: "hsla(272, 100%, 62%, 0.92)",
-      gold: "hsla(52, 100%, 56%, 0.88)",
+      cyan: "hsla(192, 100%, 50%, 1)",
+      pink: "hsla(324, 100%, 58%, 1)",
+      violet: "hsla(272, 100%, 58%, 1)",
+      gold: "hsla(52, 100%, 52%, 1)",
     }),
     [],
   );
@@ -127,10 +127,10 @@ export const PolaroidHolographicOverlay = ({
     return `linear-gradient(${angle},
       transparent 0%,
       rgba(255,255,255,0.03) 14%,
-      hsla(192, 100%, 70%, 0.34) 32%,
-      hsla(324, 100%, 72%, 0.48) 50%,
-      hsla(272, 100%, 72%, 0.42) 64%,
-      hsla(52, 100%, 72%, 0.34) 80%,
+      hsla(192, 100%, 58%, 0.58) 32%,
+      hsla(324, 100%, 60%, 0.72) 50%,
+      hsla(272, 100%, 60%, 0.65) 64%,
+      hsla(52, 100%, 58%, 0.58) 80%,
       transparent 100%)`;
   });
 
@@ -215,7 +215,7 @@ export const PolaroidHolographicOverlay = ({
           style={{
             ...overlayVars,
             background: radialBurst,
-            opacity: 0.72,
+            opacity: 0.86,
           }}
         />
       )}
@@ -226,7 +226,7 @@ export const PolaroidHolographicOverlay = ({
             ...overlayVars,
             background: spectralField,
             mixBlendMode: "color-dodge",
-            opacity: 0.5,
+            opacity: 0.66,
           }}
         />
       )}
@@ -272,7 +272,7 @@ export const PolaroidHolographicOverlay = ({
           }}
           animate={{
             x: ["-140%", "138%"],
-            opacity: [0, 0.84, 0],
+            opacity: [0, 0.96, 0],
           }}
           transition={{
             duration: 1.8,
