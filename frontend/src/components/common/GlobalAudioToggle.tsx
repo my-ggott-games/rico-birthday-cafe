@@ -93,7 +93,6 @@ export const GlobalAudioToggle: React.FC = () => {
   const currentBgmSrc = useAudioStore((state) => state.currentBgmSrc);
   const toggleMuted = useAudioStore((state) => state.toggleMuted);
   const [isNoteOpen, setIsNoteOpen] = React.useState(false);
-  const isCodyGame = location.pathname === "/game/cody";
 
   const isVisible = AUDIO_ENABLED_ROUTES.some((route) =>
     matchPath(route, location.pathname),

@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
 const clamp = (value: number, min: number, max: number) =>
@@ -26,7 +26,6 @@ export const PolaroidHolographicOverlay = ({
   imageUrl,
 }: PolaroidHolographicOverlayProps) => {
   const mobileGyroActive = mobileInteractive && orientationEnabled;
-  const noiseFilterId = useId().replace(/:/g, "");
   const targetX = useMotionValue(50);
   const targetY = useMotionValue(50);
   const springX = useSpring(targetX, HOLOGRAPHIC_SPRING);
@@ -122,10 +121,6 @@ export const PolaroidHolographicOverlay = ({
   const mobileSweepOpacity = useTransform(
     mobileTiltStrength,
     (value) => 0.58 + value * 0.18,
-  );
-  const mobileSweepFilter = useTransform(
-    mobileTiltStrength,
-    (value) => `blur(${12 + value * 4}px) saturate(${1.18 + value * 0.12})`,
   );
   const mobileSweepGradient = useTransform([mobileSweepAngle], (latest) => {
     const [angle] = latest as [string];
