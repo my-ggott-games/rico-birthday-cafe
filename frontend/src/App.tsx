@@ -1,18 +1,14 @@
-import { lazy, Suspense } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { lazy, Suspense, useLayoutEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
-import Lobby from "./pages/Lobby";
 import { usePageTracking } from "./hooks/usePageTracking";
 
 import { CursorManager } from "./components/game/CursorManager";
-import GlobalLoading from "./components/common/GlobalLoading";
-import { AchievementToast } from "./components/common/AchievementToast";
-import { GlobalAudioToggle } from "./components/common/GlobalAudioToggle";
-import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
-import LandingCompareSample from "./pages/LandingCompareSample";
+import { useAuthStore } from "./store/useAuthStore";
 
+const Lobby = lazy(() => import("./pages/Lobby"));
 const CodyGame = lazy(() => import("./pages/CodyGame"));
 const AdventureGame = lazy(() => import("./pages/AdventureGame"));
 const CodySample = lazy(() => import("./pages/CodySample"));
@@ -22,21 +18,54 @@ const HologramPlayground = lazy(() => import("./pages/HologramPlayground"));
 const AsparagusMerge = lazy(() => import("./pages/AsparagusMerge"));
 const AsparagusShowcase = lazy(() => import("./pages/AsparagusShowcase"));
 const Credits = lazy(() => import("./pages/Credits"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const LandingCompareSample = lazy(() => import("./pages/LandingCompareSample"));
+
+const GlobalLoading = lazy(() => import("./components/common/GlobalLoading"));
+const AchievementToast = lazy(() => import("./components/common/AchievementToast").then(m => ({ default: m.AchievementToast })));
+const GlobalAudioToggle = lazy(() => import("./components/common/GlobalAudioToggle").then(m => ({ default: m.GlobalAudioToggle })));
 
 function PageTracker() {
   usePageTracking();
   return null;
 }
 
+function AuthHydrator() {
+  const { pathname } = useLocation();
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
+  const hydrateFromStorage = useAuthStore((state) => state.hydrateFromStorage);
+
+  useLayoutEffect(() => {
+    if (pathname === "/" || hasHydrated) {
+      return;
+    }
+
+    hydrateFromStorage();
+  }, [hasHydrated, hydrateFromStorage, pathname]);
+
+  return null;
+}
+
+function NonLandingGlobals() {
+  const { pathname } = useLocation();
+  if (pathname === "/") return null;
+  return (
+    <Suspense fallback={null}>
+      <GlobalLoading />
+      <AchievementToast />
+      <GlobalAudioToggle />
+    </Suspense>
+  );
+}
+
 function App() {
   return (
     <div>
-      <AchievementToast />
       <CursorManager />
       <Router>
+        <AuthHydrator />
         <PageTracker />
-        <GlobalLoading />
-        <GlobalAudioToggle />
+        <NonLandingGlobals />
         <Suspense fallback={null}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
