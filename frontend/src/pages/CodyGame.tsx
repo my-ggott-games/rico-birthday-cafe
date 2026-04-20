@@ -8,22 +8,18 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core";
-import { DraggableItem } from "../components/game/cody/DraggableItem";
 import type {
   CodyItem,
   EquippedState,
-  EquipmentSlot,
   MobileTabId,
 } from "../components/game/cody/codyTypes";
 import { GameContainer } from "../components/common/GameContainer";
 import { PolaroidFireflyOverlay } from "../components/game/cody/polaroidEffects/PolaroidFireflyOverlay";
 import { PolaroidSpringBackdrop } from "../components/game/cody/polaroidEffects/PolaroidSpringBackdrop";
-import { getInventoryPreviewLayout } from "../components/game/cody/codyInventoryPreviewLayout";
 import { CodyActionBar } from "../components/game/cody/CodyActionBar";
 import { CodyDisplayStage } from "../components/game/cody/CodyDisplayStage";
 import { CodyInventoryPanel } from "../components/game/cody/CodyInventoryPanel";
 import {
-  CODY_CHARACTER_CANVAS,
   getCodyCharacterScale,
   getCodyDisplayStageHeight,
   getCodyMannequinScale,
@@ -32,7 +28,6 @@ import {
 } from "../components/game/cody/codyStageLayout";
 import { domToJpeg } from "modern-screenshot";
 import { startCodyAssetPreload } from "../utils/codyAssetPreload";
-import { AppIcon } from "../components/common/AppIcon";
 import { CODY_TUTORIAL_SLIDES } from "../constants/tutorialSlides";
 import { usePageBgm } from "../hooks/usePageBgm";
 import { pickRandomActivityBgm } from "../utils/bgm";
@@ -45,169 +40,26 @@ import {
 } from "../utils/achievementAwards";
 import { pushEvent } from "../utils/analytics";
 import { useViewEvent } from "../hooks/usePageTracking";
-
-type ShareNavigator = Navigator & {
-  canShare?: (data?: ShareData) => boolean;
-};
-
-const EMPTY_EQUIPMENT: EquippedState = {
-  hair: null,
-  top: null,
-  skirt: null,
-  dress: null,
-  jacket: null,
-  shoes: null,
-  deco_1: null,
-  deco_2: null,
-  deco_3: null,
-  deco_4: null,
-  deco_5: null,
-  deco_6: null,
-  hand_acc: null,
-};
-
-const INVALID_POLAROID_SCALE = 0.5;
-const VALID_POLAROID_SCALE = 1;
-const PNG_ASSET = (name: string) => `/assets/codygame/${name}.png`;
-
-const LEGEND_ACHIEVEMENT_CODE = "LEGEND_COORDINATOR";
-const CODY_DISCOVERED_COMBOS_KEY = "cody_discovered_combos";
-const TOTAL_VALID_COMBOS = 5; // training 제외, 유효한 조합 수
-
-const HAIR_PAIRINGS: Array<[string, string]> = [
-  ["hair_1-1", "hair_2-1"],
-  ["hair_1-2", "hair_2-1"],
-  ["hair_1-3", "hair_2-2"],
-  ["hair_1-4", "hair_2-1"],
-  ["hair_1-5", "hair_2-3"],
-  ["hair_1-6", "hair_2-1"],
-];
-
-const DECO_ITEMS: Array<{
-  id: string;
-  slot: EquipmentSlot;
-  layerPriority: number;
-}> = [
-  { id: "deco_1-1", slot: "deco_1", layerPriority: 45 },
-  { id: "deco_1-2", slot: "deco_1", layerPriority: 45 },
-  { id: "deco_2-1", slot: "deco_2", layerPriority: 34 },
-  { id: "deco_2-2", slot: "deco_2", layerPriority: 34 },
-  { id: "deco_3-1", slot: "deco_3", layerPriority: 29 },
-  { id: "deco_3-2", slot: "deco_3", layerPriority: 45 },
-  { id: "deco_3-3", slot: "deco_3", layerPriority: 45 },
-  { id: "deco_4-1", slot: "deco_4", layerPriority: 34 },
-  { id: "deco_4-2", slot: "deco_4", layerPriority: 26 },
-  { id: "deco_5-1", slot: "deco_5", layerPriority: 27 },
-  { id: "deco_6-1", slot: "deco_6", layerPriority: 21 },
-  { id: "deco_7-1", slot: "hand_acc", layerPriority: 27 },
-];
-
-const AVAILABLE_ITEMS: CodyItem[] = [
-  ...HAIR_PAIRINGS.map(([front, back]) => ({
-    id: front,
-    category: "hair" as const,
-    slot: "hair" as const,
-    layers: {
-      front: PNG_ASSET(front),
-      back: PNG_ASSET(back),
-    },
-  })),
-  {
-    id: "top_1",
-    category: "top",
-    slot: "top",
-    layerPriority: 28,
-    layers: { main: PNG_ASSET("top_1") },
-  },
-  {
-    id: "skirt_1",
-    category: "skirt",
-    slot: "skirt",
-    layers: { main: PNG_ASSET("skirt_1") },
-  },
-  ...["dress_1", "dress_2", "dress_3", "dress_4", "dress_5"].map((id) => ({
-    id,
-    category: "dress" as const,
-    slot: "dress" as const,
-    layers: { main: PNG_ASSET(id) },
-  })),
-  {
-    id: "jacket_1",
-    category: "jacket",
-    slot: "jacket",
-    layerPriority: 32,
-    layers: { main: PNG_ASSET("jacket_1") },
-  },
-  ...["shoes_1", "shoes_2", "shoes_3", "shoes_4", "shoes_5"].map((id) => ({
-    id,
-    category: "shoes" as const,
-    slot: "shoes" as const,
-    layers: { main: PNG_ASSET(id) },
-  })),
-  ...DECO_ITEMS.map(({ id, slot, layerPriority }) => ({
-    id,
-    category: "deco" as const,
-    slot,
-    layerPriority,
-    layers: { main: PNG_ASSET(id) },
-  })),
-];
-
-type Combination = {
-  name: string;
-  requiredItems: string[];
-  backgroundClass?: string;
-  backgroundUrl?: string;
-};
-
-const combinations: Combination[] = [
-  {
-    name: "beer",
-    requiredItems: ["deco_1-1", "deco_2-1", "dress_1", "hair_1-2", "shoes_4"],
-    backgroundClass: "beer",
-  },
-  {
-    name: "hanbok",
-    requiredItems: [
-      "deco_1-2",
-      "deco_3-1",
-      "deco_4-2",
-      "deco_5-1",
-      "hair_1-3",
-      "shoes_5",
-      "skirt_1",
-      "top_1",
-    ],
-    backgroundClass: "oriental",
-  },
-  {
-    name: "spring",
-    requiredItems: [
-      "deco_2-2",
-      "deco_7-1",
-      "deco_3-3",
-      "dress_3",
-      "hair_1-4",
-      "shoes_1",
-    ],
-    backgroundClass: "spring",
-  },
-  {
-    name: "rain",
-    requiredItems: ["deco_3-2", "dress_2", "hair_1-1", "jacket_1", "shoes_4"],
-    backgroundClass: "rain",
-  },
-  {
-    name: "knight",
-    requiredItems: ["deco_1-1", "deco_4-1", "dress_4", "hair_1-2", "shoes_3"],
-    backgroundClass: "knight",
-  },
-  {
-    name: "training",
-    requiredItems: ["deco_6-1", "dress_5", "hair_1-5", "shoes_2"],
-    backgroundClass: "training",
-  },
-];
+import {
+  AVAILABLE_ITEMS,
+  CODY_DISCOVERED_COMBOS_KEY,
+  EMPTY_EQUIPMENT,
+  INVALID_POLAROID_SCALE,
+  LEGEND_ACHIEVEMENT_CODE,
+  TOTAL_VALID_COMBOS,
+  VALID_POLAROID_SCALE,
+  combinations,
+  type ShareNavigator,
+} from "../features/cody/codyGameData";
+import {
+  applyItemToEquipment,
+  getCardWidth,
+  getInventoryPreviewStyles,
+  inventorySections,
+  renderInventoryCard,
+  renderInventoryPreview,
+  topSkirtIds,
+} from "../features/cody/codyInventory";
 
 const CodyGame: React.FC = () => {
   const [bgmSrc] = useState(() => pickRandomActivityBgm());
@@ -308,30 +160,6 @@ const CodyGame: React.FC = () => {
 
   const availableItems = AVAILABLE_ITEMS;
 
-  const applyItemToEquipment = (
-    prev: EquippedState,
-    item: CodyItem,
-  ): EquippedState => {
-    const nextState: EquippedState = { ...prev };
-
-    if (item.category === "dress") {
-      nextState.top = null;
-      nextState.skirt = null;
-    }
-
-    if (item.category === "top" || item.category === "skirt") {
-      nextState.dress = null;
-    }
-
-    nextState[item.slot] = item.id;
-    return nextState;
-  };
-
-  const isItemDisabled = (_item: CodyItem) => {
-    if (isFinished) return true;
-    return false;
-  };
-
   const desktopSensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
@@ -394,213 +222,28 @@ const CodyGame: React.FC = () => {
   const activeItem = activeId
     ? availableItems.find((i) => i.id === activeId)
     : null;
-
-  const getInventoryPreviewStyles = (itemId: string, item?: CodyItem) => {
-    const layout = getInventoryPreviewLayout(itemId);
-    const mobileOutfitScale =
-      isMobile &&
-      item &&
-      ["top", "skirt", "dress", "jacket"].includes(item.category)
-        ? 0.86
-        : 1;
-
-    return {
-      cardSize: isMobile ? layout.mobileCard : layout.desktopCard,
-      previewOffset: isMobile ? layout.mobileOffset : layout.desktopOffset,
-      previewLeftOffset: isMobile
-        ? layout.mobileLeftOffset
-        : layout.desktopLeftOffset,
-      previewScale: isMobile
-        ? characterScale * 0.75 * mobileOutfitScale
-        : characterScale,
-    };
-  };
-
-  const renderInventoryPreview = (item: CodyItem) => {
-    const { previewOffset, previewLeftOffset, previewScale } =
-      getInventoryPreviewStyles(item.id, item);
-
-    return (
-      <div
-        className="pointer-events-none absolute"
-        style={{
-          width: `${CODY_CHARACTER_CANVAS.width}px`,
-          height: `${CODY_CHARACTER_CANVAS.height}px`,
-          top: previewOffset,
-          left: "50%",
-          transform: `translateX(calc(-50% + ${previewLeftOffset})) scale(${previewScale})`,
-        }}
-      >
-        {item.layers.back && (
-          <img
-            src={item.layers.back}
-            alt={`${item.category}-back`}
-            className="absolute inset-0 h-full w-full object-contain pointer-events-none"
-            style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.05))" }}
-          />
-        )}
-        {item.layers.main && (
-          <img
-            src={item.layers.main}
-            alt={`${item.category}-main`}
-            className="absolute inset-0 h-full w-full object-contain pointer-events-none"
-          />
-        )}
-        {item.layers.front && (
-          <img
-            src={item.layers.front}
-            alt={`${item.category}-front`}
-            className="absolute inset-0 h-full w-full object-contain pointer-events-none"
-            style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.05))" }}
-          />
-        )}
-      </div>
-    );
-  };
-
-  const hairDecoIds = new Set(["deco_3-1", "deco_3-2", "deco_3-3"]);
-  const swordDecoIds = new Set(["deco_4-1", "deco_4-2"]);
-  const topSkirtIds = new Set(["top_1", "skirt_1"]);
-
-  const getCardWidth = (itemId: string) => {
-    const { cardSize } = getInventoryPreviewStyles(itemId);
-    const widthMatch = cardSize.match(/(?:^|\s)w-(\d+)(?:\s|$)/);
-    return widthMatch ? Number(widthMatch[1]) : 0;
-  };
-
-  const inventorySections: Array<{
-    id: string;
-    tab: MobileTabId;
-    overlap: boolean;
-    mobileOverlapClass?: string;
-    desktopOverlapClass?: string;
-    filter: (item: CodyItem) => boolean;
-  }> = [
-    {
-      id: "hair",
-      tab: "hair",
-      overlap: false,
-      filter: (item) => item.category === "hair",
-    },
-    {
-      id: "hair-deco",
-      tab: "deco",
-      overlap: false,
-      filter: (item) => hairDecoIds.has(item.id),
-    },
-    {
-      id: "dress",
-      tab: "clothes",
-      overlap: true,
-      mobileOverlapClass: "-ml-12",
-      desktopOverlapClass: "-ml-30",
-      filter: (item) => item.category === "dress" || item.category === "jacket",
-    },
-    {
-      id: "deco",
-      tab: "deco",
-      overlap: false,
-      filter: (item) =>
-        item.category === "deco" &&
-        !hairDecoIds.has(item.id) &&
-        !swordDecoIds.has(item.id),
-    },
-    {
-      id: "sword",
-      tab: "deco",
-      overlap: false,
-      filter: (item) => swordDecoIds.has(item.id),
-    },
-    {
-      id: "shoes",
-      tab: "shoes",
-      overlap: false,
-      filter: (item) => item.category === "shoes",
-    },
-  ];
-
-  const renderInventoryCard = (
+  const getInventoryCardWidth = (itemId: string) =>
+    getCardWidth(itemId, isMobile, characterScale);
+  const renderCodyInventoryCard = (
     item: CodyItem,
     index: number,
     total: number,
     overlapClass = "",
     offsetClass = "",
-  ) => {
-    const isEquipped = Object.values(equippedIds).includes(item.id);
-    const isDragging = !isMobile && activeId === item.id;
-    const isDisabled = isItemDisabled(item);
-    const showRaisedEquippedBadge =
-      !isMobile && ["top", "skirt", "dress", "jacket"].includes(item.category);
-    const handleClick = () => {
-      if (isEquipped) {
-        setEquippedItems((prev) => ({
-          ...prev,
-          [item.slot]: null,
-        }));
-        return;
-      }
-
-      if (!isMobile) return;
-
-      if (!isDisabled) {
-        setEquippedItems((prev) => applyItemToEquipment(prev, item));
-        window.requestAnimationFrame(() => {
-          window.scrollTo(0, 0);
-        });
-      }
-    };
-
-    const { cardSize } = getInventoryPreviewStyles(item.id);
-
-    return (
-      <div
-        key={item.id}
-        onClick={handleClick}
-        className={`relative ${cardSize} overflow-visible rounded-3xl flex-shrink-0 transition-all group bg-transparent border-transparent ${
-          item.category === "shoes" ? "self-end" : ""
-        } ${offsetClass} ${index > 0 ? overlapClass : ""} ${
-          isDisabled
-            ? "opacity-45 cursor-not-allowed"
-            : `hover:z-20 active:scale-95 ${!isMobile ? "cursor-grab active:cursor-grabbing" : ""}`
-        }`}
-        style={{
-          zIndex: isDragging ? total + 1 : isEquipped ? 0 : total - index,
-        }}
-      >
-        {!isEquipped && !isDragging && (
-          <>
-            {renderInventoryPreview(item)}
-            {!isMobile && !isDisabled && (
-              <DraggableItem
-                id={item.id}
-                layers={item.layers}
-                category={item.category}
-                className="absolute inset-0 z-10 cursor-grab active:cursor-grabbing"
-                renderPreview={false}
-              />
-            )}
-          </>
-        )}
-
-        {isEquipped && (
-          <div
-            className={`absolute z-30 flex justify-center ${
-              showRaisedEquippedBadge
-                ? "left-1/2 top-0 w-max -translate-x-1/2 -translate-y-[60%]"
-                : "inset-0 items-center"
-            }`}
-          >
-            <span className="whitespace-nowrap bg-pale-custard/95 text-[#166D77] px-3 py-1 rounded-full text-xs font-bold shadow-sm border border-[#166D77]/10">
-              <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                <AppIcon name="Sparkles" size={12} />
-                장착 중
-              </span>
-            </span>
-          </div>
-        )}
-      </div>
-    );
-  };
+  ) =>
+    renderInventoryCard({
+      item,
+      index,
+      total,
+      overlapClass,
+      offsetClass,
+      equippedIds,
+      activeId,
+      isMobile,
+      isFinished,
+      characterScale,
+      setEquippedItems,
+    });
 
   const mobileStageHeight = getCodyDisplayStageHeight({
     isMobile,
@@ -907,8 +550,8 @@ const CodyGame: React.FC = () => {
             showInventory={showInventory}
             sections={inventorySections}
             topSkirtIds={topSkirtIds}
-            getCardWidth={getCardWidth}
-            renderInventoryCard={renderInventoryCard}
+            getCardWidth={getInventoryCardWidth}
+            renderInventoryCard={renderCodyInventoryCard}
             onTabChange={setActiveTab}
           />
         </div>
@@ -919,9 +562,9 @@ const CodyGame: React.FC = () => {
           {activeItem ? (
             <div style={{ zIndex: 99999, pointerEvents: "none" }}>
               <div
-                className={`relative ${getInventoryPreviewStyles(activeItem.id).cardSize} overflow-visible`}
+                className={`relative ${getInventoryPreviewStyles(activeItem.id, activeItem, isMobile, characterScale).cardSize} overflow-visible`}
               >
-                {renderInventoryPreview(activeItem)}
+                {renderInventoryPreview(activeItem, isMobile, characterScale)}
               </div>
             </div>
           ) : null}

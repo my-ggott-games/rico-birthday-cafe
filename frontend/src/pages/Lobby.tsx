@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion, useAnimationControls } from "framer-motion";
 import { KCelebrateSlogan } from "k-celebrate-slogan";
 import { AchievementModal } from "../components/common/AchievementModal";
 import { AdminModal } from "../components/auth/AdminModal";
 import { AuthModal } from "../components/auth/AuthModal";
-import {
-  NoteModal,
-  type NoteModalContent,
-} from "../components/common/NoteModal";
+import { NoteModal } from "../components/common/NoteModal";
 import { PushableButton } from "../components/common/PushableButton";
 import { usePageBgm } from "../hooks/usePageBgm";
 import {
@@ -17,7 +14,6 @@ import {
 } from "../constants/puzzle";
 import { EASTER_EGG_NOTE_ACCESS_STORAGE_KEY } from "../constants/noteAccess";
 import { AppIcon } from "../components/common/AppIcon";
-import type { AppIconName } from "../components/common/appIconRegistry";
 import { LOBBY_BGM_SRC } from "../utils/bgm";
 import { useAuthStore } from "../store/useAuthStore";
 import { BASE_URL, fetchWithAuth } from "../utils/api";
@@ -26,74 +22,14 @@ import {
   addAchievementToast,
   parseAchievementAwardResponse,
 } from "../utils/achievementAwards";
-
-// ── Colour utilities ──────────────────────────────────────────────────────────
-
-const hexToHsl = (hex: string): [number, number, number] => {
-  const h = hex.replace("#", "");
-  const r = parseInt(h.slice(0, 2), 16) / 255;
-  const g = parseInt(h.slice(2, 4), 16) / 255;
-  const b = parseInt(h.slice(4, 6), 16) / 255;
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const delta = max - min;
-  let hue = 0;
-  if (delta !== 0) {
-    if (max === r) hue = ((g - b) / delta) % 6;
-    else if (max === g) hue = (b - r) / delta + 2;
-    else hue = (r - g) / delta + 4;
-    hue = (hue * 60 + 360) % 360;
-  }
-  const lightness = (max + min) / 2;
-  const saturation =
-    delta === 0 ? 0 : delta / (1 - Math.abs(2 * lightness - 1));
-  return [hue, saturation * 100, lightness * 100];
-};
-
-const hslToHex = (h: number, s: number, l: number): string => {
-  const sf = s / 100;
-  const lf = l / 100;
-  const c = (1 - Math.abs(2 * lf - 1)) * sf;
-  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-  const m = lf - c / 2;
-  let r = 0,
-    g = 0,
-    b = 0;
-  if (h < 60) {
-    r = c;
-    g = x;
-  } else if (h < 120) {
-    r = x;
-    g = c;
-  } else if (h < 180) {
-    g = c;
-    b = x;
-  } else if (h < 240) {
-    g = x;
-    b = c;
-  } else if (h < 300) {
-    r = x;
-    b = c;
-  } else {
-    r = c;
-    b = x;
-  }
-  return (
-    "#" +
-    [r, g, b]
-      .map((v) =>
-        Math.round(Math.max(0, Math.min(255, (v + m) * 255)))
-          .toString(16)
-          .padStart(2, "0"),
-      )
-      .join("")
-  );
-};
-
-const darkenHex = (hex: string, lightnessDelta: number): string => {
-  const [h, s, l] = hexToHsl(hex);
-  return hslToHex(h, s, Math.max(0, l - lightnessDelta));
-};
+import {
+  LobbyHotspot,
+  LobbyIconTile,
+} from "../features/lobby/LobbyHotspot";
+import {
+  getLobbyNoteContent,
+  type LobbyNoteKey,
+} from "../features/lobby/lobbyNotes";
 
 const SLOGAN_COLLECTOR_CODE = "SLOGAN_COLLECTOR";
 const SLOGAN_COLLECTOR_STORAGE_KEY = "lobby_slogan_collector_unlocked";
@@ -101,182 +37,6 @@ const CLICK_DROP_THRESHOLD = 100;
 const CLICK_SHAKE_MILESTONES = new Set(
   Array.from({ length: 10 }, (_, index) => index * 10).concat(1),
 );
-
-type LobbyNoteKey = "cody" | "puzzle" | "asparagus" | "adventure";
-
-const LOBBY_NOTE_CONTENT: Record<LobbyNoteKey, NoteModalContent> = {
-  cody: {
-    title: "비하인드 스토리",
-    eyebrow: "리코의 외출 준비",
-    icon: "StickyNote",
-    accentColor: "#e7bcc2",
-    backgroundColor: "#FFF1F3",
-    bodyBackgroundColor: "rgba(255,255,255,0.82)",
-    content: (
-      <>
-        <p>
-          눈치 챘나요? 동물농장 미니게임 크라라의 외출을 모티브로 만들었어요.
-        </p>
-        <p>일러스트 작가님과 함께 작업하니 마마와 파파가 된 기분이네요!</p>
-        <p>작가님... 한복 패턴 한땀한땀 작업하느라 힘드셨죠...</p>
-        <p>제가 그림에 무지해서 복잡한 패턴을 생각 못 했어요...</p>
-      </>
-    ),
-    signature: "CODE NAME: G",
-  },
-  puzzle: {
-    title: "비하인드 스토리",
-    eyebrow: "퍼즐 맞추기",
-    icon: "StickyNote",
-    accentColor: "#ddd1bf",
-    backgroundColor: "#F7F0E6",
-    bodyBackgroundColor: "rgba(255,255,255,0.82)",
-    iconBackgroundColor: "rgba(221,209,191,0.25)",
-    content: (
-      <>
-        <p>한국인은 밥심이죠. 한국에 있는 이세계인에게도 예외는 없어요.</p>
-        <p>맛있는 음식 많이 먹고 행복한 하루 보냈으면 좋겠어요.</p>
-        <p>
-          뭘 좋아할지 몰라 다 차려봤어요. 제일 먼저 먹고싶은 음식은 무엇인가요?
-        </p>
-      </>
-    ),
-    signature: "CODE NAME: G",
-  },
-  asparagus: {
-    title: "비하인드 스토리",
-    eyebrow: "아스파라거스 키우기",
-    icon: "StickyNote",
-    accentColor: "#aad0b2",
-    backgroundColor: "#EFF8F1",
-    bodyBackgroundColor: "rgba(255,255,255,0.82)",
-    content: (
-      <>
-        <p>아스파라거스의 실제 성장 과정을 참고해 단계를 구상했어요.</p>
-        <p>사실 성검 아스파라거스... 저도 못 만들었어요... 너무 어렵네요.</p>
-        <p>아이템 사용도 3번까지였는데 5번으로 늘렸어요.</p>
-        <p>언젠가 어디선가 누군가 나타나서 어떻게든 깨주지 않으려나...</p>
-      </>
-    ),
-    signature: "CODE NAME: G",
-  },
-  adventure: {
-    title: "비하인드 스토리",
-    eyebrow: "용사 리코 이야기 1",
-    icon: "StickyNote",
-    accentColor: "#aebed7",
-    backgroundColor: "#EEF3FB",
-    bodyBackgroundColor: "rgba(255,255,255,0.82)",
-    content: (
-      <>
-        <p>치코는 오케스트라 소속 단원으로 활동하고 있어요.</p>
-        <p>한 OST 악보를 받아 합주하던 그 순간,</p>
-        <p>리코가 이세계에서 마왕을 잡는 이야기가 떠올랐어요.</p>
-        <p>상상하던 이야기의 프롤로그입니다.</p>
-      </>
-    ),
-    signature: "CODE NAME: G",
-  },
-};
-
-const getLobbyNoteContent = (
-  noteKey: LobbyNoteKey,
-  isPuzzleMuseumUnlocked: boolean,
-): NoteModalContent => {
-  if (noteKey !== "puzzle") {
-    return LOBBY_NOTE_CONTENT[noteKey];
-  }
-
-  if (isPuzzleMuseumUnlocked) {
-    return LOBBY_NOTE_CONTENT.puzzle;
-  }
-
-  return {
-    ...LOBBY_NOTE_CONTENT.puzzle,
-    accentColor: "#84bf2e",
-    backgroundColor: "#F2F9E5",
-    iconBackgroundColor: "rgba(132,191,46,0.18)",
-  };
-};
-
-const LobbyIconTile = ({
-  name,
-  icon,
-  isMobile,
-  bgColor,
-  borderColor,
-  iconColor,
-}: {
-  name: string;
-  icon: AppIconName;
-  isMobile: boolean;
-  bgColor: string;
-  borderColor?: string;
-  iconColor?: string;
-}) => {
-  const resolvedBorder = borderColor ?? darkenHex(bgColor, 14);
-  const resolvedIcon = iconColor ?? darkenHex(bgColor, 42);
-  return (
-    <div className="flex flex-col items-center">
-      <div
-        className={`flex items-center justify-center rounded-[1.35rem] border-4 opacity-100 shadow-xl transition-transform group-hover:-translate-y-0.5 ${isMobile ? "h-20 w-20" : "h-24 w-24"}`}
-        style={{ backgroundColor: `${bgColor}d9`, borderColor: resolvedBorder }}
-      >
-        <AppIcon
-          name={icon}
-          size={isMobile ? 28 : 34}
-          style={{ color: resolvedIcon }}
-        />
-      </div>
-      <div
-        className={`mt-2 rounded-xl border-2 border-[#D6C0B0] bg-pale-custard opacity-100 font-bold text-[#166D77] shadow-md transition-colors ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-2"}`}
-      >
-        {name}
-      </div>
-    </div>
-  );
-};
-
-const LobbyHotspot = ({
-  to,
-  noteKey,
-  noteVisible,
-  onOpenNote,
-  children,
-  isMobile,
-}: {
-  to: string;
-  noteKey: LobbyNoteKey;
-  noteVisible: boolean;
-  onOpenNote: (key: LobbyNoteKey) => void;
-  children: React.ReactNode;
-  isMobile: boolean;
-}) => {
-  return (
-    <div
-      className="relative flex w-full justify-center"
-      style={{ width: isMobile ? undefined : "auto" }}
-    >
-      <Link to={to} className="relative group flex w-full justify-center">
-        {children}
-      </Link>
-      {noteVisible && (
-        <button
-          type="button"
-          aria-label={`${LOBBY_NOTE_CONTENT[noteKey].title} 열기`}
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            onOpenNote(noteKey);
-          }}
-          className="absolute right-[calc(50%-3.6rem)] top-[-0.7rem] z-10 rounded-2xl border-2 border-[#D6B089] bg-[#FFF4D8] p-2 text-[#9B6A3D] shadow-[0_8px_18px_rgba(128,87,40,0.2)] transition-transform duration-150 hover:-translate-y-0.5"
-        >
-          <AppIcon name="StickyNote" size={isMobile ? 16 : 18} />
-        </button>
-      )}
-    </div>
-  );
-};
 
 const Lobby: React.FC = () => {
   usePageBgm(LOBBY_BGM_SRC);
