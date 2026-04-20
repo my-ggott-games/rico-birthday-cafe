@@ -199,33 +199,19 @@ export const PolaroidHolographicOverlay = ({
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
       className="pointer-events-none absolute inset-0 z-[3] overflow-hidden"
+      style={{ isolation: "isolate", transform: "translateZ(0)" }}
     >
-      <svg className="absolute h-0 w-0" aria-hidden>
-        <defs>
-          <filter id={noiseFilterId}>
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.78"
-              numOctaves="2"
-              seed="23"
-              stitchTiles="stitch"
-            />
-            <feColorMatrix
-              type="matrix"
-              values="1 0 0 0 0
-                      0 1 0 0 0
-                      0 0 1 0 0
-                      0 0 0 10 -4"
-            />
-          </filter>
-        </defs>
-      </svg>
 
-      <img
-        src={imageUrl}
-        alt=""
+
+      <div
         aria-hidden
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `url(${imageUrl})`,
+          backgroundSize: "100% 100%",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
       />
 
       {!mobileInteractive && (
@@ -255,11 +241,10 @@ export const PolaroidHolographicOverlay = ({
           background: diagonalField,
           mixBlendMode: "overlay",
           opacity: mobileInteractive ? 0.5 : 0,
-          filter: mobileInteractive
-            ? "saturate(1.6) contrast(1.14)"
-            : "saturate(1.06)",
+          filter: mobileInteractive ? undefined : "saturate(1.06)",
           x: mobileInteractive && orientationEnabled ? diagonalOffsetX : 0,
           y: mobileInteractive && orientationEnabled ? diagonalOffsetY : 0,
+          willChange: "transform",
         }}
         transition={{ type: "spring", stiffness: 90, damping: 18 }}
       />
@@ -274,7 +259,8 @@ export const PolaroidHolographicOverlay = ({
             backgroundRepeat: "no-repeat",
             mixBlendMode: "color-dodge",
             opacity: mobileSweepOpacity,
-            filter: mobileSweepFilter,
+            // Avoid saturate() filter on mobile to prevent GPU artifact/noise residue
+            willChange: "transform",
           }}
         />
       )}
@@ -287,6 +273,7 @@ export const PolaroidHolographicOverlay = ({
             mixBlendMode: "color-dodge",
             transform: "rotate(-18deg)",
             filter: "blur(16px) saturate(1.12)",
+            willChange: "transform",
           }}
           animate={{
             x: ["-140%", "138%"],
@@ -300,21 +287,6 @@ export const PolaroidHolographicOverlay = ({
           }}
         />
       )}
-
-      <svg
-        className="absolute inset-0 h-full w-full"
-        preserveAspectRatio="none"
-        aria-hidden
-      >
-        <rect
-          width="100%"
-          height="100%"
-          fill="rgba(22,109,119,0.82)"
-          filter={`url(#${noiseFilterId})`}
-          opacity="0.18"
-          style={{ mixBlendMode: "soft-light" }}
-        />
-      </svg>
     </motion.div>
   );
 };

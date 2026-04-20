@@ -626,8 +626,6 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
       magnifierPoint={magnifierPoint}
       updateMagnifierPoint={updateMagnifierPoint}
       setIsMagnifierActive={setIsMagnifierActive}
-      isCoarsePointerDevice={isCoarsePointerDevice}
-      isNarrowViewport={isNarrowViewport}
       photocardModeEnabled={photocardModeEnabled}
       isOpeningPhotocard={isOpeningPhotocard}
       handlePhotocardMode={handlePhotocardMode}

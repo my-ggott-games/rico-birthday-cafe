@@ -15,6 +15,7 @@ import {
   FrameCorner,
 } from "../../components/game/puzzle/PuzzleBoardElements";
 import { HolographicCard } from "../../components/common/HolographicCard";
+import { PolaroidHolographicOverlay } from "../../components/game/cody/polaroidEffects/PolaroidHolographicOverlay";
 import {
   PUZZLE_GRID_OPTIONS,
   type PuzzleGridSize,
@@ -45,8 +46,6 @@ type PuzzleGameBoardViewProps = {
   magnifierPoint: { x: number; y: number };
   updateMagnifierPoint: (clientX: number, clientY: number) => void;
   setIsMagnifierActive: React.Dispatch<React.SetStateAction<boolean>>;
-  isCoarsePointerDevice: boolean;
-  isNarrowViewport: boolean;
   photocardModeEnabled: boolean;
   isOpeningPhotocard: boolean;
   handlePhotocardMode: () => Promise<void>;
@@ -78,8 +77,6 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
   magnifierPoint,
   updateMagnifierPoint,
   setIsMagnifierActive,
-  isCoarsePointerDevice,
-  isNarrowViewport,
   photocardModeEnabled,
   isOpeningPhotocard,
   handlePhotocardMode,
@@ -162,14 +159,17 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                       ))}
                     </div>
                   )}
-                  <div
-                    ref={artworkRef}
-                    className="relative overflow-hidden border border-[#e8ddc6] bg-[#faf8f1]"
+                  <div 
+                    className="relative"
                     style={{
                       width: `${displayPieceSize * cols}px`,
                       height: `${displayPieceSize * rows}px`,
                     }}
                   >
+                    <div
+                      ref={artworkRef}
+                      className="relative w-full h-full overflow-hidden border border-[#e8ddc6] bg-[#faf8f1]"
+                    >
                     <div className="pointer-events-none absolute inset-0 z-[1] border border-white/35" />
                     {!completed && (
                       <div
@@ -215,16 +215,14 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                         );
                       })}
                     </div>
-                    {photocardModeEnabled && (
-                      <div className="absolute inset-0 z-[15]">
-                        <HolographicCard
-                          imageSrc={PUZZLE_IMAGE_URL}
-                          width="100%"
-                          height="100%"
-                          foilType="holo"
-                          showGyroIndicator={isCoarsePointerDevice || isNarrowViewport}
-                        />
-                      </div>
+                    {completed && !photocardModeEnabled && (
+                      <PolaroidHolographicOverlay
+                        visible={true}
+                        mobileInteractive={false}
+                        orientationEnabled={false}
+                        desktopSweep={true}
+                        imageUrl={PUZZLE_IMAGE_URL}
+                      />
                     )}
                     {completed && (
                       <>
@@ -266,6 +264,17 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                       </>
                     )}
                   </div>
+                  {photocardModeEnabled && (
+                    <div className="absolute inset-0 z-[60] flex items-center justify-center">
+                      <HolographicCard
+                        imageSrc={PUZZLE_IMAGE_URL}
+                        width={`${displayPieceSize * cols}px`}
+                        height={`${displayPieceSize * rows}px`}
+                        foilType="holo"
+                      />
+                    </div>
+                  )}
+                </div>
                 </div>
               </div>
               {completed && (

@@ -10,7 +10,6 @@ export interface HolographicCardProps {
   width?: string | number;
   height?: string | number;
   foilType?: "holo" | "radiant" | "galaxy";
-  showGyroIndicator?: boolean;
 }
 
 export const HolographicCard: React.FC<HolographicCardProps> = ({
@@ -19,7 +18,6 @@ export const HolographicCard: React.FC<HolographicCardProps> = ({
   width = "18rem", // 288px default
   height = "25.2rem", // ~403px default
   foilType = "holo",
-  showGyroIndicator = false,
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [hasDeviceOrientation, setHasDeviceOrientation] = useState(false);
@@ -54,7 +52,7 @@ export const HolographicCard: React.FC<HolographicCardProps> = ({
   // Strength of the lighting based on distance from center
   const intensity = useTransform([springX, springY], ([x, y]: number[]) => {
     const dist = Math.hypot((x - 50) / 50, (y - 50) / 50);
-    return clamp(dist, 0, 1) * 0.8;
+    return clamp(dist, 0, 1) * 0.4;
   });
 
   useEffect(() => {
@@ -155,7 +153,7 @@ export const HolographicCard: React.FC<HolographicCardProps> = ({
 
   return (
     <div 
-      className={`relative inline-block ${className}`}
+      className={`relative block ${className}`}
       style={{ perspective: "1500px", width, height }}
     >
       <motion.div
@@ -163,7 +161,7 @@ export const HolographicCard: React.FC<HolographicCardProps> = ({
         onPointerMove={handlePointerMove}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
-        className="group relative w-full h-full rounded-[4.5%] shadow-2xl transition-transform duration-300 ease-out will-change-transform"
+        className="group relative w-full h-full transition-transform duration-300 ease-out"
         style={{
           rotateX,
           rotateY,
@@ -171,13 +169,10 @@ export const HolographicCard: React.FC<HolographicCardProps> = ({
         }}
         animate={{
           scale: interacting ? 1.05 : 1, // slight pop on hover
-          boxShadow: interacting 
-            ? "0 30px 60px rgba(0,0,0,0.4)" 
-            : "0 20px 40px rgba(0,0,0,0.25)"
         }}
       >
         {/* Base Image */}
-        <div className="absolute inset-0 rounded-[4.5%] overflow-hidden z-10 bg-[#111]">
+        <div className="absolute inset-0 overflow-hidden z-10 bg-[#111]">
           <img
             src={imageSrc}
             alt="Holographic Card"
@@ -188,16 +183,16 @@ export const HolographicCard: React.FC<HolographicCardProps> = ({
 
         {/* Glare Layer */}
         <motion.div
-          className="absolute inset-0 z-20 rounded-[4.5%] pointer-events-none mix-blend-soft-light will-change-transform"
+          className="absolute inset-0 z-20 pointer-events-none mix-blend-soft-light"
           style={{
-            background: useMotionTemplate`radial-gradient(farthest-corner circle at ${springX}% ${springY}%, rgba(255, 255, 255, 0.9) 10%, rgba(255, 255, 255, 0.4) 40%, rgba(0, 0, 0, 0.8) 90%)`,
+            background: useMotionTemplate`radial-gradient(farthest-corner circle at ${springX}% ${springY}%, rgba(255, 255, 255, 0.6) 5%, rgba(255, 255, 255, 0.15) 25%, rgba(0, 0, 0, 0.5) 80%)`,
             opacity: intensity,
           }}
         />
 
         {/* Diagonal Soft Glare Layer */}
         <motion.div
-          className="absolute inset-0 z-[25] rounded-[4.5%] pointer-events-none mix-blend-color-dodge opacity-50 will-change-transform"
+          className="absolute inset-0 z-[25] pointer-events-none mix-blend-color-dodge opacity-25"
           style={{
             background: `linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.4) 25%, transparent 30%)`,
             backgroundPosition: bgPos,
@@ -207,27 +202,23 @@ export const HolographicCard: React.FC<HolographicCardProps> = ({
 
         {/* Hologram Foil Layer */}
         <motion.div
-          className="absolute inset-0 z-30 rounded-[4.5%] pointer-events-none will-change-transform"
+          className="absolute inset-0 z-30 pointer-events-none"
           style={{
             background: foilBackground,
             mixBlendMode: glitterMixMode,
             backgroundPosition: foilType === "holo" ? bgPosInverted : "center",
             backgroundSize: foilType === "holo" ? "250% 250%" : "cover",
-            opacity: foilType === "holo" ? useTransform(fadeSpring, fade => fade * 0.85) : useTransform(fadeSpring, fade => fade * 0.6),
-            filter: foilType === "holo" ? "brightness(1.2) contrast(1.2) saturate(1.5)" : "brightness(1) contrast(1.1) saturate(1.2)",
+            opacity: foilType === "holo" ? useTransform(fadeSpring, fade => fade * 0.5) : useTransform(fadeSpring, fade => fade * 0.4),
+            filter: foilType === "holo" ? "brightness(1.1) contrast(1.1) saturate(1.2)" : "brightness(1) contrast(1.1) saturate(1.2)",
           }}
         />
         
         <motion.div
-          className="absolute inset-0 z-[35] rounded-[4.5%] pointer-events-none mix-blend-color-burn opacity-40 will-change-transform"
+          className="absolute inset-0 z-[35] pointer-events-none mix-blend-color-burn opacity-30"
           style={{
             background: useMotionTemplate`radial-gradient(circle at ${springX}% ${springY}%, transparent 80%, black 130%)`
           }}
         />
-
-        {showGyroIndicator && isGyroActive && (
-          <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-red-500 rounded-full shadow-[0_0_10px_rgba(255,0,0,0.8)] -translate-x-1/2 -translate-y-1/2 z-[100]" />
-        )}
 
       </motion.div>
     </div>
