@@ -35,7 +35,7 @@ const PIN_REGEX = /^[0-9]{4}$/;
 const UID_REGEX = /^chiko_[a-zA-Z0-9]{8}$/;
 const ADMIN_UID = "chiko_03240324";
 const MAX_PIN_LENGTH = 4;
-const REQUEST_TIMEOUT_MS = 15000;
+const REQUEST_TIMEOUT_MS = 5000;
 const UID_VALIDITY_MS = 5 * 60 * 1000;
 const UID_REISSUE_COOLDOWN_MS = 3 * 60 * 1000;
 const ISSUE_UID_STORAGE_KEY = "auth_issued_uid";
@@ -89,6 +89,9 @@ const readStoredNumber = (key: string): number | null => {
 const isServerErrorStatus = (code?: number) =>
   typeof code === "number" && code >= 500;
 
+const SERVER_UNAVAILABLE_MESSAGE =
+  "카페 리모델링 중입니다.\n게스트 모드로 입장해주세요.";
+
 const isNetworkOrTimeoutError = (error: unknown) => {
   if (!(error instanceof Error)) {
     return false;
@@ -116,8 +119,12 @@ const getFriendlyErrorMessage = (error: unknown, fallbackMessage: string) => {
     return fallbackMessage;
   }
 
+  if (error instanceof AuthRequestError && error.canEnterGuest) {
+    return SERVER_UNAVAILABLE_MESSAGE;
+  }
+
   if (error.name === "AbortError") {
-    return "요청이 지연되고 있어요.\n잠시 후 다시 시도해주세요.";
+    return SERVER_UNAVAILABLE_MESSAGE;
   }
 
   const message = error.message.trim();
@@ -127,7 +134,7 @@ const getFriendlyErrorMessage = (error: unknown, fallbackMessage: string) => {
   }
 
   if (/expected pattern|load failed|failed to fetch/i.test(message)) {
-    return fallbackMessage;
+    return SERVER_UNAVAILABLE_MESSAGE;
   }
 
   if (/[a-zA-Z]/.test(message) && !/[가-힣]/.test(message)) {
@@ -373,7 +380,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const getLoginErrorMessage = (code?: number) => {
     if (isServerErrorStatus(code)) {
-      return "카페 문 닫았어요.\n지금은 티켓을 확인할 수 없어요.";
+      return SERVER_UNAVAILABLE_MESSAGE;
     }
 
     switch (code) {
@@ -409,6 +416,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     if (code === 401) {
       return "티켓 인증이 만료됐어요.\n새 티켓을 다시 뽑아주세요.";
+    }
+
+    if (isServerErrorStatus(code)) {
+      return SERVER_UNAVAILABLE_MESSAGE;
     }
 
     return "비밀번호 설정 중 문제가 생겼어요.\n잠시 후 다시 시도해주세요.";
