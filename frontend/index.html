@@ -2,11 +2,42 @@
 <html lang="en">
   <head>
     <!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-NX7NNRX5');</script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+
+  (function (w, d, s, l, i) {
+    let hasLoaded = false;
+
+    const loadGtm = () => {
+      if (hasLoaded) return;
+      hasLoaded = true;
+
+      const firstScript = d.getElementsByTagName(s)[0];
+      const gtmScript = d.createElement(s);
+      const dataLayerSuffix = l !== "dataLayer" ? "&l=" + l : "";
+      gtmScript.async = true;
+      gtmScript.src =
+        "https://www.googletagmanager.com/gtm.js?id=" + i + dataLayerSuffix;
+      firstScript.parentNode.insertBefore(gtmScript, firstScript);
+    };
+
+    const scheduleLoad = () => {
+      if ("requestIdleCallback" in w) {
+        w.requestIdleCallback(loadGtm, { timeout: 2500 });
+        return;
+      }
+
+      w.setTimeout(loadGtm, 1500);
+    };
+
+    if (d.readyState === "complete") {
+      scheduleLoad();
+    } else {
+      w.addEventListener("load", scheduleLoad, { once: true });
+    }
+  })(window, document, "script", "dataLayer", "GTM-NX7NNRX5");
+</script>
 <!-- End Google Tag Manager -->
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/app/favicon.png" />
@@ -15,6 +46,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <title>비공식 팬메이드 유즈하 리코 사이버 생일카페</title>
+    <meta name="description" content="유즈하 리코 팬메이드 사이버 생일카페" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="preload" as="image" href="/pages/landing/background-thumb.jpg" fetchpriority="high" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#166D77" />
+    <link rel="apple-touch-icon" href="/app/favicon.png" />
     <script>
       (function () {
         const params = new URLSearchParams(window.location.search);
@@ -25,12 +62,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     </script>
     <meta property="og:title" content="Riko Birthday Cafe" />
     <meta property="og:image" content="/app/og/thumbnail.jpg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Permanent+Marker&display=swap"
-      rel="stylesheet"
-    />
   </head>
 
   <body>

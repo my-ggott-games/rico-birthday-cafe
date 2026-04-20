@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@400;700;900&display=swap");
 
 @theme {
   --color-pale-custard: #fffff8;
@@ -61,7 +60,7 @@ body {
 }
 
 .font-handwriting {
-  font-family: "OneStoreMobilePop", "Gaegu", cursive;
+  font-family: "OneStoreMobilePop", system-ui, sans-serif;
   font-weight: 400;
   letter-spacing: 0.02em;
 }
@@ -214,6 +213,24 @@ button {
     opacity: 0;
     transform: scale(1.7);
   }
+}
+
+@keyframes cursor-burst {
+  from {
+    transform: translate3d(0, 0, 0) scale(1) rotate(var(--particle-rotate-start, 0deg));
+    opacity: 1;
+  }
+
+  to {
+    transform: translate3d(var(--particle-translate-x, 0), var(--particle-translate-y, 0), 0) scale(0.72) rotate(var(--particle-rotate-end, 120deg));
+    opacity: 0;
+  }
+}
+
+.cursor-burst-particle {
+  animation: cursor-burst 620ms ease-out forwards;
+  transform-origin: center;
+  will-change: transform, opacity;
 }
 
 @keyframes phase-transition-wash {

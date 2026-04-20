@@ -35,45 +35,53 @@ interface AuthState {
   isAuthenticated: boolean;
   isAdmin: boolean;
   isGuest: boolean;
+  hasHydrated: boolean;
+  hydrateFromStorage: () => void;
   login: (token: string, uid?: string | null) => void;
   enterGuest: () => void;
   logout: () => void;
 }
 
-const isTokenExpired = (token: string): boolean => {
-  try {
-    const payload = JSON.parse(
-      decodeBase64Url(token.split(".")[1] ?? ""),
-    ) as { exp?: unknown };
-    if (typeof payload.exp !== "number") return false;
-    return Date.now() / 1000 > payload.exp;
-  } catch {
-    return false;
+const getStoredAuthState = () => {
+  if (typeof window === "undefined") {
+    return {
+      token: null,
+      uid: null,
+      isAuthenticated: false,
+      isAdmin: false,
+      isGuest: false,
+    };
   }
+
+  const token = window.localStorage.getItem("token");
+  const isGuest =
+    window.localStorage.getItem(AUTH_GUEST_STORAGE_KEY) === "true" && !token;
+  const uid =
+    window.localStorage.getItem(AUTH_UID_STORAGE_KEY) ||
+    (token ? getJwtSubject(token) : null);
+
+  return {
+    token,
+    uid: isGuest ? null : uid,
+    isAuthenticated: !!token || isGuest,
+    isAdmin: token ? isAdminToken(token) : false,
+    isGuest,
+  };
 };
 
-const initialToken = (() => {
-  const t = localStorage.getItem("token");
-  if (t && isTokenExpired(t)) {
-    localStorage.removeItem("token");
-    localStorage.removeItem(AUTH_UID_STORAGE_KEY);
-    return null;
-  }
-  return t;
-})();
-
-const initialGuest =
-  localStorage.getItem(AUTH_GUEST_STORAGE_KEY) === "true" && !initialToken;
-const initialUid =
-  localStorage.getItem(AUTH_UID_STORAGE_KEY) ||
-  (initialToken ? getJwtSubject(initialToken) : null);
-
 export const useAuthStore = create<AuthState>((set) => ({
-  token: initialToken,
-  uid: initialGuest ? null : initialUid,
-  isAuthenticated: !!initialToken || initialGuest,
-  isAdmin: initialToken ? isAdminToken(initialToken) : false,
-  isGuest: initialGuest,
+  token: null,
+  uid: null,
+  isAuthenticated: false,
+  isAdmin: false,
+  isGuest: false,
+  hasHydrated: false,
+  hydrateFromStorage: () => {
+    set({
+      ...getStoredAuthState(),
+      hasHydrated: true,
+    });
+  },
   login: (token: string, uid?: string | null) => {
     localStorage.setItem("token", token);
     localStorage.removeItem(AUTH_GUEST_STORAGE_KEY);
@@ -90,6 +98,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       isAuthenticated: true,
       isAdmin: isAdminToken(token),
       isGuest: false,
+      hasHydrated: true,
     });
   },
   enterGuest: () => {
@@ -102,6 +111,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       isAuthenticated: true,
       isAdmin: false,
       isGuest: true,
+      hasHydrated: true,
     });
   },
   logout: () => {
@@ -114,6 +124,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       isAuthenticated: false,
       isAdmin: false,
       isGuest: false,
+      hasHydrated: true,
     });
   },
 }));

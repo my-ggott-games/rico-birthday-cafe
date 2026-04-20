@@ -323,11 +323,11 @@ const Lobby: React.FC = () => {
         window.localStorage.getItem(PUZZLE_MUSEUM_UNLOCK_KEY) === "true",
       );
     const backgroundImage = new Image();
-    backgroundImage.src = "/pages/lobby/background.jpg";
+    backgroundImage.src = "/pages/lobby/background.webp";
 
     const revealBackground = () => {
       if (!isCancelled) {
-        setBackgroundSrc("/pages/lobby/background.jpg");
+        setBackgroundSrc("/pages/lobby/background.webp");
       }
     };
 
