@@ -1,0 +1,13 @@
+{
+  "name": "유즈하 리코 사이버 생일카페",
+  "short_name": "리코카페",
+  "description": "유즈하 리코 팬메이드 사이버 생일카페",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#05080c",
+  "theme_color": "#166D77",
+  "icons": [
+    { "src": "/app/favicon.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/app/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
