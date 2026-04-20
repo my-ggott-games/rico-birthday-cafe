@@ -14,7 +14,7 @@ import {
   DroppableCell,
   FrameCorner,
 } from "../../components/game/puzzle/PuzzleBoardElements";
-import { PolaroidHolographicOverlay } from "../../components/game/cody/polaroidEffects/PolaroidHolographicOverlay";
+import { HolographicCard } from "../../components/common/HolographicCard";
 import {
   PUZZLE_GRID_OPTIONS,
   type PuzzleGridSize,
@@ -40,10 +40,6 @@ type PuzzleGameBoardViewProps = {
   completed: boolean;
   pieces: PuzzlePiece[];
   boardConfig: PuzzleBoardConfig;
-  hologramVisible: boolean;
-  mobilePhotocardActive: boolean;
-  orientationEnabled: boolean;
-  desktopSweepEnabled: boolean;
   sensorUnavailable: boolean;
   isMagnifierActive: boolean;
   magnifierPoint: { x: number; y: number };
@@ -77,10 +73,6 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
   completed,
   pieces,
   boardConfig,
-  hologramVisible,
-  mobilePhotocardActive,
-  orientationEnabled,
-  desktopSweepEnabled,
   sensorUnavailable,
   isMagnifierActive,
   magnifierPoint,
@@ -223,14 +215,17 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                         );
                       })}
                     </div>
-                    <PolaroidHolographicOverlay
-                      visible={hologramVisible}
-                      mobileInteractive={mobilePhotocardActive}
-                      orientationEnabled={orientationEnabled}
-                      desktopSweep={desktopSweepEnabled}
-                      imageUrl={PUZZLE_IMAGE_URL}
-                      permissionDenied={sensorUnavailable}
-                    />
+                    {photocardModeEnabled && (
+                      <div className="absolute inset-0 z-[15]">
+                        <HolographicCard
+                          imageSrc={PUZZLE_IMAGE_URL}
+                          width="100%"
+                          height="100%"
+                          foilType="holo"
+                          showGyroIndicator={isCoarsePointerDevice || isNarrowViewport}
+                        />
+                      </div>
+                    )}
                     {completed && (
                       <>
                         <div
@@ -284,7 +279,6 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                     <MuseumPlaque className="mt-0 w-full max-w-none" />
                   </motion.div>
                   <div className="flex w-full items-center gap-3">
-                    {(isCoarsePointerDevice || isNarrowViewport) && (
                       <PushableButton
                         onClick={() => void handlePhotocardMode()}
                         disabled={isOpeningPhotocard}
@@ -297,14 +291,9 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                             ? "홀로그램 끄기"
                             : "홀로그램 모드"}
                       </PushableButton>
-                    )}
                     <PushableButton
                       onClick={handleReplay}
-                      className={
-                        isCoarsePointerDevice || isNarrowViewport
-                          ? "flex-1 justify-center"
-                          : "w-full justify-center"
-                      }
+                      className="flex-1 justify-center"
                       variant="cream"
                     >
                       다시하기
@@ -330,7 +319,6 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                   >
                     <MuseumPlaque className="mt-0" />
                   </motion.div>
-                  {(isCoarsePointerDevice || isNarrowViewport) && (
                     <PushableButton
                       onClick={() => void handlePhotocardMode()}
                       disabled={isOpeningPhotocard}
@@ -343,7 +331,6 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                           ? "홀로그램 끄기"
                           : "홀로그램 모드"}
                     </PushableButton>
-                  )}
                   <PushableButton
                     onClick={handleReplay}
                     className="w-full justify-center"

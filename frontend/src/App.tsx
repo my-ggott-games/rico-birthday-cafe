@@ -15,6 +15,7 @@ const CodySample = lazy(() => import("./pages/CodySample"));
 const PuzzleGame = lazy(() => import("./pages/PuzzleGame"));
 const PuzzleSandbox = lazy(() => import("./pages/PuzzleSandbox"));
 const HologramPlayground = lazy(() => import("./pages/HologramPlayground"));
+const PuzzleHoloSample = lazy(() => import("./pages/PuzzleHoloSample"));
 const AsparagusMerge = lazy(() => import("./pages/AsparagusMerge"));
 const AsparagusShowcase = lazy(() => import("./pages/AsparagusShowcase"));
 const Credits = lazy(() => import("./pages/Credits"));
@@ -71,6 +72,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
 
             <Route element={<ProtectedRoute />}>
+              <Route path="/sample/puzzle-holo" element={<PuzzleHoloSample />} />
               <Route path="/lobby" element={<Lobby />} />
               <Route path="/game/cody" element={<CodyGame />} />
               <Route path="/game/adventure" element={<AdventureGame />} />
@@ -85,7 +87,6 @@ function App() {
                 element={<LandingCompareSample />}
               />
               <Route path="/sample/cody" element={<CodySample />} />
-              <Route path="/sample/adventure" element={<AdventureGame />} />
               <Route path="/sample/puzzle" element={<PuzzleSandbox />} />
               <Route path="/sample/hologram" element={<HologramPlayground />} />
               <Route path="/sample/asparagus" element={<AsparagusShowcase />} />

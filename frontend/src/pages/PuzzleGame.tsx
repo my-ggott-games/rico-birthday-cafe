@@ -76,7 +76,6 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   const [photocardModeEnabled, setPhotocardModeEnabled] = useState(false);
   const [isOpeningPhotocard, setIsOpeningPhotocard] = useState(false);
   const [sensorUnavailable, setSensorUnavailable] = useState(false);
-  const [orientationEnabled, setOrientationEnabled] = useState(false);
   const [layoutVersion, setLayoutVersion] = useState(0);
   const [isMagnifierActive, setIsMagnifierActive] = useState(false);
   const [magnifierPoint, setMagnifierPoint] = useState({ x: 0, y: 0 });
@@ -121,7 +120,6 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
     setPhotocardModeEnabled(false);
     setIsOpeningPhotocard(false);
     setSensorUnavailable(false);
-    setOrientationEnabled(false);
     setIsMagnifierActive(false);
     setMagnifierPoint({ x: 0, y: 0 });
     setPieces([]);
@@ -467,7 +465,6 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   const handlePhotocardMode = React.useCallback(async () => {
     if (photocardModeEnabled) {
       setPhotocardModeEnabled(false);
-      setOrientationEnabled(false);
       setSensorUnavailable(false);
       setIsOpeningPhotocard(false);
       return;
@@ -483,7 +480,6 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
 
       if (!hasDeviceOrientation) {
         setPhotocardModeEnabled(true);
-        setOrientationEnabled(false);
         setSensorUnavailable(true);
         return;
       }
@@ -494,7 +490,6 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
       // Even when denied, enable photocard mode so the overlay (Case 3) shows
       // and the button flips to "홀로그램 끄기".
       setPhotocardModeEnabled(true);
-      setOrientationEnabled(canUseOrientation);
       setSensorUnavailable(!canUseOrientation);
     } finally {
       setIsOpeningPhotocard(false);
@@ -509,7 +504,6 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
     setPhotocardModeEnabled(false);
     setIsOpeningPhotocard(false);
     setSensorUnavailable(false);
-    setOrientationEnabled(false);
     setIsMagnifierActive(false);
     setMagnifierPoint({ x: 0, y: 0 });
     setPieces([]);
@@ -526,7 +520,6 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
       setPhotocardModeEnabled(false);
       setIsOpeningPhotocard(false);
       setSensorUnavailable(false);
-      setOrientationEnabled(false);
       setIsMagnifierActive(false);
       setMagnifierPoint({ x: 0, y: 0 });
       setPieces([]);
@@ -608,10 +601,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
     }
   }, [completed]);
 
-  const mobilePhotocardActive =
-    (isCoarsePointerDevice || isNarrowViewport) && photocardModeEnabled;
-  const hologramVisible = completed;
-  const desktopSweepEnabled = completed && !mobilePhotocardActive;
+
 
   const content = (
     <PuzzleGameBoardView
@@ -631,10 +621,6 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
       completed={completed}
       pieces={pieces}
       boardConfig={boardConfig}
-      hologramVisible={hologramVisible}
-      mobilePhotocardActive={mobilePhotocardActive}
-      orientationEnabled={orientationEnabled}
-      desktopSweepEnabled={desktopSweepEnabled}
       sensorUnavailable={sensorUnavailable}
       isMagnifierActive={isMagnifierActive}
       magnifierPoint={magnifierPoint}
