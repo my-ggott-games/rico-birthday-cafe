@@ -9,6 +9,7 @@ type ProgressiveBackgroundProps = {
   imageClassName?: string;
   previewFetchPriority?: "high" | "low" | "auto";
   showVignette?: boolean;
+  fullResLoadDelayMs?: number;
   onHighResVisible?: () => void;
 };
 
@@ -21,6 +22,7 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
   imageClassName = "object-cover",
   previewFetchPriority = "auto",
   showVignette = true,
+  fullResLoadDelayMs = 0,
   onHighResVisible,
 }) => {
   const previewSrc = thumbnailSrc ?? fullSrc;
@@ -31,6 +33,7 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
     let isCancelled = false;
     let frameId: number | null = null;
     let revealTimerId: number | null = null;
+    let loadTimerId: number | null = null;
     const image = new Image();
 
     setIsHighResReady(false);
@@ -66,12 +69,24 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
       revealHighRes();
     };
 
-    image.src = fullSrc;
+    const startLoading = () => {
+      if (isCancelled) {
+        return;
+      }
 
-    if (image.complete) {
-      decodeAndReveal();
+      image.src = fullSrc;
+
+      if (image.complete) {
+        decodeAndReveal();
+      } else {
+        image.onload = decodeAndReveal;
+      }
+    };
+
+    if (fullResLoadDelayMs > 0) {
+      loadTimerId = window.setTimeout(startLoading, fullResLoadDelayMs);
     } else {
-      image.onload = decodeAndReveal;
+      startLoading();
     }
 
     return () => {
@@ -85,8 +100,12 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
       if (revealTimerId !== null) {
         window.clearTimeout(revealTimerId);
       }
+
+      if (loadTimerId !== null) {
+        window.clearTimeout(loadTimerId);
+      }
     };
-  }, [fullSrc, onHighResVisible]);
+  }, [fullResLoadDelayMs, fullSrc, onHighResVisible]);
 
   return (
     <div

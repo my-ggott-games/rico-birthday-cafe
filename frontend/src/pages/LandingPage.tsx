@@ -2,13 +2,12 @@ import React, { Suspense, lazy, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import ProgressiveBackground from "../components/common/ProgressiveBackground";
-import ProgressiveImage from "../components/common/ProgressiveImage";
 import { pushEvent } from "../utils/analytics";
 
 const LANDING_IMAGE_ASPECT = "aspect-[3847/2885]";
 const MOBILE_DOOR_FRAME_CLASS =
   "pointer-events-auto absolute left-1/2 top-[60%] flex -translate-x-1/2 -translate-y-1/2 cursor-pointer flex-col items-center";
-const DESKTOP_LANDING_FRAME_CLASS = `${LANDING_IMAGE_ASPECT} relative w-[max(100vw,calc(100dvh*3847/2885))]`;
+const LANDING_FRAME_CLASS = `${LANDING_IMAGE_ASPECT} absolute left-1/2 top-1/2 h-full -translate-x-1/2 -translate-y-1/2 scale-[0.75] md:top-0 md:h-auto md:w-[max(100vw,calc(100dvh*3847/2885))] md:-translate-y-0 md:scale-100`;
 const DESKTOP_DOOR_FRAME_CLASS =
   "absolute left-1/2 top-[45%] flex -translate-x-1/2 -translate-y-1/2 cursor-pointer flex-col items-center";
 const ENTER_ANIMATION_DURATION_MS = 1850;
@@ -23,11 +22,11 @@ const LandingPage: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [shouldLoadAuthModal, setShouldLoadAuthModal] = useState(false);
+  const hydrateFromStorage = useAuthStore((state) => state.hydrateFromStorage);
 
   useEffect(() => {
     pushEvent("view_home");
   }, []);
-  const { isAuthenticated } = useAuthStore();
 
   const preventDrag = (event: React.DragEvent<HTMLElement>) => {
     event.preventDefault();
@@ -37,6 +36,9 @@ const LandingPage: React.FC = () => {
     if (isOpen) {
       return;
     }
+
+    hydrateFromStorage();
+    const { isAuthenticated } = useAuthStore.getState();
 
     pushEvent("click_enter_site");
     pushEvent("click_cta_main");
@@ -74,35 +76,24 @@ const LandingPage: React.FC = () => {
           filter: isOpen ? "brightness(1.04)" : "brightness(1)",
         }}
       >
-        {/* Background Layers */}
-        <ProgressiveBackground
-          thumbnailSrc="/pages/landing/background-thumb.jpg"
-          fullSrc="/pages/landing/background.webp"
-          previewFetchPriority="high"
-          className="z-0"
-          overlayClassName="bg-transparent"
-          imageClassName="object-cover object-center"
-          showVignette={false}
-
-        />
-
-        <div className="pointer-events-none absolute inset-0 z-10 bg-[#05080c] md:hidden">
-          <div className="absolute left-1/2 top-1/2 h-full aspect-[3847/2885] -translate-x-1/2 -translate-y-1/2 scale-[0.75]">
-            <ProgressiveImage
+        <div className="absolute inset-0 z-0 bg-[#05080c]">
+          <div className={LANDING_FRAME_CLASS}>
+            <ProgressiveBackground
               thumbnailSrc="/pages/landing/background-thumb.jpg"
               fullSrc="/pages/landing/background.webp"
               previewFetchPriority="high"
-              alt=""
-              className="h-full w-full"
+              className="z-0"
+              overlayClassName="bg-transparent"
               imageClassName="object-cover object-center"
-
+              showVignette={false}
+              fullResLoadDelayMs={320}
             />
 
             {!isOpen && (
               <button
                 type="button"
                 onClick={handleEnter}
-                className={`${MOBILE_DOOR_FRAME_CLASS} transition-transform duration-200 ease-out hover:scale-105 active:scale-105`}
+                className={`${MOBILE_DOOR_FRAME_CLASS} transition-transform duration-200 ease-out hover:scale-105 active:scale-105 md:hidden`}
               >
                 <span className="landing-door-pulse flex h-32 w-32 items-center justify-center rounded-[1.75rem] border border-white/55 bg-[rgba(255,255,255,0.5)] shadow-[0_12px_30px_rgba(0,0,0,0.16)] transition-[background-color,box-shadow] duration-200 ease-out hover:bg-[rgba(255,255,255,0.5)] hover:shadow-[0_16px_36px_rgba(0,0,0,0.2)] active:bg-[rgba(255,255,255,0.5)] active:shadow-[0_16px_36px_rgba(0,0,0,0.2)]">
                   <span
@@ -114,16 +105,12 @@ const LandingPage: React.FC = () => {
                 </span>
               </button>
             )}
-          </div>
-        </div>
 
-        <div className="absolute left-1/2 top-0 hidden -translate-x-1/2 md:block">
-          <div className={DESKTOP_LANDING_FRAME_CLASS}>
             {!isOpen && (
               <button
                 type="button"
                 onClick={handleEnter}
-                className={`${DESKTOP_DOOR_FRAME_CLASS} transition-transform duration-200 ease-out hover:scale-105 active:scale-105`}
+                className={`${DESKTOP_DOOR_FRAME_CLASS} hidden transition-transform duration-200 ease-out hover:scale-105 active:scale-105 md:flex`}
               >
                 <span className="landing-door-pulse flex h-56 w-56 items-center justify-center rounded-[2.6rem] border border-white/55 bg-transparent shadow-[0_12px_30px_rgba(0,0,0,0.16)] transition-[background-color,box-shadow] duration-200 ease-out hover:bg-[rgba(255,255,255,0.5)] hover:shadow-[0_16px_36px_rgba(0,0,0,0.2)] active:bg-[rgba(255,255,255,0.5)] active:shadow-[0_16px_36px_rgba(0,0,0,0.2)]">
                   <span

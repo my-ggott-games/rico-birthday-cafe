@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useLayoutEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import { usePageTracking } from "./hooks/usePageTracking";
@@ -6,6 +6,7 @@ import { usePageTracking } from "./hooks/usePageTracking";
 import { CursorManager } from "./components/game/CursorManager";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
+import { useAuthStore } from "./store/useAuthStore";
 
 const Lobby = lazy(() => import("./pages/Lobby"));
 const CodyGame = lazy(() => import("./pages/CodyGame"));
@@ -29,6 +30,22 @@ function PageTracker() {
   return null;
 }
 
+function AuthHydrator() {
+  const { pathname } = useLocation();
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
+  const hydrateFromStorage = useAuthStore((state) => state.hydrateFromStorage);
+
+  useLayoutEffect(() => {
+    if (pathname === "/" || hasHydrated) {
+      return;
+    }
+
+    hydrateFromStorage();
+  }, [hasHydrated, hydrateFromStorage, pathname]);
+
+  return null;
+}
+
 function NonLandingGlobals() {
   const { pathname } = useLocation();
   if (pathname === "/") return null;
@@ -46,6 +63,7 @@ function App() {
     <div>
       <CursorManager />
       <Router>
+        <AuthHydrator />
         <PageTracker />
         <NonLandingGlobals />
         <Suspense fallback={null}>

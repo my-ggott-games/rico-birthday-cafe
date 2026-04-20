@@ -5,7 +5,12 @@ import { useAuthStore } from "../../store/useAuthStore";
 const NotFound = lazy(() => import("../../pages/NotFound"));
 
 export const AdminOnlyRoute: React.FC = () => {
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
   const isAdmin = useAuthStore((state) => state.isAdmin);
+
+  if (!hasHydrated) {
+    return null;
+  }
 
   if (!isAdmin) {
     return (
