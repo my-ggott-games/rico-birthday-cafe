@@ -4,7 +4,6 @@ import LandingPage from "./pages/LandingPage";
 import { usePageTracking } from "./hooks/usePageTracking";
 
 import { CursorManager } from "./components/game/CursorManager";
-import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
 import { useAuthStore } from "./store/useAuthStore";
 
@@ -71,15 +70,14 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
 
-            <Route element={<ProtectedRoute />}>
-              <Route path="/sample/puzzle-holo" element={<PuzzleHoloSample />} />
-              <Route path="/lobby" element={<Lobby />} />
-              <Route path="/game/cody" element={<CodyGame />} />
-              <Route path="/game/adventure" element={<AdventureGame />} />
-              <Route path="/game/puzzle" element={<PuzzleGame />} />
-              <Route path="/game/asparagus" element={<AsparagusMerge />} />
-              <Route path="/credits" element={<Credits />} />
-            </Route>
+            <Route path="/sample/puzzle-holo" element={<PuzzleHoloSample />} />
+            <Route path="/lobby" element={<Lobby />} />
+            <Route path="/game/cody" element={<CodyGame />} />
+            <Route path="/game/cody/shared" element={<CodyGame />} />
+            <Route path="/game/adventure" element={<AdventureGame />} />
+            <Route path="/game/puzzle" element={<PuzzleGame />} />
+            <Route path="/game/asparagus" element={<AsparagusMerge />} />
+            <Route path="/credits" element={<Credits />} />
 
             <Route element={<AdminOnlyRoute />}>
               <Route

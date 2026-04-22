@@ -4,6 +4,11 @@ import { Clover, Heart, Music, Sparkles, Star } from "lucide-react";
 
 type SignatureIconKey = "Heart" | "Sparkles" | "Clover" | "Star" | "Music";
 
+const getDefaultFormattedDate = () => {
+  const today = new Date();
+  return `${today.getFullYear()}. ${String(today.getMonth() + 1).padStart(2, "0")}. ${String(today.getDate()).padStart(2, "0")}. photo by 치코`;
+};
+
 const SIGNATURE_ICONS: Array<{
   key: SignatureIconKey;
   color: string;
@@ -44,6 +49,7 @@ const SIGNATURE_ICONS: Array<{
 interface PolaroidFrameProps {
   isFlyAway?: boolean;
   activeBackground?: string | null;
+  formattedDate?: string;
   backgroundContent?: React.ReactNode;
   underlayContent?: React.ReactNode;
   overlayContent?: React.ReactNode;
@@ -58,6 +64,7 @@ interface PolaroidFrameProps {
 export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
   isFlyAway,
   activeBackground,
+  formattedDate,
   backgroundContent,
   underlayContent,
   overlayContent,
@@ -82,6 +89,7 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
     [],
   );
   const SignatureIconComponent = signatureIcon.Icon;
+  const displayFormattedDate = formattedDate ?? getDefaultFormattedDate();
 
   React.useEffect(() => {
     if (hideAnimations || revealDuration === 0) {
@@ -91,9 +99,6 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
 
     setShowEffects(false);
   }, [activeBackground, hideAnimations, revealDuration]);
-
-  const today = new Date();
-  const formattedDate = `${today.getFullYear()}. ${String(today.getMonth() + 1).padStart(2, "0")}. ${String(today.getDate()).padStart(2, "0")}. photo by 치코`;
 
   return (
     <div className="absolute inset-0 z-40 overflow-y-auto overflow-x-hidden flex p-2 md:p-0">
@@ -215,7 +220,7 @@ export const PolaroidFrame: React.FC<PolaroidFrameProps> = ({
               transform: "rotate(-2deg)",
             }}
           >
-            <span>{formattedDate}</span>
+            <span>{displayFormattedDate}</span>
             <span
               className="inline-flex shrink-0"
               style={{

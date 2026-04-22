@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  AlertCircle,
   ArrowBigLeft,
   ArrowBigDown,
   ArrowBigRight,
@@ -20,6 +21,7 @@ import {
   Copy,
   Crown,
   DoorOpen,
+  Download,
   Eye,
   FileQuestion,
   Flower2,
@@ -65,6 +67,7 @@ import {
 } from "lucide-react";
 
 export const APP_ICONS = {
+  AlertCircle,
   ArrowBigLeft,
   ArrowBigDown,
   ArrowBigRight,
@@ -85,6 +88,7 @@ export const APP_ICONS = {
   Copy,
   Crown,
   DoorOpen,
+  Download,
   Eye,
   FileQuestionMark: FileQuestion,
   Flower2,

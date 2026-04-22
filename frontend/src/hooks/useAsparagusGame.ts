@@ -211,6 +211,38 @@ export const useAsparagusGame = () => {
     }
   };
 
+  // Game over fires when board is full (tiles >= 16) with no valid moves AND no items remain.
+  // Checked after every state change so item use after getting stuck is also caught.
+  useEffect(() => {
+    if (gameOver || (won && !continueAfterWin)) return;
+    if (!checkGameOver(grid)) return;
+
+    const hasUsableItems = undoCount > 0 || swapCount > 0 || shuffleCount > 0;
+    if (hasUsableItems) return;
+
+    setGameOver(true);
+    const finalBest = Math.max(best, score);
+    if (!debugMode && finalBest > best) {
+      setBest(finalBest);
+      localStorage.setItem(bestScoreKey, String(finalBest));
+    }
+    if (!debugMode) {
+      submitBestScore(finalBest);
+    }
+  }, [
+    grid,
+    undoCount,
+    swapCount,
+    shuffleCount,
+    gameOver,
+    won,
+    continueAfterWin,
+    best,
+    score,
+    debugMode,
+    bestScoreKey,
+  ]);
+
   const move = useCallback(
     (dir: Direction) => {
       if (gameOver || (won && !continueAfterWin) || isSwapMode) return;
@@ -230,7 +262,7 @@ export const useAsparagusGame = () => {
       const newScore = debugMode ? 0 : score + addedScore;
       setScore(newScore);
 
-      // 4. Check ending conditions
+      // 4. Check win condition
       const didWin = !continueAfterWin && checkWin(nextGrid);
       if (didWin) {
         setWon(true);
@@ -246,22 +278,10 @@ export const useAsparagusGame = () => {
             colors: ["#ffd700", "#e0f2fe", "#38bdf8", "#bef264", "#FFFFF8"],
           });
         }, 350);
-      } else if (checkGameOver(nextGrid)) {
-        setGameOver(true);
-        // Finalize best score locally and submit to server ONLY on game over
-        const finalBest = Math.max(best, newScore);
-        if (!debugMode && finalBest > best) {
-          setBest(finalBest);
-          localStorage.setItem(bestScoreKey, String(finalBest));
-        }
-        if (!debugMode) {
-          submitBestScore(finalBest);
-        }
       }
+      // Game over detection is handled by the useEffect above
     },
     [
-      best,
-      bestScoreKey,
       continueAfterWin,
       debugMode,
       gameOver,

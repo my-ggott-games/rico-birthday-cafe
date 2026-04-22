@@ -376,27 +376,16 @@ const Lobby: React.FC = () => {
         className={`relative z-10 w-full min-h-screen select-none ${isMobile ? "px-4 pt-4 pb-8" : "p-10"} flex flex-col`}
       >
         <header
-          className={`flex ${isMobile ? "justify-between items-start" : "justify-between items-center"} ${isMobile ? "mb-2" : ""}`}
+          className={`flex justify-center ${isMobile ? "items-start mb-2" : "items-center"}`}
         >
-          <div />
-          <div
-            className={`${isMobile ? "flex gap-2" : "flex flex-col items-end gap-3"}`}
-          >
-            {isMobile ? (
-              <div className="flex w-full gap-2">
-                {noteToggleButton}
-                {creditsButton}
-                {profileButton}
-              </div>
-            ) : (
-              <div className="flex items-center gap-3 rounded-2xl border border-white/60 bg-white/50 px-4 py-2.5 shadow-[0_4px_24px_rgba(22,109,119,0.10)] backdrop-blur-sm">
-                {noteToggleButton}
-                {creditsButton}
-                {profileButton}
-                {adminButton}
-              </div>
-            )}
-            {!token && !isMobile && (
+          <div className={`flex flex-col items-center ${isMobile ? "gap-1" : "gap-3"}`}>
+            <div className="flex items-center gap-3">
+              {noteToggleButton}
+              {creditsButton}
+              {profileButton}
+              {!isMobile && adminButton}
+            </div>
+            {!token && (
               <button
                 type="button"
                 onClick={() => setIsAuthOpen(true)}
@@ -407,15 +396,6 @@ const Lobby: React.FC = () => {
             )}
           </div>
         </header>
-        {!token && isMobile && (
-          <button
-            type="button"
-            onClick={() => setIsAuthOpen(true)}
-            className="mb-3 self-center rounded-full border border-[#166D77]/20 bg-[#166D77]/8 px-3 py-1 text-xs font-bold text-[#166D77]/70"
-          >
-            로그인하면 업적과 점수를 저장할 수 있어요
-          </button>
-        )}
 
         {/* Slogan */}
         <div

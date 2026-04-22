@@ -49,10 +49,9 @@ export const ASPARAGUS_TUTORIAL_SLIDES: TutorialSlide[] = [
     showArrows: false,
   },
   {
-    title: "처음엔 많이 어려울거야",
+    title: "비료를 사용하자",
     titleIcon: "Wrench",
     lines: [
-      "비료를 사용해봐, 얼마 없으니 아껴써야 해!",
       "되돌리기: 마지막 이동을 되돌릴 수 있어",
       "바꾸기: 두 타일의 위치를 바꿀 수 있어",
       "갈아엎기: 모든 타일 위치를 무작위로 바꿔버려",
@@ -92,10 +91,7 @@ export const CODY_TUTORIAL_SLIDES: TutorialSlide[] = [
   {
     title: "옷을 고르자!",
     titleIcon: "Shirt",
-    lines: [
-      "PC: 아이템을 드래그해서 리코에게 전해주자",
-      "모바일: 아이템을 탭해봐!",
-    ],
+    lines: ["PC: 아이템을 리코에게 전해주자", "모바일: 아이템을 탭해봐!"],
     showArrows: false,
   },
   {

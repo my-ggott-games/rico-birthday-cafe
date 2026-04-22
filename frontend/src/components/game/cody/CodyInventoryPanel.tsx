@@ -2,48 +2,36 @@ import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AppIcon } from "../../common/AppIcon";
 import type { AppIconName } from "../../common/appIconRegistry";
-import type { CodyItem, MobileTabId } from "./codyTypes";
-
-type InventorySection = {
-  id: string;
-  tab: MobileTabId;
-  overlap: boolean;
-  mobileOverlapClass?: string;
-  desktopOverlapClass?: string;
-  filter: (item: CodyItem) => boolean;
-};
-
-type CodyInventoryPanelProps = {
-  availableItems: CodyItem[];
-  activeTab: MobileTabId;
-  isFinished: boolean;
-  isMobile: boolean;
-  showInventory: boolean;
-  sections: InventorySection[];
-  topSkirtIds: Set<string>;
-  getCardWidth: (itemId: string) => number;
-  renderInventoryCard: (
-    item: CodyItem,
-    index: number,
-    total: number,
-    overlapClass?: string,
-    offsetClass?: string,
-  ) => React.ReactNode;
-  onTabChange: (tab: MobileTabId) => void;
-};
-
-export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
-  availableItems,
-  activeTab,
-  isFinished,
-  isMobile,
-  showInventory,
-  sections,
-  topSkirtIds,
+import type { MobileTabId } from "./codyTypes";
+import { useCodyGameStore } from "../../../store/useCodyGameStore";
+import {
+  AVAILABLE_ITEMS,
+} from "../../../features/cody/codyGameData";
+import {
   getCardWidth,
+  inventorySections,
   renderInventoryCard,
-  onTabChange,
-}) => {
+  topSkirtIds,
+} from "../../../features/cody/codyInventory";
+import {
+  getCodyCharacterScale,
+} from "./codyStageLayout";
+
+export const CodyInventoryPanel: React.FC = () => {
+  const {
+    activeTab,
+    isFinished,
+    windowWidth,
+    showInventory,
+    equippedIds,
+    activeId,
+    setActiveTab,
+    setEquippedItems,
+  } = useCodyGameStore();
+
+  const isMobile = windowWidth < 768;
+  const characterScale = getCodyCharacterScale({ isMobile, windowWidth });
+
   const mobileHairOrder = [
     "hair_1-4",
     "hair_1-2",
@@ -82,7 +70,7 @@ export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
     id: string;
     label: string;
     icon: AppIconName;
-    sectionIds: InventorySection["id"][];
+    sectionIds: (typeof inventorySections)[number]["id"][];
   }> = [
     { id: "hair", label: "헤어", icon: "Smile", sectionIds: ["hair"] },
     {
@@ -117,9 +105,11 @@ export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
 
   const activeDesktopSlide = desktopSlides[desktopSlideIndex];
   const visibleSections = isMobile
-    ? sections.filter((section) => activeTab === section.tab)
-    : sections
-        .filter((section) => activeDesktopSlide.sectionIds.includes(section.id))
+    ? inventorySections.filter((section) => activeTab === section.tab)
+    : inventorySections
+        .filter((section) =>
+          activeDesktopSlide.sectionIds.includes(section.id),
+        )
         .sort(
           (a, b) =>
             activeDesktopSlide.sectionIds.indexOf(a.id) -
@@ -142,7 +132,7 @@ export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
                 key={tab.id}
                 type="button"
                 onPointerDown={(e) => e.stopPropagation()}
-                onClick={() => onTabChange(tab.id)}
+                onClick={() => setActiveTab(tab.id)}
                 className={`relative z-50 inline-flex w-full items-center justify-center gap-1.5 whitespace-nowrap border-b-2 px-0 py-2 text-sm font-black transition-colors ${
                   activeTab === tab.id
                     ? "border-[#166D77] text-[#166D77]"
@@ -211,9 +201,8 @@ export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
             {visibleSections.map((section) => {
               const useOverlap =
                 section.overlap && !(isMobile && section.id === "dress");
-              const sectionItems = availableItems
-                .filter(section.filter)
-                .sort((a, b) => {
+              const sectionItems = AVAILABLE_ITEMS.filter(section.filter).sort(
+                (a, b) => {
                   if (isMobile && section.id === "hair") {
                     const aOrder = mobileHairOrderMap.get(a.id);
                     const bOrder = mobileHairOrderMap.get(b.id);
@@ -226,13 +215,16 @@ export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
                     }
                   }
 
-                  const widthDiff = getCardWidth(a.id) - getCardWidth(b.id);
+                  const widthDiff =
+                    getCardWidth(a.id, isMobile, characterScale) -
+                    getCardWidth(b.id, isMobile, characterScale);
                   if (widthDiff !== 0) return widthDiff;
                   return a.id.localeCompare(b.id);
-                });
+                },
+              );
               const topSkirtItems =
                 section.id === "dress"
-                  ? availableItems.filter((item) => topSkirtIds.has(item.id))
+                  ? AVAILABLE_ITEMS.filter((item) => topSkirtIds.has(item.id))
                   : [];
               const mobileDressItems =
                 section.id === "dress" && isMobile
@@ -259,13 +251,19 @@ export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
                   {section.id === "dress" && isMobile ? (
                     <div className="grid grid-cols-3 justify-items-center gap-x-2 gap-y-3 px-4 pb-4">
                       {mobileDressItems.map((item, index) =>
-                        renderInventoryCard(
+                        renderInventoryCard({
                           item,
                           index,
-                          mobileDressItems.length,
-                          "",
-                          "",
-                        ),
+                          total: mobileDressItems.length,
+                          overlapClass: "",
+                          offsetClass: "",
+                          equippedIds,
+                          activeId,
+                          isMobile,
+                          isFinished,
+                          characterScale,
+                          setEquippedItems,
+                        }),
                       )}
                     </div>
                   ) : (
@@ -290,16 +288,23 @@ export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
                         }`}
                       >
                         {sectionItems.map((item, index) =>
-                          renderInventoryCard(
+                          renderInventoryCard({
                             item,
                             index,
-                            sectionItems.length,
-                            useOverlap
+                            total: sectionItems.length,
+                            overlapClass: useOverlap
                               ? isMobile
                                 ? section.mobileOverlapClass || "-ml-8"
                                 : section.desktopOverlapClass || "-ml-12"
                               : "",
-                          ),
+                            offsetClass: "",
+                            equippedIds,
+                            activeId,
+                            isMobile,
+                            isFinished,
+                            characterScale,
+                            setEquippedItems,
+                          }),
                         )}
                       </div>
 
@@ -315,19 +320,26 @@ export const CodyInventoryPanel: React.FC<CodyInventoryPanelProps> = ({
                           style={{ zIndex: 0 }}
                         >
                           {topSkirtItems.map((item, index) =>
-                            renderInventoryCard(
+                            renderInventoryCard({
                               item,
                               index,
-                              topSkirtItems.length,
-                              isMobile ? "-mt-12" : "-mt-16",
-                              item.id === "top_1"
-                                ? isMobile
-                                  ? "-ml-1"
-                                  : "-ml-5"
-                                : isMobile
-                                  ? "ml-2"
-                                  : "ml-5",
-                            ),
+                              total: topSkirtItems.length,
+                              overlapClass: isMobile ? "-mt-12" : "-mt-16",
+                              offsetClass:
+                                item.id === "top_1"
+                                  ? isMobile
+                                    ? "-ml-1"
+                                    : "-ml-5"
+                                  : isMobile
+                                    ? "ml-2"
+                                    : "ml-5",
+                              equippedIds,
+                              activeId,
+                              isMobile,
+                              isFinished,
+                              characterScale,
+                              setEquippedItems,
+                            }),
                           )}
                         </div>
                       )}
