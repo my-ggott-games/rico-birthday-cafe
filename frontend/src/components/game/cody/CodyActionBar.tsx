@@ -6,13 +6,13 @@ import { useCodyGameStore } from "../../../store/useCodyGameStore";
 type CodyActionBarProps = {
   onReset: () => void;
   onPrimaryAction: () => void;
-  onCapturePolaroid?: () => Promise<void>;
+  isSharedView?: boolean;
 };
 
 export const CodyActionBar: React.FC<CodyActionBarProps> = ({
   onReset,
   onPrimaryAction,
-  onCapturePolaroid,
+  isSharedView = false,
 }) => {
   const { isFinished, isCapturing, windowWidth, showButtons, equippedIds, formattedDate } =
     useCodyGameStore();
@@ -41,7 +41,7 @@ export const CodyActionBar: React.FC<CodyActionBarProps> = ({
         onClick={onReset}
         className={actionButtonClassName}
       >
-        다시하기
+        {isSharedView ? "나도 할래!" : "다시하기"}
       </PushableButton>
 
       <PushableButton
@@ -57,7 +57,8 @@ export const CodyActionBar: React.FC<CodyActionBarProps> = ({
         <ShareButtonGroup
           urlToShare={urlToShare}
           gameName="리코의 외출 준비"
-          onCapturePolaroid={onCapturePolaroid}
+          shareDescription="나만의 리코 외출 준비를 해봤어요! 여러분도 함께 축하해주세요."
+          thumbnailUrl="/assets/codygame/share_thumbnail.jpg"
           buttonClassName={actionButtonClassName}
         />
       )}

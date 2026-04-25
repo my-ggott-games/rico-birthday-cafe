@@ -506,28 +506,6 @@ const CodyGame: React.FC = () => {
         headerHidden={!showButtons}
         mainClassName="relative overflow-x-hidden md:overflow-y-auto"
       >
-        {isSharedView && (
-          <div className="absolute top-[80%] left-[50%] -translate-x-[50%] -translate-y-[50%] z-[200] w-[90%] max-w-[320px] bg-white/95 backdrop-blur-md rounded-2xl p-5 shadow-2xl border border-gray-100 flex flex-col items-center animate-in slide-in-from-bottom flex-shrink-0 text-center gap-3">
-            <div className="flex flex-col gap-1 items-center">
-              <span className="text-[16px] font-bold text-gray-800 tracking-tight">누군가 코디한 리코예요!</span>
-              <span className="text-[13px] text-gray-500 tracking-tight">나만의 리코 코디를 만들어볼까요?</span>
-            </div>
-            <div className="flex w-full gap-2 mt-1">
-              <button
-                onClick={() => setIsSharedView(false)}
-                className="flex-1 py-3 text-[13px] rounded-xl font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-              >
-                닫기
-              </button>
-              <button
-                onClick={handleReset}
-                className="flex-1 py-3 text-[13px] rounded-xl font-bold bg-teal-500 text-white hover:bg-teal-600 transition-colors"
-              >
-                나도 코디하기
-              </button>
-            </div>
-          </div>
-        )}
 
         {activeBackground === "spring" && !isFinished && (
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -558,8 +536,8 @@ const CodyGame: React.FC = () => {
 
             <CodyActionBar
               onReset={handleReset}
-              onCapturePolaroid={capturePolaroid}
               onPrimaryAction={handlePrimaryAction}
+              isSharedView={isSharedView}
             />
           </div>
 

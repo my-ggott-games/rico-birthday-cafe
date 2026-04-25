@@ -342,10 +342,11 @@ export const clampPiecePosition = (
 export const buildSpawnZones = (
   containerBounds: Bounds,
   boardBounds: Bounds,
+  isDesktop = false,
 ): SpawnZone[] => {
   const margin = 16;
 
-  return [
+  const zones: SpawnZone[] = [
     {
       x: margin,
       y: margin,
@@ -361,22 +362,28 @@ export const buildSpawnZones = (
         margin * 2,
       height: containerBounds.height - margin * 2,
     },
-    {
-      x: margin,
-      y: margin,
-      width: containerBounds.width - margin * 2,
-      height: boardBounds.y - margin * 2,
-    },
-    {
-      x: margin,
-      y: boardBounds.y + boardBounds.height + margin,
-      width: containerBounds.width - margin * 2,
-      height:
-        containerBounds.height -
-        (boardBounds.y + boardBounds.height) -
-        margin * 2,
-    },
-  ].filter((zone) => zone.width > 24 && zone.height > 24);
+    ...(!isDesktop
+      ? [
+          {
+            x: margin,
+            y: margin,
+            width: containerBounds.width - margin * 2,
+            height: boardBounds.y - margin * 2,
+          },
+          {
+            x: margin,
+            y: boardBounds.y + boardBounds.height + margin,
+            width: containerBounds.width - margin * 2,
+            height:
+              containerBounds.height -
+              (boardBounds.y + boardBounds.height) -
+              margin * 2,
+          },
+        ]
+      : []),
+  ];
+
+  return zones.filter((zone) => zone.width > 24 && zone.height > 24);
 };
 
 export const overlapsTooMuch = (a: Bounds, b: Bounds) => {
@@ -400,6 +407,7 @@ export const assignSpawnPositions = (
   scale: number,
 ) => {
   const containerRect = containerEl.getBoundingClientRect();
+  const isDesktop = containerRect.width >= 1024;
   const boardRect = getLocalBounds(
     boardEl.getBoundingClientRect(),
     containerRect,
@@ -412,6 +420,7 @@ export const assignSpawnPositions = (
       height: containerRect.height,
     },
     boardRect,
+    isDesktop,
   );
   const placedRects: Bounds[] = [];
   const fallbackZone = zones.reduce<SpawnZone | null>((largest, zone) => {

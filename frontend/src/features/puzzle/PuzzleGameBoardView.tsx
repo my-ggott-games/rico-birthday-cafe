@@ -7,6 +7,7 @@ import {
 } from "@dnd-kit/core";
 import { motion } from "framer-motion";
 import { PushableButton } from "../../components/common/PushableButton";
+import { ShareButtonGroup } from "../../components/common/ShareButtonGroup";
 import { MagnifyingGlass } from "../../components/game/puzzle/MagnifyingGlass";
 import { MuseumPlaque } from "../../components/game/puzzle/MuseumPlaque";
 import {
@@ -156,7 +157,7 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                       ))}
                     </div>
                   )}
-                  <div 
+                  <div
                     className="relative"
                     style={{
                       width: `${displayPieceSize * cols}px`,
@@ -167,120 +168,132 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                       ref={artworkRef}
                       className="relative w-full h-full overflow-hidden border border-[#e8ddc6] bg-[#faf8f1]"
                     >
-                    <div className="pointer-events-none absolute inset-0 z-[1] border border-white/35" />
-                    {!completed && (
-                      <div
-                        className="pointer-events-none absolute inset-0 z-[1]"
-                        style={{
-                          background:
-                            "linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0) 20%, rgba(68,46,24,0.04) 100%)",
-                        }}
-                      />
-                    )}
-                    <div
-                      className="absolute inset-0 z-[2] grid gap-0"
-                      style={{
-                        gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-                        gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
-                      }}
-                    >
-                      {Array.from({ length: rows * cols }).map((_, index) => {
-                        const col = index % cols;
-                        const row = Math.floor(index / cols);
-                        const cellId = `cell-${col}-${row}`;
-                        const slotPiece = pieces.find(
-                          (piece) =>
-                            piece.correctX === col && piece.correctY === row,
-                        );
-                        const placedPiece = pieces.find(
-                          (piece) =>
-                            piece.isPlaced &&
-                            piece.correctX === col &&
-                            piece.correctY === row,
-                        );
-
-                        return (
-                          <DroppableCell
-                            key={index}
-                            id={cellId}
-                            slotPiece={slotPiece}
-                            placedPiece={placedPiece}
-                            completed={completed}
-                            displayPieceSize={displayPieceSize}
-                            boardConfig={boardConfig}
-                          />
-                        );
-                      })}
-                    </div>
-                    {completed && !photocardModeEnabled && (
-                      <PolaroidHolographicOverlay
-                        visible={true}
-                        mobileInteractive={false}
-                        orientationEnabled={false}
-                        desktopSweep={true}
-                        imageUrl={PUZZLE_IMAGE_URL}
-                      />
-                    )}
-                    {completed && (
-                      <>
+                      <div className="pointer-events-none absolute inset-0 z-[1] border border-white/35" />
+                      {!completed && (
                         <div
-                          className="absolute inset-0 z-[5] cursor-zoom-in"
-                          onMouseDown={(event) => {
-                            updateMagnifierPoint(event.clientX, event.clientY);
-                            setIsMagnifierActive(true);
+                          className="pointer-events-none absolute inset-0 z-[1]"
+                          style={{
+                            background:
+                              "linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0) 20%, rgba(68,46,24,0.04) 100%)",
                           }}
-                          onMouseMove={(event) => {
-                            if (!isMagnifierActive) return;
-                            updateMagnifierPoint(event.clientX, event.clientY);
-                          }}
-                          onMouseLeave={() => setIsMagnifierActive(false)}
-                          onTouchStart={(event) => {
-                            const touch = event.touches[0];
-                            if (!touch) return;
-                            updateMagnifierPoint(touch.clientX, touch.clientY);
-                            setIsMagnifierActive(true);
-                          }}
-                          onTouchMove={(event) => {
-                            const touch = event.touches[0];
-                            if (!touch) return;
-                            event.preventDefault();
-                            updateMagnifierPoint(touch.clientX, touch.clientY);
-                          }}
-                          onTouchEnd={() => setIsMagnifierActive(false)}
-                          onTouchCancel={() => setIsMagnifierActive(false)}
-                          aria-label="완성된 그림 확대해서 보기"
                         />
-                        <MagnifyingGlass
-                          visible={isMagnifierActive}
-                          imageUrl={PUZZLE_IMAGE_URL}
-                          boardWidth={displayPieceSize * cols}
-                          boardHeight={displayPieceSize * rows}
-                          pointerX={magnifierPoint.x}
-                          pointerY={magnifierPoint.y}
-                        />
-                      </>
-                    )}
-                  </div>
-                  {photocardModeEnabled && (
-                    <div className="absolute inset-0 z-[60] flex items-center justify-center">
+                      )}
                       <div
-                        className="relative"
+                        className="absolute inset-0 z-[2] grid gap-0"
                         style={{
-                          width: `${displayPieceSize * cols}px`,
-                          height: `${displayPieceSize * rows}px`,
+                          gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+                          gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
                         }}
                       >
-                        <HolographicCard
-                          imageSrc={PUZZLE_IMAGE_URL}
-                          width={`${displayPieceSize * cols}px`}
-                          height={`${displayPieceSize * rows}px`}
-                          foilType="holo"
-                        />
-                        <HoloPointerHint active={photocardModeEnabled} />
+                        {Array.from({ length: rows * cols }).map((_, index) => {
+                          const col = index % cols;
+                          const row = Math.floor(index / cols);
+                          const cellId = `cell-${col}-${row}`;
+                          const slotPiece = pieces.find(
+                            (piece) =>
+                              piece.correctX === col && piece.correctY === row,
+                          );
+                          const placedPiece = pieces.find(
+                            (piece) =>
+                              piece.isPlaced &&
+                              piece.correctX === col &&
+                              piece.correctY === row,
+                          );
+
+                          return (
+                            <DroppableCell
+                              key={index}
+                              id={cellId}
+                              slotPiece={slotPiece}
+                              placedPiece={placedPiece}
+                              completed={completed}
+                              displayPieceSize={displayPieceSize}
+                              boardConfig={boardConfig}
+                            />
+                          );
+                        })}
                       </div>
+                      {completed && !photocardModeEnabled && (
+                        <PolaroidHolographicOverlay
+                          visible={true}
+                          mobileInteractive={false}
+                          orientationEnabled={false}
+                          desktopSweep={true}
+                          imageUrl={PUZZLE_IMAGE_URL}
+                        />
+                      )}
+                      {completed && (
+                        <>
+                          <div
+                            className="absolute inset-0 z-[5] cursor-zoom-in"
+                            onMouseDown={(event) => {
+                              updateMagnifierPoint(
+                                event.clientX,
+                                event.clientY,
+                              );
+                              setIsMagnifierActive(true);
+                            }}
+                            onMouseMove={(event) => {
+                              if (!isMagnifierActive) return;
+                              updateMagnifierPoint(
+                                event.clientX,
+                                event.clientY,
+                              );
+                            }}
+                            onMouseLeave={() => setIsMagnifierActive(false)}
+                            onTouchStart={(event) => {
+                              const touch = event.touches[0];
+                              if (!touch) return;
+                              updateMagnifierPoint(
+                                touch.clientX,
+                                touch.clientY,
+                              );
+                              setIsMagnifierActive(true);
+                            }}
+                            onTouchMove={(event) => {
+                              const touch = event.touches[0];
+                              if (!touch) return;
+                              event.preventDefault();
+                              updateMagnifierPoint(
+                                touch.clientX,
+                                touch.clientY,
+                              );
+                            }}
+                            onTouchEnd={() => setIsMagnifierActive(false)}
+                            onTouchCancel={() => setIsMagnifierActive(false)}
+                            aria-label="완성된 그림 확대해서 보기"
+                          />
+                          <MagnifyingGlass
+                            visible={isMagnifierActive}
+                            imageUrl={PUZZLE_IMAGE_URL}
+                            boardWidth={displayPieceSize * cols}
+                            boardHeight={displayPieceSize * rows}
+                            pointerX={magnifierPoint.x}
+                            pointerY={magnifierPoint.y}
+                          />
+                        </>
+                      )}
                     </div>
-                  )}
-                </div>
+                    {photocardModeEnabled && (
+                      <div className="absolute inset-0 z-[60] flex items-center justify-center">
+                        <div
+                          className="relative"
+                          style={{
+                            width: `${displayPieceSize * cols}px`,
+                            height: `${displayPieceSize * rows}px`,
+                          }}
+                        >
+                          <HolographicCard
+                            imageSrc={PUZZLE_IMAGE_URL}
+                            width={`${displayPieceSize * cols}px`}
+                            height={`${displayPieceSize * rows}px`}
+                            foilType="holo"
+                          />
+                          <HoloPointerHint active={photocardModeEnabled} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               {completed && (
@@ -294,13 +307,13 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                     <MuseumPlaque className="mt-0 w-full max-w-none" />
                   </motion.div>
                   <div className="flex w-full items-center gap-3">
-                      <PushableButton
-                        onClick={handlePhotocardMode}
-                        className="flex-1 justify-center"
-                        variant="mint"
-                      >
-                        {photocardModeEnabled ? "홀로그램 끄기" : "홀로그램 모드"}
-                      </PushableButton>
+                    <PushableButton
+                      onClick={handlePhotocardMode}
+                      className="flex-1 justify-center"
+                      variant="mint"
+                    >
+                      {photocardModeEnabled ? "홀로그램 끄기" : "홀로그램 모드"}
+                    </PushableButton>
                     <PushableButton
                       onClick={handleReplay}
                       className="flex-1 justify-center"
@@ -309,6 +322,12 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                       다시하기
                     </PushableButton>
                   </div>
+                  <ShareButtonGroup
+                    urlToShare={`${window.location.origin}/game/puzzle`}
+                    gameName="퍼즐 맞추기"
+                    shareDescription="리코 퍼즐을 완성했어요! 함께 즐겨보세요."
+                    thumbnailUrl="/assets/puzzle/share_thumbnail.jpg"
+                  />
                 </div>
               )}
             </div>
@@ -329,13 +348,19 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                   >
                     <MuseumPlaque className="mt-0" />
                   </motion.div>
-                    <PushableButton
-                      onClick={handlePhotocardMode}
-                      className="w-full justify-center"
-                      variant="mint"
-                    >
-                      {photocardModeEnabled ? "홀로그램 끄기" : "홀로그램 모드"}
-                    </PushableButton>
+                  <PushableButton
+                    onClick={handlePhotocardMode}
+                    className="w-full justify-center"
+                    variant="mint"
+                  >
+                    {photocardModeEnabled ? "홀로그램 끄기" : "홀로그램 모드"}
+                  </PushableButton>
+                  <ShareButtonGroup
+                    urlToShare={`${window.location.origin}/game/puzzle`}
+                    gameName="퍼즐 맞추기"
+                    shareDescription="리코 퍼즐을 완성했어요! 함께 즐겨보세요."
+                    thumbnailUrl="/assets/puzzle/share_thumbnail.jpg"
+                  />
                   <PushableButton
                     onClick={handleReplay}
                     className="w-full justify-center"

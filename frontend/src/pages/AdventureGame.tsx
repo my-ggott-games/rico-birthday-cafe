@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { GameContainer } from "../components/common/GameContainer";
 import { ScoreStatCard } from "../components/common/ScoreStatCard";
 import { ScoreStatGroup } from "../components/common/ScoreStatGroup";
+import { ShareButtonGroup } from "../components/common/ShareButtonGroup";
 import { AdventureModal } from "../components/game/adventure/AdventureModal";
 import { AdventureGamePanel } from "../components/game/adventure/AdventureGamePanel";
 import { ADVENTURE_HELP_SLIDES } from "../constants/tutorialSlides";
@@ -47,7 +48,10 @@ export default function AdventureGame() {
   useEffect(() => {
     if (runState === "gameover" && !gameOverFiredRef.current) {
       gameOverFiredRef.current = true;
-      pushEvent("complete_game", { game_name: "용사 리코 이야기 1", score: resultScore });
+      pushEvent("complete_game", {
+        game_name: "용사 리코 이야기 1",
+        score: resultScore,
+      });
     }
     if (runState === "ready") {
       gameOverFiredRef.current = false;
@@ -85,7 +89,15 @@ export default function AdventureGame() {
         status="유산소 시작이다!"
         title="준비됐어?"
         description="마왕을 물리치려면 이 정도는 기본이지"
-        actions={[{ label: "시작하기", onClick: () => { pushEvent("start_game", { game_name: "용사 리코 이야기 1" }); startGame(); } }]}
+        actions={[
+          {
+            label: "시작하기",
+            onClick: () => {
+              pushEvent("start_game", { game_name: "용사 리코 이야기 1" });
+              startGame();
+            },
+          },
+        ]}
       />
     ) : runState === "paused" ? (
       <AdventureModal
@@ -95,7 +107,14 @@ export default function AdventureGame() {
         description="다시 훈련에 집중해볼까?"
         actions={[
           { label: "이어서 달리기", onClick: resumeGame },
-          { label: "처음부터", onClick: () => { pushEvent("retry_game", { game_name: "용사 리코 이야기 1" }); restartGame(); }, tone: "secondary" },
+          {
+            label: "처음부터",
+            onClick: () => {
+              pushEvent("retry_game", { game_name: "용사 리코 이야기 1" });
+              restartGame();
+            },
+            tone: "secondary",
+          },
         ]}
       />
     ) : runState === "gameover" ? (
@@ -110,7 +129,15 @@ export default function AdventureGame() {
         description={
           resultScore >= 1000 ? "줄여서 오운R" : "안 돼! 정신 차려!!"
         }
-        actions={[{ label: "다시 달리기", onClick: () => { pushEvent("retry_game", { game_name: "용사 리코 이야기 1" }); restartGame(); } }]}
+        actions={[
+          {
+            label: "다시 달리기",
+            onClick: () => {
+              pushEvent("retry_game", { game_name: "용사 리코 이야기 1" });
+              restartGame();
+            },
+          },
+        ]}
       >
         <div className="grid grid-cols-2 gap-3">
           <ScoreStatCard
@@ -126,6 +153,14 @@ export default function AdventureGame() {
             background="#166D77"
             className="rounded-xl"
             valueClassName="text-lg"
+          />
+        </div>
+        <div className="mt-3 flex justify-center">
+          <ShareButtonGroup
+            urlToShare={`${window.location.origin}/game/adventure`}
+            gameName="용사 리코 이야기 1"
+            shareDescription="멋진 용사는 "
+            thumbnailUrl="/assets/adventure/share_thumbnail.jpg"
           />
         </div>
       </AdventureModal>

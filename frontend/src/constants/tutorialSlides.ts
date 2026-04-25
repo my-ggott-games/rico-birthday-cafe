@@ -82,7 +82,8 @@ export const PUZZLE_TUTORIAL_SLIDES: TutorialSlide[] = [
   },
   {
     title: "어떤 그림일까?",
-    lines: ["제한 시간은 없으니 여유롭게 즐겨줘!"],
+    titleIcon: "Cake",
+    lines: ["힌트를 줄게!", "양쪽 위로 분홍색 커튼이 있어"],
     showArrows: false,
   },
 ];

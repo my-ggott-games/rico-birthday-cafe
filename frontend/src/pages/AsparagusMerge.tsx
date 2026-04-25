@@ -7,6 +7,7 @@ import { CommonModal } from "../components/common/CommonModal";
 import { GameContainer } from "../components/common/GameContainer";
 import { PushableButton } from "../components/common/PushableButton";
 import { ScoreStatGroup } from "../components/common/ScoreStatGroup";
+import { ShareButtonGroup } from "../components/common/ShareButtonGroup";
 import { useAsparagusGame } from "../hooks/useAsparagusGame";
 import { usePageBgm } from "../hooks/usePageBgm";
 import { type Direction } from "../components/asparagus/types";
@@ -201,7 +202,7 @@ const AsparagusMerge: React.FC = () => {
           <>
             <PushableButton
               onClick={() => setContinueAfterWin(true)}
-              variant="cream"
+              variant="light"
               className="w-full px-0 py-3 text-[#6b7280]"
             >
               계속하기
@@ -211,13 +212,14 @@ const AsparagusMerge: React.FC = () => {
                 pushEvent("retry_game", { game_name: "아스파라거스 키우기" });
                 startGame();
               }}
-              variant="cream"
+              variant="teal"
               className="w-full px-0 py-3"
             >
               다시 키우기
             </PushableButton>
             <PushableButton
               onClick={() => navigate("/lobby")}
+              variant="mint"
               className="w-full px-0 py-3"
             >
               로비로 이동
@@ -244,25 +246,35 @@ const AsparagusMerge: React.FC = () => {
         panelClassName="border-[#5EC7A5] px-8 py-8 shadow-[0_30px_80px_rgba(22,109,119,0.16)]"
         titleClassName="mb-4 text-2xl"
         bodyClassName="space-y-3 text-center"
-        footerClassName="mt-6 flex gap-3"
+        footerClassName="mt-6 flex flex-col gap-3"
         footer={
           <>
-            <PushableButton
-              onClick={() => {
-                pushEvent("retry_game", { game_name: "아스파라거스 키우기" });
-                startGame();
-              }}
-              className="flex-1 px-0 py-3"
-            >
-              재도전
-            </PushableButton>
-            <PushableButton
-              onClick={() => navigate("/lobby")}
-              variant="cream"
-              className="flex-1 px-0 py-3"
-            >
-              로비
-            </PushableButton>
+            <div className="flex justify-center">
+              <ShareButtonGroup
+                urlToShare={`${window.location.origin}/game/asparagus`}
+                gameName="아스파라거스 키우기"
+                shareDescription="성검 아스파라거스를 만들자"
+                thumbnailUrl="/assets/asparagus/share_thumbnail.jpg"
+              />
+            </div>
+            <div className="flex gap-3">
+              <PushableButton
+                onClick={() => {
+                  pushEvent("retry_game", { game_name: "아스파라거스 키우기" });
+                  startGame();
+                }}
+                className="flex-1 px-0 py-3"
+              >
+                다시하기
+              </PushableButton>
+              <PushableButton
+                onClick={() => navigate("/lobby")}
+                variant="cream"
+                className="flex-1 px-0 py-3"
+              >
+                로비로 이동
+              </PushableButton>
+            </div>
           </>
         }
       >
