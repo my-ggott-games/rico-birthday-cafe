@@ -59,6 +59,16 @@ export default function AdventureGame() {
   }, [runState, resultScore]);
 
   const targetProgress = Math.min(100, (score / 1000) * 100);
+  const gameOverShareFooter =
+    runState === "gameover" ? (
+      <div className="flex justify-center">
+        <ShareButtonGroup
+          urlToShare={`${window.location.origin}/game/adventure?score=${resultScore}`}
+          gameName="용사 리코 이야기 1"
+          buttonClassName="w-full max-w-[15rem]"
+        />
+      </div>
+    ) : null;
 
   // stageScene is stable: only re-creates when structural/layout props change
   const stageScene = useMemo(
@@ -131,13 +141,14 @@ export default function AdventureGame() {
         }
         actions={[
           {
-            label: "다시 달리기",
+            label: "다시하기",
             onClick: () => {
               pushEvent("retry_game", { game_name: "용사 리코 이야기 1" });
               restartGame();
             },
           },
         ]}
+        footer={gameOverShareFooter}
       >
         <div className="grid grid-cols-2 gap-3">
           <ScoreStatCard
@@ -153,12 +164,6 @@ export default function AdventureGame() {
             background="#166D77"
             className="rounded-xl"
             valueClassName="text-lg"
-          />
-        </div>
-        <div className="mt-3 flex justify-center">
-          <ShareButtonGroup
-            urlToShare={`${window.location.origin}/game/adventure`}
-            gameName="용사 리코 이야기 1"
           />
         </div>
       </AdventureModal>

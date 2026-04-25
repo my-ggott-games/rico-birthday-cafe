@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
 import { Board } from "../components/asparagus/Board";
 import { Items } from "../components/asparagus/Items";
@@ -21,7 +20,6 @@ import { useViewEvent } from "../hooks/usePageTracking";
 const AsparagusMerge: React.FC = () => {
   const [bgmSrc] = React.useState(() => pickRandomActivityBgm());
   const isAdmin = useAuthStore((state) => state.isAdmin);
-  const navigate = useNavigate();
 
   usePageBgm(bgmSrc);
   useViewEvent("view_game", { game_name: "아스파라거스 키우기" });
@@ -217,13 +215,13 @@ const AsparagusMerge: React.FC = () => {
             >
               다시 키우기
             </PushableButton>
-            <PushableButton
-              onClick={() => navigate("/lobby")}
-              variant="mint"
-              className="w-full px-0 py-3"
-            >
-              로비로 이동
-            </PushableButton>
+            <div className="flex">
+              <ShareButtonGroup
+                urlToShare={`${window.location.origin}/game/asparagus?score=${score}`}
+                gameName="아스파라거스 키우기"
+                buttonClassName="w-full px-0 py-3"
+              />
+            </div>
           </>
         }
       >
@@ -249,23 +247,12 @@ const AsparagusMerge: React.FC = () => {
         footerClassName="mt-6 flex flex-col gap-3"
         footer={
           <>
-            <div className="flex gap-3">
-              <PushableButton
-                onClick={() => {
-                  pushEvent("retry_game", { game_name: "아스파라거스 키우기" });
-                  startGame();
-                }}
-                className="flex-1 px-0 py-3"
-              >
-                다시하기
-              </PushableButton>
-              <div className="flex-1">
-                <ShareButtonGroup
-                  urlToShare={`${window.location.origin}/game/asparagus`}
-                  gameName="아스파라거스 키우기"
-                  buttonClassName="w-full px-0 py-3"
-                />
-              </div>
+            <div className="flex">
+              <ShareButtonGroup
+                urlToShare={`${window.location.origin}/game/asparagus?score=${score}`}
+                gameName="아스파라거스 키우기"
+                buttonClassName="w-full px-0 py-3"
+              />
             </div>
           </>
         }

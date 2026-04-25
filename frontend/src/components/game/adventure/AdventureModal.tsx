@@ -15,6 +15,7 @@ type AdventureModalProps = {
   actions: AdventureModalAction[];
   embedded?: boolean;
   children?: ReactNode;
+  footer?: ReactNode;
 };
 
 export function AdventureModal({
@@ -24,6 +25,7 @@ export function AdventureModal({
   actions,
   embedded = false,
   children,
+  footer,
 }: AdventureModalProps) {
   const singleAction = actions.length === 1;
 
@@ -77,6 +79,8 @@ export function AdventureModal({
             </PushableButton>
           ))}
         </div>
+
+        {footer ? <div className="mt-3 sm:mt-4">{footer}</div> : null}
       </motion.div>
     </div>
   );
