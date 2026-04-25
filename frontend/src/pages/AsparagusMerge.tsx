@@ -249,14 +249,6 @@ const AsparagusMerge: React.FC = () => {
         footerClassName="mt-6 flex flex-col gap-3"
         footer={
           <>
-            <div className="flex justify-center">
-              <ShareButtonGroup
-                urlToShare={`${window.location.origin}/game/asparagus`}
-                gameName="아스파라거스 키우기"
-                shareDescription="성검 아스파라거스를 만들자"
-                thumbnailUrl="/assets/asparagus/share_thumbnail.jpg"
-              />
-            </div>
             <div className="flex gap-3">
               <PushableButton
                 onClick={() => {
@@ -267,13 +259,13 @@ const AsparagusMerge: React.FC = () => {
               >
                 다시하기
               </PushableButton>
-              <PushableButton
-                onClick={() => navigate("/lobby")}
-                variant="cream"
-                className="flex-1 px-0 py-3"
-              >
-                로비로 이동
-              </PushableButton>
+              <div className="flex-1">
+                <ShareButtonGroup
+                  urlToShare={`${window.location.origin}/game/asparagus`}
+                  gameName="아스파라거스 키우기"
+                  buttonClassName="w-full px-0 py-3"
+                />
+              </div>
             </div>
           </>
         }

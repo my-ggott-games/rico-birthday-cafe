@@ -335,7 +335,7 @@ const Lobby: React.FC = () => {
       variant="mint"
       className={`${isMobile ? "min-h-9 px-3 py-1 text-sm" : "min-h-[2.75rem] px-7 py-2 text-base"} rounded-full`}
     >
-      <span className="flex items-center gap-1.5">
+      <span className="flex items-center gap-1.5 whitespace-nowrap">
         <AppIcon name="IdCardLanyard" size={16} />
         {token ? "프로필" : "로그인"}
       </span>
@@ -347,7 +347,7 @@ const Lobby: React.FC = () => {
       variant="cream"
       className={`${isMobile ? "min-h-9 px-3 py-1 text-sm" : "min-h-[2.75rem] px-7 py-2 text-base"} rounded-full`}
     >
-      <span className="flex items-center gap-1.5">
+      <span className="flex items-center gap-1.5 whitespace-nowrap">
         <AppIcon name="Clapperboard" size={16} /> Who Made This?!
       </span>
     </PushableButton>

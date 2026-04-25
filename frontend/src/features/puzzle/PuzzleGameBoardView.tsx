@@ -91,7 +91,7 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
     >
       <div
         ref={playAreaRef}
-        className="w-full h-full bg-[#FFFFF8] relative overflow-hidden select-none flex flex-col"
+        className="relative flex h-full min-h-full w-full flex-col overflow-x-hidden overflow-y-auto bg-[#FFFFF8] pb-[calc(env(safe-area-inset-bottom)+6.5rem)] select-none lg:overflow-hidden lg:pb-0"
         style={{ touchAction: "pinch-zoom" }}
       >
         <svg
@@ -113,7 +113,7 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
             />
           </defs>
         </svg>
-        <div className="flex w-full flex-1 overflow-hidden">
+        <div className="flex w-full flex-1 overflow-visible lg:overflow-hidden">
           <div
             className="flex-1 relative bg-[rgba(239,246,255,0.1)] hidden lg:block"
             id="area-left"
@@ -325,8 +325,6 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                   <ShareButtonGroup
                     urlToShare={`${window.location.origin}/game/puzzle`}
                     gameName="퍼즐 맞추기"
-                    shareDescription="리코 퍼즐을 완성했어요! 함께 즐겨보세요."
-                    thumbnailUrl="/assets/puzzle/share_thumbnail.jpg"
                   />
                 </div>
               )}
@@ -355,12 +353,6 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                   >
                     {photocardModeEnabled ? "홀로그램 끄기" : "홀로그램 모드"}
                   </PushableButton>
-                  <ShareButtonGroup
-                    urlToShare={`${window.location.origin}/game/puzzle`}
-                    gameName="퍼즐 맞추기"
-                    shareDescription="리코 퍼즐을 완성했어요! 함께 즐겨보세요."
-                    thumbnailUrl="/assets/puzzle/share_thumbnail.jpg"
-                  />
                   <PushableButton
                     onClick={handleReplay}
                     className="w-full justify-center"
@@ -368,6 +360,10 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                   >
                     다시 하기
                   </PushableButton>
+                  <ShareButtonGroup
+                    urlToShare={`${window.location.origin}/game/puzzle`}
+                    gameName="퍼즐 맞추기"
+                  />
                 </div>
               </div>
             )}

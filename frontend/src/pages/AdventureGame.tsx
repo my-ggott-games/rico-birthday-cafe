@@ -159,8 +159,6 @@ export default function AdventureGame() {
           <ShareButtonGroup
             urlToShare={`${window.location.origin}/game/adventure`}
             gameName="용사 리코 이야기 1"
-            shareDescription="멋진 용사는 "
-            thumbnailUrl="/assets/adventure/share_thumbnail.jpg"
           />
         </div>
       </AdventureModal>

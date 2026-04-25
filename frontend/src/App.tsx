@@ -48,12 +48,15 @@ function AuthHydrator() {
 
 function NonLandingGlobals() {
   const { pathname } = useLocation();
-  if (pathname === "/") return null;
   return (
     <Suspense fallback={null}>
       <GlobalLoading />
-      <AchievementToast />
-      <GlobalAudioToggle />
+      {pathname !== "/" && (
+        <>
+          <AchievementToast />
+          <GlobalAudioToggle />
+        </>
+      )}
     </Suspense>
   );
 }

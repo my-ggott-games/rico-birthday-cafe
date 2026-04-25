@@ -62,12 +62,11 @@ export const Board: React.FC<BoardProps> = ({
   return (
     <div className="flex flex-col items-center justify-center w-full h-full">
       <div
-        className="relative aspect-square flex items-center justify-center"
+        className="relative aspect-square flex-none items-center justify-center w-[min(calc(100vw-2rem),32.5rem)] max-w-full"
         style={
           {
             "--board-padding": boardPadding,
             "--cell-radius": cellRadius,
-            width: "100%",
             background:
               "linear-gradient(135deg, #73c5a8 0%, #7fd0a9 42%, #6fcbb3 100%)",
             borderRadius: boardRadius,

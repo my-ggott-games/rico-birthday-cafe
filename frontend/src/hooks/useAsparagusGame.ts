@@ -211,14 +211,11 @@ export const useAsparagusGame = () => {
     }
   };
 
-  // Game over fires when board is full (tiles >= 16) with no valid moves AND no items remain.
-  // Checked after every state change so item use after getting stuck is also caught.
+  // Game over fires as soon as the board has no empty cells and no valid merges.
+  // Remaining items no longer postpone the game-over state.
   useEffect(() => {
     if (gameOver || (won && !continueAfterWin)) return;
     if (!checkGameOver(grid)) return;
-
-    const hasUsableItems = undoCount > 0 || swapCount > 0 || shuffleCount > 0;
-    if (hasUsableItems) return;
 
     setGameOver(true);
     const finalBest = Math.max(best, score);
@@ -231,9 +228,6 @@ export const useAsparagusGame = () => {
     }
   }, [
     grid,
-    undoCount,
-    swapCount,
-    shuffleCount,
     gameOver,
     won,
     continueAfterWin,

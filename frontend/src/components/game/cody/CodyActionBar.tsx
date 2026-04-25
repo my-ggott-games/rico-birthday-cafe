@@ -57,8 +57,6 @@ export const CodyActionBar: React.FC<CodyActionBarProps> = ({
         <ShareButtonGroup
           urlToShare={urlToShare}
           gameName="리코의 외출 준비"
-          shareDescription="나만의 리코 외출 준비를 해봤어요! 여러분도 함께 축하해주세요."
-          thumbnailUrl="/assets/codygame/share_thumbnail.jpg"
           buttonClassName={actionButtonClassName}
         />
       )}

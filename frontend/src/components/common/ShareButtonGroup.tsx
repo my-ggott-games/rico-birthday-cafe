@@ -6,15 +6,12 @@ import { pushEvent } from "../../utils/analytics";
 interface ShareButtonGroupProps {
   urlToShare: string;
   gameName: string;
-  shareDescription: string;
-  thumbnailUrl?: string;
   buttonClassName?: string;
 }
 
 export const ShareButtonGroup: React.FC<ShareButtonGroupProps> = ({
   urlToShare,
   gameName,
-  shareDescription,
   buttonClassName,
 }) => {
   const [copied, setCopied] = useState(false);
@@ -41,7 +38,7 @@ export const ShareButtonGroup: React.FC<ShareButtonGroupProps> = ({
     if (navigator.share && isMobileDevice()) {
       pushEvent("click_share_menu", { game_name: gameName, method: "native" });
       try {
-        await navigator.share({ title: gameName, text: shareDescription, url: urlToShare });
+        await navigator.share({ title: gameName, url: urlToShare });
       } catch (err) {
         if (err instanceof Error && err.name !== "AbortError") {
           await copyToClipboard();

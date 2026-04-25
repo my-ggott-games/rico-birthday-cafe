@@ -596,7 +596,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
       helpSlides={PUZZLE_TUTORIAL_SLIDES}
       autoShowHelpKey="game_help_seen_puzzle"
       className="bg-[#FFFFF8]"
-      mainClassName="relative overflow-hidden"
+      mainClassName="relative overflow-x-hidden"
     >
       {content}
     </GameContainer>
