@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
 import { Board } from "../components/asparagus/Board";
 import { Items } from "../components/asparagus/Items";
@@ -7,6 +6,7 @@ import { CommonModal } from "../components/common/CommonModal";
 import { GameContainer } from "../components/common/GameContainer";
 import { PushableButton } from "../components/common/PushableButton";
 import { ScoreStatGroup } from "../components/common/ScoreStatGroup";
+import { ShareButtonGroup } from "../components/common/ShareButtonGroup";
 import { useAsparagusGame } from "../hooks/useAsparagusGame";
 import { usePageBgm } from "../hooks/usePageBgm";
 import { type Direction } from "../components/asparagus/types";
@@ -20,7 +20,6 @@ import { useViewEvent } from "../hooks/usePageTracking";
 const AsparagusMerge: React.FC = () => {
   const [bgmSrc] = React.useState(() => pickRandomActivityBgm());
   const isAdmin = useAuthStore((state) => state.isAdmin);
-  const navigate = useNavigate();
 
   usePageBgm(bgmSrc);
   useViewEvent("view_game", { game_name: "아스파라거스 키우기" });
@@ -36,10 +35,12 @@ const AsparagusMerge: React.FC = () => {
     history,
     undoCount,
     swapCount,
+    shuffleCount,
     isSwapMode,
     selection,
     startGame,
     handleUndo,
+    handleShuffle,
     handleTileClick,
     move,
     setContinueAfterWin,
@@ -104,15 +105,36 @@ const AsparagusMerge: React.FC = () => {
       desc="아스파라거스도 리코도 건강만 해다오"
       gameName="아스파라거스 키우기"
       helpSlides={ASPARAGUS_TUTORIAL_SLIDES}
+      autoShowHelpKey="game_help_seen_asparagus"
       className="select-none"
     >
-      {/* ─── Main Content: Horizontal 3 DIV ─── */}
-      <div className="flex-1 w-full grid grid-cols-1 gap-6 px-4 pb-12 pt-4 sm:px-6 lg:grid-cols-[1fr_0.8fr] lg:gap-8 lg:px-10">
-        {/* [Center] Board: swipe only on the board element */}
-        <div className="flex min-h-0 flex-col items-center justify-center gap-4 lg:min-h-[calc(100dvh-260px)]">
-          <div className="flex w-full justify-center lg:justify-center">
-            <div className="flex w-full max-w-[min(100%,520px)] justify-end">
+      {/* ─── Main Content ─── */}
+      <div className="flex flex-1 w-full items-center justify-center px-4 pb-12 pt-4 sm:px-6 lg:px-10">
+        <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-center lg:gap-16">
+          {/* Board + Score */}
+          <div className="flex w-full max-w-[520px] flex-col gap-4 lg:w-[520px]">
+            <div className="flex w-full items-center justify-between gap-2 px-4">
+              <PushableButton
+                variant="teal"
+                onClick={() => {
+                  pushEvent("retry_game", { game_name: "아스파라거스 키우기" });
+                  startGame();
+                }}
+                className="h-14 shrink-0 rounded-2xl px-0 py-0 lg:px-4"
+                aria-label="다시하기"
+              >
+                <span className="flex items-center lg:hidden">
+                  <AppIcon name="RefreshCw" size={18} />
+                </span>
+                <span className="hidden lg:flex lg:flex-col lg:items-center lg:gap-0.5">
+                  <span className="text-[9px] opacity-60 uppercase tracking-tighter">
+                    Reset
+                  </span>
+                  <span className="text-sm">다시하기</span>
+                </span>
+              </PushableButton>
               <ScoreStatGroup
+                className="justify-end"
                 items={[
                   {
                     label: "Score",
@@ -130,37 +152,34 @@ const AsparagusMerge: React.FC = () => {
                 ]}
               />
             </div>
-          </div>
-          <Board
-            grid={grid}
-            selection={selection}
-            isSwapMode={isSwapMode}
-            onTileClick={handleTileClick}
-            onMove={move}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-          />
-        </div>
-
-        {/* [Right] Items */}
-        <div className="flex min-h-0 flex-col items-center justify-center lg:min-h-[calc(100dvh-260px)]">
-          <div className="flex h-full w-full flex-col items-center justify-center gap-2">
-            <Items
-              undoCount={undoCount}
-              swapCount={swapCount}
-              historyLength={history.length}
+            <Board
+              grid={grid}
+              selection={selection}
               isSwapMode={isSwapMode}
-              isAdmin={isAdmin}
-              debugMode={debugMode}
-              onUndo={handleUndo}
-              onToggleSwapMode={() => {
-                setIsSwapMode(!isSwapMode);
-                setSelection(null);
-              }}
-              onRestart={() => { pushEvent("retry_game", { game_name: "아스파라거스 키우기" }); startGame(); }}
-              onDebugStart={startDebugGame}
+              onTileClick={handleTileClick}
+              onMove={move}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
             />
           </div>
+
+          {/* Items */}
+          <Items
+            undoCount={undoCount}
+            swapCount={swapCount}
+            shuffleCount={shuffleCount}
+            historyLength={history.length}
+            isSwapMode={isSwapMode}
+            isAdmin={isAdmin}
+            debugMode={debugMode}
+            onUndo={handleUndo}
+            onToggleSwapMode={() => {
+              setIsSwapMode(!isSwapMode);
+              setSelection(null);
+            }}
+            onShuffle={handleShuffle}
+            onDebugStart={startDebugGame}
+          />
         </div>
       </div>
 
@@ -181,24 +200,28 @@ const AsparagusMerge: React.FC = () => {
           <>
             <PushableButton
               onClick={() => setContinueAfterWin(true)}
-              variant="cream"
+              variant="light"
               className="w-full px-0 py-3 text-[#6b7280]"
             >
               계속하기
             </PushableButton>
             <PushableButton
-              onClick={() => { pushEvent("retry_game", { game_name: "아스파라거스 키우기" }); startGame(); }}
-              variant="cream"
+              onClick={() => {
+                pushEvent("retry_game", { game_name: "아스파라거스 키우기" });
+                startGame();
+              }}
+              variant="teal"
               className="w-full px-0 py-3"
             >
               다시 키우기
             </PushableButton>
-            <PushableButton
-              onClick={() => navigate("/lobby")}
-              className="w-full px-0 py-3"
-            >
-              로비로 이동
-            </PushableButton>
+            <div className="flex">
+              <ShareButtonGroup
+                urlToShare={`${window.location.origin}/game/asparagus?score=${score}`}
+                gameName="아스파라거스 키우기"
+                buttonClassName="w-full px-0 py-3"
+              />
+            </div>
           </>
         }
       >
@@ -212,28 +235,25 @@ const AsparagusMerge: React.FC = () => {
 
       <CommonModal
         isOpen={gameOver}
-        onClose={() => { pushEvent("retry_game", { game_name: "아스파라거스 키우기" }); startGame(); }}
+        onClose={() => {
+          pushEvent("retry_game", { game_name: "아스파라거스 키우기" });
+          startGame();
+        }}
         icon={<AppIcon name="Flower2" size={32} />}
         title="아스파라거스가 시들었어"
         panelClassName="border-[#5EC7A5] px-8 py-8 shadow-[0_30px_80px_rgba(22,109,119,0.16)]"
         titleClassName="mb-4 text-2xl"
         bodyClassName="space-y-3 text-center"
-        footerClassName="mt-6 flex gap-3"
+        footerClassName="mt-6 flex flex-col gap-3"
         footer={
           <>
-            <PushableButton
-              onClick={() => { pushEvent("retry_game", { game_name: "아스파라거스 키우기" }); startGame(); }}
-              className="flex-1 px-0 py-3"
-            >
-              재도전
-            </PushableButton>
-            <PushableButton
-              onClick={() => navigate("/lobby")}
-              variant="cream"
-              className="flex-1 px-0 py-3"
-            >
-              로비
-            </PushableButton>
+            <div className="flex">
+              <ShareButtonGroup
+                urlToShare={`${window.location.origin}/game/asparagus?score=${score}`}
+                gameName="아스파라거스 키우기"
+                buttonClassName="w-full px-0 py-3"
+              />
+            </div>
           </>
         }
       >

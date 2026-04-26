@@ -58,6 +58,7 @@ export const useAsparagusGame = () => {
   const [history, setHistory] = useState<{ grid: Grid; score: number }[]>([]);
   const [undoCount, setUndoCount] = useState(5);
   const [swapCount, setSwapCount] = useState(5);
+  const [shuffleCount, setShuffleCount] = useState(5);
   const [isSwapMode, setIsSwapMode] = useState(false);
   const [selection, setSelection] = useState<{ r: number; c: number } | null>(
     null,
@@ -86,6 +87,7 @@ export const useAsparagusGame = () => {
     setHistory([]);
     setUndoCount(5);
     setSwapCount(5);
+    setShuffleCount(5);
     setIsSwapMode(false);
     setSelection(null);
   }, []);
@@ -162,6 +164,24 @@ export const useAsparagusGame = () => {
     setWon(false);
   }, [undoCount, history]);
 
+  const handleShuffle = useCallback(() => {
+    if (shuffleCount <= 0) return;
+    setHistory((prev) => [...prev, { grid, score }]);
+    const values: (number | null)[] = [];
+    for (let r = 0; r < 4; r++)
+      for (let c = 0; c < 4; c++) values.push(grid[r][c]);
+    for (let i = values.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [values[i], values[j]] = [values[j], values[i]];
+    }
+    const newGrid = createEmptyGrid();
+    let idx = 0;
+    for (let r = 0; r < 4; r++)
+      for (let c = 0; c < 4; c++) newGrid[r][c] = values[idx++];
+    setGrid(newGrid);
+    setShuffleCount((c) => c - 1);
+  }, [shuffleCount, grid, score]);
+
   const handleTileClick = (r: number, c: number) => {
     if (!isSwapMode || swapCount <= 0 || gameOver) return;
 
@@ -191,6 +211,32 @@ export const useAsparagusGame = () => {
     }
   };
 
+  // Game over fires as soon as the board has no empty cells and no valid merges.
+  // Remaining items no longer postpone the game-over state.
+  useEffect(() => {
+    if (gameOver || (won && !continueAfterWin)) return;
+    if (!checkGameOver(grid)) return;
+
+    setGameOver(true);
+    const finalBest = Math.max(best, score);
+    if (!debugMode && finalBest > best) {
+      setBest(finalBest);
+      localStorage.setItem(bestScoreKey, String(finalBest));
+    }
+    if (!debugMode) {
+      submitBestScore(finalBest);
+    }
+  }, [
+    grid,
+    gameOver,
+    won,
+    continueAfterWin,
+    best,
+    score,
+    debugMode,
+    bestScoreKey,
+  ]);
+
   const move = useCallback(
     (dir: Direction) => {
       if (gameOver || (won && !continueAfterWin) || isSwapMode) return;
@@ -210,7 +256,7 @@ export const useAsparagusGame = () => {
       const newScore = debugMode ? 0 : score + addedScore;
       setScore(newScore);
 
-      // 4. Check ending conditions
+      // 4. Check win condition
       const didWin = !continueAfterWin && checkWin(nextGrid);
       if (didWin) {
         setWon(true);
@@ -226,22 +272,10 @@ export const useAsparagusGame = () => {
             colors: ["#ffd700", "#e0f2fe", "#38bdf8", "#bef264", "#FFFFF8"],
           });
         }, 350);
-      } else if (checkGameOver(nextGrid)) {
-        setGameOver(true);
-        // Finalize best score locally and submit to server ONLY on game over
-        const finalBest = Math.max(best, newScore);
-        if (!debugMode && finalBest > best) {
-          setBest(finalBest);
-          localStorage.setItem(bestScoreKey, String(finalBest));
-        }
-        if (!debugMode) {
-          submitBestScore(finalBest);
-        }
       }
+      // Game over detection is handled by the useEffect above
     },
     [
-      best,
-      bestScoreKey,
       continueAfterWin,
       debugMode,
       gameOver,
@@ -263,12 +297,14 @@ export const useAsparagusGame = () => {
     history,
     undoCount,
     swapCount,
+    shuffleCount,
     isSwapMode,
     selection,
     debugMode,
     startGame,
     startDebugGame: () => startGame(true),
     handleUndo,
+    handleShuffle,
     handleTileClick,
     move,
     setContinueAfterWin,

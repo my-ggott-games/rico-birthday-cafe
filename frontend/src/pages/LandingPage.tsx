@@ -1,28 +1,19 @@
-import React, { Suspense, lazy, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../store/useAuthStore";
 import ProgressiveBackground from "../components/common/ProgressiveBackground";
 import { pushEvent } from "../utils/analytics";
 
 const LANDING_IMAGE_ASPECT = "aspect-[3847/2885]";
 const MOBILE_DOOR_FRAME_CLASS =
   "pointer-events-auto absolute left-1/2 top-[60%] flex -translate-x-1/2 -translate-y-1/2 cursor-pointer flex-col items-center";
-const LANDING_FRAME_CLASS = `${LANDING_IMAGE_ASPECT} absolute left-1/2 top-1/2 h-full -translate-x-1/2 -translate-y-1/2 scale-[0.75] md:top-0 md:h-auto md:w-[max(100vw,calc(100dvh*3847/2885))] md:-translate-y-0 md:scale-100`;
+const LANDING_FRAME_CLASS = `${LANDING_IMAGE_ASPECT} absolute left-1/2 top-1/2 h-full -translate-x-1/2 -translate-y-1/2 scale-[0.75] md:top-1/2 md:h-auto md:w-[max(100vw,calc(100dvh*3847/2885))] md:-translate-y-1/2 md:scale-100`;
 const DESKTOP_DOOR_FRAME_CLASS =
-  "absolute left-1/2 top-[45%] flex -translate-x-1/2 -translate-y-1/2 cursor-pointer flex-col items-center";
+  "absolute left-1/2 top-[60%] flex -translate-x-1/2 -translate-y-1/2 cursor-pointer flex-col items-center";
 const ENTER_ANIMATION_DURATION_MS = 1850;
-const AuthModal = lazy(() =>
-  import("../components/auth/AuthModal").then((module) => ({
-    default: module.AuthModal,
-  })),
-);
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [shouldLoadAuthModal, setShouldLoadAuthModal] = useState(false);
-  const hydrateFromStorage = useAuthStore((state) => state.hydrateFromStorage);
 
   useEffect(() => {
     pushEvent("view_home");
@@ -37,23 +28,12 @@ const LandingPage: React.FC = () => {
       return;
     }
 
-    hydrateFromStorage();
-    const { isAuthenticated } = useAuthStore.getState();
-
     pushEvent("click_enter_site");
     pushEvent("click_cta_main");
-
-    if (isAuthenticated) {
-      triggerEnterAnimation();
-      return;
-    }
-
-    setShouldLoadAuthModal(true);
-    setIsAuthModalOpen(true);
+    triggerEnterAnimation();
   };
 
   const triggerEnterAnimation = () => {
-    setIsAuthModalOpen(false);
     setIsOpen(true);
     setTimeout(() => {
       navigate("/lobby");
@@ -134,16 +114,6 @@ const LandingPage: React.FC = () => {
           }}
         />
       </div>
-
-      {shouldLoadAuthModal ? (
-        <Suspense fallback={null}>
-          <AuthModal
-            isOpen={isAuthModalOpen}
-            onClose={() => setIsAuthModalOpen(false)}
-            onSuccess={triggerEnterAnimation}
-          />
-        </Suspense>
-      ) : null}
     </div>
   );
 };

@@ -17,6 +17,8 @@ interface GameContainerProps {
   showDesktopHelp?: boolean;
   headerHidden?: boolean;
   returnButtonVariant?: "mint" | "cream";
+  /** localStorage key used by GameHelp to auto-open on first visit */
+  autoShowHelpKey?: string;
 }
 
 export const GameContainer: React.FC<GameContainerProps> = ({
@@ -32,6 +34,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   showDesktopHelp: _showDesktopHelp = true,
   headerHidden = false,
   returnButtonVariant = "mint",
+  autoShowHelpKey,
 }) => {
   const hiddenClass = headerHidden
     ? "opacity-0 pointer-events-none"
@@ -78,7 +81,12 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           <CommonTitle
             title={title}
             subtitle={desc}
-            helpSlot={<GameHelp slides={helpSlides} />}
+            helpSlot={
+              <GameHelp
+                slides={helpSlides}
+                autoShowHelpKey={autoShowHelpKey}
+              />
+            }
           />
         </div>
 

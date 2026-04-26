@@ -227,13 +227,19 @@ export const AdminModal: React.FC<AdminModalProps> = ({
         const achievementAwardResult =
           await parseAchievementAwardResponse(achievementRes);
 
-        addToast({
-          title: "시스템 권한 획득",
-          description: "관리자 모드로 입장합니다.",
-          icon: "KeyRound",
-        });
         if (achievementAwardResult?.awarded) {
+          addToast({
+            title: "시스템 권한 획득",
+            description: "관리자 모드로 입장합니다.",
+            icon: "KeyRound",
+          });
           addAchievementToast(addToast, achievementAwardResult.achievement, "admin");
+        } else {
+          addToast({
+            title: "관리자 모드 전환",
+            description: "관리자 모드로 전환합니다.",
+            icon: "KeyRound",
+          });
         }
 
         setTimeout(() => {

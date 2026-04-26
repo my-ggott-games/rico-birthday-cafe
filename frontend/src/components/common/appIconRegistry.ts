@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  AlertCircle,
   ArrowBigLeft,
   ArrowBigDown,
   ArrowBigRight,
@@ -11,6 +12,7 @@ import {
   Backpack,
   BadgeCheck,
   Camera,
+  Cake,
   CakeSlice,
   CalendarCheck,
   CalendarDays,
@@ -20,6 +22,7 @@ import {
   Copy,
   Crown,
   DoorOpen,
+  Download,
   Eye,
   FileQuestion,
   Flower2,
@@ -47,6 +50,7 @@ import {
   ScrollText,
   Share2,
   Shield,
+  Shuffle,
   Sparkles,
   SportShoe,
   Sprout,
@@ -64,6 +68,7 @@ import {
 } from "lucide-react";
 
 export const APP_ICONS = {
+  AlertCircle,
   ArrowBigLeft,
   ArrowBigDown,
   ArrowBigRight,
@@ -75,6 +80,7 @@ export const APP_ICONS = {
   Backpack,
   BadgeCheck,
   Camera,
+  Cake,
   CakeSlice,
   CalendarCheck,
   CalendarDays,
@@ -84,6 +90,7 @@ export const APP_ICONS = {
   Copy,
   Crown,
   DoorOpen,
+  Download,
   Eye,
   FileQuestionMark: FileQuestion,
   Flower2,
@@ -111,6 +118,7 @@ export const APP_ICONS = {
   ScrollText,
   Share2,
   Shield,
+  Shuffle,
   Sparkles,
   SportShoe,
   Sprout,

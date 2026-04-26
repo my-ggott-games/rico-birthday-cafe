@@ -15,7 +15,8 @@ export const addRandomTile = (grid: Grid): Grid => {
   const [r, c] = empty[Math.floor(Math.random() * empty.length)];
   const next = grid.map((row) => [...row]) as Grid;
   const roll = Math.random();
-  next[r][c] = roll < 0.6 ? 1 : roll < 0.9 ? 2 : 4;
+  // 75 % seed (1), 20 % sprout (2), 5 % stem (4) — gentler early-game curve
+  next[r][c] = roll < 0.75 ? 1 : roll < 0.95 ? 2 : 4;
   return next;
 };
 

@@ -2,36 +2,20 @@ import React from "react";
 import { DroppableCharacter } from "../components/game/cody/DroppableCharacter";
 import { PolaroidFrame } from "../components/game/cody/PolaroidFrame";
 import { PolaroidGlitchOverlay } from "../components/game/cody/polaroidEffects/PolaroidGlitchOverlay";
+import { useCodyGameStore } from "../store/useCodyGameStore";
 
 const AVAILABLE_BGS = ["5-1", "6-1"];
 
-// Sample equipped state, just to have a character on screen
-const sampleEquippedIds = {
-  hair: "hair-1",
-  clothes: "clothes-1",
-  hair_acc: null,
-  clothes_acc: null,
-  hand_acc: null,
-  accessories: null,
-};
-
-const sampleAvailableItems = [
-  {
-    id: "hair-1",
-    category: "hair",
-    layers: {
-      front: "/assets/codygame/rico_hair_front_long.png",
-      back: "/assets/codygame/riko_hair_back_long.png",
-    },
-  },
-  {
-    id: "clothes-1",
-    category: "clothes",
-    layers: { main: "/assets/codygame/riko_clothes_training.png" },
-  },
-];
-
 const CodySample: React.FC = () => {
+  const { initGame } = useCodyGameStore();
+
+  React.useLayoutEffect(() => {
+    initGame({
+      isFinished: true,
+      resultImage: "/assets/codygame/riko_body_smile.png",
+    });
+  }, [initGame]);
+
   return (
     <div className="min-h-screen bg-[#FFFFF8] p-8">
       <h1 className="text-4xl font-black text-[#166D77] mb-8 text-center">
@@ -64,15 +48,7 @@ const CodySample: React.FC = () => {
                   }
                 >
                   <div className="relative pointer-events-none">
-                    <DroppableCharacter
-                      equippedIds={sampleEquippedIds as any}
-                      activeId={null}
-                      isFinished={true}
-                      resultImage={"/assets/codygame/riko_body_smile.png"}
-                      scale={1.25}
-                      isMobile={false}
-                      availableItems={sampleAvailableItems as any}
-                    />
+                    <DroppableCharacter scale={1.25} />
                   </div>
                 </PolaroidFrame>
               </div>

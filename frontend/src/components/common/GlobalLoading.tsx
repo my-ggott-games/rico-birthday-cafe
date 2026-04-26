@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import { useLocation, matchPath } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { LOADING_MESSAGES } from "../../constants/loadingMessages";
@@ -14,17 +14,24 @@ const GlobalLoading: React.FC = () => {
   );
   const [message, setMessage] = useState("");
   const isGuest = useAuthStore((state) => state.isGuest);
-  // Keep track of the current path to avoid double-triggering on mount if strict mode
-  const [prevPath, setPrevPath] = useState<string | null>(null);
+  // Keep previous path in ref so we can skip initial direct-entry loading and
+  // avoid StrictMode double-mount side effects.
+  const prevPathRef = useRef<string | null>(null);
 
   useLayoutEffect(() => {
-    // Prevent triggering on initial mount if we want only on "move"?
-    // User said "move pages". Usually implies subsequent navigation.
-    // But usually initial load also has a loading screen.
-    // I will allow it on mount too for consistency (reload -> loading).
+    const prevPath = prevPathRef.current;
+    const isInitialMount = prevPath === null;
+    prevPathRef.current = location.pathname;
 
     if (location.pathname === prevPath) return;
-    setPrevPath(location.pathname);
+
+    // Skip loader for initial hard entry (direct URL / reload) to prevent
+    // page -> loading -> page flicker.
+    if (isInitialMount) {
+      setLoading(false);
+      setPageTransitionLoading(false);
+      return;
+    }
 
     const validRoutes = [
       "/lobby",

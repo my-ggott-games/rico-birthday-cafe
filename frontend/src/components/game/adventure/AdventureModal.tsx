@@ -15,6 +15,7 @@ type AdventureModalProps = {
   actions: AdventureModalAction[];
   embedded?: boolean;
   children?: ReactNode;
+  footer?: ReactNode;
 };
 
 export function AdventureModal({
@@ -24,6 +25,7 @@ export function AdventureModal({
   actions,
   embedded = false,
   children,
+  footer,
 }: AdventureModalProps) {
   const singleAction = actions.length === 1;
 
@@ -68,7 +70,7 @@ export function AdventureModal({
               data-ui-control="true"
               onPointerDown={(event) => event.stopPropagation()}
               onClick={action.onClick}
-              variant={action.tone === "secondary" ? "modalLight" : "modalDark"}
+              variant={action.tone === "secondary" ? "light" : "navy"}
               className={`rounded-[1rem] px-4 py-3 text-sm font-black transition-transform hover:scale-[1.01] sm:rounded-[1.2rem] sm:px-5 sm:py-4 ${
                 singleAction ? "w-full max-w-[15rem]" : ""
               }`}
@@ -77,6 +79,8 @@ export function AdventureModal({
             </PushableButton>
           ))}
         </div>
+
+        {footer ? <div className="mt-3 sm:mt-4">{footer}</div> : null}
       </motion.div>
     </div>
   );

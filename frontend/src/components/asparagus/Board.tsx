@@ -36,6 +36,7 @@ const ArrowButton = ({
   };
   return (
     <PushableButton
+      variant="teal"
       onClick={onClick}
       className="h-20 w-20 px-0 py-0 lg:h-[5.5rem] lg:w-[5.5rem]"
       aria-label={`${dir} 이동`}
@@ -57,26 +58,22 @@ export const Board: React.FC<BoardProps> = ({
   const boardPadding = "clamp(10px, 2.4vw, 20px)";
   const cellRadius = "clamp(12px, 2.8vw, 20px)";
   const boardRadius = "calc(var(--cell-radius) + var(--board-padding))";
-  const boardSize = "min(100%, clamp(340px, 92vw, 520px))";
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-full">
       <div
-        className="relative aspect-square flex items-center justify-center"
+        className="relative aspect-square flex-none items-center justify-center w-[min(calc(100vw-2rem),32.5rem)] max-w-full"
         style={
           {
             "--board-padding": boardPadding,
             "--cell-radius": cellRadius,
-            width: boardSize,
             background:
               "linear-gradient(135deg, #73c5a8 0%, #7fd0a9 42%, #6fcbb3 100%)",
             borderRadius: boardRadius,
             padding: "var(--board-padding)",
             border: "3px solid rgba(18, 94, 91, 0.72)",
-            boxShadow:
-              "0 30px 80px rgba(84, 182, 160, 0.24)",
-            touchAction: "pinch-zoom", // Keep swipe interactions while allowing browser zoom gestures
-            marginInline: "auto",
+            boxShadow: "0 30px 80px rgba(84, 182, 160, 0.24)",
+            touchAction: "pinch-zoom",
           } as React.CSSProperties
         }
         onTouchStart={onTouchStart}

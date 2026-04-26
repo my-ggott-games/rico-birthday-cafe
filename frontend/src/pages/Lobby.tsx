@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion, useAnimationControls } from "framer-motion";
 import { KCelebrateSlogan } from "k-celebrate-slogan";
 import { AchievementModal } from "../components/common/AchievementModal";
 import { AdminModal } from "../components/auth/AdminModal";
-import {
-  NoteModal,
-  type NoteModalContent,
-} from "../components/common/NoteModal";
+import { AuthModal } from "../components/auth/AuthModal";
+import { NoteModal } from "../components/common/NoteModal";
 import { PushableButton } from "../components/common/PushableButton";
 import { usePageBgm } from "../hooks/usePageBgm";
 import {
@@ -16,7 +14,6 @@ import {
 } from "../constants/puzzle";
 import { EASTER_EGG_NOTE_ACCESS_STORAGE_KEY } from "../constants/noteAccess";
 import { AppIcon } from "../components/common/AppIcon";
-import type { AppIconName } from "../components/common/appIconRegistry";
 import { LOBBY_BGM_SRC } from "../utils/bgm";
 import { useAuthStore } from "../store/useAuthStore";
 import { BASE_URL, fetchWithAuth } from "../utils/api";
@@ -25,6 +22,14 @@ import {
   addAchievementToast,
   parseAchievementAwardResponse,
 } from "../utils/achievementAwards";
+import {
+  LobbyHotspot,
+  LobbyIconTile,
+} from "../features/lobby/LobbyHotspot";
+import {
+  getLobbyNoteContent,
+  type LobbyNoteKey,
+} from "../features/lobby/lobbyNotes";
 
 const SLOGAN_COLLECTOR_CODE = "SLOGAN_COLLECTOR";
 const SLOGAN_COLLECTOR_STORAGE_KEY = "lobby_slogan_collector_unlocked";
@@ -32,175 +37,6 @@ const CLICK_DROP_THRESHOLD = 100;
 const CLICK_SHAKE_MILESTONES = new Set(
   Array.from({ length: 10 }, (_, index) => index * 10).concat(1),
 );
-
-type LobbyNoteKey = "cody" | "puzzle" | "asparagus" | "adventure";
-
-const LOBBY_NOTE_CONTENT: Record<LobbyNoteKey, NoteModalContent> = {
-  cody: {
-    title: "비하인드 스토리",
-    eyebrow: "리코의 외출 준비",
-    icon: "StickyNote",
-    accentColor: "#e7bcc2",
-    backgroundColor: "#FFF1F3",
-    bodyBackgroundColor: "rgba(255,255,255,0.82)",
-    content: (
-      <>
-        <p>
-          눈치 챘나요? 동물농장 미니게임 크라라의 외출을 모티브로 만들었어요.
-        </p>
-        <p>일러스트 작가님과 함께 작업하니 마마와 파파가 된 기분이네요!</p>
-        <p>작가님... 한복 패턴 한땀한땀 작업하느라 힘드셨죠...</p>
-        <p>제가 그림에 무지해서 복잡한 패턴을 생각 못 했어요...</p>
-      </>
-    ),
-    signature: "CODE NAME: G",
-  },
-  puzzle: {
-    title: "비하인드 스토리",
-    eyebrow: "퍼즐 맞추기",
-    icon: "StickyNote",
-    accentColor: "#ddd1bf",
-    backgroundColor: "#F7F0E6",
-    bodyBackgroundColor: "rgba(255,255,255,0.82)",
-    iconBackgroundColor: "rgba(221,209,191,0.25)",
-    content: (
-      <>
-        <p>한국인은 밥심이죠. 한국에 있는 이세계인에게도 예외는 없어요.</p>
-        <p>맛있는 음식 많이 먹고 행복한 하루 보냈으면 좋겠어요.</p>
-        <p>
-          뭘 좋아할지 몰라 다 차려봤어요. 제일 먼저 먹고싶은 음식은 무엇인가요?
-        </p>
-      </>
-    ),
-    signature: "CODE NAME: G",
-  },
-  asparagus: {
-    title: "비하인드 스토리",
-    eyebrow: "아스파라거스 키우기",
-    icon: "StickyNote",
-    accentColor: "#aad0b2",
-    backgroundColor: "#EFF8F1",
-    bodyBackgroundColor: "rgba(255,255,255,0.82)",
-    content: (
-      <>
-        <p>아스파라거스의 실제 성장 과정을 참고해 단계를 구상했어요.</p>
-        <p>사실 성검 아스파라거스... 저도 못 만들었어요... 너무 어렵네요.</p>
-        <p>아이템 사용도 3번까지였는데 5번으로 늘렸어요.</p>
-        <p>언젠가 어디선가 누군가 나타나서 어떻게든 깨주지 않으려나...</p>
-      </>
-    ),
-    signature: "CODE NAME: G",
-  },
-  adventure: {
-    title: "비하인드 스토리",
-    eyebrow: "용사 리코 이야기 1",
-    icon: "StickyNote",
-    accentColor: "#aebed7",
-    backgroundColor: "#EEF3FB",
-    bodyBackgroundColor: "rgba(255,255,255,0.82)",
-    content: (
-      <>
-        <p>치코는 오케스트라 소속 단원으로 활동하고 있어요.</p>
-        <p>한 OST 악보를 받아 합주하던 그 순간,</p>
-        <p>리코가 이세계에서 마왕을 잡는 이야기가 떠올랐어요.</p>
-        <p>상상하던 이야기의 프롤로그입니다.</p>
-      </>
-    ),
-    signature: "CODE NAME: G",
-  },
-};
-
-const getLobbyNoteContent = (
-  noteKey: LobbyNoteKey,
-  isPuzzleMuseumUnlocked: boolean,
-): NoteModalContent => {
-  if (noteKey !== "puzzle") {
-    return LOBBY_NOTE_CONTENT[noteKey];
-  }
-
-  if (isPuzzleMuseumUnlocked) {
-    return LOBBY_NOTE_CONTENT.puzzle;
-  }
-
-  return {
-    ...LOBBY_NOTE_CONTENT.puzzle,
-    accentColor: "#84bf2e",
-    backgroundColor: "#F2F9E5",
-    iconBackgroundColor: "rgba(132,191,46,0.18)",
-  };
-};
-
-const LobbyIconTile = ({
-  name,
-  icon,
-  isMobile,
-  className,
-  iconClassName,
-}: {
-  name: string;
-  icon: AppIconName;
-  isMobile: boolean;
-  className: string;
-  iconClassName?: string;
-}) => (
-  <div className="flex flex-col items-center">
-    <div
-      className={`flex items-center justify-center rounded-[1.35rem] border-4 opacity-100 shadow-xl transition-transform transition-colors group-hover:-translate-y-0.5 ${isMobile ? "h-20 w-20" : "h-24 w-24"} ${className}`}
-    >
-      <AppIcon
-        name={icon}
-        size={isMobile ? 28 : 34}
-        className={iconClassName}
-      />
-    </div>
-    <div
-      className={`mt-2 rounded-xl border-2 border-[#D6C0B0] bg-pale-custard opacity-100 font-bold text-[#166D77] shadow-md transition-colors ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-2"}`}
-    >
-      {name}
-    </div>
-  </div>
-);
-
-const LobbyHotspot = ({
-  to,
-  noteKey,
-  noteVisible,
-  onOpenNote,
-  children,
-  isMobile,
-}: {
-  to: string;
-  noteKey: LobbyNoteKey;
-  noteVisible: boolean;
-  onOpenNote: (key: LobbyNoteKey) => void;
-  children: React.ReactNode;
-  isMobile: boolean;
-}) => {
-  return (
-    <div
-      className="relative flex w-full justify-center"
-      style={{ width: isMobile ? undefined : "auto" }}
-    >
-      <Link to={to} className="relative group flex w-full justify-center">
-        {children}
-      </Link>
-      {noteVisible && (
-        <button
-          type="button"
-          aria-label={`${LOBBY_NOTE_CONTENT[noteKey].title} 열기`}
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            onOpenNote(noteKey);
-          }}
-          className="absolute right-[calc(50%-3.6rem)] top-[-0.7rem] z-10 rounded-2xl border-2 border-[#D6B089] bg-[#FFF4D8] p-2 text-[#9B6A3D] shadow-[0_8px_18px_rgba(128,87,40,0.2)] transition-transform duration-150 hover:-translate-y-0.5"
-        >
-          <AppIcon name="StickyNote" size={isMobile ? 16 : 18} />
-        </button>
-      )}
-    </div>
-  );
-};
 
 const Lobby: React.FC = () => {
   usePageBgm(LOBBY_BGM_SRC);
@@ -216,6 +52,7 @@ const Lobby: React.FC = () => {
   );
   const [isAchievementOpen, setIsAchievementOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isEasterEggNoteAccess, setIsEasterEggNoteAccess] = useState(
     window.localStorage.getItem(EASTER_EGG_NOTE_ACCESS_STORAGE_KEY) === "true",
   );
@@ -488,13 +325,19 @@ const Lobby: React.FC = () => {
   ) : null;
   const profileButton = (
     <PushableButton
-      onClick={() => setIsAchievementOpen(true)}
-      disabled={isGuest}
+      onClick={() => {
+        if (token) {
+          setIsAchievementOpen(true);
+        } else {
+          setIsAuthOpen(true);
+        }
+      }}
       variant="mint"
-      className={`${isMobile ? "min-h-9 px-3 py-1 text-sm" : "px-6 py-2"} rounded-full disabled:cursor-not-allowed`}
+      className={`${isMobile ? "min-h-9 px-3 py-1 text-sm" : "min-h-[2.75rem] px-7 py-2 text-base"} rounded-full`}
     >
-      <span className="flex items-center gap-1.5">
-        <AppIcon name="IdCardLanyard" size={16} /> 프로필
+      <span className="flex items-center gap-1.5 whitespace-nowrap">
+        <AppIcon name="IdCardLanyard" size={16} />
+        {token ? "프로필" : "로그인"}
       </span>
     </PushableButton>
   );
@@ -502,9 +345,9 @@ const Lobby: React.FC = () => {
     <PushableButton
       onClick={() => navigate("/credits")}
       variant="cream"
-      className={`${isMobile ? "min-h-9 px-3 py-1 text-sm" : "px-6 py-2"} rounded-full`}
+      className={`${isMobile ? "min-h-9 px-3 py-1 text-sm" : "min-h-[2.75rem] px-7 py-2 text-base"} rounded-full`}
     >
-      <span className="flex items-center gap-1.5">
+      <span className="flex items-center gap-1.5 whitespace-nowrap">
         <AppIcon name="Clapperboard" size={16} /> Who Made This?!
       </span>
     </PushableButton>
@@ -513,7 +356,7 @@ const Lobby: React.FC = () => {
     <PushableButton
       onClick={() => setIsAdminOpen(true)}
       variant="black"
-      className={`${isMobile ? "fixed bottom-4 left-4 z-20 px-3 py-1 text-sm" : "px-5 py-2"} rounded-full font-mono tracking-tighter`}
+      className={`${isMobile ? "fixed bottom-4 left-4 z-20 px-3 py-1 text-sm" : "min-h-[2.75rem] px-5 py-2 text-base"} rounded-full font-mono tracking-tighter`}
     >
       <span className="inline-block">who am I?</span>
     </PushableButton>
@@ -533,38 +376,26 @@ const Lobby: React.FC = () => {
         className={`relative z-10 w-full min-h-screen select-none ${isMobile ? "px-4 pt-4 pb-8" : "p-10"} flex flex-col`}
       >
         <header
-          className={`flex ${isMobile ? "justify-between items-start" : "justify-between items-center"} ${isMobile ? "mb-2" : ""}`}
+          className={`flex justify-center ${isMobile ? "items-start mb-2" : "items-center"}`}
         >
-          <div />
-          <div
-            className={`${isMobile ? "flex gap-2" : "flex flex-col items-end gap-3"}`}
-          >
-            {isMobile ? (
-              <div className="flex w-full gap-2">
-                {noteToggleButton}
-                {creditsButton}
-                {profileButton}
-              </div>
-            ) : (
-              <div className="flex gap-2">
-                {noteToggleButton}
-                {creditsButton}
-                {profileButton}
-                {adminButton}
-              </div>
-            )}
-            {isGuest && !isMobile && (
-              <p className="rounded-full border border-[#166D77]/20 bg-[#166D77]/10 px-3 py-1 text-xs font-bold text-[#166D77]">
-                게스트 모드: 프로필/업적/기록 저장 사용 불가
-              </p>
+          <div className={`flex flex-col items-center ${isMobile ? "gap-1" : "gap-3"}`}>
+            <div className="flex items-center gap-3">
+              {noteToggleButton}
+              {creditsButton}
+              {profileButton}
+              {!isMobile && adminButton}
+            </div>
+            {!token && (
+              <button
+                type="button"
+                onClick={() => setIsAuthOpen(true)}
+                className="rounded-full border border-[#166D77]/20 bg-[#166D77]/8 px-3 py-1 text-xs font-bold text-[#166D77]/70 transition-colors hover:bg-[#166D77]/14 hover:text-[#166D77]"
+              >
+                로그인하면 업적과 점수를 저장할 수 있어요
+              </button>
             )}
           </div>
         </header>
-        {isGuest && isMobile && (
-          <p className="mb-3 self-center rounded-full border border-[#166D77]/20 bg-[#166D77]/10 px-3 py-1 text-xs font-bold text-[#166D77]">
-            게스트 모드: 프로필/업적/기록 저장 사용 불가
-          </p>
-        )}
 
         {/* Slogan */}
         <div
@@ -652,8 +483,9 @@ const Lobby: React.FC = () => {
                 name="리코의 외출 준비"
                 icon="Shirt"
                 isMobile={isMobile}
-                className="border-[#e7bcc2] bg-[#FFE4E6]/85 group-hover:bg-[#FFE4E6]/85"
-                iconClassName="text-[#cf9aa3]"
+                bgColor="#FFE4E6"
+                borderColor="#e7bcc2"
+                iconColor="#cf9aa3"
               />
             </motion.div>
           </LobbyHotspot>
@@ -671,15 +503,14 @@ const Lobby: React.FC = () => {
                 name="퍼즐 맞추기"
                 icon="Puzzle"
                 isMobile={isMobile}
-                className={
-                  isMobile || isPuzzleMuseumUnlocked
-                    ? "border-[#ddd1bf] bg-[#f5ecdd]/85 group-hover:bg-[#f5ecdd]/85"
-                    : "border-[#84bf2e] bg-[#a3e635]/85 group-hover:bg-[#a3e635]/85"
+                bgColor={
+                  isMobile || isPuzzleMuseumUnlocked ? "#f5ecdd" : "#a3e635"
                 }
-                iconClassName={
-                  isMobile || isPuzzleMuseumUnlocked
-                    ? "text-[#b9ab97]"
-                    : "text-[#6e9f23]"
+                borderColor={
+                  isMobile || isPuzzleMuseumUnlocked ? "#ddd1bf" : "#84bf2e"
+                }
+                iconColor={
+                  isMobile || isPuzzleMuseumUnlocked ? "#b9ab97" : "#6e9f23"
                 }
               />
             </motion.div>
@@ -698,8 +529,9 @@ const Lobby: React.FC = () => {
                 name="아스파라거스 키우기"
                 icon="Sprout"
                 isMobile={isMobile}
-                className="border-[#aad0b2] bg-[#d4edda]/85 group-hover:bg-[#d4edda]/85"
-                iconClassName="text-[#2d6a4f]"
+                bgColor="#d4edda"
+                borderColor="#aad0b2"
+                iconColor="#2d6a4f"
               />
             </motion.div>
           </LobbyHotspot>
@@ -716,8 +548,9 @@ const Lobby: React.FC = () => {
                 name="용사 리코 이야기"
                 icon="Swords"
                 isMobile={isMobile}
-                className="border-[#aebed7] bg-[#d8e4f7]/85 group-hover:bg-[#d8e4f7]/85"
-                iconClassName="text-[#102542]"
+                bgColor="#d8e4f7"
+                borderColor="#aebed7"
+                iconColor="#102542"
               />
             </motion.div>
           </LobbyHotspot>
@@ -728,6 +561,12 @@ const Lobby: React.FC = () => {
       <AchievementModal
         isOpen={isAchievementOpen}
         onClose={() => setIsAchievementOpen(false)}
+      />
+
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        onSuccess={() => setIsAuthOpen(false)}
       />
 
       <AdminModal

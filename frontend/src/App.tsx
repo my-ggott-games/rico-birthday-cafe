@@ -4,7 +4,6 @@ import LandingPage from "./pages/LandingPage";
 import { usePageTracking } from "./hooks/usePageTracking";
 
 import { CursorManager } from "./components/game/CursorManager";
-import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
 import { useAuthStore } from "./store/useAuthStore";
 
@@ -15,6 +14,7 @@ const CodySample = lazy(() => import("./pages/CodySample"));
 const PuzzleGame = lazy(() => import("./pages/PuzzleGame"));
 const PuzzleSandbox = lazy(() => import("./pages/PuzzleSandbox"));
 const HologramPlayground = lazy(() => import("./pages/HologramPlayground"));
+const PuzzleHoloSample = lazy(() => import("./pages/PuzzleHoloSample"));
 const AsparagusMerge = lazy(() => import("./pages/AsparagusMerge"));
 const AsparagusShowcase = lazy(() => import("./pages/AsparagusShowcase"));
 const Credits = lazy(() => import("./pages/Credits"));
@@ -48,12 +48,15 @@ function AuthHydrator() {
 
 function NonLandingGlobals() {
   const { pathname } = useLocation();
-  if (pathname === "/") return null;
   return (
     <Suspense fallback={null}>
       <GlobalLoading />
-      <AchievementToast />
-      <GlobalAudioToggle />
+      {pathname !== "/" && (
+        <>
+          <AchievementToast />
+          <GlobalAudioToggle />
+        </>
+      )}
     </Suspense>
   );
 }
@@ -70,14 +73,14 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
 
-            <Route element={<ProtectedRoute />}>
-              <Route path="/lobby" element={<Lobby />} />
-              <Route path="/game/cody" element={<CodyGame />} />
-              <Route path="/game/adventure" element={<AdventureGame />} />
-              <Route path="/game/puzzle" element={<PuzzleGame />} />
-              <Route path="/game/asparagus" element={<AsparagusMerge />} />
-              <Route path="/credits" element={<Credits />} />
-            </Route>
+            <Route path="/sample/puzzle-holo" element={<PuzzleHoloSample />} />
+            <Route path="/lobby" element={<Lobby />} />
+            <Route path="/game/cody" element={<CodyGame />} />
+            <Route path="/game/cody/shared" element={<CodyGame />} />
+            <Route path="/game/adventure" element={<AdventureGame />} />
+            <Route path="/game/puzzle" element={<PuzzleGame />} />
+            <Route path="/game/asparagus" element={<AsparagusMerge />} />
+            <Route path="/credits" element={<Credits />} />
 
             <Route element={<AdminOnlyRoute />}>
               <Route
@@ -85,7 +88,6 @@ function App() {
                 element={<LandingCompareSample />}
               />
               <Route path="/sample/cody" element={<CodySample />} />
-              <Route path="/sample/adventure" element={<AdventureGame />} />
               <Route path="/sample/puzzle" element={<PuzzleSandbox />} />
               <Route path="/sample/hologram" element={<HologramPlayground />} />
               <Route path="/sample/asparagus" element={<AsparagusShowcase />} />

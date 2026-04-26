@@ -2,56 +2,61 @@ import React from "react";
 import { DroppableCharacter } from "./DroppableCharacter";
 import { PolaroidFrame } from "./PolaroidFrame";
 import { PolaroidGlitchOverlay } from "./polaroidEffects/PolaroidGlitchOverlay";
-import type { CodyItem, EquippedState } from "./codyTypes";
 import { PolaroidBlossomOverlay } from "./polaroidEffects/PolaroidBlossomOverlay";
 import { PolaroidButterflyOverlay } from "./polaroidEffects/PolaroidButterflyOverlay";
 import { PolaroidFireflyOverlay } from "./polaroidEffects/PolaroidFireflyOverlay";
 import { PolaroidHexOverlay } from "./polaroidEffects/PolaroidHexOverlay";
 import { PolaroidRainOverlay } from "./polaroidEffects/PolaroidRainOverlay";
+import {
+  getCodyCharacterScale,
+  getCodyDisplayStageHeight,
+  getCodyMannequinScale,
+  getCodyPolaroidCharacterOffset,
+  getCodyPolaroidCharacterStageClassName,
+} from "./codyStageLayout";
+import {
+  INVALID_POLAROID_SCALE,
+  VALID_POLAROID_SCALE,
+} from "../../../features/cody/codyGameData";
+import { useCodyGameStore } from "../../../store/useCodyGameStore";
 
 type CodyDisplayStageProps = {
-  activeBackground: string | null;
-  activeId: string | null;
-  availableItems: CodyItem[];
-  characterScale: number;
-  characterStageClassName: string;
-  characterOffset: { x?: number; y?: number };
-  contentVisible: boolean;
-  equippedIds: EquippedState;
-  isCapturing: boolean;
-  isFinished: boolean;
-  isFlyAway: boolean;
-  isMobile: boolean;
   polaroidRef: React.RefObject<HTMLDivElement | null>;
-  resultImage: string | null;
-  scaleWhenFinished: number;
-  springBgUrl: string | null;
-  stageHeight?: string;
-  trainingBgUrl: string | null;
-  orientalBgUrl: string | null;
 };
 
 export const CodyDisplayStage: React.FC<CodyDisplayStageProps> = ({
-  activeBackground,
-  activeId,
-  availableItems,
-  characterScale,
-  characterStageClassName,
-  characterOffset,
-  contentVisible,
-  equippedIds,
-  isCapturing,
-  isFinished,
-  isFlyAway,
-  isMobile,
   polaroidRef,
-  resultImage,
-  scaleWhenFinished,
-  springBgUrl,
-  stageHeight,
-  trainingBgUrl,
-  orientalBgUrl,
 }) => {
+  const {
+    activeBackground,
+    contentVisible,
+    formattedDate,
+    isCapturing,
+    isFinished,
+    isFlyAway,
+    windowWidth,
+    orientalBgUrl,
+    springBgUrl,
+    trainingBgUrl,
+  } = useCodyGameStore();
+
+  const isMobile = windowWidth < 768;
+  const characterScale = getCodyCharacterScale({ isMobile, windowWidth });
+  const mannequinScale = getCodyMannequinScale({ isMobile, windowWidth });
+  const scaleWhenFinished =
+    characterScale *
+    (activeBackground?.startsWith("linear-gradient")
+      ? INVALID_POLAROID_SCALE
+      : VALID_POLAROID_SCALE);
+  const stageHeight = getCodyDisplayStageHeight({ isMobile, isFinished });
+  const characterOffset = getCodyPolaroidCharacterOffset({
+    activeBackground,
+    isFinished,
+    isMobile,
+  });
+  const characterStageClassName =
+    getCodyPolaroidCharacterStageClassName(activeBackground);
+
   return (
     <div
       className={`relative z-10 flex w-full items-center justify-center ${isMobile ? "" : "h-[80%]"}`}
@@ -61,6 +66,7 @@ export const CodyDisplayStage: React.FC<CodyDisplayStageProps> = ({
         <PolaroidFrame
           isFlyAway={isFlyAway}
           activeBackground={activeBackground}
+          formattedDate={formattedDate}
           characterOffset={characterOffset}
           characterStageClassName={characterStageClassName}
           polaroidRef={polaroidRef}
@@ -86,7 +92,9 @@ export const CodyDisplayStage: React.FC<CodyDisplayStageProps> = ({
                 activeBackground === "training" && (
                   <div className="absolute inset-0 z-0">
                     <img
-                      src={trainingBgUrl || "/assets/codygame/background_5-1.jpg"}
+                      src={
+                        trainingBgUrl || "/assets/codygame/background_5-1.jpg"
+                      }
                       className="h-full w-full object-cover object-center"
                       alt="background-training"
                     />
@@ -99,7 +107,9 @@ export const CodyDisplayStage: React.FC<CodyDisplayStageProps> = ({
                 ) && (
                   <div className="absolute inset-0 z-0">
                     <img
-                      src={orientalBgUrl || "/assets/codygame/background_3-1.jpg"}
+                      src={
+                        orientalBgUrl || "/assets/codygame/background_3-1.jpg"
+                      }
                       className="h-full w-full object-cover object-[center_10%]"
                       alt="background-scene"
                     />
@@ -138,30 +148,14 @@ export const CodyDisplayStage: React.FC<CodyDisplayStageProps> = ({
           }
         >
           <div className="relative">
-            <DroppableCharacter
-              equippedIds={equippedIds}
-              activeId={activeId}
-              isFinished={isFinished}
-              resultImage={resultImage}
-              scale={scaleWhenFinished}
-              isMobile={isMobile}
-              availableItems={availableItems}
-            />
+            <DroppableCharacter scale={scaleWhenFinished} />
           </div>
         </PolaroidFrame>
       ) : (
         <div
           className={`transition-opacity duration-300 ${contentVisible ? "opacity-100" : "opacity-0"}`}
         >
-          <DroppableCharacter
-            equippedIds={equippedIds}
-            activeId={activeId}
-            isFinished={isFinished}
-            resultImage={resultImage}
-            scale={characterScale}
-            isMobile={isMobile}
-            availableItems={availableItems}
-          />
+          <DroppableCharacter scale={mannequinScale} />
         </div>
       )}
     </div>

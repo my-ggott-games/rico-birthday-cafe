@@ -2,27 +2,21 @@ import React from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { motion } from "framer-motion";
 import { CODY_CHARACTER_CANVAS } from "./codyStageLayout";
-import type { CodyItem, EquippedState, EquipmentSlot } from "./codyTypes";
+import type { EquipmentSlot } from "./codyTypes";
+import { AVAILABLE_ITEMS } from "../../../features/cody/codyGameData";
+import { useCodyGameStore } from "../../../store/useCodyGameStore";
 
 interface DroppableCharacterProps {
-  equippedIds: EquippedState;
-  activeId: string | null;
-  isFinished?: boolean;
-  resultImage?: string | null;
   scale?: number;
-  isMobile?: boolean;
-  availableItems?: CodyItem[];
 }
 
 export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
-  equippedIds,
-  activeId,
-  isFinished = false,
-  resultImage = null,
   scale = 1,
-  isMobile = false,
-  availableItems = [],
 }) => {
+  const { equippedIds, activeId, isFinished, resultImage, windowWidth } =
+    useCodyGameStore();
+  const isMobile = windowWidth < 768;
+
   const { setNodeRef } = useDroppable({
     id: "character-zone",
     disabled: isMobile || isFinished,
@@ -48,7 +42,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
   const getItem = (slot: EquipmentSlot) => {
     const id = equippedIds[slot];
     if (!id) return null;
-    return availableItems.find((i) => i.id === id) ?? null;
+    return AVAILABLE_ITEMS.find((i) => i.id === id) ?? null;
   };
 
   const renderHairBackLayer = () => {
@@ -93,7 +87,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
     if (slot === "hair") return null;
     const id = equippedIds[slot];
     if (!id) return null;
-    const item = availableItems.find((i) => i.id === id);
+    const item = AVAILABLE_ITEMS.find((i) => i.id === id);
     if (!item) return null;
     const itemZIndex = zIndex ?? item.layerPriority ?? zIndexMap[slot] ?? 30;
 
@@ -109,7 +103,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
               <img
                 src={item.layers.back}
                 className={overlayStyle}
-                style={{ zIndex: -1 }} // Relative to the motion.div's zIndex
+                style={{ zIndex: -1 }}
                 alt={`${id} back`}
               />
             )}
@@ -151,10 +145,8 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
           transform: `scale(${scale})`,
         }}
       >
-        {/* Layer order */}
         {renderHairBackLayer()}
 
-        {/* Body */}
         <motion.img
           src="/assets/codygame/riko_body_default.png"
           alt="Base Character"
