@@ -94,8 +94,8 @@ export const Board: React.FC<BoardProps> = ({
             gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
             gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`,
             gap: "clamp(8px, 2.2vw, 18px)",
-            width: "100%",
-            height: "100%",
+            position: "absolute",
+            inset: "var(--board-padding)",
           }}
         >
           {grid.map((row, r) =>
@@ -116,8 +116,7 @@ export const Board: React.FC<BoardProps> = ({
                   style={{
                     background:
                       "linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.05) 100%)",
-                    borderRadius: "var(--cell-radius)",
-                    border: "2px solid rgba(244,255,249,0.78)",
+                    borderRadius: "calc(var(--cell-radius) + var(--board-padding))",
                   }}
                 />
                 <AnimatePresence mode="popLayout">

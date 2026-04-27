@@ -11,6 +11,7 @@ interface ItemsProps {
   isSwapMode: boolean;
   isAdmin: boolean;
   debugMode: boolean;
+  gameOver: boolean;
   onUndo: () => void;
   onToggleSwapMode: () => void;
   onShuffle: () => void;
@@ -28,6 +29,7 @@ export const Items: React.FC<ItemsProps> = ({
   isSwapMode,
   isAdmin,
   debugMode,
+  gameOver,
   onUndo,
   onToggleSwapMode,
   onShuffle,
@@ -40,7 +42,7 @@ export const Items: React.FC<ItemsProps> = ({
         <PushableButton
           variant="navy"
           onClick={onUndo}
-          disabled={undoCount <= 0 || historyLength === 0}
+          disabled={gameOver || undoCount <= 0 || historyLength === 0}
           className={ITEM_BTN}
         >
           <AppIcon name="RotateCcw" size={24} className="mb-1" />
@@ -57,7 +59,7 @@ export const Items: React.FC<ItemsProps> = ({
         <PushableButton
           variant={isSwapMode ? "teal" : "light"}
           onClick={onToggleSwapMode}
-          disabled={swapCount <= 0}
+          disabled={gameOver || swapCount <= 0}
           className={ITEM_BTN}
         >
           <AppIcon name="ArrowLeftRight" size={24} className="mb-1" />
@@ -74,7 +76,7 @@ export const Items: React.FC<ItemsProps> = ({
         <PushableButton
           variant="mint"
           onClick={onShuffle}
-          disabled={shuffleCount <= 0}
+          disabled={gameOver || shuffleCount <= 0}
           className={ITEM_BTN}
         >
           <AppIcon name="Shuffle" size={24} className="mb-1" />
