@@ -136,8 +136,21 @@ button {
 
 @font-face {
   font-family: "OneStoreMobilePop";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-POP.woff") format("woff");
+  src:
+    url("./assets/fonts/ONE-Mobile-POP.woff") format("woff"),
+    url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-POP.woff") format("woff");
   font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JoseonPalace";
+  src:
+    url("./assets/fonts/JoseonPalace.woff") format("woff"),
+    url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/ChosunGs.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
   font-display: swap;
 }
 
@@ -649,6 +662,7 @@ button {
   position: relative;
   z-index: 0;
   display: inline-block;
+  font-family: "OneStoreMobilePop", system-ui, sans-serif;
 }
 
 .landing-enter-text-stroke::before {

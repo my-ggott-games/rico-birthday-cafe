@@ -7,6 +7,7 @@ import { AdminModal } from "../components/auth/AdminModal";
 import { AuthModal } from "../components/auth/AuthModal";
 import { NoteModal } from "../components/common/NoteModal";
 import { PushableButton } from "../components/common/PushableButton";
+import ProgressiveBackground from "../components/common/ProgressiveBackground";
 import { usePageBgm } from "../hooks/usePageBgm";
 import {
   PUZZLE_MUSEUM_UNLOCK_EVENT,
@@ -22,10 +23,7 @@ import {
   addAchievementToast,
   parseAchievementAwardResponse,
 } from "../utils/achievementAwards";
-import {
-  LobbyHotspot,
-  LobbyIconTile,
-} from "../features/lobby/LobbyHotspot";
+import { LobbyHotspot, LobbyIconTile } from "../features/lobby/LobbyHotspot";
 import {
   getLobbyNoteContent,
   type LobbyNoteKey,
@@ -47,9 +45,6 @@ const Lobby: React.FC = () => {
   const addToast = useToastStore((state) => state.addToast);
 
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  const [backgroundSrc, setBackgroundSrc] = useState(
-    "/pages/lobby/background-thumb.jpg",
-  );
   const [isAchievementOpen, setIsAchievementOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -75,35 +70,18 @@ const Lobby: React.FC = () => {
 
   useEffect(() => {
     console.log("519_2024"); // Easter Egg
-    let isCancelled = false;
 
     const handleResize = () => setWindowWidth(window.innerWidth);
     const handlePuzzleUnlock = () =>
       setIsPuzzleMuseumUnlocked(
         window.localStorage.getItem(PUZZLE_MUSEUM_UNLOCK_KEY) === "true",
       );
-    const backgroundImage = new Image();
-    backgroundImage.src = "/pages/lobby/background.webp";
-
-    const revealBackground = () => {
-      if (!isCancelled) {
-        setBackgroundSrc("/pages/lobby/background.webp");
-      }
-    };
-
-    if (backgroundImage.complete) {
-      revealBackground();
-    } else {
-      backgroundImage.onload = revealBackground;
-    }
 
     window.addEventListener("resize", handleResize);
     window.addEventListener("storage", handlePuzzleUnlock);
     window.addEventListener(PUZZLE_MUSEUM_UNLOCK_EVENT, handlePuzzleUnlock);
 
     return () => {
-      isCancelled = true;
-      backgroundImage.onload = null;
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("storage", handlePuzzleUnlock);
       window.removeEventListener(
@@ -306,6 +284,7 @@ const Lobby: React.FC = () => {
   ]);
 
   const isMobile = windowWidth < 768;
+  const isCompactMobile = windowWidth < 390;
   const hasSecretNoteAccess = isAdmin || isEasterEggNoteAccess;
   const canViewSecretNotes = hasSecretNoteAccess && isNoteToggleOn;
   const noteToggleButton = hasSecretNoteAccess ? (
@@ -333,7 +312,7 @@ const Lobby: React.FC = () => {
         }
       }}
       variant="mint"
-      className={`${isMobile ? "min-h-9 px-3 py-1 text-sm" : "min-h-[2.75rem] px-7 py-2 text-base"} rounded-full`}
+      className={`${isMobile ? "min-h-9 shrink-0 px-2.5 py-1 text-[11px]" : "min-h-[2.75rem] px-7 py-2 text-base"} rounded-full`}
     >
       <span className="flex items-center gap-1.5 whitespace-nowrap">
         <AppIcon name="IdCardLanyard" size={16} />
@@ -345,10 +324,10 @@ const Lobby: React.FC = () => {
     <PushableButton
       onClick={() => navigate("/credits")}
       variant="cream"
-      className={`${isMobile ? "min-h-9 px-3 py-1 text-sm" : "min-h-[2.75rem] px-7 py-2 text-base"} rounded-full`}
+      className={`${isMobile ? `${isCompactMobile ? "min-h-9 shrink min-w-0 px-1.5 py-1 text-[10px]" : "min-h-9 shrink min-w-0 px-2 py-1 text-[11px]"}` : "min-h-[2.75rem] px-7 py-2 text-base"} rounded-full`}
     >
       <span className="flex items-center gap-1.5 whitespace-nowrap">
-        <AppIcon name="Clapperboard" size={16} /> Who Made This?!
+        <AppIcon name="Clapperboard" size={isCompactMobile ? 14 : 16} /> Who Made This?!
       </span>
     </PushableButton>
   );
@@ -364,11 +343,15 @@ const Lobby: React.FC = () => {
 
   return (
     <div className="relative w-full min-h-screen overflow-x-hidden bg-[#FFFFF8]">
-      <div
-        className="absolute inset-0 pointer-events-none bg-center bg-cover bg-no-repeat"
-        style={{
-          backgroundImage: `url('${backgroundSrc}')`,
-        }}
+      <ProgressiveBackground
+        thumbnailSrc="/pages/lobby/background-thumb.jpg"
+        midSrc="/pages/lobby/background-mid.webp"
+        fullSrc="/pages/lobby/background-full.webp"
+        className="z-0"
+        overlayClassName="bg-transparent"
+        imageClassName="object-cover object-center"
+        showVignette={false}
+        fullResLoadDelayMs={420}
       />
       <div className="absolute inset-0 pointer-events-none bg-white/30" />
 
@@ -378,8 +361,12 @@ const Lobby: React.FC = () => {
         <header
           className={`flex justify-center ${isMobile ? "items-start mb-2" : "items-center"}`}
         >
-          <div className={`flex flex-col items-center ${isMobile ? "gap-1" : "gap-3"}`}>
-            <div className="flex items-center gap-3">
+          <div
+            className={`flex flex-col items-center ${isMobile ? "gap-1" : "gap-3"}`}
+          >
+            <div
+              className={`${isMobile ? "flex w-full max-w-full items-center justify-center gap-2" : "flex items-center gap-3"}`}
+            >
               {noteToggleButton}
               {creditsButton}
               {profileButton}
@@ -503,15 +490,9 @@ const Lobby: React.FC = () => {
                 name="퍼즐 맞추기"
                 icon="Puzzle"
                 isMobile={isMobile}
-                bgColor={
-                  isMobile || isPuzzleMuseumUnlocked ? "#f5ecdd" : "#a3e635"
-                }
-                borderColor={
-                  isMobile || isPuzzleMuseumUnlocked ? "#ddd1bf" : "#84bf2e"
-                }
-                iconColor={
-                  isMobile || isPuzzleMuseumUnlocked ? "#b9ab97" : "#6e9f23"
-                }
+                bgColor="#f5ecdd"
+                borderColor="#ddd1bf"
+                iconColor="#b9ab97"
               />
             </motion.div>
           </LobbyHotspot>

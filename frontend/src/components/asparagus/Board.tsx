@@ -41,7 +41,7 @@ const ArrowButton = ({
       className="h-20 w-20 px-0 py-0 lg:h-[5.5rem] lg:w-[5.5rem]"
       aria-label={`${dir} 이동`}
     >
-      <AppIcon name={icons[dir]} size={38} strokeWidth={2.8} />
+      <AppIcon name={icons[dir]} size={38} />
     </PushableButton>
   );
 };
@@ -116,7 +116,8 @@ export const Board: React.FC<BoardProps> = ({
                   style={{
                     background:
                       "linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.05) 100%)",
-                    borderRadius: "calc(var(--cell-radius) + var(--board-padding))",
+                    borderRadius:
+                      "calc(var(--cell-radius) + var(--board-padding))",
                   }}
                 />
                 <AnimatePresence mode="popLayout">

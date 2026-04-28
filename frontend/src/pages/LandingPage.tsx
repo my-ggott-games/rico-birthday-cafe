@@ -60,7 +60,8 @@ const LandingPage: React.FC = () => {
           <div className={LANDING_FRAME_CLASS}>
             <ProgressiveBackground
               thumbnailSrc="/pages/landing/background-thumb.jpg"
-              fullSrc="/pages/landing/background.webp"
+              midSrc="/pages/landing/background-mid.webp"
+              fullSrc="/pages/landing/background-full.webp"
               previewFetchPriority="high"
               className="z-0"
               overlayClassName="bg-transparent"

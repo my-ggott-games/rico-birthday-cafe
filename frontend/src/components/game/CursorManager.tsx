@@ -21,32 +21,32 @@ export const CursorManager: React.FC = () => {
   const cloverPalette = [
     {
       color: "#65a30d",
-      fillColor: "#d9f99d",
+      fillColor: "#c8f276",
       glow: "rgba(190, 242, 100, 0.34)",
     },
     {
       color: "#4d7c0f",
-      fillColor: "#ecfccb",
+      fillColor: "#dff5ae",
       glow: "rgba(217, 249, 157, 0.38)",
     },
     {
       color: "#15803d",
-      fillColor: "#bbf7d0",
+      fillColor: "#9eedb8",
       glow: "rgba(187, 247, 208, 0.34)",
     },
     {
       color: "#16a34a",
-      fillColor: "#dcfce7",
+      fillColor: "#c4f7d4",
       glow: "rgba(220, 252, 231, 0.36)",
     },
     {
       color: "#166534",
-      fillColor: "#86efac",
+      fillColor: "#6fe39a",
       glow: "rgba(134, 239, 172, 0.32)",
     },
     {
       color: "#84cc16",
-      fillColor: "#f7fee7",
+      fillColor: "#e9f8c8",
       glow: "rgba(236, 252, 203, 0.42)",
     },
   ];
