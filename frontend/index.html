@@ -13,6 +13,9 @@
       if (hasLoaded) return;
       hasLoaded = true;
 
+      w.removeEventListener("pointerdown", loadGtm);
+      w.removeEventListener("keydown", loadGtm);
+
       const firstScript = d.getElementsByTagName(s)[0];
       const gtmScript = d.createElement(s);
       const dataLayerSuffix = l !== "dataLayer" ? "&l=" + l : "";
@@ -24,18 +27,16 @@
 
     const scheduleLoad = () => {
       if ("requestIdleCallback" in w) {
-        w.requestIdleCallback(loadGtm, { timeout: 2500 });
+        w.requestIdleCallback(loadGtm, { timeout: 6000 });
         return;
       }
 
-      w.setTimeout(loadGtm, 1500);
+      w.setTimeout(loadGtm, 5000);
     };
 
-    if (d.readyState === "complete") {
-      scheduleLoad();
-    } else {
-      w.addEventListener("load", scheduleLoad, { once: true });
-    }
+    w.addEventListener("pointerdown", loadGtm, { once: true });
+    w.addEventListener("keydown", loadGtm, { once: true });
+    w.addEventListener("load", scheduleLoad, { once: true });
   })(window, document, "script", "dataLayer", "GTM-NX7NNRX5");
 </script>
 <!-- End Google Tag Manager -->
@@ -50,12 +51,11 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link
       rel="preload"
-      href="./src/assets/fonts/ONE-Mobile-POP.woff"
+      href="./src/assets/fonts/ONE-Mobile-POP-subset.woff"
       as="font"
       type="font/woff"
       crossorigin
     />
-    <link rel="preload" as="image" href="/pages/landing/background-thumb.jpg" fetchpriority="high" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#166D77" />
     <link rel="apple-touch-icon" href="/app/favicon.png" />

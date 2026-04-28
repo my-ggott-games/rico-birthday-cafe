@@ -1,9 +1,8 @@
-import { lazy, Suspense, useLayoutEffect } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import { usePageTracking } from "./hooks/usePageTracking";
 
-import { CursorManager } from "./components/game/CursorManager";
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
 import { useAuthStore } from "./store/useAuthStore";
 
@@ -21,6 +20,11 @@ const Credits = lazy(() => import("./pages/Credits"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const LandingCompareSample = lazy(() => import("./pages/LandingCompareSample"));
 
+const CursorManager = lazy(() =>
+  import("./components/game/CursorManager").then((m) => ({
+    default: m.CursorManager,
+  })),
+);
 const GlobalLoading = lazy(() => import("./components/common/GlobalLoading"));
 const AchievementToast = lazy(() => import("./components/common/AchievementToast").then(m => ({ default: m.AchievementToast })));
 const GlobalAudioToggle = lazy(() => import("./components/common/GlobalAudioToggle").then(m => ({ default: m.GlobalAudioToggle })));
@@ -28,6 +32,52 @@ const GlobalAudioToggle = lazy(() => import("./components/common/GlobalAudioTogg
 function PageTracker() {
   usePageTracking();
   return null;
+}
+
+function DeferredCursorManager() {
+  const [shouldRender, setShouldRender] = useState(false);
+
+  useEffect(() => {
+    if (shouldRender) {
+      return;
+    }
+
+    let timeoutId: number | null = null;
+
+    const enable = () => {
+      setShouldRender(true);
+      window.removeEventListener("pointerdown", enable);
+      window.removeEventListener("keydown", enable);
+    };
+
+    window.addEventListener("pointerdown", enable, { once: true });
+    window.addEventListener("keydown", enable, { once: true });
+
+    if (typeof window.requestIdleCallback === "function") {
+      window.requestIdleCallback(enable, { timeout: 5000 });
+    } else {
+      timeoutId = window.setTimeout(enable, 3500);
+    }
+
+    return () => {
+      window.removeEventListener("pointerdown", enable);
+      window.removeEventListener("keydown", enable);
+
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [shouldRender]);
+
+  if (!shouldRender) {
+    return null;
+  }
+
+  return (
+    <Suspense fallback={null}>
+      <CursorManager />
+    </Suspense>
+  );
 }
 
 function AuthHydrator() {
@@ -48,15 +98,16 @@ function AuthHydrator() {
 
 function NonLandingGlobals() {
   const { pathname } = useLocation();
+
+  if (pathname === "/") {
+    return null;
+  }
+
   return (
     <Suspense fallback={null}>
       <GlobalLoading />
-      {pathname !== "/" && (
-        <>
-          <AchievementToast />
-          <GlobalAudioToggle />
-        </>
-      )}
+      <AchievementToast />
+      <GlobalAudioToggle />
     </Suspense>
   );
 }
@@ -64,7 +115,7 @@ function NonLandingGlobals() {
 function App() {
   return (
     <div>
-      <CursorManager />
+      <DeferredCursorManager />
       <Router>
         <AuthHydrator />
         <PageTracker />

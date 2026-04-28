@@ -137,6 +137,7 @@ button {
 @font-face {
   font-family: "OneStoreMobilePop";
   src:
+    url("./assets/fonts/ONE-Mobile-POP-subset.woff") format("woff"),
     url("./assets/fonts/ONE-Mobile-POP.woff") format("woff"),
     url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-POP.woff") format("woff");
   font-weight: normal;
