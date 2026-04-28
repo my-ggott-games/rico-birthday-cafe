@@ -129,7 +129,7 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
         draggable={false}
         fetchPriority={previewFetchPriority}
         decoding="async"
-        style={{ willChange: "opacity, filter, transform" }}
+        style={{ willChange: nextSrc ? "opacity, filter, transform" : "auto" }}
         className={[
           "absolute inset-0 h-full w-full transition-[opacity,filter,transform] duration-[1800ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
           nextSrc
@@ -145,6 +145,7 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
           alt={alt}
           draggable={false}
           decoding="async"
+          fetchPriority={nextSrc === fullSrc ? "low" : "high"}
           onLoad={handleNextLoad}
           style={{ willChange: "opacity, filter, transform" }}
           className={[

@@ -56,7 +56,18 @@
       type="font/woff"
       crossorigin
     />
-    <link rel="manifest" href="/manifest.json" />
+    <link
+      rel="preload"
+      href="/pages/landing/background-thumb.jpg"
+      as="image"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      href="/pages/landing/background-mid.webp"
+      as="image"
+      fetchpriority="low"
+    />
     <meta name="theme-color" content="#166D77" />
     <link rel="apple-touch-icon" href="/app/favicon.png" />
     <script>
@@ -77,6 +88,14 @@
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
     <div id="root"></div>
+    <script>
+      window.addEventListener('load', function () {
+        var l = document.createElement('link');
+        l.rel = 'manifest';
+        l.href = '/manifest.json';
+        document.head.appendChild(l);
+      }, { once: true });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

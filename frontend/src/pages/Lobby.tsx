@@ -347,6 +347,7 @@ const Lobby: React.FC = () => {
         thumbnailSrc="/pages/lobby/background-thumb.jpg"
         midSrc="/pages/lobby/background-mid.webp"
         fullSrc="/pages/lobby/background-full.webp"
+        previewFetchPriority="high"
         className="z-0"
         overlayClassName="bg-transparent"
         imageClassName="object-cover object-center"

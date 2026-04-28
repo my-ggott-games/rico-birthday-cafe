@@ -19,6 +19,19 @@ const LandingPage: React.FC = () => {
     pushEvent("view_home");
   }, []);
 
+  useEffect(() => {
+    let timeoutId: number;
+    const prefetch = () => { import("./Lobby"); };
+
+    if (typeof window.requestIdleCallback === "function") {
+      window.requestIdleCallback(prefetch, { timeout: 4000 });
+    } else {
+      timeoutId = window.setTimeout(prefetch, 3000);
+    }
+
+    return () => { window.clearTimeout(timeoutId); };
+  }, []);
+
   const preventDrag = (event: React.DragEvent<HTMLElement>) => {
     event.preventDefault();
   };
