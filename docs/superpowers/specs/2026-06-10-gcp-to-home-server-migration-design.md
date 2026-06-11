@@ -4,12 +4,13 @@
 
 이 문서는 `rico-birthday-cafe`의 Spring Boot 백엔드와 PostgreSQL을 GCP Compute Engine에서 개인 MacBook으로 이전하기 위한 설계 및 인수인계 문서다.
 
-새 Codex 세션에서는 이 문서를 먼저 읽고, **남은 설계 항목을 확정한 뒤 구현 계획을 작성**한다. 아직 실제 운영 마이그레이션이나 GCP 리소스 삭제는 시작하지 않았다.
+새 Codex 세션에서는 이 문서를 먼저 읽고 구현 계획부터 작성한다. 아직 실제
+운영 마이그레이션이나 GCP 리소스 삭제는 시작하지 않았다.
 
 ## 승인 상태
 
 - 홈 서버 아키텍처: 2026년 6월 10일 사용자 승인
-- 상세 운영 및 프론트엔드 동기화 설계: 진행 중
+- 상세 운영 설계: 2026년 6월 11일 사용자 승인
 - 구현 계획: 상세 설계 승인 후 작성
 - 운영 마이그레이션 및 GCP 삭제: 미실행
 
@@ -50,6 +51,10 @@
 - 현재 두 DuckDNS 레코드는 GCP 고정 IP `34.169.16.108`을 가리킨다.
 - 테스트 시 먼저 개발 도메인을 홈 서버 공인 IP로 변경하고, 검증 후 운영 도메인을 전환한다.
 - 홈 공인 IP 변경에 대비해 DuckDNS 자동 갱신을 구성한다.
+- Netlify 환경변수는 이미 다음과 같이 구성되어 있어 도메인 전환 시 변경하지 않는다.
+  - Production: `https://riko-birthday-cafe.duckdns.org`
+  - Deploy Previews 및 Branch deploys: `https://dev-riko-birthday-cafe.duckdns.org`
+  - Local development: `http://localhost:8080`
 
 ## 홈 서버 환경
 
@@ -97,11 +102,17 @@ Spring Boot container
 PostgreSQL container + persistent volume
 ```
 
-Docker Compose로 다음 세 서비스를 함께 관리한다.
+Docker Compose로 다음 다섯 서비스를 함께 관리한다.
 
 1. `caddy`: TLS 종료 및 리버스 프록시
-2. `backend`: Spring Boot API
-3. `db`: PostgreSQL과 영구 데이터 볼륨
+2. `backend-prod`: `prod` 스키마를 사용하는 운영 Spring Boot API
+3. `backend-dev`: `dev` 스키마를 사용하는 개발 Spring Boot API
+4. `db`: PostgreSQL 18과 영구 데이터 볼륨
+5. `duckdns`: 홈 공인 IP를 두 DuckDNS 레코드에 주기적으로 반영
+
+홈 서버 운영 구성은 기존 개발용 Compose 파일과 분리된
+`docker-compose.home.yml`에서 관리한다. 홈 서버 비밀값은 Git에서 제외되는
+`.env.home`에 저장한다.
 
 ## 네트워크 및 보안 원칙
 
@@ -113,6 +124,9 @@ Docker Compose로 다음 세 서비스를 함께 관리한다.
 - PostgreSQL은 Docker 내부 네트워크에서만 백엔드가 접근한다.
 - macOS 방화벽과 공유기 포트포워딩을 함께 사용한다.
 - 관리자 비밀번호, DB 비밀번호, JWT 비밀키, DuckDNS 토큰은 Git에 커밋하지 않는다.
+- 현재 대화에 노출된 DB 비밀번호, 운영·개발 JWT 비밀키 및 관리자 인증 정보는
+  마이그레이션 전환 시 모두 새 값으로 교체한다.
+- 운영과 개발 JWT 비밀키는 서로 다른 값으로 생성한다.
 
 ## HTTPS
 
@@ -121,6 +135,7 @@ Docker Compose로 다음 세 서비스를 함께 관리한다.
 - 인증서 발급을 위해 도메인이 홈 공인 IP를 가리키고 외부에서 `80/443`에 접근할 수 있어야 한다.
 - 먼저 `dev-riko-birthday-cafe.duckdns.org`로 인증서와 외부 접근을 검증한다.
 - 운영 전환 후 `riko-birthday-cafe.duckdns.org`를 사용한다.
+- 개발 도메인 검증 중에는 운영 도메인이 계속 GCP를 가리키도록 유지한다.
 
 ## macOS 운영 원칙
 
@@ -131,6 +146,10 @@ Docker Compose로 다음 세 서비스를 함께 관리한다.
 - Docker Desktop 자동 시작은 필수가 아니다. 필요할 때 수동 실행할 수 있다.
 - Wi-Fi 장애와 전원 종료는 허용 가능한 장애로 간주한다.
 - 약 50GB의 남은 공간을 고려해 Docker 로그 제한과 백업 보존 정책을 둔다.
+- `scripts/home-server-start.sh`가 Docker 준비 상태와 필수 환경변수를 검사한 뒤
+  홈 서버 Compose 스택을 시작한다.
+- `scripts/home-server-stop.sh`가 Compose 스택과 PostgreSQL을 정상 종료한다.
+- `scripts/home-server-backup.sh`는 사용자가 종료 전에 수동 실행한다.
 
 ## 로컬 실행 검증 결과
 
@@ -147,9 +166,31 @@ Docker Compose로 다음 세 서비스를 함께 관리한다.
 
 이 검증은 현재 로컬 개발 DB를 대상으로 했으며, GCP 운영 데이터 복원 검증은 아직 하지 않았다.
 
+운영 마이그레이션에서는 기존 로컬 개발 DB와 별도로 PostgreSQL
+`postgres:18` 이미지를 사용한다.
+
+## 확인된 GCP 데이터베이스
+
+- 컨테이너: `riko-postgres`
+- 이미지: `postgres:18`
+- 서버 및 도구 버전: PostgreSQL 18.3
+- 데이터베이스: `riko_birthday_cafe_db`
+- 데이터베이스 크기: 약 8.8MB
+- Docker 볼륨: `deploy_riko_postgres_data`
+- 볼륨 사용량: 약 67MB
+- 별도 확장: 없음 (`plpgsql`만 사용)
+- 운영 백엔드: `rico-backend-prod`, `currentSchema=prod`
+- 개발 백엔드: `rico-backend-dev`, `currentSchema=dev`
+- `public` 스키마도 전체 DB 백업에 포함하되 백엔드에서는 사용하지 않는다.
+
+GCP 호스트에서는 현재 `5432`, `8000`, `8001`이 모든 인터페이스에
+바인딩되어 있다. 홈 서버에서는 이 포트들을 외부에 공개하지 않는다.
+
 ## 데이터 마이그레이션
 
-전체 데이터를 보존한다. 서비스 점검 시간에는 제한이 없으므로 무중단 복제보다 단순하고 안전한 오프라인 백업/복원을 사용한다.
+전체 데이터베이스를 보존한다. `prod`, `dev`, `public` 스키마를 모두
+포함한다. 서비스 점검 시간에는 제한이 없으므로 무중단 복제보다 단순하고
+안전한 오프라인 백업/복원을 사용한다.
 
 권장 흐름:
 
@@ -157,12 +198,23 @@ Docker Compose로 다음 세 서비스를 함께 관리한다.
 2. GCP PostgreSQL에서 custom format `pg_dump`를 생성한다.
 3. 덤프 파일의 크기와 체크섬을 기록한다.
 4. 덤프를 MacBook으로 안전하게 전송한다.
-5. 별도의 빈 로컬 운영 DB에 `pg_restore`한다.
+5. PostgreSQL 18 기반의 별도 빈 로컬 운영 DB에 `pg_restore`한다.
 6. 주요 테이블의 행 수, 사용자 수, 점수, 업적 및 외래키를 비교한다.
 7. 로컬 백엔드로 로그인, 조회, 점수 저장, 업적 저장을 시험한다.
 8. 검증이 끝날 때까지 원본 덤프와 GCP VM을 유지한다.
 
-PostgreSQL 서버 버전 차이로 인한 문제를 줄이기 위해 덤프 도구 버전과 복원 대상 버전을 구현 계획에서 확정해야 한다.
+덤프는 GCP PostgreSQL 18.3 컨테이너의 `pg_dump`로 생성하고, 홈 서버의
+PostgreSQL 18에 복원한다.
+
+### 백업 보존
+
+- `scripts/home-server-backup.sh`를 사용자가 수동 실행한다.
+- MacBook 내부에는 성공한 최근 7개 백업만 보존한다.
+- 새 백업 생성과 체크섬 검증이 성공한 뒤에만 가장 오래된 백업을 삭제한다.
+- 외장 디스크에 최소 1개 백업을 복사한다.
+- MacBook과 외장 디스크 파일의 SHA-256 체크섬을 비교한다.
+- 외장 디스크가 연결되고 복사·검증되기 전에는 GCP 리소스를 삭제하지 않는다.
+- 외장 복사가 실패하면 기존 백업을 삭제하지 않는다.
 
 ## 프론트엔드 장애 처리
 
@@ -191,9 +243,12 @@ PostgreSQL 서버 버전 차이로 인한 문제를 줄이기 위해 덤프 도�
 3. 최종 DB 덤프 및 로컬 복원
 4. 로컬 API 전체 기능 검증
 5. 운영 DuckDNS 레코드를 홈 공인 IP로 변경
-6. Netlify 프론트엔드의 운영 API 주소 변경 및 배포
+6. Netlify 환경변수가 기존 운영 DuckDNS 도메인을 유지하는지 재확인
 7. 외부 네트워크에서 최종 검증
 8. 관찰 기간 후 GCP 리소스 삭제
+
+전환 후 7일 동안 GCP VM은 중지 상태로 유지한다. VM 실행 비용은 차단되지만
+부팅 디스크와 예약 외부 IP 비용은 관찰 기간 동안 발생할 수 있다.
 
 ### 롤백
 
@@ -201,6 +256,8 @@ PostgreSQL 서버 버전 차이로 인한 문제를 줄이기 위해 덤프 도�
 - GCP 원본 DB는 롤백 기간 동안 읽기/쓰기 재개가 가능하도록 유지한다.
 - 홈 서버에서 새로 발생한 데이터를 GCP에 역반영하는 절차가 없으므로, 전환 후 양쪽 DB에 동시에 쓰지 않는다.
 - GCP 삭제 후 롤백은 보관한 덤프로 새 환경을 복구하는 방식만 가능하다.
+- 7일 관찰 기간에 문제가 생기면 GCP VM을 다시 시작하고 DuckDNS를
+  `34.169.16.108`로 되돌린다.
 
 ## GCP 과금 제거 점검 범위
 
@@ -237,27 +294,28 @@ PostgreSQL 서버 버전 차이로 인한 문제를 줄이기 위해 덤프 도�
 - 외부 공개 포트는 `80/443`만 사용
 - Docker Compose + Caddy + Spring Boot + PostgreSQL 구조 사용
 - 위 홈 서버 아키텍처 사용자 승인 완료
+- 홈 서버 구성은 `docker-compose.home.yml`로 개발 구성과 분리
+- PostgreSQL은 `postgres:18` 사용
+- 운영과 개발 백엔드를 모두 이전
+- 전체 DB의 `prod`, `dev`, `public` 스키마 보존
 - 개발 DuckDNS 도메인으로 먼저 시험
+- DuckDNS 갱신 컨테이너와 `.env.home` 사용
+- 시작·종료·백업 스크립트 제공
+- MacBook 최근 7개 백업 및 외장 디스크 최소 1개 복사
+- 홈 서버 전환 후 GCP VM을 중지하고 7일 관찰
+- 관찰 종료 후 과금 리소스 삭제
+- 노출된 비밀값은 전환 시 일괄 교체
 - 브라우저 영구 대기열과 자동 재전송은 이번 범위에서 제외
 
 ## 남은 설계 항목
 
-다음 항목은 구현 전에 순서대로 확정해야 한다.
-
-1. 운영 Compose 파일 구조와 개발 Compose 파일 분리 방식
-2. Caddy 설정과 두 DuckDNS 도메인의 전환 절차
-3. DuckDNS 공인 IP 자동 갱신 방식과 주기
-4. macOS 서버 시작/종료 스크립트
-5. Docker 로그 크기 제한과 DB 백업 보존 기간
-6. GCP PostgreSQL 버전과 실제 DB 용량
-7. `pg_dump` 전송 및 복원 검증 명령
-8. 관찰 기간과 GCP 삭제 시점
-9. Netlify 운영 환경변수의 현재 API 주소 및 변경 절차
+상세 설계는 완료되었다. 정확한 Compose 구성, Caddyfile, 스크립트,
+`pg_dump`/`pg_restore` 명령, 검증 명령 및 GCP 삭제 순서는 구현 계획에서
+파일과 명령 단위로 작성한다.
 
 ## 다음 세션 시작 지점
 
-이 문서를 읽은 뒤 `superpowers:brainstorming`을 계속 진행한다. 첫 질문은 다음과 같다.
+이 문서를 읽은 뒤 `superpowers:writing-plans`로 구현 계획을 작성한다.
 
-> 운영용 Compose 파일을 기존 개발용 Compose 파일과 분리해 `docker-compose.home.yml`로 관리해도 되는가?
-
-설계가 모두 승인되기 전에는 운영 파일 변경, 포트포워딩, DuckDNS 전환, 데이터 덤프 또는 GCP 삭제를 실행하지 않는다.
+구현 계획 승인 전에는 포트포워딩, DuckDNS 전환, 운영 데이터 덤프,
+비밀값 교체 또는 GCP 삭제를 실행하지 않는다.
