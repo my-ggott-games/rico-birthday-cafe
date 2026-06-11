@@ -2,7 +2,10 @@
 
 ## 문서 목적
 
-이 문서는 `rico-birthday-cafe`의 Spring Boot 백엔드와 PostgreSQL을 GCP Compute Engine에서 개인 MacBook으로 이전하기 위한 설계 및 인수인계 문서다.
+이 문서는 현재 `rico-birthday-cafe`로 잘못 표기된 프로젝트의 Spring Boot
+백엔드와 PostgreSQL을 GCP Compute Engine에서 개인 MacBook으로 이전하고,
+프로젝트 표기를 `riko-birthday-cafe`로 바로잡기 위한 설계 및 인수인계
+문서다.
 
 새 Codex 세션에서는 이 문서를 먼저 읽고 구현 계획부터 작성한다. 아직 실제
 운영 마이그레이션이나 GCP 리소스 삭제는 시작하지 않았다.
@@ -17,6 +20,7 @@
 ## 목표
 
 - GCP 과금을 0원 또는 가능한 한 0원에 가깝게 줄인다.
+- 프로젝트의 잘못된 `rico` 표기를 올바른 `riko`로 정규화한다.
 - Netlify 프론트엔드는 현재 무료 플랜과 설정을 그대로 유지한다.
 - 백엔드와 PostgreSQL을 필요할 때만 켤 수 있는 홈 서버로 이전한다.
 - 백엔드가 꺼져 있어도 기존 프론트엔드 게스트 모드를 계속 이용할 수 있어야 한다.
@@ -113,6 +117,38 @@ Docker Compose로 다음 다섯 서비스를 함께 관리한다.
 홈 서버 운영 구성은 기존 개발용 Compose 파일과 분리된
 `docker-compose.home.yml`에서 관리한다. 홈 서버 비밀값은 Git에서 제외되는
 `.env.home`에 저장한다.
+
+## Riko 명명 정규화
+
+`rico`는 잘못된 표기이며 새 홈 서버 구성과 활성 코드에서는 `riko`를
+사용한다. 마이그레이션 구현 계획에 다음 변경을 포함한다.
+
+- GitHub 저장소: `rico-birthday-cafe`에서 `riko-birthday-cafe`로 이름 변경
+- 로컬 저장소 디렉터리와 Git remote URL 갱신
+- 루트 패키지명과 문서의 프로젝트 경로
+- Java 패키지: `com.rico.birthdaycafe`에서 `com.riko.birthdaycafe`로 이동
+- Gradle group: `com.rico`에서 `com.riko`로 변경
+- Docker Compose 프로젝트, 컨테이너, 이미지, 네트워크 및 볼륨 이름
+- 로컬 DB 이름: `rico_db` 대신 `riko_birthday_cafe_db` 사용
+- 프론트엔드 내부 저장 키, 이벤트명, 전역 변수, CSS/Tailwind 토큰
+- 활성 배포 문서와 스크립트의 `rico` 식별자
+
+GCP의 기존 컨테이너명 `rico-backend-prod`, `rico-backend-dev`는 원본 환경을
+식별하기 위한 과거 이름으로만 기록한다. 홈 서버에서는 각각
+`riko-backend-prod`, `riko-backend-dev`를 사용한다.
+
+영속 데이터나 외부 계약에 쓰이는 식별자는 무조건 문자열 치환하지 않는다.
+예를 들어 업적 코드 `RICO_DEBUT_DATE`, 브라우저 localStorage 키, 이벤트명은
+기존 사용자 데이터와 호환되도록 다음 절차를 적용한다.
+
+1. 새 `RIKO_*` 식별자를 정의한다.
+2. DB 데이터와 참조 코드를 한 번에 이전한다.
+3. 필요한 브라우저 키는 기존 값을 읽어 새 키로 옮긴다.
+4. 이전 데이터와 신규 데이터에서 로그인, 업적 및 UI 설정을 검증한다.
+5. 호환성 검증 후에만 기존 `RICO_*` 처리를 제거한다.
+
+사용자 UID, 비밀번호 해시, 점수, 업적 획득 시각 등 실제 사용자 값은 이름
+정규화 과정에서 변경하지 않는다.
 
 ## 네트워크 및 보안 원칙
 
@@ -305,13 +341,15 @@ PostgreSQL 18에 복원한다.
 - 홈 서버 전환 후 GCP VM을 중지하고 7일 관찰
 - 관찰 종료 후 과금 리소스 삭제
 - 노출된 비밀값은 전환 시 일괄 교체
+- 저장소, Java 패키지, Docker, DB 및 프론트엔드 내부 식별자의 `rico`를
+  호환성 마이그레이션과 함께 `riko`로 정규화
 - 브라우저 영구 대기열과 자동 재전송은 이번 범위에서 제외
 
 ## 남은 설계 항목
 
 상세 설계는 완료되었다. 정확한 Compose 구성, Caddyfile, 스크립트,
-`pg_dump`/`pg_restore` 명령, 검증 명령 및 GCP 삭제 순서는 구현 계획에서
-파일과 명령 단위로 작성한다.
+`pg_dump`/`pg_restore` 명령, `rico`에서 `riko`로의 명명 변경 순서, 검증
+명령 및 GCP 삭제 순서는 구현 계획에서 파일과 명령 단위로 작성한다.
 
 ## 다음 세션 시작 지점
 
