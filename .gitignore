@@ -17,3 +17,6 @@ build/
 
 # Local Git worktrees
 .worktrees/
+
+# Production DB backups (contain real user data)
+backups/
