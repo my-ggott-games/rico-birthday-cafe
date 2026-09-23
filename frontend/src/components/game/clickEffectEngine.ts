@@ -17,6 +17,7 @@ const MAX_RINGS = 60;
 const MAX_DEVICE_PIXEL_RATIO = 2;
 
 const CLOVERS_PER_BURST = 10;
+const REDUCED_MOTION_CLOVERS_PER_BURST = 5;
 const SPARKLES_PER_BURST = 14;
 
 type Sprite = { canvas: HTMLCanvasElement; size: number };
@@ -148,7 +149,7 @@ export class ClickEffectEngine {
   private readonly flash: Sprite;
   private readonly particles: Particle[] = [];
   private readonly rings: Ring[] = [];
-  private readonly isReducedMotion: boolean;
+  private readonly reducedMotionQuery: MediaQueryList;
   private pixelRatio = 1;
   private frameId: number | null = null;
   private lastTime = 0;
@@ -157,9 +158,9 @@ export class ClickEffectEngine {
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.context = canvas.getContext("2d")!;
-    this.isReducedMotion = window.matchMedia(
+    this.reducedMotionQuery = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
-    ).matches;
+    );
     this.resize();
     const spriteScale = this.pixelRatio;
     this.clovers = CLOVER_PALETTE.map((palette) =>
@@ -180,14 +181,14 @@ export class ClickEffectEngine {
   }
 
   burst(x: number, y: number) {
-    this.addRing(x, y, 6, 64, 0, 0.55);
-
-    if (this.isReducedMotion) {
+    if (this.reducedMotionQuery.matches) {
+      this.addClovers(x, y, REDUCED_MOTION_CLOVERS_PER_BURST);
       this.start();
       return;
     }
 
-    this.addRing(x, y, 4, 96, 0.1, 0.7);
+    this.addRing(x, y, 2, 16, 0, 0.55);
+    this.addRing(x, y, 1, 24, 0.1, 0.7);
     this.addParticle({
       kind: "flash",
       sprite: this.flash,
@@ -204,33 +205,11 @@ export class ClickEffectEngine {
       phase: 0,
     });
 
-    const angleOffset = Math.random() * Math.PI * 2;
-    for (let i = 0; i < CLOVERS_PER_BURST; i += 1) {
-      const angle =
-        angleOffset +
-        (Math.PI * 2 * i) / CLOVERS_PER_BURST +
-        randomBetween(-0.25, 0.25);
-      const speed = randomBetween(260, 420);
-      this.addParticle({
-        kind: "clover",
-        sprite: this.clovers[Math.floor(Math.random() * this.clovers.length)],
-        x,
-        y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        rotation: Math.random() * Math.PI * 2,
-        spin: randomBetween(-4, 4),
-        size: randomBetween(52, 76),
-        age: 0,
-        delay: 0,
-        life: randomBetween(0.7, 0.95),
-        phase: 0,
-      });
-    }
+    this.addClovers(x, y, CLOVERS_PER_BURST);
 
     for (let i = 0; i < SPARKLES_PER_BURST; i += 1) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = randomBetween(120, 520);
+      const speed = randomBetween(80, 340);
       this.addParticle({
         kind: "sparkle",
         sprite: this.sparkle,
@@ -258,6 +237,30 @@ export class ClickEffectEngine {
     }
     this.particles.length = 0;
     this.rings.length = 0;
+  }
+
+  private addClovers(x: number, y: number, count: number) {
+    const angleOffset = Math.random() * Math.PI * 2;
+    for (let i = 0; i < count; i += 1) {
+      const angle =
+        angleOffset + (Math.PI * 2 * i) / count + randomBetween(-0.25, 0.25);
+      const speed = randomBetween(170, 280);
+      this.addParticle({
+        kind: "clover",
+        sprite: this.clovers[Math.floor(Math.random() * this.clovers.length)],
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        rotation: Math.random() * Math.PI * 2,
+        spin: randomBetween(-4, 4),
+        size: randomBetween(52, 76),
+        age: 0,
+        delay: 0,
+        life: randomBetween(0.7, 0.95),
+        phase: 0,
+      });
+    }
   }
 
   private addParticle(particle: Particle) {
@@ -330,16 +333,16 @@ export class ClickEffectEngine {
       const alpha = (1 - progress) ** 1.5;
       context.beginPath();
       context.arc(ring.x, ring.y, radius, 0, Math.PI * 2);
-      context.lineWidth = 12;
+      context.lineWidth = 6;
       context.strokeStyle = `rgba(94, 199, 165, ${0.28 * alpha})`;
       context.stroke();
-      context.lineWidth = 5;
+      context.lineWidth = 2.5;
       context.strokeStyle = `rgba(94, 199, 165, ${0.55 * alpha})`;
       context.stroke();
-      context.lineWidth = 2;
+      context.lineWidth = 1;
       context.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
       context.stroke();
-      markDirty(ring.x, ring.y, radius + 8);
+      markDirty(ring.x, ring.y, radius + 4);
     }
     this.rings.length = ringWrite;
 
