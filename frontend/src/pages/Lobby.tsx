@@ -23,7 +23,7 @@ import {
   addAchievementToast,
   parseAchievementAwardResponse,
 } from "../utils/achievementAwards";
-import { LobbyHotspot, LobbyIconTile } from "../features/lobby/LobbyHotspot";
+import { ChikoPlayground } from "../features/lobby/chiko/ChikoPlayground";
 import {
   getLobbyNoteContent,
   type LobbyNoteKey,
@@ -327,7 +327,8 @@ const Lobby: React.FC = () => {
       className={`${isMobile ? `${isCompactMobile ? "min-h-9 shrink min-w-0 px-1.5 py-1 text-[10px]" : "min-h-9 shrink min-w-0 px-2 py-1 text-[11px]"}` : "min-h-[2.75rem] px-7 py-2 text-base"} rounded-full`}
     >
       <span className="flex items-center gap-1.5 whitespace-nowrap">
-        <AppIcon name="Clapperboard" size={isCompactMobile ? 14 : 16} /> Who Made This?!
+        <AppIcon name="Clapperboard" size={isCompactMobile ? 14 : 16} /> Who
+        Made This?!
       </span>
     </PushableButton>
   );
@@ -455,88 +456,11 @@ const Lobby: React.FC = () => {
             </motion.button>
           )}
         </div>
-        <div
-          className={`flex-1 relative ${isMobile ? "mt-2 grid grid-cols-2 gap-x-3 gap-y-4 place-items-center content-center pb-8" : "mt-6 flex flex-wrap justify-center items-center gap-6 pb-8"}`}
-        >
-          {/* Hotspot: TPO Cody (Paper Doll Table) */}
-          <LobbyHotspot
-            to="/game/cody"
-            noteKey="cody"
-            noteVisible={canViewSecretNotes}
-            onOpenNote={setActiveNoteKey}
-            isMobile={isMobile}
-          >
-            <motion.div whileHover={{ scale: 1.05 }} className="group">
-              <LobbyIconTile
-                name="리코의 외출 준비"
-                icon="Shirt"
-                isMobile={isMobile}
-                bgColor="#FFE4E6"
-                borderColor="#e7bcc2"
-                iconColor="#cf9aa3"
-              />
-            </motion.div>
-          </LobbyHotspot>
-
-          {/* Hotspot: Mini Game (Puzzle) */}
-          <LobbyHotspot
-            to="/game/puzzle"
-            noteKey="puzzle"
-            noteVisible={canViewSecretNotes}
-            onOpenNote={setActiveNoteKey}
-            isMobile={isMobile}
-          >
-            <motion.div whileHover={{ scale: 1.05 }} className="group">
-              <LobbyIconTile
-                name="퍼즐 맞추기"
-                icon="Puzzle"
-                isMobile={isMobile}
-                bgColor="#f5ecdd"
-                borderColor="#ddd1bf"
-                iconColor="#b9ab97"
-              />
-            </motion.div>
-          </LobbyHotspot>
-
-          {/* Hotspot: Asparagus Merge (2048 style) */}
-          <LobbyHotspot
-            to="/game/asparagus"
-            noteKey="asparagus"
-            noteVisible={canViewSecretNotes}
-            onOpenNote={setActiveNoteKey}
-            isMobile={isMobile}
-          >
-            <motion.div whileHover={{ scale: 1.05 }} className="group">
-              <LobbyIconTile
-                name="아스파라거스 키우기"
-                icon="Sprout"
-                isMobile={isMobile}
-                bgColor="#d4edda"
-                borderColor="#aad0b2"
-                iconColor="#2d6a4f"
-              />
-            </motion.div>
-          </LobbyHotspot>
-
-          <LobbyHotspot
-            to="/game/adventure"
-            noteKey="adventure"
-            noteVisible={canViewSecretNotes}
-            onOpenNote={setActiveNoteKey}
-            isMobile={isMobile}
-          >
-            <motion.div whileHover={{ scale: 1.05 }} className="group">
-              <LobbyIconTile
-                name="용사 리코 이야기"
-                icon="Swords"
-                isMobile={isMobile}
-                bgColor="#d8e4f7"
-                borderColor="#aebed7"
-                iconColor="#102542"
-              />
-            </motion.div>
-          </LobbyHotspot>
-        </div>
+        <ChikoPlayground
+          isMobile={isMobile}
+          noteVisible={canViewSecretNotes}
+          onOpenNote={setActiveNoteKey}
+        />
       </div>
       {isMobile && adminButton}
 
