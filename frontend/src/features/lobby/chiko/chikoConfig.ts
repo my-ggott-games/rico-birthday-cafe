@@ -85,3 +85,17 @@ export const getChikoDirection = (dx: number, dy: number): ChikoDirection => {
   const octant = Math.round(angle / (Math.PI / 4));
   return DIRECTIONS_BY_OCTANT[(octant + 8) % 8];
 };
+
+export const getNextTurnDirection = (
+  current: ChikoDirection,
+  target: ChikoDirection,
+): ChikoDirection => {
+  const from = DIRECTIONS_BY_OCTANT.indexOf(current);
+  const to = DIRECTIONS_BY_OCTANT.indexOf(target);
+  const clockwiseSteps = (to - from + 8) % 8;
+  if (clockwiseSteps === 0) {
+    return current;
+  }
+  const step = clockwiseSteps <= 4 ? 1 : -1;
+  return DIRECTIONS_BY_OCTANT[(from + step + 8) % 8];
+};

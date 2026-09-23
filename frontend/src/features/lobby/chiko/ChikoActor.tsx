@@ -12,6 +12,7 @@ import { getLobbyNoteTitle, type LobbyNoteKey } from "../lobbyNotes";
 import {
   CHIKO_SPRITE_ASPECT,
   getChikoDirection,
+  getNextTurnDirection,
   type ChikoDirection,
   type LobbyChikoGame,
 } from "./chikoConfig";
@@ -27,6 +28,7 @@ const MAX_STEP_RATIO_X = 0.4;
 const MAX_STEP_RATIO_Y = 0.5;
 const FAR_SCALE = 0.8;
 const BOTTOM_PADDING_PX = 8;
+const TURN_STEP_MS = 90;
 
 export type ChikoPosition = { rx: number; ry: number };
 
@@ -88,6 +90,38 @@ const STILL_ANIMATION: TargetAndTransition = {
   scaleX: 1,
   scaleY: 1,
   transition: { type: "spring", stiffness: 520, damping: 18 },
+};
+
+const DANGLE_ANIMATION: TargetAndTransition = {
+  rotate: [0, 7, 0, -7, 0],
+  transition: { duration: 2.4, repeat: Infinity, ease: "easeInOut" },
+};
+
+const SETTLE_ANIMATION: TargetAndTransition = {
+  rotate: 0,
+  transition: { type: "spring", stiffness: 260, damping: 14 },
+};
+
+const useTurningDirection = (
+  target: ChikoDirection,
+  isInstant: boolean,
+): ChikoDirection => {
+  const [current, setCurrent] = useState(target);
+
+  useEffect(() => {
+    if (current === target) {
+      return;
+    }
+
+    const timer = setTimeout(
+      () =>
+        setCurrent(isInstant ? target : getNextTurnDirection(current, target)),
+      isInstant ? 0 : TURN_STEP_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [current, target, isInstant]);
+
+  return current;
 };
 
 type ChikoActorProps = {
@@ -189,7 +223,7 @@ export const ChikoActor: React.FC<ChikoActorProps> = ({
 
     let isCancelled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    let controls: AnimationPlaybackControls[] = [];
+    let control: AnimationPlaybackControls | undefined;
 
     const rest = (delayMs: number) => {
       timer = setTimeout(walk, delayMs);
@@ -225,20 +259,21 @@ export const ChikoActor: React.FC<ChikoActorProps> = ({
       );
       setDirection(getChikoDirection(dx, dy));
       setIsWalking(true);
-      controls = [
-        animate(rx, toX, { duration, ease: "linear" }),
-        animate(ry, toY, {
-          duration,
-          ease: "linear",
-          onComplete: () => {
-            if (isCancelled) {
-              return;
-            }
-            setIsWalking(false);
-            rest(randomBetween(MIN_REST_MS, MAX_REST_MS));
-          },
-        }),
-      ];
+      control = animate(0, 1, {
+        duration,
+        ease: "linear",
+        onUpdate: (progress) => {
+          rx.set(fromX + (toX - fromX) * progress);
+          ry.set(fromY + (toY - fromY) * progress);
+        },
+        onComplete: () => {
+          if (isCancelled) {
+            return;
+          }
+          setIsWalking(false);
+          rest(randomBetween(MIN_REST_MS, MAX_REST_MS));
+        },
+      });
     };
 
     rest(resumeDelayRef.current ?? randomBetween(500, 3000));
@@ -247,7 +282,7 @@ export const ChikoActor: React.FC<ChikoActorProps> = ({
     return () => {
       isCancelled = true;
       clearTimeout(timer);
-      controls.forEach((control) => control.stop());
+      control?.stop();
       setIsWalking(false);
     };
   }, [isPaused, isAreaReady, rx, ry]);
@@ -341,8 +376,12 @@ export const ChikoActor: React.FC<ChikoActorProps> = ({
     onEnter(game);
   };
 
-  const visibleDirection: ChikoDirection =
+  const targetDirection: ChikoDirection =
     isReducedMotion || isDragging || isLabelVisible ? "front" : direction;
+  const visibleDirection = useTurningDirection(
+    targetDirection,
+    isReducedMotion,
+  );
 
   let bodyAnimation = STILL_ANIMATION;
   if (isDragging) {
@@ -355,7 +394,7 @@ export const ChikoActor: React.FC<ChikoActorProps> = ({
 
   return (
     <motion.div
-      className="absolute left-0 top-0"
+      className="absolute left-0 top-0 h-0 w-0"
       style={{ x, y, zIndex: isDragging || isLabelVisible ? 200 : zIndex }}
     >
       <div
@@ -401,12 +440,17 @@ export const ChikoActor: React.FC<ChikoActorProps> = ({
             animate={bodyAnimation}
             className={`absolute inset-0 origin-bottom touch-none select-none rounded-[40%] border-0 bg-transparent p-0 outline-none focus-visible:ring-4 focus-visible:ring-[#166D77]/40 ${isReducedMotion ? "cursor-pointer" : isDragging ? "cursor-grabbing" : "cursor-grab"}`}
           >
-            <img
-              src={game.sprites[visibleDirection]}
-              alt=""
-              className="pointer-events-none h-full w-full select-none object-contain"
-              draggable={false}
-            />
+            <motion.div
+              className="h-full w-full origin-top"
+              animate={isDragging ? DANGLE_ANIMATION : SETTLE_ANIMATION}
+            >
+              <img
+                src={game.sprites[visibleDirection]}
+                alt=""
+                className="pointer-events-none h-full w-full select-none object-contain"
+                draggable={false}
+              />
+            </motion.div>
           </motion.button>
         </motion.div>
 
