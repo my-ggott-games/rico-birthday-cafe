@@ -473,17 +473,10 @@ export const ChikoActor: React.FC<ChikoActorProps> = ({
         </motion.div>
 
         {isLabelVisible && (
-          <div className="pointer-events-none absolute bottom-full left-1/2 mb-1 flex -translate-x-1/2 flex-col items-center">
-            <div
-              className={`whitespace-nowrap rounded-xl border-2 border-[#D6C0B0] bg-pale-custard font-bold text-[#166D77] shadow-md ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-1.5 text-sm"}`}
-            >
-              {game.name}
-            </div>
-            {isCoarsePointer && isSelected && (
-              <div className="mt-1 whitespace-nowrap rounded-full bg-[#166D77]/80 px-2 py-0.5 text-[0.65rem] font-bold text-white">
-                한 번 더 탭하면 입장
-              </div>
-            )}
+          <div
+            className={`pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap rounded-xl border-2 border-[#D6C0B0] bg-pale-custard font-bold text-[#166D77] shadow-md ${isCoarsePointer ? "top-full mt-2" : "bottom-full mb-1"} ${isMobile ? "px-3 py-1 text-xs" : "px-4 py-1.5 text-sm"}`}
+          >
+            {game.name}
           </div>
         )}
 

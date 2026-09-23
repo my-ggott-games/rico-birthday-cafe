@@ -24,6 +24,7 @@ import {
   parseAchievementAwardResponse,
 } from "../utils/achievementAwards";
 import { ChikoPlayground } from "../features/lobby/chiko/ChikoPlayground";
+import { useChikoReducedMotion } from "../features/lobby/chiko/useChikoReducedMotion";
 import {
   getLobbyNoteContent,
   type LobbyNoteKey,
@@ -53,6 +54,8 @@ const Lobby: React.FC = () => {
     window.localStorage.getItem(EASTER_EGG_NOTE_ACCESS_STORAGE_KEY) === "true",
   );
   const [isNoteToggleOn, setIsNoteToggleOn] = useState(true);
+  const { isReducedMotion: isChikoMotionReduced, toggleReducedMotion } =
+    useChikoReducedMotion();
   const [activeNoteKey, setActiveNoteKey] = useState<LobbyNoteKey | null>(null);
   const [isPuzzleMuseumUnlocked, setIsPuzzleMuseumUnlocked] = useState(
     window.localStorage.getItem(PUZZLE_MUSEUM_UNLOCK_KEY) === "true",
@@ -323,6 +326,20 @@ const Lobby: React.FC = () => {
       <AppIcon name="StickyNote" size={isMobile ? 16 : 18} />
     </button>
   ) : null;
+  const chikoMotionToggleButton = (
+    <button
+      type="button"
+      aria-label={isChikoMotionReduced ? "치코 움직이기" : "치코 멈추기"}
+      aria-pressed={isChikoMotionReduced}
+      onClick={toggleReducedMotion}
+      className={`inline-flex items-center justify-center self-center rounded-full border-2 border-[#D6B089] bg-[#FFF4D8] text-[#9B6A3D] shadow-[0_8px_18px_rgba(128,87,40,0.2)] ${isMobile ? "h-9 w-9 shrink-0" : "h-[42px] w-[42px] shrink-0"}`}
+    >
+      <AppIcon
+        name={isChikoMotionReduced ? "Play" : "Pause"}
+        size={isMobile ? 16 : 18}
+      />
+    </button>
+  );
   const profileButton = (
     <PushableButton
       onClick={() => {
@@ -391,6 +408,7 @@ const Lobby: React.FC = () => {
               className={`${isMobile ? "flex w-full max-w-full items-center justify-center gap-2" : "flex items-center gap-3"}`}
             >
               {noteToggleButton}
+              {chikoMotionToggleButton}
               {creditsButton}
               {profileButton}
               {!isMobile && adminButton}
@@ -479,6 +497,7 @@ const Lobby: React.FC = () => {
         </div>
         <ChikoPlayground
           isMobile={isMobile}
+          isReducedMotion={isChikoMotionReduced}
           noteVisible={canViewSecretNotes}
           onOpenNote={setActiveNoteKey}
         />

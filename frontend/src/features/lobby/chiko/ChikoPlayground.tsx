@@ -7,12 +7,9 @@ import React, {
   useState,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { AppIcon } from "../../../components/common/AppIcon";
 import type { LobbyNoteKey } from "../lobbyNotes";
 import { ChikoActor, type ChikoArea, type ChikoPosition } from "./ChikoActor";
 import { LOBBY_CHIKO_GAMES, type LobbyChikoGame } from "./chikoConfig";
-
-const REDUCED_MOTION_STORAGE_KEY = "lobby_chiko_reduced_motion";
 
 const DESKTOP_FIXED_POSITIONS: ChikoPosition[] = LOBBY_CHIKO_GAMES.map(
   (_, index) => ({
@@ -28,29 +25,19 @@ const MOBILE_FIXED_POSITIONS: ChikoPosition[] = LOBBY_CHIKO_GAMES.map(
   }),
 );
 
-const readInitialReducedMotion = () => {
-  try {
-    const stored = window.localStorage.getItem(REDUCED_MOTION_STORAGE_KEY);
-    if (stored !== null) {
-      return stored === "true";
-    }
-  } catch {
-    // Storage can be unavailable in private mode.
-  }
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-};
-
 const getRootFontSize = () =>
   parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
 
 type ChikoPlaygroundProps = {
   isMobile: boolean;
+  isReducedMotion: boolean;
   noteVisible: boolean;
   onOpenNote: (key: LobbyNoteKey) => void;
 };
 
 export const ChikoPlayground: React.FC<ChikoPlaygroundProps> = ({
   isMobile,
+  isReducedMotion,
   noteVisible,
   onOpenNote,
 }) => {
@@ -60,10 +47,13 @@ export const ChikoPlayground: React.FC<ChikoPlaygroundProps> = ({
   const [isCoarsePointer] = useState(
     () => window.matchMedia("(pointer: coarse)").matches,
   );
-  const [isReducedMotion, setIsReducedMotion] = useState(
-    readInitialReducedMotion,
-  );
   const [selectedId, setSelectedId] = useState<LobbyNoteKey | null>(null);
+  const [selectionMotionMode, setSelectionMotionMode] =
+    useState(isReducedMotion);
+  if (selectionMotionMode !== isReducedMotion) {
+    setSelectionMotionMode(isReducedMotion);
+    setSelectedId(null);
+  }
   const [initialPositions] = useState<ChikoPosition[]>(() =>
     LOBBY_CHIKO_GAMES.map(() => ({ rx: Math.random(), ry: Math.random() })),
   );
@@ -116,19 +106,6 @@ export const ChikoPlayground: React.FC<ChikoPlaygroundProps> = ({
     [navigate],
   );
 
-  const toggleReducedMotion = () => {
-    setIsReducedMotion((current) => {
-      const next = !current;
-      try {
-        window.localStorage.setItem(REDUCED_MOTION_STORAGE_KEY, String(next));
-      } catch {
-        // Storage can be unavailable in private mode.
-      }
-      return next;
-    });
-    setSelectedId(null);
-  };
-
   const fixedPositions = isMobile
     ? MOBILE_FIXED_POSITIONS
     : DESKTOP_FIXED_POSITIONS;
@@ -165,19 +142,6 @@ export const ChikoPlayground: React.FC<ChikoPlaygroundProps> = ({
           />
         ))}
       </div>
-
-      <button
-        type="button"
-        aria-label={isReducedMotion ? "치코 움직이기" : "치코 멈추기"}
-        aria-pressed={isReducedMotion}
-        onClick={toggleReducedMotion}
-        className={`absolute right-0 top-0 z-[300] inline-flex items-center justify-center rounded-full border-2 border-[#D6B089] bg-[#FFF4D8]/90 text-[#9B6A3D] shadow-[0_6px_14px_rgba(128,87,40,0.18)] transition-colors hover:bg-[#FFF4D8] ${isMobile ? "h-8 w-8" : "h-9 w-9"}`}
-      >
-        <AppIcon
-          name={isReducedMotion ? "Play" : "Pause"}
-          size={isMobile ? 14 : 16}
-        />
-      </button>
     </div>
   );
 };
