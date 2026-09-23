@@ -92,15 +92,10 @@ const STILL_ANIMATION: TargetAndTransition = {
   transition: { type: "spring", stiffness: 520, damping: 18 },
 };
 
-const DANGLE_ANIMATION: TargetAndTransition = {
-  rotate: [0, 7, 0, -7, 0],
-  transition: { duration: 2.4, repeat: Infinity, ease: "easeInOut" },
-};
-
-const SETTLE_ANIMATION: TargetAndTransition = {
-  rotate: 0,
-  transition: { type: "spring", stiffness: 260, damping: 14 },
-};
+const DANGLE_ANGLE_DEG = 8;
+const DANGLE_SWING_SEC = 1.6;
+const DANGLE_HOLD_RATIO = 0.09;
+const DANGLE_SWING_EASE = [0.45, 0, 0.55, 1] as const;
 
 const useTurningDirection = (
   target: ChikoDirection,
@@ -160,6 +155,7 @@ export const ChikoActor: React.FC<ChikoActorProps> = ({
   const areaWidth = useMotionValue(area.width);
   const areaHeight = useMotionValue(area.height);
   const spriteHeight = useMotionValue(area.spriteHeight);
+  const dangleRotate = useMotionValue(0);
   const areaRef = useRef(area);
   const resumeDelayRef = useRef<number | null>(null);
   const suppressClickRef = useRef(false);
@@ -211,6 +207,46 @@ export const ChikoActor: React.FC<ChikoActorProps> = ({
       ry.set(fixedPosition.ry);
     }
   }, [isReducedMotion, fixedPosition.rx, fixedPosition.ry, rx, ry]);
+
+  useEffect(() => {
+    if (!isDragging) {
+      const settle = animate(dangleRotate, 0, {
+        type: "spring",
+        stiffness: 260,
+        damping: 14,
+      });
+      return () => settle.stop();
+    }
+
+    let swing: AnimationPlaybackControls | undefined;
+    const lead = animate(dangleRotate, -DANGLE_ANGLE_DEG, {
+      duration: DANGLE_SWING_SEC / 2,
+      ease: "easeOut",
+      onComplete: () => {
+        swing = animate(
+          dangleRotate,
+          [
+            -DANGLE_ANGLE_DEG,
+            -DANGLE_ANGLE_DEG,
+            DANGLE_ANGLE_DEG,
+            DANGLE_ANGLE_DEG,
+          ],
+          {
+            duration: DANGLE_SWING_SEC,
+            times: [0, DANGLE_HOLD_RATIO, 1 - DANGLE_HOLD_RATIO, 1],
+            ease: ["linear", DANGLE_SWING_EASE, "linear"],
+            repeat: Infinity,
+            repeatType: "mirror",
+          },
+        );
+      },
+    });
+
+    return () => {
+      lead.stop();
+      swing?.stop();
+    };
+  }, [isDragging, dangleRotate]);
 
   const isLabelVisible = isHovered || isFocused || isSelected;
   const isPaused = isReducedMotion || isDragging || isLabelVisible;
@@ -442,7 +478,7 @@ export const ChikoActor: React.FC<ChikoActorProps> = ({
           >
             <motion.div
               className="h-full w-full origin-top"
-              animate={isDragging ? DANGLE_ANIMATION : SETTLE_ANIMATION}
+              style={{ rotate: dangleRotate }}
             >
               <img
                 src={game.sprites[visibleDirection]}
