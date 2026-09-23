@@ -12,12 +12,15 @@ const CLOVER_PALETTE = [
   { stroke: "#84cc16", fill: "#e9f8c8", glow: "rgba(236, 252, 203, 0.8)" },
 ];
 
+const RING_BORDER_RGB = "245, 245, 245";
+
 const MAX_PARTICLES = 600;
 const MAX_RINGS = 60;
 const MAX_DEVICE_PIXEL_RATIO = 2;
 
 const CLOVERS_PER_BURST = 10;
 const REDUCED_MOTION_CLOVERS_PER_BURST = 5;
+const CLOVER_SPREAD_SPEED = 230;
 const SPARKLES_PER_BURST = 14;
 
 type Sprite = { canvas: HTMLCanvasElement; size: number };
@@ -108,11 +111,11 @@ const bakeSparkle = (scale: number): Sprite => {
     );
   }
   context.closePath();
-  context.fillStyle = "#fff9db";
-  context.shadowColor = "rgba(250, 204, 21, 0.95)";
+  context.fillStyle = "#f0fdf4";
+  context.shadowColor = "rgba(110, 231, 183, 0.95)";
   context.shadowBlur = 8 * scale;
   context.fill();
-  context.shadowColor = "rgba(163, 230, 53, 0.9)";
+  context.shadowColor = "rgba(134, 239, 172, 0.9)";
   context.shadowBlur = 4 * scale;
   context.fill();
   context.shadowColor = "transparent";
@@ -242,9 +245,8 @@ export class ClickEffectEngine {
   private addClovers(x: number, y: number, count: number) {
     const angleOffset = Math.random() * Math.PI * 2;
     for (let i = 0; i < count; i += 1) {
-      const angle =
-        angleOffset + (Math.PI * 2 * i) / count + randomBetween(-0.25, 0.25);
-      const speed = randomBetween(170, 280);
+      const angle = angleOffset + (Math.PI * 2 * i) / count;
+      const speed = CLOVER_SPREAD_SPEED;
       this.addParticle({
         kind: "clover",
         sprite: this.clovers[Math.floor(Math.random() * this.clovers.length)],
@@ -257,7 +259,7 @@ export class ClickEffectEngine {
         size: randomBetween(52, 76),
         age: 0,
         delay: 0,
-        life: randomBetween(0.7, 0.95),
+        life: 0.8,
         phase: 0,
       });
     }
@@ -334,13 +336,13 @@ export class ClickEffectEngine {
       context.beginPath();
       context.arc(ring.x, ring.y, radius, 0, Math.PI * 2);
       context.lineWidth = 6;
-      context.strokeStyle = `rgba(94, 199, 165, ${0.28 * alpha})`;
+      context.strokeStyle = `rgba(${RING_BORDER_RGB}, ${0.28 * alpha})`;
       context.stroke();
       context.lineWidth = 2.5;
-      context.strokeStyle = `rgba(94, 199, 165, ${0.55 * alpha})`;
+      context.strokeStyle = `rgba(${RING_BORDER_RGB}, ${0.55 * alpha})`;
       context.stroke();
       context.lineWidth = 1;
-      context.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+      context.strokeStyle = `rgba(${RING_BORDER_RGB}, ${alpha})`;
       context.stroke();
       markDirty(ring.x, ring.y, radius + 4);
     }
@@ -365,7 +367,7 @@ export class ClickEffectEngine {
       if (particle.kind === "clover") {
         const damping = Math.exp(-4.2 * deltaSec);
         particle.vx *= damping;
-        particle.vy = particle.vy * damping + 240 * deltaSec;
+        particle.vy *= damping;
         scale =
           progress < 0.12 ? 0.4 + (progress / 0.12) * 0.6 : 1 - progress * 0.35;
         alpha = progress < 0.65 ? 1 : 1 - (progress - 0.65) / 0.35;
