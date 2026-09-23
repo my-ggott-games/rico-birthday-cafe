@@ -7,20 +7,22 @@ const FOUR_LEAF_BODY_PATH = new Path2D(
   "M4.02 12a2.827 2.827 0 1 1 3.81-4.17A2.827 2.827 0 1 1 12 4.02a2.827 2.827 0 1 1 4.17 3.81A2.827 2.827 0 1 1 19.98 12a2.827 2.827 0 1 1-3.81 4.17A2.827 2.827 0 1 1 12 19.98a2.827 2.827 0 1 1-4.17-3.81A1 1 0 1 1 4 12",
 );
 
-const CLOVER_SHAPES: CloverShape[] = [
-  {
-    body: CLUB_BODY_PATH,
-    lines: [CLUB_BODY_PATH, new Path2D("M12 17.66L12 22")],
-  },
-  {
-    body: FOUR_LEAF_BODY_PATH,
-    lines: [
-      FOUR_LEAF_BODY_PATH,
-      new Path2D("M16.17 7.83 2 22"),
-      new Path2D("m7.83 7.83 8.34 8.34"),
-    ],
-  },
-];
+const CLUB_SHAPE: CloverShape = {
+  body: CLUB_BODY_PATH,
+  lines: [CLUB_BODY_PATH, new Path2D("M12 17.66L12 22")],
+};
+
+const FOUR_LEAF_SHAPE: CloverShape = {
+  body: FOUR_LEAF_BODY_PATH,
+  lines: [
+    FOUR_LEAF_BODY_PATH,
+    new Path2D("M16.17 7.83 2 22"),
+    new Path2D("m7.83 7.83 8.34 8.34"),
+  ],
+};
+
+const FOUR_LEAF_TO_CLUB_MIN_RATIO = 1 / 5;
+const FOUR_LEAF_TO_CLUB_MAX_RATIO = 1 / 2;
 
 const CLOVER_PALETTE = [
   { stroke: "#65a30d", fill: "#c8f276", glow: "rgba(190, 242, 100, 0.8)" },
@@ -165,7 +167,8 @@ const bakeFlash = (scale: number): Sprite => {
 export class ClickEffectEngine {
   private readonly canvas: HTMLCanvasElement;
   private readonly context: CanvasRenderingContext2D;
-  private readonly clovers: Sprite[];
+  private readonly clubSprites: Sprite[];
+  private readonly fourLeafSprites: Sprite[];
   private readonly sparkle: Sprite;
   private readonly flash: Sprite;
   private readonly particles: Particle[] = [];
@@ -184,8 +187,11 @@ export class ClickEffectEngine {
     );
     this.resize();
     const spriteScale = this.pixelRatio;
-    this.clovers = CLOVER_SHAPES.flatMap((shape) =>
-      CLOVER_PALETTE.map((palette) => bakeClover(shape, palette, spriteScale)),
+    this.clubSprites = CLOVER_PALETTE.map((palette) =>
+      bakeClover(CLUB_SHAPE, palette, spriteScale),
+    );
+    this.fourLeafSprites = CLOVER_PALETTE.map((palette) =>
+      bakeClover(FOUR_LEAF_SHAPE, palette, spriteScale),
     );
     this.sparkle = bakeSparkle(spriteScale);
     this.flash = bakeFlash(spriteScale);
@@ -230,7 +236,7 @@ export class ClickEffectEngine {
 
     for (let i = 0; i < SPARKLES_PER_BURST; i += 1) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = randomBetween(80, 340);
+      const speed = randomBetween(110, 480);
       this.addParticle({
         kind: "sparkle",
         sprite: this.sparkle,
@@ -243,7 +249,7 @@ export class ClickEffectEngine {
         size: randomBetween(24, 44),
         age: 0,
         delay: randomBetween(0, 0.12),
-        life: randomBetween(0.45, 0.8),
+        life: randomBetween(0.3, 0.5),
         phase: Math.random() * Math.PI * 2,
       });
     }
@@ -261,24 +267,48 @@ export class ClickEffectEngine {
   }
 
   private addClovers(x: number, y: number, count: number) {
+    const ratio = randomBetween(
+      FOUR_LEAF_TO_CLUB_MIN_RATIO,
+      FOUR_LEAF_TO_CLUB_MAX_RATIO,
+    );
+    const fourLeafCount = Math.min(
+      Math.max(
+        Math.round((count * ratio) / (1 + ratio)),
+        Math.ceil(
+          (count * FOUR_LEAF_TO_CLUB_MIN_RATIO) /
+            (1 + FOUR_LEAF_TO_CLUB_MIN_RATIO),
+        ),
+      ),
+      Math.floor(
+        (count * FOUR_LEAF_TO_CLUB_MAX_RATIO) /
+          (1 + FOUR_LEAF_TO_CLUB_MAX_RATIO),
+      ),
+    );
+    const fourLeafSlots = new Set<number>();
+    while (fourLeafSlots.size < fourLeafCount) {
+      fourLeafSlots.add(Math.floor(Math.random() * count));
+    }
+
     const angleOffset = Math.random() * Math.PI * 2;
     for (let i = 0; i < count; i += 1) {
       const angle =
         angleOffset + (Math.PI * 2 * i) / count + randomBetween(-0.25, 0.25);
-      const speed = randomBetween(170, 280);
+      const speed = randomBetween(260, 400);
+      const isFourLeaf = fourLeafSlots.has(i);
+      const sprites = isFourLeaf ? this.fourLeafSprites : this.clubSprites;
       this.addParticle({
         kind: "clover",
-        sprite: this.clovers[Math.floor(Math.random() * this.clovers.length)],
+        sprite: sprites[Math.floor(Math.random() * sprites.length)],
         x,
         y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         rotation: Math.random() * Math.PI * 2,
         spin: randomBetween(-4, 4),
-        size: randomBetween(52, 76),
+        size: isFourLeaf ? randomBetween(34, 48) : randomBetween(52, 76),
         age: 0,
         delay: 0,
-        life: randomBetween(0.7, 0.95),
+        life: randomBetween(0.42, 0.58),
         phase: 0,
       });
     }
@@ -384,14 +414,14 @@ export class ClickEffectEngine {
       let alpha = 1;
       let scale = 1;
       if (particle.kind === "clover") {
-        const damping = Math.exp(-4.2 * deltaSec);
+        const damping = Math.exp(-6 * deltaSec);
         particle.vx *= damping;
         particle.vy *= damping;
         scale =
           progress < 0.12 ? 0.4 + (progress / 0.12) * 0.6 : 1 - progress * 0.35;
         alpha = progress < 0.65 ? 1 : 1 - (progress - 0.65) / 0.35;
       } else if (particle.kind === "sparkle") {
-        const damping = Math.exp(-5.5 * deltaSec);
+        const damping = Math.exp(-8 * deltaSec);
         particle.vx *= damping;
         particle.vy *= damping;
         scale = Math.sin(Math.PI * progress);
