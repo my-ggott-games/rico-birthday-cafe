@@ -159,7 +159,7 @@ const CLAIM_ALERT_THRESHOLD = 0.33;
 const CREDITS_BOTTOM_PADDING = 140;
 const CREDITS_SCROLL_SPEED_PX = 24;
 const CREDITS_TEXT_OUTLINE =
-  "[-webkit-text-stroke:4px_#f5f5f5] [paint-order:stroke_fill]";
+  "[-webkit-text-stroke:4px_#fcffff] [paint-order:stroke_fill]";
 
 export default function Credits() {
   const navigate = useNavigate();

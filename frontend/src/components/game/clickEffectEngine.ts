@@ -33,7 +33,7 @@ const CLOVER_PALETTE = [
   { stroke: "#84cc16", fill: "#e9f8c8", glow: "rgba(236, 252, 203, 0.8)" },
 ];
 
-const RING_BORDER_RGB = "245, 245, 245";
+const RING_BORDER_RGB = "252, 255, 255";
 
 const MAX_PARTICLES = 600;
 const MAX_RINGS = 60;
