@@ -85,15 +85,6 @@ export const ChikoPlayground: React.FC<ChikoPlaygroundProps> = ({
   }, []);
 
   useEffect(() => {
-    LOBBY_CHIKO_GAMES.forEach((game) => {
-      Object.values(game.sprites).forEach((src) => {
-        const image = new Image();
-        image.src = src;
-      });
-    });
-  }, []);
-
-  useEffect(() => {
     if (selectedId === null) {
       return;
     }

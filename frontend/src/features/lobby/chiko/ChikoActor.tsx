@@ -10,6 +10,7 @@ import {
 import { AppIcon } from "../../../components/common/AppIcon";
 import { getLobbyNoteTitle, type LobbyNoteKey } from "../lobbyNotes";
 import {
+  CHIKO_ATLAS_FRAMES,
   CHIKO_SPRITE_ASPECT,
   getChikoDirection,
   getNextTurnDirection,
@@ -52,28 +53,6 @@ const getUsableBox = ({ width, height, spriteHeight }: ChikoArea) => {
     width: Math.max(width - spriteWidth, 0),
     height: Math.max(height - spriteHeight - BOTTOM_PADDING_PX, 0),
   };
-};
-
-const WALK_ANIMATION: TargetAndTransition = {
-  y: [0, -7, 0],
-  rotate: [-4, 4, -4],
-  scaleX: 1,
-  scaleY: 1,
-  transition: {
-    y: { duration: 0.42, repeat: Infinity, ease: "easeOut" },
-    rotate: { duration: 0.84, repeat: Infinity, ease: "easeInOut" },
-  },
-};
-
-const IDLE_ANIMATION: TargetAndTransition = {
-  y: 0,
-  rotate: 0,
-  scaleX: [1, 1.02, 1],
-  scaleY: [1, 0.97, 1],
-  transition: {
-    scaleX: { duration: 2.4, repeat: Infinity, ease: "easeInOut" },
-    scaleY: { duration: 2.4, repeat: Infinity, ease: "easeInOut" },
-  },
 };
 
 const DRAG_ANIMATION: TargetAndTransition = {
@@ -419,18 +398,16 @@ export const ChikoActor: React.FC<ChikoActorProps> = ({
     isReducedMotion,
   );
 
-  let bodyAnimation = STILL_ANIMATION;
-  if (isDragging) {
-    bodyAnimation = DRAG_ANIMATION;
-  } else if (isWalking) {
-    bodyAnimation = WALK_ANIMATION;
-  } else if (!isReducedMotion) {
-    bodyAnimation = IDLE_ANIMATION;
+  let loopAnimationClass = "";
+  if (isWalking) {
+    loopAnimationClass = "animate-chiko-walk";
+  } else if (!isDragging && !isReducedMotion) {
+    loopAnimationClass = "animate-chiko-idle";
   }
 
   return (
     <motion.div
-      className="absolute left-0 top-0 h-0 w-0"
+      className="absolute left-0 top-0 h-0 w-0 will-change-transform"
       style={{ x, y, zIndex: isDragging || isLabelVisible ? 200 : zIndex }}
     >
       <div
@@ -442,7 +419,7 @@ export const ChikoActor: React.FC<ChikoActorProps> = ({
         >
           <motion.div
             aria-hidden="true"
-            className="absolute bottom-[-0.3rem] left-1/2 h-3 w-3/5 -translate-x-1/2 rounded-[50%] bg-[#1a4e35]/25 blur-[1px]"
+            className="absolute bottom-[-0.3rem] left-1/2 h-3 w-3/5 -translate-x-1/2 rounded-[50%] bg-[radial-gradient(closest-side,rgba(26,78,53,0.3),rgba(26,78,53,0.18)_70%,transparent)]"
             animate={
               isDragging
                 ? { scale: 0.7, opacity: 0.45 }
@@ -473,20 +450,25 @@ export const ChikoActor: React.FC<ChikoActorProps> = ({
             }}
             onBlur={() => setIsFocused(false)}
             onClick={handleClick}
-            animate={bodyAnimation}
+            animate={isDragging ? DRAG_ANIMATION : STILL_ANIMATION}
             className={`absolute inset-0 origin-bottom touch-none select-none rounded-[40%] border-0 bg-transparent p-0 outline-none focus-visible:ring-4 focus-visible:ring-[#166D77]/40 ${isReducedMotion ? "cursor-pointer" : isDragging ? "cursor-grabbing" : "cursor-grab"}`}
           >
-            <motion.div
-              className="h-full w-full origin-top"
-              style={{ rotate: dangleRotate }}
+            <div
+              className={`h-full w-full origin-bottom ${loopAnimationClass}`}
             >
-              <img
-                src={game.sprites[visibleDirection]}
-                alt=""
-                className="pointer-events-none h-full w-full select-none object-contain"
-                draggable={false}
-              />
-            </motion.div>
+              <motion.div
+                className="h-full w-full origin-top"
+                style={{ rotate: dangleRotate }}
+              >
+                <div
+                  className="pointer-events-none h-full w-full bg-[length:800%_100%] bg-no-repeat will-change-transform"
+                  style={{
+                    backgroundImage: `url('${game.spriteAtlas}')`,
+                    backgroundPositionX: `${(CHIKO_ATLAS_FRAMES.indexOf(visibleDirection) / (CHIKO_ATLAS_FRAMES.length - 1)) * 100}%`,
+                  }}
+                />
+              </motion.div>
+            </div>
           </motion.button>
         </motion.div>
 

@@ -10,9 +10,7 @@ export type ChikoDirection =
   | "diag-back-right"
   | "diag-back-left";
 
-export type ChikoSpriteSet = Record<ChikoDirection, string>;
-
-const CHIKO_DIRECTIONS: ChikoDirection[] = [
+export const CHIKO_ATLAS_FRAMES: ChikoDirection[] = [
   "front",
   "back",
   "side-right",
@@ -23,15 +21,7 @@ const CHIKO_DIRECTIONS: ChikoDirection[] = [
   "diag-back-left",
 ];
 
-const createSpriteSet = (basePath: string): ChikoSpriteSet =>
-  Object.fromEntries(
-    CHIKO_DIRECTIONS.map((direction) => [
-      direction,
-      `${basePath}/${direction}.webp`,
-    ]),
-  ) as ChikoSpriteSet;
-
-const DEFAULT_CHIKO_SPRITES = createSpriteSet("/pages/lobby/chiko");
+const DEFAULT_CHIKO_ATLAS = "/pages/lobby/chiko/atlas.webp";
 
 export const CHIKO_SPRITE_ASPECT = 349 / 320;
 
@@ -39,7 +29,7 @@ export type LobbyChikoGame = {
   id: LobbyNoteKey;
   name: string;
   to: string;
-  sprites: ChikoSpriteSet;
+  spriteAtlas: string;
 };
 
 export const LOBBY_CHIKO_GAMES: LobbyChikoGame[] = [
@@ -47,25 +37,25 @@ export const LOBBY_CHIKO_GAMES: LobbyChikoGame[] = [
     id: "cody",
     name: "리코의 외출 준비",
     to: "/game/cody",
-    sprites: DEFAULT_CHIKO_SPRITES,
+    spriteAtlas: DEFAULT_CHIKO_ATLAS,
   },
   {
     id: "puzzle",
     name: "퍼즐 맞추기",
     to: "/game/puzzle",
-    sprites: DEFAULT_CHIKO_SPRITES,
+    spriteAtlas: DEFAULT_CHIKO_ATLAS,
   },
   {
     id: "asparagus",
     name: "아스파라거스 키우기",
     to: "/game/asparagus",
-    sprites: DEFAULT_CHIKO_SPRITES,
+    spriteAtlas: DEFAULT_CHIKO_ATLAS,
   },
   {
     id: "adventure",
     name: "용사 리코 이야기",
     to: "/game/adventure",
-    sprites: DEFAULT_CHIKO_SPRITES,
+    spriteAtlas: DEFAULT_CHIKO_ATLAS,
   },
 ];
 

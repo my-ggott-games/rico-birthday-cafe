@@ -12,6 +12,10 @@
   --color-egg-shell: #faffff;
   --color-blanc-de-blanc: #f6f6f6;
   --color-cream: var(--color-cream);
+
+  --animate-chiko-walk:
+    chiko-hop 0.42s ease-out infinite, chiko-sway 0.84s ease-in-out infinite;
+  --animate-chiko-idle: chiko-breathe 2.4s ease-in-out infinite;
 }
 
 /* 
@@ -559,6 +563,39 @@ button {
 }
 
 /* ── Keyframes ── */
+@keyframes chiko-hop {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 0 -7px;
+  }
+}
+
+@keyframes chiko-sway {
+  0%,
+  100% {
+    rotate: -4deg;
+  }
+
+  50% {
+    rotate: 4deg;
+  }
+}
+
+@keyframes chiko-breathe {
+  0%,
+  100% {
+    scale: 1 1;
+  }
+
+  50% {
+    scale: 1.02 0.97;
+  }
+}
+
 @keyframes bf-hover {
   0% {
     translate: 0 0;
