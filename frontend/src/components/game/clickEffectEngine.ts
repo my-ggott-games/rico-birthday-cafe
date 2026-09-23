@@ -1,7 +1,26 @@
-const CLOVER_PATH = new Path2D(
+type CloverShape = { body: Path2D; lines: Path2D[] };
+
+const CLUB_BODY_PATH = new Path2D(
   "M17.28 9.05a5.5 5.5 0 1 0-10.56 0A5.5 5.5 0 1 0 12 17.66a5.5 5.5 0 1 0 5.28-8.61Z",
 );
-const CLOVER_STEM_PATH = new Path2D("M12 17.66L12 22");
+const FOUR_LEAF_BODY_PATH = new Path2D(
+  "M4.02 12a2.827 2.827 0 1 1 3.81-4.17A2.827 2.827 0 1 1 12 4.02a2.827 2.827 0 1 1 4.17 3.81A2.827 2.827 0 1 1 19.98 12a2.827 2.827 0 1 1-3.81 4.17A2.827 2.827 0 1 1 12 19.98a2.827 2.827 0 1 1-4.17-3.81A1 1 0 1 1 4 12",
+);
+
+const CLOVER_SHAPES: CloverShape[] = [
+  {
+    body: CLUB_BODY_PATH,
+    lines: [CLUB_BODY_PATH, new Path2D("M12 17.66L12 22")],
+  },
+  {
+    body: FOUR_LEAF_BODY_PATH,
+    lines: [
+      FOUR_LEAF_BODY_PATH,
+      new Path2D("M16.17 7.83 2 22"),
+      new Path2D("m7.83 7.83 8.34 8.34"),
+    ],
+  },
+];
 
 const CLOVER_PALETTE = [
   { stroke: "#65a30d", fill: "#c8f276", glow: "rgba(190, 242, 100, 0.8)" },
@@ -20,7 +39,6 @@ const MAX_DEVICE_PIXEL_RATIO = 2;
 
 const CLOVERS_PER_BURST = 10;
 const REDUCED_MOTION_CLOVERS_PER_BURST = 5;
-const CLOVER_SPREAD_SPEED = 230;
 const SPARKLES_PER_BURST = 14;
 
 type Sprite = { canvas: HTMLCanvasElement; size: number };
@@ -68,6 +86,7 @@ const createSpriteCanvas = (size: number, scale: number) => {
 };
 
 const bakeClover = (
+  shape: CloverShape,
   palette: (typeof CLOVER_PALETTE)[number],
   scale: number,
 ): Sprite => {
@@ -84,15 +103,14 @@ const bakeClover = (
 
   context.shadowColor = palette.glow;
   context.shadowBlur = 10 * scale;
-  context.fill(CLOVER_PATH);
+  context.fill(shape.body);
   context.shadowColor = "rgba(255, 255, 255, 0.9)";
   context.shadowBlur = 5 * scale;
-  context.fill(CLOVER_PATH);
+  context.fill(shape.body);
 
   context.shadowColor = "transparent";
-  context.fill(CLOVER_PATH);
-  context.stroke(CLOVER_PATH);
-  context.stroke(CLOVER_STEM_PATH);
+  context.fill(shape.body);
+  shape.lines.forEach((line) => context.stroke(line));
   return { canvas, size };
 };
 
@@ -166,8 +184,8 @@ export class ClickEffectEngine {
     );
     this.resize();
     const spriteScale = this.pixelRatio;
-    this.clovers = CLOVER_PALETTE.map((palette) =>
-      bakeClover(palette, spriteScale),
+    this.clovers = CLOVER_SHAPES.flatMap((shape) =>
+      CLOVER_PALETTE.map((palette) => bakeClover(shape, palette, spriteScale)),
     );
     this.sparkle = bakeSparkle(spriteScale);
     this.flash = bakeFlash(spriteScale);
@@ -245,8 +263,9 @@ export class ClickEffectEngine {
   private addClovers(x: number, y: number, count: number) {
     const angleOffset = Math.random() * Math.PI * 2;
     for (let i = 0; i < count; i += 1) {
-      const angle = angleOffset + (Math.PI * 2 * i) / count;
-      const speed = CLOVER_SPREAD_SPEED;
+      const angle =
+        angleOffset + (Math.PI * 2 * i) / count + randomBetween(-0.25, 0.25);
+      const speed = randomBetween(170, 280);
       this.addParticle({
         kind: "clover",
         sprite: this.clovers[Math.floor(Math.random() * this.clovers.length)],
@@ -259,7 +278,7 @@ export class ClickEffectEngine {
         size: randomBetween(52, 76),
         age: 0,
         delay: 0,
-        life: 0.8,
+        life: randomBetween(0.7, 0.95),
         phase: 0,
       });
     }
