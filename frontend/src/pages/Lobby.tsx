@@ -32,6 +32,7 @@ import {
 const SLOGAN_COLLECTOR_CODE = "SLOGAN_COLLECTOR";
 const SLOGAN_COLLECTOR_STORAGE_KEY = "lobby_slogan_collector_unlocked";
 const CLICK_DROP_THRESHOLD = 100;
+const BIRTHDAY_SEASON_MONTHS = new Set([2, 3]);
 const CLICK_SHAKE_MILESTONES = new Set(
   Array.from({ length: 10 }, (_, index) => index * 10).concat(1),
 );
@@ -62,6 +63,9 @@ const Lobby: React.FC = () => {
     window.localStorage.getItem(SLOGAN_COLLECTOR_STORAGE_KEY) === "true",
   );
   const [isHappyBirthdayDropping, setIsHappyBirthdayDropping] = useState(false);
+  const [isBirthdaySloganFront] = useState(() =>
+    BIRTHDAY_SEASON_MONTHS.has(new Date().getMonth()),
+  );
   const [isHappyBirthdayHidden, setIsHappyBirthdayHidden] = useState(false);
   const [isSloganDropping, setIsSloganDropping] = useState(false);
   const [isSloganHidden, setIsSloganHidden] = useState(false);
@@ -233,7 +237,11 @@ const Lobby: React.FC = () => {
   }, [sloganControls, isSloganHidden, isSloganDropping]);
 
   const handleHappyBirthdayClick = useCallback(() => {
-    if (isHappyBirthdayDropping || isHappyBirthdayHidden) {
+    if (
+      (!isBirthdaySloganFront && !isSloganHidden) ||
+      isHappyBirthdayDropping ||
+      isHappyBirthdayHidden
+    ) {
       return;
     }
 
@@ -241,6 +249,9 @@ const Lobby: React.FC = () => {
     setHappyBirthdayClickCount(nextClickCount);
 
     if (nextClickCount >= CLICK_DROP_THRESHOLD) {
+      if (!isBirthdaySloganFront) {
+        void unlockSloganCollectorAchievement();
+      }
       triggerHappyBirthdayDrop();
       return;
     }
@@ -250,14 +261,21 @@ const Lobby: React.FC = () => {
     }
   }, [
     happyBirthdayClickCount,
+    isBirthdaySloganFront,
     isHappyBirthdayDropping,
     isHappyBirthdayHidden,
+    isSloganHidden,
     triggerHappyBirthdayDrop,
     triggerHappyBirthdayShake,
+    unlockSloganCollectorAchievement,
   ]);
 
   const handleSloganClick = useCallback(() => {
-    if (isHappyBirthdayHidden === false || isSloganDropping || isSloganHidden) {
+    if (
+      (isBirthdaySloganFront && !isHappyBirthdayHidden) ||
+      isSloganDropping ||
+      isSloganHidden
+    ) {
       return;
     }
 
@@ -265,7 +283,9 @@ const Lobby: React.FC = () => {
     setSloganClickCount(nextClickCount);
 
     if (nextClickCount >= CLICK_DROP_THRESHOLD) {
-      void unlockSloganCollectorAchievement();
+      if (isBirthdaySloganFront) {
+        void unlockSloganCollectorAchievement();
+      }
       triggerSloganDrop();
       return;
     }
@@ -274,6 +294,7 @@ const Lobby: React.FC = () => {
       triggerSloganShake();
     }
   }, [
+    isBirthdaySloganFront,
     isHappyBirthdayHidden,
     isSloganDropping,
     isSloganHidden,
@@ -410,7 +431,7 @@ const Lobby: React.FC = () => {
                 }
               }}
               onClick={handleHappyBirthdayClick}
-              className="lobby-slogan-stage__happy-birthday absolute left-1/2 top-1/2 w-[min(86vw,30rem)] -translate-x-1/2 -translate-y-1/2 cursor-pointer border-0 bg-transparent p-0"
+              className={`${isBirthdaySloganFront ? "lobby-slogan-stage__front" : "lobby-slogan-stage__back"} absolute left-1/2 top-1/2 w-[min(86vw,30rem)] -translate-x-1/2 -translate-y-1/2 border-0 bg-transparent p-0 ${isBirthdaySloganFront || isSloganHidden ? "cursor-pointer" : ""}`}
             >
               <div
                 className={`relative overflow-hidden rounded-[1.1rem] ${isMobile ? "h-[6.4rem]" : "h-[10rem]"}`}
@@ -443,7 +464,7 @@ const Lobby: React.FC = () => {
                 }
               }}
               onClick={handleSloganClick}
-              className={`lobby-slogan-stage__banner absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-transparent p-0 border-0 ${isHappyBirthdayHidden ? "cursor-pointer" : ""}`}
+              className={`${isBirthdaySloganFront ? "lobby-slogan-stage__back" : "lobby-slogan-stage__front"} absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-transparent p-0 border-0 ${!isBirthdaySloganFront || isHappyBirthdayHidden ? "cursor-pointer" : ""}`}
             >
               <KCelebrateSlogan
                 className="slogan-lobby"

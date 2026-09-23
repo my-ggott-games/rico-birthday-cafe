@@ -417,11 +417,11 @@ button {
   isolation: isolate;
 }
 
-.lobby-slogan-stage__happy-birthday {
+.lobby-slogan-stage__front {
   z-index: 30;
 }
 
-.lobby-slogan-stage__banner {
+.lobby-slogan-stage__back {
   z-index: 20;
 }
 
