@@ -158,6 +158,8 @@ const CREDITS_SECTIONS: CreditSection[] = [
 const CLAIM_ALERT_THRESHOLD = 0.33;
 const CREDITS_BOTTOM_PADDING = 140;
 const CREDITS_SCROLL_SPEED_PX = 24;
+const CREDITS_TEXT_OUTLINE =
+  "[-webkit-text-stroke:4px_#fcffff] [paint-order:stroke_fill]";
 
 export default function Credits() {
   const navigate = useNavigate();
@@ -413,7 +415,7 @@ export default function Credits() {
       ref={creditsTrackRef}
       className="flex w-full max-w-4xl flex-col items-center text-center"
     >
-      <div className="pb-40 pt-32">
+      <div className={`pb-40 pt-32 ${CREDITS_TEXT_OUTLINE}`}>
         <h1 className="mb-4 text-4xl font-black text-[#166D77] md:text-5xl">
           THANK YOU
         </h1>
@@ -426,7 +428,7 @@ export default function Credits() {
       </div>
 
       {CREDITS_SECTIONS.map((section, idx) => (
-        <div key={idx} className="mb-24 w-full">
+        <div key={idx} className={`mb-24 w-full ${CREDITS_TEXT_OUTLINE}`}>
           <h2 className="mb-6 text-xl font-bold uppercase tracking-wider text-[#166D77] md:text-2xl">
             {section.title}
           </h2>
@@ -462,7 +464,11 @@ export default function Credits() {
       ))}
 
       <div className="flex flex-col items-center pt-32 pb-[50vh]">
-        <h2 className="mb-10 text-3xl font-black text-[#166D77]">And You</h2>
+        <h2
+          className={`mb-10 text-3xl font-black text-[#166D77] ${CREDITS_TEXT_OUTLINE}`}
+        >
+          And You
+        </h2>
 
         {token && showClaimButton ? (
           <motion.div

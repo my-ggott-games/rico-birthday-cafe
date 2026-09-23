@@ -13,7 +13,9 @@ import {
   parseAchievementAwardResponse,
 } from "../utils/achievementAwards";
 import {
+  PUZZLE_DETAIL_IMAGE_URL,
   PUZZLE_ACHIEVEMENT_CODE,
+  PUZZLE_GAMEPLAY_IMAGE_URL,
   PUZZLE_MUSEUM_UNLOCK_EVENT,
   PUZZLE_MUSEUM_UNLOCK_KEY,
 } from "../constants/puzzle";
@@ -73,6 +75,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   const [pieces, setPieces] = useState<PuzzlePiece[]>([]);
   const [completed, setCompleted] = useState(false);
   const [photocardModeEnabled, setPhotocardModeEnabled] = useState(false);
+  const [isDetailImageReady, setIsDetailImageReady] = useState(false);
   const [layoutVersion, setLayoutVersion] = useState(0);
   const [isMagnifierActive, setIsMagnifierActive] = useState(false);
   const [magnifierPoint, setMagnifierPoint] = useState({ x: 0, y: 0 });
@@ -93,7 +96,47 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   const storedProgressRef = useRef<StoredPuzzleProgress | null>(
     readStoredPuzzleProgress(currentOwnerId),
   );
+  const hasStartedDetailImagePreloadRef = useRef(false);
   const { addToast } = useToastStore();
+
+  const startDetailImagePreload = React.useCallback(() => {
+    if (
+      typeof window === "undefined" ||
+      isDetailImageReady ||
+      hasStartedDetailImagePreloadRef.current
+    ) {
+      return;
+    }
+
+    hasStartedDetailImagePreloadRef.current = true;
+
+    const image = new Image();
+    image.decoding = "async";
+    image.src = PUZZLE_DETAIL_IMAGE_URL;
+
+    const markReady = () => {
+      setIsDetailImageReady(true);
+    };
+
+    if (image.complete) {
+      if (typeof image.decode === "function") {
+        image.decode().catch(() => undefined).finally(markReady);
+        return;
+      }
+
+      markReady();
+      return;
+    }
+
+    image.onload = () => {
+      if (typeof image.decode === "function") {
+        image.decode().catch(() => undefined).finally(markReady);
+        return;
+      }
+
+      markReady();
+    };
+  }, [isDetailImageReady]);
 
   useEffect(() => {
     if (ownerIdRef.current === currentOwnerId) {
@@ -519,6 +562,59 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
   }, [pieces, token]);
 
   useEffect(() => {
+    if (typeof window === "undefined" || isDetailImageReady || pieces.length === 0) {
+      return;
+    }
+
+    const placedCount = pieces.reduce(
+      (count, piece) => count + (piece.isPlaced ? 1 : 0),
+      0,
+    );
+    const progressRatio = placedCount / pieces.length;
+
+    if (completed || progressRatio >= 0.7) {
+      startDetailImagePreload();
+      return;
+    }
+
+    let timeoutId: number | null = null;
+    let idleCancelled = false;
+    let idleHandle: number | null = null;
+
+    const schedulePreload = () => {
+      startDetailImagePreload();
+    };
+
+    if (typeof window.requestIdleCallback === "function") {
+      idleHandle = window.requestIdleCallback(
+        () => {
+          if (!idleCancelled) {
+            schedulePreload();
+          }
+        },
+        { timeout: 4500 },
+      );
+    } else {
+      timeoutId = window.setTimeout(schedulePreload, 2500);
+    }
+
+    return () => {
+      idleCancelled = true;
+
+      if (
+        idleHandle !== null &&
+        typeof window.cancelIdleCallback === "function"
+      ) {
+        window.cancelIdleCallback(idleHandle);
+      }
+
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [completed, isDetailImageReady, pieces, startDetailImagePreload]);
+
+  useEffect(() => {
     if (typeof window === "undefined" || pieces.length === 0) {
       return;
     }
@@ -555,6 +651,12 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
 
   const content = (
     <PuzzleGameBoardView
+      gameplayImageUrl={PUZZLE_GAMEPLAY_IMAGE_URL}
+      detailImageUrl={
+        completed && isDetailImageReady
+          ? PUZZLE_DETAIL_IMAGE_URL
+          : PUZZLE_GAMEPLAY_IMAGE_URL
+      }
       sensors={sensors}
       handleDragStart={handleDragStart}
       handleDragEnd={handleDragEnd}

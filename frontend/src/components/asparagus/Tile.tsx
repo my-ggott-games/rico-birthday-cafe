@@ -51,7 +51,7 @@ export const Tile: React.FC<TileProps> = ({
   isSwapMode = false,
   onClick,
 }) => {
-  const tileRadius = "var(--cell-radius, 16px)";
+  const tileRadius = "calc(var(--cell-radius, 16px) + var(--board-padding, 12px))";
   const swapAccentColor = "#3C9E96";
   const swapRing = `inset 0 0 0 3px ${swapAccentColor}`;
   const selectedGlow = "0 0 14px rgba(60, 158, 150, 0.18)";
@@ -134,7 +134,7 @@ export const Tile: React.FC<TileProps> = ({
       <div
         className="pointer-events-none absolute inset-0"
         style={{
-          borderRadius: "var(--cell-radius, 16px)",
+          borderRadius: "calc(var(--cell-radius, 16px) + var(--board-padding, 12px))",
           background:
             "linear-gradient(180deg, rgba(255,255,255,0.24) 0%, rgba(255,255,255,0.06) 38%, rgba(255,255,255,0) 60%)",
         }}
@@ -142,7 +142,7 @@ export const Tile: React.FC<TileProps> = ({
       <div
         className="pointer-events-none absolute inset-[2px]"
         style={{
-          borderRadius: "calc(var(--cell-radius, 16px) - 3px)",
+          borderRadius: "calc(var(--cell-radius, 16px) + var(--board-padding, 12px))",
           border: "1px solid rgba(255,255,255,0.14)",
         }}
       />

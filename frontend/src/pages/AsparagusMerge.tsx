@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { motion, useAnimation } from "framer-motion";
 
 import { Board } from "../components/asparagus/Board";
 import { Items } from "../components/asparagus/Items";
@@ -49,6 +50,25 @@ const AsparagusMerge: React.FC = () => {
     startDebugGame,
     touchStart: touchStartRef,
   } = useAsparagusGame();
+
+  const [gameOverModalDismissed, setGameOverModalDismissed] = React.useState(false);
+  React.useEffect(() => {
+    if (!gameOver) setGameOverModalDismissed(false);
+  }, [gameOver]);
+
+  const retryBtnControls = useAnimation();
+  useEffect(() => {
+    if (gameOver) {
+      retryBtnControls.start({
+        scale: [0.9, 1.1, 0.9],
+        y: [-5, 5, -5],
+        transition: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+      });
+    } else {
+      retryBtnControls.stop();
+      retryBtnControls.set({ scale: 1, y: 0 });
+    }
+  }, [gameOver, retryBtnControls]);
 
   useEffect(() => {
     pushEvent("start_game", { game_name: "아스파라거스 키우기" });
@@ -114,6 +134,9 @@ const AsparagusMerge: React.FC = () => {
           {/* Board + Score */}
           <div className="flex w-full max-w-[520px] flex-col gap-4 lg:w-[520px]">
             <div className="flex w-full items-center justify-between gap-2 px-4">
+              <motion.div
+                animate={retryBtnControls}
+              >
               <PushableButton
                 variant="teal"
                 onClick={() => {
@@ -133,6 +156,7 @@ const AsparagusMerge: React.FC = () => {
                   <span className="text-sm">다시하기</span>
                 </span>
               </PushableButton>
+              </motion.div>
               <ScoreStatGroup
                 className="justify-end"
                 items={[
@@ -172,6 +196,7 @@ const AsparagusMerge: React.FC = () => {
             isSwapMode={isSwapMode}
             isAdmin={isAdmin}
             debugMode={debugMode}
+            gameOver={gameOver}
             onUndo={handleUndo}
             onToggleSwapMode={() => {
               setIsSwapMode(!isSwapMode);
@@ -234,20 +259,27 @@ const AsparagusMerge: React.FC = () => {
       </CommonModal>
 
       <CommonModal
-        isOpen={gameOver}
-        onClose={() => {
-          pushEvent("retry_game", { game_name: "아스파라거스 키우기" });
-          startGame();
-        }}
+        isOpen={gameOver && !gameOverModalDismissed}
+        onClose={() => setGameOverModalDismissed(true)}
         icon={<AppIcon name="Flower2" size={32} />}
         title="아스파라거스가 시들었어"
         panelClassName="border-[#5EC7A5] px-8 py-8 shadow-[0_30px_80px_rgba(22,109,119,0.16)]"
         titleClassName="mb-4 text-2xl"
         bodyClassName="space-y-3 text-center"
-        footerClassName="mt-6 flex flex-col gap-3"
+        footerClassName="mt-6 flex gap-3"
         footer={
           <>
-            <div className="flex">
+            <PushableButton
+              onClick={() => {
+                pushEvent("retry_game", { game_name: "아스파라거스 키우기" });
+                startGame();
+              }}
+              variant="teal"
+              className="flex-1 px-0 py-3"
+            >
+              다시하기
+            </PushableButton>
+            <div className="flex-1 [&>div]:w-full">
               <ShareButtonGroup
                 urlToShare={`${window.location.origin}/game/asparagus?score=${score}`}
                 gameName="아스파라거스 키우기"

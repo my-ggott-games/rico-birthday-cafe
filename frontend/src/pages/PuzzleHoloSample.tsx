@@ -3,7 +3,7 @@ import { GameContainer } from "../components/common/GameContainer";
 import { HolographicCard } from "../components/common/HolographicCard";
 import type { TutorialSlide } from "../components/common/TutorialBanner";
 
-const PUZZLE_IMAGE = "/assets/puzzlegame/riko_puzzle_birthday_banquet.png";
+const PUZZLE_IMAGE = "/assets/puzzlegame/riko_puzzle_birthday_banquet.webp";
 
 const helpSlides: TutorialSlide[] = [
   {

@@ -1,143 +1,45 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Club } from "lucide-react";
+import React, { useEffect, useRef } from "react";
+import { ClickEffectEngine } from "./clickEffectEngine";
 
-interface Particle {
-  id: number;
-  x: number;
-  y: number;
-  color: string;
-  fillColor: string;
-  glow: string;
-  angle: number;
-  velocity: number;
-  size: number;
-  rotation: number;
-}
+const MIN_BURST_INTERVAL_MS = 60;
 
 export const CursorManager: React.FC = () => {
-  const [particles, setParticles] = useState<Particle[]>([]);
-  const lastClickTime = useRef(0);
-
-  const cloverPalette = [
-    {
-      color: "#65a30d",
-      fillColor: "#d9f99d",
-      glow: "rgba(190, 242, 100, 0.34)",
-    },
-    {
-      color: "#4d7c0f",
-      fillColor: "#ecfccb",
-      glow: "rgba(217, 249, 157, 0.38)",
-    },
-    {
-      color: "#15803d",
-      fillColor: "#bbf7d0",
-      glow: "rgba(187, 247, 208, 0.34)",
-    },
-    {
-      color: "#16a34a",
-      fillColor: "#dcfce7",
-      glow: "rgba(220, 252, 231, 0.36)",
-    },
-    {
-      color: "#166534",
-      fillColor: "#86efac",
-      glow: "rgba(134, 239, 172, 0.32)",
-    },
-    {
-      color: "#84cc16",
-      fillColor: "#f7fee7",
-      glow: "rgba(236, 252, 203, 0.42)",
-    },
-  ];
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      const now = Date.now();
-      if (now - lastClickTime.current < 500) return; // 500ms debounce to prevent rendering overload
-      lastClickTime.current = now;
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
 
-      const clickX = e.clientX;
-      const clickY = e.clientY;
+    const engine = new ClickEffectEngine(canvas);
+    let lastBurstTime = 0;
 
-      // Create burst particles
-      const particleCount = 8;
-      const newParticles: Particle[] = Array.from({ length: particleCount }).map(
-        (_, i) => ({
-          id: Date.now() + i,
-          x: clickX,
-          y: clickY,
-          ...cloverPalette[Math.floor(Math.random() * cloverPalette.length)],
-          angle: (Math.PI * 2 * i) / particleCount + Math.random() * 0.5,
-          velocity: 72 + Math.random() * 68,
-          size: 22 + Math.random() * 12,
-          rotation: Math.random() * 360,
-        }),
-      );
-
-      setParticles((prev) => [...prev, ...newParticles]);
-
-      // Cleanup particles after animation
-      setTimeout(() => {
-        setParticles((prev) =>
-          prev.filter((p) => !newParticles.find((np) => np.id === p.id)),
-        );
-      }, 850);
+    const handleClick = (event: MouseEvent) => {
+      const now = performance.now();
+      if (now - lastBurstTime < MIN_BURST_INTERVAL_MS) {
+        return;
+      }
+      lastBurstTime = now;
+      engine.burst(event.clientX, event.clientY);
     };
+    const handleResize = () => engine.resize();
+
     window.addEventListener("click", handleClick, true);
+    window.addEventListener("resize", handleResize);
 
     return () => {
       window.removeEventListener("click", handleClick, true);
+      window.removeEventListener("resize", handleResize);
+      engine.destroy();
     };
   }, []);
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[9999999]">
-      {particles.map((p) => (
-        <div
-          key={p.id}
-          className="cursor-burst-particle fixed select-none"
-          style={
-            {
-              left: p.x - p.size / 2,
-              top: p.y - p.size / 2,
-              width: p.size * 2.8,
-              height: p.size * 2.8,
-              "--particle-translate-x": `${Math.cos(p.angle) * p.velocity}px`,
-              "--particle-translate-y": `${Math.sin(p.angle) * p.velocity}px`,
-              "--particle-rotate-start": `${p.rotation}deg`,
-              "--particle-rotate-end": `${p.rotation + 120}deg`,
-            } as React.CSSProperties
-          }
-        >
-          <div
-            className="relative flex h-full w-full items-center justify-center"
-            style={{
-              filter: `drop-shadow(0 0 8px ${p.glow}) drop-shadow(0 0 18px ${p.glow})`,
-            }}
-          >
-            <div
-              className="absolute rounded-full"
-              style={{
-                width: p.size * 1.65,
-                height: p.size * 1.65,
-                background: `radial-gradient(circle, ${p.glow} 0%, rgba(217,249,157,0.22) 42%, rgba(217,249,157,0) 76%)`,
-              }}
-            />
-            <Club
-              aria-hidden
-              strokeWidth={1.75}
-              style={{
-                width: p.size,
-                height: p.size,
-                color: p.color,
-                fill: p.fillColor,
-                fillOpacity: 0.96,
-              }}
-            />
-          </div>
-        </div>
-      ))}
-    </div>
+    <canvas
+      ref={canvasRef}
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 z-[9999999] h-full w-full"
+    />
   );
 };

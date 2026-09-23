@@ -7,7 +7,7 @@ const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
 const HOLOGRAPHIC_SPRING = { stiffness: 120, damping: 20 };
-const BASE_IMAGE_URL = "/assets/puzzlegame/riko_puzzle_birthday_banquet.png";
+const BASE_IMAGE_URL = "/assets/puzzlegame/riko_puzzle_birthday_banquet.webp";
 
 const Toggle: React.FC<{
   label: string;

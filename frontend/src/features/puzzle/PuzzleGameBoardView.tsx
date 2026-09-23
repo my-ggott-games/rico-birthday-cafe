@@ -24,7 +24,6 @@ import {
   type PuzzleBoardConfig,
 } from "./constants";
 import type { PuzzlePiece } from "./types";
-import { PUZZLE_IMAGE_URL } from "../../constants/puzzle";
 
 type PuzzleGameBoardViewProps = {
   sensors: SensorDescriptor<any>[];
@@ -43,6 +42,8 @@ type PuzzleGameBoardViewProps = {
   completed: boolean;
   pieces: PuzzlePiece[];
   boardConfig: PuzzleBoardConfig;
+  gameplayImageUrl: string;
+  detailImageUrl: string;
   isMagnifierActive: boolean;
   magnifierPoint: { x: number; y: number };
   updateMagnifierPoint: (clientX: number, clientY: number) => void;
@@ -72,6 +73,8 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
   completed,
   pieces,
   boardConfig,
+  gameplayImageUrl,
+  detailImageUrl,
   isMagnifierActive,
   magnifierPoint,
   updateMagnifierPoint,
@@ -106,7 +109,7 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
           <defs>
             <image
               id="shared-puzzle-img"
-              href={PUZZLE_IMAGE_URL}
+              href={gameplayImageUrl}
               width={boardWidth}
               height={boardHeight}
               preserveAspectRatio="none"
@@ -209,6 +212,7 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                               completed={completed}
                               displayPieceSize={displayPieceSize}
                               boardConfig={boardConfig}
+                              imageUrl={gameplayImageUrl}
                             />
                           );
                         })}
@@ -219,7 +223,7 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                           mobileInteractive={false}
                           orientationEnabled={false}
                           desktopSweep={true}
-                          imageUrl={PUZZLE_IMAGE_URL}
+                          imageUrl={detailImageUrl}
                         />
                       )}
                       {completed && (
@@ -265,7 +269,7 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                           />
                           <MagnifyingGlass
                             visible={isMagnifierActive}
-                            imageUrl={PUZZLE_IMAGE_URL}
+                            imageUrl={detailImageUrl}
                             boardWidth={displayPieceSize * cols}
                             boardHeight={displayPieceSize * rows}
                             pointerX={magnifierPoint.x}
@@ -284,7 +288,7 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                           }}
                         >
                           <HolographicCard
-                            imageSrc={PUZZLE_IMAGE_URL}
+                            imageSrc={detailImageUrl}
                             width={`${displayPieceSize * cols}px`}
                             height={`${displayPieceSize * rows}px`}
                             foilType="holo"
@@ -384,6 +388,7 @@ export const PuzzleGameBoardView: React.FC<PuzzleGameBoardViewProps> = ({
                 onRotate={handleRotate}
                 displayPieceSize={displayPieceSize}
                 boardConfig={boardConfig}
+                imageUrl={gameplayImageUrl}
               />
             ))}
           </div>

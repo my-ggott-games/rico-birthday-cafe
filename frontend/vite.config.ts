@@ -24,6 +24,14 @@ export default defineConfig({
             return;
           }
 
+          if (id.includes("pixi.js") || id.includes("@pixi/")) {
+            return "pixi";
+          }
+
+          if (id.includes("html2canvas") || id.includes("modern-screenshot")) {
+            return "screenshot";
+          }
+
           if (id.includes("framer-motion")) {
             return "motion";
           }

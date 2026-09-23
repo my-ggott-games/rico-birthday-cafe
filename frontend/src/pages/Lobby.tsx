@@ -7,6 +7,7 @@ import { AdminModal } from "../components/auth/AdminModal";
 import { AuthModal } from "../components/auth/AuthModal";
 import { NoteModal } from "../components/common/NoteModal";
 import { PushableButton } from "../components/common/PushableButton";
+import ProgressiveBackground from "../components/common/ProgressiveBackground";
 import { usePageBgm } from "../hooks/usePageBgm";
 import {
   PUZZLE_MUSEUM_UNLOCK_EVENT,
@@ -22,10 +23,8 @@ import {
   addAchievementToast,
   parseAchievementAwardResponse,
 } from "../utils/achievementAwards";
-import {
-  LobbyHotspot,
-  LobbyIconTile,
-} from "../features/lobby/LobbyHotspot";
+import { ChikoPlayground } from "../features/lobby/chiko/ChikoPlayground";
+import { useChikoReducedMotion } from "../features/lobby/chiko/useChikoReducedMotion";
 import {
   getLobbyNoteContent,
   type LobbyNoteKey,
@@ -34,6 +33,7 @@ import {
 const SLOGAN_COLLECTOR_CODE = "SLOGAN_COLLECTOR";
 const SLOGAN_COLLECTOR_STORAGE_KEY = "lobby_slogan_collector_unlocked";
 const CLICK_DROP_THRESHOLD = 100;
+const BIRTHDAY_SEASON_MONTHS = new Set([2, 3]);
 const CLICK_SHAKE_MILESTONES = new Set(
   Array.from({ length: 10 }, (_, index) => index * 10).concat(1),
 );
@@ -47,9 +47,6 @@ const Lobby: React.FC = () => {
   const addToast = useToastStore((state) => state.addToast);
 
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  const [backgroundSrc, setBackgroundSrc] = useState(
-    "/pages/lobby/background-thumb.jpg",
-  );
   const [isAchievementOpen, setIsAchievementOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -57,6 +54,8 @@ const Lobby: React.FC = () => {
     window.localStorage.getItem(EASTER_EGG_NOTE_ACCESS_STORAGE_KEY) === "true",
   );
   const [isNoteToggleOn, setIsNoteToggleOn] = useState(true);
+  const { isReducedMotion: isChikoMotionReduced, toggleReducedMotion } =
+    useChikoReducedMotion();
   const [activeNoteKey, setActiveNoteKey] = useState<LobbyNoteKey | null>(null);
   const [isPuzzleMuseumUnlocked, setIsPuzzleMuseumUnlocked] = useState(
     window.localStorage.getItem(PUZZLE_MUSEUM_UNLOCK_KEY) === "true",
@@ -67,6 +66,9 @@ const Lobby: React.FC = () => {
     window.localStorage.getItem(SLOGAN_COLLECTOR_STORAGE_KEY) === "true",
   );
   const [isHappyBirthdayDropping, setIsHappyBirthdayDropping] = useState(false);
+  const [isBirthdaySloganFront] = useState(() =>
+    BIRTHDAY_SEASON_MONTHS.has(new Date().getMonth()),
+  );
   const [isHappyBirthdayHidden, setIsHappyBirthdayHidden] = useState(false);
   const [isSloganDropping, setIsSloganDropping] = useState(false);
   const [isSloganHidden, setIsSloganHidden] = useState(false);
@@ -75,35 +77,18 @@ const Lobby: React.FC = () => {
 
   useEffect(() => {
     console.log("519_2024"); // Easter Egg
-    let isCancelled = false;
 
     const handleResize = () => setWindowWidth(window.innerWidth);
     const handlePuzzleUnlock = () =>
       setIsPuzzleMuseumUnlocked(
         window.localStorage.getItem(PUZZLE_MUSEUM_UNLOCK_KEY) === "true",
       );
-    const backgroundImage = new Image();
-    backgroundImage.src = "/pages/lobby/background.webp";
-
-    const revealBackground = () => {
-      if (!isCancelled) {
-        setBackgroundSrc("/pages/lobby/background.webp");
-      }
-    };
-
-    if (backgroundImage.complete) {
-      revealBackground();
-    } else {
-      backgroundImage.onload = revealBackground;
-    }
 
     window.addEventListener("resize", handleResize);
     window.addEventListener("storage", handlePuzzleUnlock);
     window.addEventListener(PUZZLE_MUSEUM_UNLOCK_EVENT, handlePuzzleUnlock);
 
     return () => {
-      isCancelled = true;
-      backgroundImage.onload = null;
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("storage", handlePuzzleUnlock);
       window.removeEventListener(
@@ -255,7 +240,11 @@ const Lobby: React.FC = () => {
   }, [sloganControls, isSloganHidden, isSloganDropping]);
 
   const handleHappyBirthdayClick = useCallback(() => {
-    if (isHappyBirthdayDropping || isHappyBirthdayHidden) {
+    if (
+      (!isBirthdaySloganFront && !isSloganHidden) ||
+      isHappyBirthdayDropping ||
+      isHappyBirthdayHidden
+    ) {
       return;
     }
 
@@ -263,6 +252,9 @@ const Lobby: React.FC = () => {
     setHappyBirthdayClickCount(nextClickCount);
 
     if (nextClickCount >= CLICK_DROP_THRESHOLD) {
+      if (!isBirthdaySloganFront) {
+        void unlockSloganCollectorAchievement();
+      }
       triggerHappyBirthdayDrop();
       return;
     }
@@ -272,14 +264,21 @@ const Lobby: React.FC = () => {
     }
   }, [
     happyBirthdayClickCount,
+    isBirthdaySloganFront,
     isHappyBirthdayDropping,
     isHappyBirthdayHidden,
+    isSloganHidden,
     triggerHappyBirthdayDrop,
     triggerHappyBirthdayShake,
+    unlockSloganCollectorAchievement,
   ]);
 
   const handleSloganClick = useCallback(() => {
-    if (isHappyBirthdayHidden === false || isSloganDropping || isSloganHidden) {
+    if (
+      (isBirthdaySloganFront && !isHappyBirthdayHidden) ||
+      isSloganDropping ||
+      isSloganHidden
+    ) {
       return;
     }
 
@@ -287,7 +286,9 @@ const Lobby: React.FC = () => {
     setSloganClickCount(nextClickCount);
 
     if (nextClickCount >= CLICK_DROP_THRESHOLD) {
-      void unlockSloganCollectorAchievement();
+      if (isBirthdaySloganFront) {
+        void unlockSloganCollectorAchievement();
+      }
       triggerSloganDrop();
       return;
     }
@@ -296,6 +297,7 @@ const Lobby: React.FC = () => {
       triggerSloganShake();
     }
   }, [
+    isBirthdaySloganFront,
     isHappyBirthdayHidden,
     isSloganDropping,
     isSloganHidden,
@@ -306,6 +308,7 @@ const Lobby: React.FC = () => {
   ]);
 
   const isMobile = windowWidth < 768;
+  const isCompactMobile = windowWidth < 390;
   const hasSecretNoteAccess = isAdmin || isEasterEggNoteAccess;
   const canViewSecretNotes = hasSecretNoteAccess && isNoteToggleOn;
   const noteToggleButton = hasSecretNoteAccess ? (
@@ -323,6 +326,20 @@ const Lobby: React.FC = () => {
       <AppIcon name="StickyNote" size={isMobile ? 16 : 18} />
     </button>
   ) : null;
+  const chikoMotionToggleButton = (
+    <button
+      type="button"
+      aria-label={isChikoMotionReduced ? "치코 움직이기" : "치코 멈추기"}
+      aria-pressed={isChikoMotionReduced}
+      onClick={toggleReducedMotion}
+      className={`inline-flex items-center justify-center self-center rounded-full border-2 border-[#D6B089] bg-[#FFF4D8] text-[#9B6A3D] shadow-[0_8px_18px_rgba(128,87,40,0.2)] ${isMobile ? "h-9 w-9 shrink-0" : "h-[42px] w-[42px] shrink-0"}`}
+    >
+      <AppIcon
+        name={isChikoMotionReduced ? "Play" : "Pause"}
+        size={isMobile ? 16 : 18}
+      />
+    </button>
+  );
   const profileButton = (
     <PushableButton
       onClick={() => {
@@ -333,7 +350,7 @@ const Lobby: React.FC = () => {
         }
       }}
       variant="mint"
-      className={`${isMobile ? "min-h-9 px-3 py-1 text-sm" : "min-h-[2.75rem] px-7 py-2 text-base"} rounded-full`}
+      className={`${isMobile ? "min-h-9 shrink-0 px-2.5 py-1 text-[11px]" : "min-h-[2.75rem] px-7 py-2 text-base"} rounded-full`}
     >
       <span className="flex items-center gap-1.5 whitespace-nowrap">
         <AppIcon name="IdCardLanyard" size={16} />
@@ -345,10 +362,11 @@ const Lobby: React.FC = () => {
     <PushableButton
       onClick={() => navigate("/credits")}
       variant="cream"
-      className={`${isMobile ? "min-h-9 px-3 py-1 text-sm" : "min-h-[2.75rem] px-7 py-2 text-base"} rounded-full`}
+      className={`${isMobile ? `${isCompactMobile ? "min-h-9 shrink min-w-0 px-1.5 py-1 text-[10px]" : "min-h-9 shrink min-w-0 px-2 py-1 text-[11px]"}` : "min-h-[2.75rem] px-7 py-2 text-base"} rounded-full`}
     >
       <span className="flex items-center gap-1.5 whitespace-nowrap">
-        <AppIcon name="Clapperboard" size={16} /> Who Made This?!
+        <AppIcon name="Clapperboard" size={isCompactMobile ? 14 : 16} /> Who
+        Made This?!
       </span>
     </PushableButton>
   );
@@ -364,11 +382,16 @@ const Lobby: React.FC = () => {
 
   return (
     <div className="relative w-full min-h-screen overflow-x-hidden bg-[#FFFFF8]">
-      <div
-        className="absolute inset-0 pointer-events-none bg-center bg-cover bg-no-repeat"
-        style={{
-          backgroundImage: `url('${backgroundSrc}')`,
-        }}
+      <ProgressiveBackground
+        thumbnailSrc="/pages/lobby/background-thumb.jpg"
+        midSrc="/pages/lobby/background-mid.webp"
+        fullSrc="/pages/lobby/background-full.webp"
+        previewFetchPriority="high"
+        className="z-0"
+        overlayClassName="bg-transparent"
+        imageClassName="object-cover object-center"
+        showVignette={false}
+        fullResLoadDelayMs={420}
       />
       <div className="absolute inset-0 pointer-events-none bg-white/30" />
 
@@ -378,9 +401,14 @@ const Lobby: React.FC = () => {
         <header
           className={`flex justify-center ${isMobile ? "items-start mb-2" : "items-center"}`}
         >
-          <div className={`flex flex-col items-center ${isMobile ? "gap-1" : "gap-3"}`}>
-            <div className="flex items-center gap-3">
+          <div
+            className={`flex flex-col items-center ${isMobile ? "gap-1" : "gap-3"}`}
+          >
+            <div
+              className={`${isMobile ? "flex w-full max-w-full items-center justify-center gap-2" : "flex items-center gap-3"}`}
+            >
               {noteToggleButton}
+              {chikoMotionToggleButton}
               {creditsButton}
               {profileButton}
               {!isMobile && adminButton}
@@ -421,7 +449,7 @@ const Lobby: React.FC = () => {
                 }
               }}
               onClick={handleHappyBirthdayClick}
-              className="lobby-slogan-stage__happy-birthday absolute left-1/2 top-1/2 w-[min(86vw,30rem)] -translate-x-1/2 -translate-y-1/2 cursor-pointer border-0 bg-transparent p-0"
+              className={`${isBirthdaySloganFront ? "lobby-slogan-stage__front" : "lobby-slogan-stage__back"} absolute left-1/2 top-1/2 w-[min(86vw,30rem)] -translate-x-1/2 -translate-y-1/2 border-0 bg-transparent p-0 ${isBirthdaySloganFront || isSloganHidden ? "cursor-pointer" : ""}`}
             >
               <div
                 className={`relative overflow-hidden rounded-[1.1rem] ${isMobile ? "h-[6.4rem]" : "h-[10rem]"}`}
@@ -454,7 +482,7 @@ const Lobby: React.FC = () => {
                 }
               }}
               onClick={handleSloganClick}
-              className={`lobby-slogan-stage__banner absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-transparent p-0 border-0 ${isHappyBirthdayHidden ? "cursor-pointer" : ""}`}
+              className={`${isBirthdaySloganFront ? "lobby-slogan-stage__back" : "lobby-slogan-stage__front"} absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-transparent p-0 border-0 ${!isBirthdaySloganFront || isHappyBirthdayHidden ? "cursor-pointer" : ""}`}
             >
               <KCelebrateSlogan
                 className="slogan-lobby"
@@ -467,94 +495,12 @@ const Lobby: React.FC = () => {
             </motion.button>
           )}
         </div>
-        <div
-          className={`flex-1 relative ${isMobile ? "mt-2 grid grid-cols-2 gap-x-3 gap-y-4 place-items-center content-center pb-8" : "mt-6 flex flex-wrap justify-center items-center gap-6 pb-8"}`}
-        >
-          {/* Hotspot: TPO Cody (Paper Doll Table) */}
-          <LobbyHotspot
-            to="/game/cody"
-            noteKey="cody"
-            noteVisible={canViewSecretNotes}
-            onOpenNote={setActiveNoteKey}
-            isMobile={isMobile}
-          >
-            <motion.div whileHover={{ scale: 1.05 }} className="group">
-              <LobbyIconTile
-                name="리코의 외출 준비"
-                icon="Shirt"
-                isMobile={isMobile}
-                bgColor="#FFE4E6"
-                borderColor="#e7bcc2"
-                iconColor="#cf9aa3"
-              />
-            </motion.div>
-          </LobbyHotspot>
-
-          {/* Hotspot: Mini Game (Puzzle) */}
-          <LobbyHotspot
-            to="/game/puzzle"
-            noteKey="puzzle"
-            noteVisible={canViewSecretNotes}
-            onOpenNote={setActiveNoteKey}
-            isMobile={isMobile}
-          >
-            <motion.div whileHover={{ scale: 1.05 }} className="group">
-              <LobbyIconTile
-                name="퍼즐 맞추기"
-                icon="Puzzle"
-                isMobile={isMobile}
-                bgColor={
-                  isMobile || isPuzzleMuseumUnlocked ? "#f5ecdd" : "#a3e635"
-                }
-                borderColor={
-                  isMobile || isPuzzleMuseumUnlocked ? "#ddd1bf" : "#84bf2e"
-                }
-                iconColor={
-                  isMobile || isPuzzleMuseumUnlocked ? "#b9ab97" : "#6e9f23"
-                }
-              />
-            </motion.div>
-          </LobbyHotspot>
-
-          {/* Hotspot: Asparagus Merge (2048 style) */}
-          <LobbyHotspot
-            to="/game/asparagus"
-            noteKey="asparagus"
-            noteVisible={canViewSecretNotes}
-            onOpenNote={setActiveNoteKey}
-            isMobile={isMobile}
-          >
-            <motion.div whileHover={{ scale: 1.05 }} className="group">
-              <LobbyIconTile
-                name="아스파라거스 키우기"
-                icon="Sprout"
-                isMobile={isMobile}
-                bgColor="#d4edda"
-                borderColor="#aad0b2"
-                iconColor="#2d6a4f"
-              />
-            </motion.div>
-          </LobbyHotspot>
-
-          <LobbyHotspot
-            to="/game/adventure"
-            noteKey="adventure"
-            noteVisible={canViewSecretNotes}
-            onOpenNote={setActiveNoteKey}
-            isMobile={isMobile}
-          >
-            <motion.div whileHover={{ scale: 1.05 }} className="group">
-              <LobbyIconTile
-                name="용사 리코 이야기"
-                icon="Swords"
-                isMobile={isMobile}
-                bgColor="#d8e4f7"
-                borderColor="#aebed7"
-                iconColor="#102542"
-              />
-            </motion.div>
-          </LobbyHotspot>
-        </div>
+        <ChikoPlayground
+          isMobile={isMobile}
+          isReducedMotion={isChikoMotionReduced}
+          noteVisible={canViewSecretNotes}
+          onOpenNote={setActiveNoteKey}
+        />
       </div>
       {isMobile && adminButton}
 

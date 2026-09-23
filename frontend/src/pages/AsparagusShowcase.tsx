@@ -231,6 +231,7 @@ const AsparagusShowcase: React.FC = () => {
                   isSwapMode={isSwapMode}
                   isAdmin
                   debugMode={false}
+                  gameOver={false}
                   onUndo={resetPreview}
                   onToggleSwapMode={() => {
                     setIsSwapMode((prev) => !prev);

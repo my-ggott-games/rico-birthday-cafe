@@ -8,7 +8,6 @@ import {
   TAP_ROTATE_MAX_MS,
   type PuzzleBoardConfig,
 } from "../../../features/puzzle/constants";
-import { PUZZLE_IMAGE_URL } from "../../../constants/puzzle";
 import {
   createGuidelinePath,
   getScaledBounds,
@@ -19,6 +18,7 @@ type PuzzlePieceComponentProps = {
   piece: PuzzlePiece;
   displayPieceSize: number;
   boardConfig: PuzzleBoardConfig;
+  imageUrl: string;
   className?: string;
   showOutline?: boolean;
 };
@@ -27,6 +27,7 @@ const PuzzlePieceComponent = ({
   piece,
   displayPieceSize,
   boardConfig,
+  imageUrl,
   className,
   showOutline = true,
 }: PuzzlePieceComponentProps) => {
@@ -69,7 +70,7 @@ const PuzzlePieceComponent = ({
           top: `${-offsetY - bleed}px`,
           width: `${renderWidth}px`,
           height: `${renderHeight}px`,
-          backgroundImage: `url(${PUZZLE_IMAGE_URL})`,
+          backgroundImage: `url(${imageUrl})`,
           backgroundSize: `${boardConfig.boardWidth * scale}px ${boardConfig.boardHeight * scale}px`,
           backgroundPosition: `${-piece.expandedBounds.x * scale + bleed}px ${-piece.expandedBounds.y * scale + bleed}px`,
           backgroundRepeat: "no-repeat",
@@ -163,6 +164,7 @@ type DroppableCellProps = {
   completed: boolean;
   displayPieceSize: number;
   boardConfig: PuzzleBoardConfig;
+  imageUrl: string;
 };
 
 export const DroppableCell = ({
@@ -172,6 +174,7 @@ export const DroppableCell = ({
   completed,
   displayPieceSize,
   boardConfig,
+  imageUrl,
 }: DroppableCellProps) => {
   const { setNodeRef, isOver } = useDroppable({ id });
 
@@ -191,6 +194,7 @@ export const DroppableCell = ({
           piece={placedPiece}
           displayPieceSize={displayPieceSize}
           boardConfig={boardConfig}
+          imageUrl={imageUrl}
           showOutline={false}
         />
       )}
@@ -282,11 +286,13 @@ export const DraggablePiece = React.memo(
     onRotate,
     displayPieceSize,
     boardConfig,
+    imageUrl,
   }: {
     piece: PuzzlePiece;
     onRotate: (id: number) => void;
     displayPieceSize: number;
     boardConfig: PuzzleBoardConfig;
+    imageUrl: string;
   }) => {
     const { attributes, listeners, setNodeRef, isDragging, transform } =
       useDraggable({
@@ -376,6 +382,7 @@ export const DraggablePiece = React.memo(
             piece={piece}
             displayPieceSize={displayPieceSize}
             boardConfig={boardConfig}
+            imageUrl={imageUrl}
           />
         </motion.div>
       </div>
@@ -384,5 +391,6 @@ export const DraggablePiece = React.memo(
   (prev, next) =>
     prev.piece === next.piece &&
     prev.displayPieceSize === next.displayPieceSize &&
-    prev.boardConfig === next.boardConfig,
+    prev.boardConfig === next.boardConfig &&
+    prev.imageUrl === next.imageUrl,
 );

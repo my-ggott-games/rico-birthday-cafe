@@ -12,6 +12,10 @@
   --color-egg-shell: #faffff;
   --color-blanc-de-blanc: #f6f6f6;
   --color-cream: var(--color-cream);
+
+  --animate-chiko-walk:
+    chiko-hop 0.42s ease-out infinite, chiko-sway 0.84s ease-in-out infinite;
+  --animate-chiko-idle: chiko-breathe 2.4s ease-in-out infinite;
 }
 
 /* 
@@ -136,8 +140,22 @@ button {
 
 @font-face {
   font-family: "OneStoreMobilePop";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-POP.woff") format("woff");
+  src:
+    url("./assets/fonts/ONE-Mobile-POP-subset.woff") format("woff"),
+    url("./assets/fonts/ONE-Mobile-POP.woff") format("woff"),
+    url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-POP.woff") format("woff");
   font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JoseonPalace";
+  src:
+    url("./assets/fonts/JoseonPalace.woff") format("woff"),
+    url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/ChosunGs.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
   font-display: swap;
 }
 
@@ -213,24 +231,6 @@ button {
     opacity: 0;
     transform: scale(1.7);
   }
-}
-
-@keyframes cursor-burst {
-  from {
-    transform: translate3d(0, 0, 0) scale(1) rotate(var(--particle-rotate-start, 0deg));
-    opacity: 1;
-  }
-
-  to {
-    transform: translate3d(var(--particle-translate-x, 0), var(--particle-translate-y, 0), 0) scale(0.72) rotate(var(--particle-rotate-end, 120deg));
-    opacity: 0;
-  }
-}
-
-.cursor-burst-particle {
-  animation: cursor-burst 620ms ease-out forwards;
-  transform-origin: center;
-  will-change: transform, opacity;
 }
 
 @keyframes phase-transition-wash {
@@ -417,11 +417,11 @@ button {
   isolation: isolate;
 }
 
-.lobby-slogan-stage__happy-birthday {
+.lobby-slogan-stage__front {
   z-index: 30;
 }
 
-.lobby-slogan-stage__banner {
+.lobby-slogan-stage__back {
   z-index: 20;
 }
 
@@ -545,6 +545,39 @@ button {
 }
 
 /* ── Keyframes ── */
+@keyframes chiko-hop {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 0 -7px;
+  }
+}
+
+@keyframes chiko-sway {
+  0%,
+  100% {
+    rotate: -4deg;
+  }
+
+  50% {
+    rotate: 4deg;
+  }
+}
+
+@keyframes chiko-breathe {
+  0%,
+  100% {
+    scale: 1 1;
+  }
+
+  50% {
+    scale: 1.02 0.97;
+  }
+}
+
 @keyframes bf-hover {
   0% {
     translate: 0 0;
@@ -649,6 +682,7 @@ button {
   position: relative;
   z-index: 0;
   display: inline-block;
+  font-family: "OneStoreMobilePop", system-ui, sans-serif;
 }
 
 .landing-enter-text-stroke::before {
