@@ -13,6 +13,7 @@ import {
   setPageTransitionLoading,
 } from "../../utils/pageTransitionLoading";
 import { useAuthStore } from "../../store/useAuthStore";
+import { useNetworkStore } from "../../store/useNetworkStore";
 import {
   getAssetGroupForPath,
   getAssetGroupProgress,
@@ -20,6 +21,8 @@ import {
 } from "../../utils/assetPreloadQueue";
 
 const MAX_LOADING_MS = 8000;
+// Slow lines get longer to fetch the first screen before it is revealed.
+const SLOW_MAX_LOADING_MS = 12000;
 
 const GlobalLoading: React.FC = () => {
   const location = useLocation();
@@ -86,9 +89,15 @@ const GlobalLoading: React.FC = () => {
       prioritizeAssetGroup(groupId);
     }
 
+    const { measureNetworkSpeed } = useNetworkStore.getState();
+    measureNetworkSpeed();
+
     // Stay up at least this long (landing already plays an enter animation),
-    // then until the page's first-screen assets arrive, capped at MAX_LOADING_MS.
+    // then until the page's first-screen assets arrive, capped at maxDuration.
     const minDuration = isLandingToLobby ? 2000 : 3000;
+    const maxDuration = useNetworkStore.getState().isSlowNetwork
+      ? SLOW_MAX_LOADING_MS
+      : MAX_LOADING_MS;
     const startTime = performance.now();
     let targetPercent = 0;
     let frameId = 0;
@@ -104,7 +113,7 @@ const GlobalLoading: React.FC = () => {
         : { loaded: 0, total: 0 };
       const assetRatio = total === 0 ? 1 : loaded / total;
       const isDone =
-        elapsed >= MAX_LOADING_MS || (assetRatio === 1 && elapsed >= minDuration);
+        elapsed >= maxDuration || (assetRatio === 1 && elapsed >= minDuration);
 
       if (isDone) {
         progress.set(100);

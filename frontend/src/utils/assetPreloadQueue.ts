@@ -22,9 +22,10 @@ type AssetGroup = {
 const ASSET_GROUPS: Record<AssetGroupId, AssetGroup> = {
   lobby: {
     path: "/lobby",
+    // Loading screen first: it covers the lobby while the rest arrives.
     chunks: [
-      () => import("../pages/Lobby"),
       () => import("../components/common/GlobalLoading"),
+      () => import("../pages/Lobby"),
     ],
     eager: [
       "/pages/lobby/background-thumb.jpg",
@@ -165,11 +166,6 @@ const enqueue = (jobs: Job[], position: "front" | "back") => {
   pump();
 };
 
-export const isSaveDataMode = () =>
-  typeof navigator !== "undefined" &&
-  (navigator as Navigator & { connection?: { saveData?: boolean } }).connection
-    ?.saveData === true;
-
 // Queue a group's first-screen assets behind everything already waiting.
 export const enqueueAssetGroup = (id: AssetGroupId) => {
   enqueue(groupJobs(id, "eager"), "back");
@@ -181,10 +177,8 @@ export const prioritizeAssetGroup = (id: AssetGroupId) => {
 };
 
 // After the lobby is up: game code and first screens in popularity order, then
-// every game's remaining assets. Data saver only gets intent-driven loads.
+// every game's remaining assets.
 export const startBackgroundGamePreload = () => {
-  if (isSaveDataMode()) return;
-
   BACKGROUND_GAME_ORDER.forEach(enqueueAssetGroup);
   enqueue(
     BACKGROUND_GAME_ORDER.flatMap((id) => groupJobs(id, "rest")),

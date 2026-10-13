@@ -116,12 +116,17 @@ function NonLandingGlobals() {
     return null;
   }
 
+  // Separate boundaries: the loading screen must not wait for the other chunks.
   return (
-    <Suspense fallback={null}>
-      <GlobalLoading />
-      <AchievementToast />
-      <GlobalAudioToggle />
-    </Suspense>
+    <>
+      <Suspense fallback={null}>
+        <GlobalLoading />
+      </Suspense>
+      <Suspense fallback={null}>
+        <AchievementToast />
+        <GlobalAudioToggle />
+      </Suspense>
+    </>
   );
 }
 
