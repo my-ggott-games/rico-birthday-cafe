@@ -10,7 +10,7 @@ import {
   LOBBY_BACKGROUND_FULL_SRC,
   LOBBY_BACKGROUND_THUMB_SRC,
 } from "../constants/lobbyAssets";
-import { getBgmAudio, LOBBY_BGM_SRC } from "./bgm";
+import { getBgmAudio, LOBBY_BGM_SRC, peekActivityBgm } from "./bgm";
 import { CODY_ALL_ASSETS, CODY_EAGER_ASSETS } from "./codyAssets";
 
 export type AssetGroupId = "lobby" | "cody" | "puzzle" | "asparagus" | "adventure";
@@ -22,9 +22,10 @@ type AssetGroup = {
   eager: string[];
   // Fetched after every group's eager assets, or right away once prioritized.
   rest: string[];
-  // Started before `rest` images.
-  restAudio?: string[];
-  // Run the rest one at a time, in order, instead of in parallel.
+  // BGM, started right after the first screen and before `rest` images. A
+  // function because game tracks are picked at random per visit.
+  bgm?: () => string;
+  // Run the rest images one at a time, in order, instead of in parallel.
   sequentialRest?: boolean;
 };
 
@@ -45,7 +46,7 @@ const ASSET_GROUPS: Record<AssetGroupId, AssetGroup> = {
       "/slogan/happybirthday.jpg",
       "/pages/lobby/decor/ezipia.png",
     ],
-    restAudio: [LOBBY_BGM_SRC],
+    bgm: () => LOBBY_BGM_SRC,
     rest: [LOBBY_BACKGROUND_FULL_SRC],
     sequentialRest: true,
   },
@@ -53,24 +54,28 @@ const ASSET_GROUPS: Record<AssetGroupId, AssetGroup> = {
     path: "/game/cody",
     chunks: [() => import("../pages/CodyGame")],
     eager: CODY_EAGER_ASSETS,
+    bgm: peekActivityBgm,
     rest: CODY_ALL_ASSETS.filter((src) => !CODY_EAGER_ASSETS.includes(src)),
   },
   puzzle: {
     path: "/game/puzzle",
     chunks: [() => import("../pages/PuzzleGame")],
     eager: [PUZZLE_GAMEPLAY_IMAGE_URL],
+    bgm: peekActivityBgm,
     rest: [PUZZLE_DETAIL_IMAGE_URL],
   },
   asparagus: {
     path: "/game/asparagus",
     chunks: [() => import("../pages/AsparagusMerge")],
     eager: [],
+    bgm: peekActivityBgm,
     rest: [],
   },
   adventure: {
     path: "/game/adventure",
     chunks: [() => import("../pages/AdventureGame")],
     eager: ADVENTURE_EAGER_ASSET_PATHS,
+    bgm: peekActivityBgm,
     rest: [
       ...ADVENTURE_PLAYER_TEXTURE_PATHS.shock,
       ...ADVENTURE_PLAYER_TEXTURE_PATHS.anger,
@@ -124,7 +129,11 @@ const loadImage = (src: string, urgent: boolean) =>
 const loadAudio = (src: string) =>
   new Promise<void>((resolve) => {
     const audio = getBgmAudio(src);
-    if (audio.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
+    // Already loading or loaded (requested by another group or by playback).
+    if (
+      audio.preload === "auto" ||
+      audio.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA
+    ) {
       resolve();
       return;
     }
@@ -166,17 +175,21 @@ const groupJobs = (id: AssetGroupId, tier: Job["tier"]): Job[] => {
           run: load,
         }))
       : [];
-  const audioJobs: Job[] =
-    tier === "rest"
-      ? (group.restAudio ?? []).map((src) => ({
-          key: src,
+  // Keyed by track, so games sharing a track queue it once. Runs alone so
+  // the track gets a head start before the remaining images.
+  const bgmSrc = tier === "rest" ? group.bgm?.() : undefined;
+  const audioJobs: Job[] = bgmSrc
+    ? [
+        {
+          key: bgmSrc,
           group: id,
           tier,
           urgent: false,
-          sequential,
-          run: () => loadAudio(src),
-        }))
-      : [];
+          sequential: true,
+          run: () => loadAudio(bgmSrc),
+        },
+      ]
+    : [];
 
   return [
     ...chunkJobs,

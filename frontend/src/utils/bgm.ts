@@ -1,14 +1,24 @@
 export const LOBBY_BGM_SRC = "/sound/lobby-bgm-128k.m4a";
 
 export const ACTIVITY_BGM_SOURCES = [
-  "/sound/activity-bgm-1.m4a",
-  "/sound/activity-bgm-2.m4a",
+  "/sound/activity-bgm-1-128k.m4a",
+  "/sound/activity-bgm-2-128k.m4a",
 ] as const;
 
-export const pickRandomActivityBgm = () =>
+const pickRandomActivityBgm = () =>
   ACTIVITY_BGM_SOURCES[
     Math.floor(Math.random() * ACTIVITY_BGM_SOURCES.length)
   ];
+
+// The track the next game page will play, decided ahead so the preload queue
+// fetches the same one. Re-rolled when a page using it unmounts.
+let upcomingActivityBgm = pickRandomActivityBgm();
+
+export const peekActivityBgm = () => upcomingActivityBgm;
+
+export const rerollActivityBgm = () => {
+  upcomingActivityBgm = pickRandomActivityBgm();
+};
 
 const bgmAudioBySrc = new Map<string, HTMLAudioElement>();
 

@@ -21,7 +21,7 @@ import { domToJpeg } from "modern-screenshot";
 import { prioritizeAssetGroup } from "../utils/assetPreloadQueue";
 import { CODY_TUTORIAL_SLIDES } from "../constants/tutorialSlides";
 import { usePageBgm } from "../hooks/usePageBgm";
-import { pickRandomActivityBgm } from "../utils/bgm";
+import { useActivityBgm } from "../hooks/useActivityBgm";
 import { BASE_URL } from "../utils/api";
 import { useAuthStore } from "../store/useAuthStore";
 import { useToastStore } from "../store/useToastStore";
@@ -54,9 +54,10 @@ const createCodyFormattedDate = () => {
 
 const CodyGame: React.FC = () => {
   const navigate = useNavigate();
-  const [bgmSrc] = useState(() => pickRandomActivityBgm());
+  const bgmSrc = useActivityBgm();
 
-  usePageBgm(bgmSrc);
+  // The preload queue starts the BGM after this page's first-screen assets.
+  usePageBgm(bgmSrc, { deferLoad: true });
 
   const {
     activeId,

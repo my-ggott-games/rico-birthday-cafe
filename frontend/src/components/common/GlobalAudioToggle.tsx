@@ -2,7 +2,7 @@ import React from "react";
 import { matchPath, useLocation } from "react-router-dom";
 import { useAudioStore } from "../../store/useAudioStore";
 import { pushEvent } from "../../utils/analytics";
-import { LOBBY_BGM_SRC } from "../../utils/bgm";
+import { ACTIVITY_BGM_SOURCES, LOBBY_BGM_SRC } from "../../utils/bgm";
 import { AppIcon } from "./AppIcon";
 import { NoteModal, type NoteModalContent } from "./NoteModal";
 
@@ -38,7 +38,7 @@ const AUDIO_NOTE_BY_BGM: Record<string, NoteModalContent> = {
     ),
     signature: "Special thanks to 「U+003AU+27B4」",
   },
-  "/sound/activity-bgm-1.m4a": {
+  [ACTIVITY_BGM_SOURCES[0]]: {
     title: "꽃 하나 aka. 밤바밤바",
     eyebrow: "게임 BGM 1",
     icon: "StickyNote",
@@ -62,7 +62,7 @@ const AUDIO_NOTE_BY_BGM: Record<string, NoteModalContent> = {
     ),
     signature: "Special thanks to 「U+003AU+27B4」",
   },
-  "/sound/activity-bgm-2.m4a": {
+  [ACTIVITY_BGM_SOURCES[1]]: {
     title: "그 날, 감자튀김",
     eyebrow: "게임 BGM 2",
     icon: "StickyNote",

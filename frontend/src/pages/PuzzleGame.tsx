@@ -37,7 +37,7 @@ import {
   getDisplayPieceSize,
 } from "../features/puzzle/helpers";
 import type { PuzzlePiece } from "../features/puzzle/types";
-import { pickRandomActivityBgm } from "../utils/bgm";
+import { useActivityBgm } from "../hooks/useActivityBgm";
 import { pushEvent } from "../utils/analytics";
 import { useViewEvent } from "../hooks/usePageTracking";
 import {
@@ -54,7 +54,7 @@ type PuzzleGameProps = {
 };
 
 const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
-  const [bgmSrc] = useState(() => pickRandomActivityBgm());
+  const bgmSrc = useActivityBgm();
   const { token, uid, isAdmin, isGuest } = useAuthStore();
   const currentOwnerId = getPuzzleOwnerId(uid, isGuest);
   const [gridSize, setGridSize] = useState<PuzzleGridSize>(() => {
@@ -62,7 +62,8 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({ embedInContainer = true }) => {
     return storedProgress?.gridSize ?? 10;
   });
 
-  usePageBgm(bgmSrc);
+  // The preload queue starts the BGM after this page's first-screen assets.
+  usePageBgm(bgmSrc, { deferLoad: true });
   useViewEvent("view_game", { game_name: "퍼즐 맞추기" });
 
   useEffect(() => {
