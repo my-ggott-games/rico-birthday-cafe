@@ -3,6 +3,8 @@ import React from "react";
 type ProgressiveBackgroundProps = {
   thumbnailSrc?: string;
   fullSrc: string;
+  // Hold off requesting the full image, e.g. until a preload queue fetched it.
+  loadFull?: boolean;
   alt?: string;
   className?: string;
   overlayClassName?: string;
@@ -15,6 +17,7 @@ type ProgressiveBackgroundProps = {
 const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
   thumbnailSrc,
   fullSrc,
+  loadFull = true,
   alt = "",
   className = "",
   overlayClassName = "bg-black/20",
@@ -32,7 +35,7 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
   // The blurred thumbnail stays up until the full image is downloaded and
   // decoded, so the focus-in transition never shows a half-painted image.
   React.useEffect(() => {
-    if (!thumbnailSrc) return;
+    if (!thumbnailSrc || !loadFull) return;
 
     setIsFullReady(false);
     setIsFullVisible(false);
@@ -61,7 +64,7 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
       isCancelled = true;
       image.onload = null;
     };
-  }, [fullSrc, thumbnailSrc]);
+  }, [fullSrc, loadFull, thumbnailSrc]);
 
   // Mount the full image hidden first, then flip it visible on the next frame
   // so the opacity/blur transition actually runs.

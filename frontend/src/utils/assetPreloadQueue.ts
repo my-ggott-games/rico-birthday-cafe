@@ -6,6 +6,11 @@ import {
   PUZZLE_DETAIL_IMAGE_URL,
   PUZZLE_GAMEPLAY_IMAGE_URL,
 } from "../constants/puzzle";
+import {
+  LOBBY_BACKGROUND_FULL_SRC,
+  LOBBY_BACKGROUND_THUMB_SRC,
+} from "../constants/lobbyAssets";
+import { getBgmAudio, LOBBY_BGM_SRC } from "./bgm";
 import { CODY_ALL_ASSETS, CODY_EAGER_ASSETS } from "./codyAssets";
 
 export type AssetGroupId = "lobby" | "cody" | "puzzle" | "asparagus" | "adventure";
@@ -17,6 +22,10 @@ type AssetGroup = {
   eager: string[];
   // Fetched after every group's eager assets, or right away once prioritized.
   rest: string[];
+  // Started before `rest` images.
+  restAudio?: string[];
+  // Run the rest one at a time, in order, instead of in parallel.
+  sequentialRest?: boolean;
 };
 
 const ASSET_GROUPS: Record<AssetGroupId, AssetGroup> = {
@@ -27,14 +36,18 @@ const ASSET_GROUPS: Record<AssetGroupId, AssetGroup> = {
       () => import("../components/common/GlobalLoading"),
       () => import("../pages/Lobby"),
     ],
+    // During the landing -> lobby loading screen: blurred background first,
+    // then the buttons (chiko games, slogan) and decor. The loader waits for
+    // these only; the BGM and the full background follow in that order.
     eager: [
-      "/pages/lobby/background-thumb.jpg",
+      LOBBY_BACKGROUND_THUMB_SRC,
       "/pages/lobby/chiko/atlas.webp",
-      "/pages/lobby/decor/ezipia.png",
       "/slogan/happybirthday.jpg",
-      "/pages/lobby/background-full-2560.webp",
+      "/pages/lobby/decor/ezipia.png",
     ],
-    rest: [],
+    restAudio: [LOBBY_BGM_SRC],
+    rest: [LOBBY_BACKGROUND_FULL_SRC],
+    sequentialRest: true,
   },
   cody: {
     path: "/game/cody",
@@ -75,18 +88,27 @@ const BACKGROUND_GAME_ORDER: AssetGroupId[] = [
 
 const MAX_CONCURRENT_JOBS = 2;
 
+// Give up waiting on a track after this; downloading continues in the
+// background, the queue just moves on.
+const AUDIO_PRELOAD_TIMEOUT_MS = 4000;
+// iOS ignores preload, so if the track is not loading by now, move on.
+const AUDIO_LOADING_CHECK_MS = 300;
+
 type Job = {
   key: string;
   group: AssetGroupId;
   tier: "eager" | "rest";
   urgent: boolean;
+  sequential: boolean;
   run: (urgent: boolean) => Promise<unknown>;
 };
 
 const pending: Job[] = [];
 const queuedKeys = new Set<string>();
 const finishedKeys = new Set<string>();
+const listeners = new Set<() => void>();
 let runningJobs = 0;
+let isSequentialJobRunning = false;
 
 const loadImage = (src: string, urgent: boolean) =>
   new Promise<void>((resolve) => {
@@ -98,9 +120,41 @@ const loadImage = (src: string, urgent: boolean) =>
     image.src = src;
   });
 
+// Resolves once the track can play through (or clearly will not load now).
+const loadAudio = (src: string) =>
+  new Promise<void>((resolve) => {
+    const audio = getBgmAudio(src);
+    if (audio.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
+      resolve();
+      return;
+    }
+
+    const finish = () => {
+      window.clearTimeout(timeoutId);
+      window.clearTimeout(loadingCheckId);
+      audio.removeEventListener("canplaythrough", finish);
+      audio.removeEventListener("error", finish);
+      resolve();
+    };
+    const timeoutId = window.setTimeout(finish, AUDIO_PRELOAD_TIMEOUT_MS);
+    const loadingCheckId = window.setTimeout(() => {
+      if (audio.networkState !== HTMLMediaElement.NETWORK_LOADING) {
+        finish();
+      }
+    }, AUDIO_LOADING_CHECK_MS);
+    audio.addEventListener("canplaythrough", finish);
+    audio.addEventListener("error", finish);
+
+    audio.preload = "auto";
+    if (audio.paused && audio.readyState === HTMLMediaElement.HAVE_NOTHING) {
+      audio.load();
+    }
+  });
+
 const groupJobs = (id: AssetGroupId, tier: Job["tier"]): Job[] => {
   const group = ASSET_GROUPS[id];
   const images = tier === "eager" ? group.eager : group.rest;
+  const sequential = tier === "rest" && group.sequentialRest === true;
   const chunkJobs: Job[] =
     tier === "eager"
       ? group.chunks.map((load, index) => ({
@@ -108,32 +162,59 @@ const groupJobs = (id: AssetGroupId, tier: Job["tier"]): Job[] => {
           group: id,
           tier,
           urgent: false,
+          sequential,
           run: load,
+        }))
+      : [];
+  const audioJobs: Job[] =
+    tier === "rest"
+      ? (group.restAudio ?? []).map((src) => ({
+          key: src,
+          group: id,
+          tier,
+          urgent: false,
+          sequential,
+          run: () => loadAudio(src),
         }))
       : [];
 
   return [
     ...chunkJobs,
+    ...audioJobs,
     ...images.map((src) => ({
       key: src,
       group: id,
       tier,
       urgent: false,
+      sequential,
       run: (urgent: boolean) => loadImage(src, urgent),
     })),
   ];
 };
 
+const notify = () => listeners.forEach((listener) => listener());
+
 const pump = () => {
-  while (runningJobs < MAX_CONCURRENT_JOBS && pending.length > 0) {
+  while (
+    runningJobs < MAX_CONCURRENT_JOBS &&
+    pending.length > 0 &&
+    !isSequentialJobRunning
+  ) {
+    if (pending[0].sequential && runningJobs > 0) return;
+
     const job = pending.shift()!;
     runningJobs += 1;
+    isSequentialJobRunning = job.sequential;
     job
       .run(job.urgent)
       .catch(() => undefined)
       .finally(() => {
         runningJobs -= 1;
+        if (job.sequential) {
+          isSequentialJobRunning = false;
+        }
         finishedKeys.add(job.key);
+        notify();
         pump();
       });
   }
@@ -163,6 +244,14 @@ const enqueue = (jobs: Job[], position: "front" | "back") => {
   }
 
   pump();
+};
+
+// Queue only a group's code, e.g. so the loading screen itself is ready.
+export const enqueueAssetGroupCode = (id: AssetGroupId) => {
+  enqueue(
+    groupJobs(id, "eager").filter((job) => job.key.startsWith(`${id}:chunk:`)),
+    "back",
+  );
 };
 
 // Queue a group's first-screen assets behind everything already waiting.
@@ -201,4 +290,13 @@ export const getAssetGroupProgress = (id: AssetGroupId) => {
   }
   const loaded = keys.filter((key) => finishedKeys.has(key)).length;
   return { loaded, total: keys.length };
+};
+
+export const isAssetLoaded = (key: string) => finishedKeys.has(key);
+
+export const subscribeAssetProgress = (listener: () => void) => {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
 };

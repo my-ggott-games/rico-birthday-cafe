@@ -1,4 +1,9 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useSyncExternalStore,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useAnimationControls } from "framer-motion";
 import { KCelebrateSlogan } from "k-celebrate-slogan";
@@ -16,7 +21,16 @@ import {
 import { EASTER_EGG_NOTE_ACCESS_STORAGE_KEY } from "../constants/noteAccess";
 import { AppIcon } from "../components/common/AppIcon";
 import { LOBBY_BGM_SRC } from "../utils/bgm";
-import { startBackgroundGamePreload } from "../utils/assetPreloadQueue";
+import {
+  isAssetLoaded,
+  prioritizeAssetGroup,
+  startBackgroundGamePreload,
+  subscribeAssetProgress,
+} from "../utils/assetPreloadQueue";
+import {
+  LOBBY_BACKGROUND_FULL_SRC,
+  LOBBY_BACKGROUND_THUMB_SRC,
+} from "../constants/lobbyAssets";
 import { useAuthStore } from "../store/useAuthStore";
 import { BASE_URL, fetchWithAuth } from "../utils/api";
 import { useToastStore } from "../store/useToastStore";
@@ -40,7 +54,17 @@ const CLICK_SHAKE_MILESTONES = new Set(
 );
 
 const Lobby: React.FC = () => {
-  usePageBgm(LOBBY_BGM_SRC);
+  // The queue starts the BGM after the lobby's first-screen images.
+  usePageBgm(LOBBY_BGM_SRC, { deferLoad: true });
+  const isFullBackgroundLoaded = useSyncExternalStore(
+    subscribeAssetProgress,
+    () => isAssetLoaded(LOBBY_BACKGROUND_FULL_SRC),
+  );
+
+  useEffect(() => {
+    // Direct entry skips the loading screen, so queue the lobby here too.
+    prioritizeAssetGroup("lobby");
+  }, []);
 
   useEffect(() => {
     if (typeof window.requestIdleCallback === "function") {
@@ -396,8 +420,9 @@ const Lobby: React.FC = () => {
   return (
     <div className="relative w-full min-h-screen overflow-x-hidden bg-[#FFFFF8]">
       <ProgressiveBackground
-        thumbnailSrc="/pages/lobby/background-thumb.jpg"
-        fullSrc="/pages/lobby/background-full-2560.webp"
+        thumbnailSrc={LOBBY_BACKGROUND_THUMB_SRC}
+        fullSrc={LOBBY_BACKGROUND_FULL_SRC}
+        loadFull={isFullBackgroundLoaded}
         previewFetchPriority="high"
         className="z-0"
         overlayClassName="bg-transparent"

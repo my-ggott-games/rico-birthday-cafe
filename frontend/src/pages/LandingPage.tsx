@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import ProgressiveBackground from "../components/common/ProgressiveBackground";
 import { pushEvent } from "../utils/analytics";
 import {
-  enqueueAssetGroup,
+  enqueueAssetGroupCode,
   prioritizeAssetGroup,
 } from "../utils/assetPreloadQueue";
 
@@ -14,6 +14,13 @@ const LANDING_FRAME_CLASS = `${LANDING_IMAGE_ASPECT} absolute left-1/2 top-1/2 h
 const DESKTOP_DOOR_FRAME_CLASS =
   "absolute left-1/2 top-[60%] flex -translate-x-1/2 -translate-y-1/2 cursor-pointer flex-col items-center";
 const ENTER_ANIMATION_DURATION_MS = 1850;
+// Fallback if the landing background never finishes (e.g. a failed request).
+const LOBBY_CODE_PREFETCH_FALLBACK_MS = 8000;
+
+// The landing background gets the line to itself; only the lobby's code (so
+// the loading screen can appear at once) is fetched after it is on screen.
+// Lobby images download during the landing -> lobby loading screen.
+const prefetchLobbyCode = () => enqueueAssetGroupCode("lobby");
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -24,18 +31,11 @@ const LandingPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    let timeoutId: number;
-    const prefetch = () => {
-      enqueueAssetGroup("lobby");
-    };
-
-    if (typeof window.requestIdleCallback === "function") {
-      window.requestIdleCallback(prefetch, { timeout: 4000 });
-    } else {
-      timeoutId = window.setTimeout(prefetch, 3000);
-    }
-
-    return () => { window.clearTimeout(timeoutId); };
+    const timeoutId = window.setTimeout(
+      prefetchLobbyCode,
+      LOBBY_CODE_PREFETCH_FALLBACK_MS,
+    );
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   const preventDrag = (event: React.DragEvent<HTMLElement>) => {
@@ -86,6 +86,7 @@ const LandingPage: React.FC = () => {
               overlayClassName="bg-transparent"
               imageClassName="object-cover object-center"
               showVignette={false}
+              onHighResVisible={prefetchLobbyCode}
             />
 
             {!isOpen && (
