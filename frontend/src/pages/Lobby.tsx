@@ -385,7 +385,7 @@ const Lobby: React.FC = () => {
       <ProgressiveBackground
         thumbnailSrc="/pages/lobby/background-thumb.jpg"
         midSrc="/pages/lobby/background-mid.webp"
-        fullSrc="/pages/lobby/background-full.webp"
+        fullSrc="/pages/lobby/background-full-2560.webp"
         previewFetchPriority="high"
         className="z-0"
         overlayClassName="bg-transparent"

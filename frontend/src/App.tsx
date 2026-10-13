@@ -5,6 +5,7 @@ import { usePageTracking } from "./hooks/usePageTracking";
 
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
 import { useAuthStore } from "./store/useAuthStore";
+import { recordPathname } from "./utils/pageTransitionLoading";
 
 const Lobby = lazy(() => import("./pages/Lobby"));
 const CodyGame = lazy(() => import("./pages/CodyGame"));
@@ -80,6 +81,18 @@ function DeferredCursorManager() {
   );
 }
 
+function PathnameRecorder() {
+  const { pathname } = useLocation();
+
+  // Must run before NonLandingGlobals' layout effects, so keep this component
+  // above it in the tree.
+  useLayoutEffect(() => {
+    recordPathname(pathname);
+  }, [pathname]);
+
+  return null;
+}
+
 function AuthHydrator() {
   const { pathname } = useLocation();
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
@@ -119,6 +132,7 @@ function App() {
       <Router>
         <AuthHydrator />
         <PageTracker />
+        <PathnameRecorder />
         <NonLandingGlobals />
         <Suspense fallback={null}>
           <Routes>

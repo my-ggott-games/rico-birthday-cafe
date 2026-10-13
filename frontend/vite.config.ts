@@ -20,6 +20,12 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          // Keep Vite's lazy-import helper out of the pixi chunk; otherwise the
+          // entry imports it from there and the landing page downloads Pixi.
+          if (id.includes("vite/preload-helper")) {
+            return "framework";
+          }
+
           if (!id.includes("node_modules")) {
             return;
           }

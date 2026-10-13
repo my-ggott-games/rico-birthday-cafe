@@ -1,8 +1,11 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useState } from "react";
 import { useLocation, matchPath } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { LOADING_MESSAGES } from "../../constants/loadingMessages";
-import { setPageTransitionLoading } from "../../utils/pageTransitionLoading";
+import {
+  getPreviousPathname,
+  setPageTransitionLoading,
+} from "../../utils/pageTransitionLoading";
 import { useAuthStore } from "../../store/useAuthStore";
 
 const GlobalLoading: React.FC = () => {
@@ -14,20 +17,15 @@ const GlobalLoading: React.FC = () => {
   );
   const [message, setMessage] = useState("");
   const isGuest = useAuthStore((state) => state.isGuest);
-  // Keep previous path in ref so we can skip initial direct-entry loading and
-  // avoid StrictMode double-mount side effects.
-  const prevPathRef = useRef<string | null>(null);
 
   useLayoutEffect(() => {
-    const prevPath = prevPathRef.current;
-    const isInitialMount = prevPath === null;
-    prevPathRef.current = location.pathname;
-
-    if (location.pathname === prevPath) return;
+    // Read from the app-level path history: this component is not mounted on
+    // the landing page, so its own first mount can still be a transition.
+    const prevPath = getPreviousPathname(location.pathname);
 
     // Skip loader for initial hard entry (direct URL / reload) to prevent
     // page -> loading -> page flicker.
-    if (isInitialMount) {
+    if (prevPath === null) {
       setLoading(false);
       setPageTransitionLoading(false);
       return;
@@ -65,8 +63,11 @@ const GlobalLoading: React.FC = () => {
       : LOADING_MESSAGES[Math.floor(Math.random() * LOADING_MESSAGES.length)];
     setMessage(nextMessage);
 
-    // Random duration between 3000ms (3s) and 5000ms (5s)
-    const duration = Math.floor(Math.random() * 2000) + 3000;
+    // Landing already plays an enter animation, so keep that hop shorter:
+    // 2-3s for landing -> lobby, 3-5s otherwise.
+    const duration = isLandingToLobby
+      ? Math.floor(Math.random() * 1000) + 2000
+      : Math.floor(Math.random() * 2000) + 3000;
     const startTime = Date.now();
 
     // Random speed simulation:

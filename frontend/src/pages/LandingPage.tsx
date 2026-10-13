@@ -2,6 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProgressiveBackground from "../components/common/ProgressiveBackground";
 import { pushEvent } from "../utils/analytics";
+import { startLobbyAssetPreload } from "../utils/lobbyAssetPreload";
+
+const prefetchLobbyTransition = () => {
+  import("./Lobby");
+  import("../components/common/GlobalLoading");
+};
 
 const LANDING_IMAGE_ASPECT = "aspect-[3847/2885]";
 const MOBILE_DOOR_FRAME_CLASS =
@@ -21,7 +27,10 @@ const LandingPage: React.FC = () => {
 
   useEffect(() => {
     let timeoutId: number;
-    const prefetch = () => { import("./Lobby"); };
+    const prefetch = () => {
+      prefetchLobbyTransition();
+      startLobbyAssetPreload();
+    };
 
     if (typeof window.requestIdleCallback === "function") {
       window.requestIdleCallback(prefetch, { timeout: 4000 });
@@ -48,6 +57,8 @@ const LandingPage: React.FC = () => {
 
   const triggerEnterAnimation = () => {
     setIsOpen(true);
+    prefetchLobbyTransition();
+    startLobbyAssetPreload();
     setTimeout(() => {
       navigate("/lobby");
     }, ENTER_ANIMATION_DURATION_MS);
@@ -74,7 +85,7 @@ const LandingPage: React.FC = () => {
             <ProgressiveBackground
               thumbnailSrc="/pages/landing/background-thumb.jpg"
               midSrc="/pages/landing/background-mid.webp"
-              fullSrc="/pages/landing/background-full.webp"
+              fullSrc="/pages/landing/background-full-2560.webp"
               previewFetchPriority="high"
               className="z-0"
               overlayClassName="bg-transparent"
