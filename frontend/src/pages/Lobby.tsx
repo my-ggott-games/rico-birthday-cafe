@@ -397,14 +397,12 @@ const Lobby: React.FC = () => {
     <div className="relative w-full min-h-screen overflow-x-hidden bg-[#FFFFF8]">
       <ProgressiveBackground
         thumbnailSrc="/pages/lobby/background-thumb.jpg"
-        midSrc="/pages/lobby/background-mid.webp"
         fullSrc="/pages/lobby/background-full-2560.webp"
         previewFetchPriority="high"
         className="z-0"
         overlayClassName="bg-transparent"
         imageClassName="object-cover object-center"
         showVignette={false}
-        fullResLoadDelayMs={420}
       />
       <div className="absolute inset-0 pointer-events-none bg-white/30" />
 

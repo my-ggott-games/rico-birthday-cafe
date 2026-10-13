@@ -29,7 +29,6 @@ const ASSET_GROUPS: Record<AssetGroupId, AssetGroup> = {
     ],
     eager: [
       "/pages/lobby/background-thumb.jpg",
-      "/pages/lobby/background-mid.webp",
       "/pages/lobby/chiko/atlas.webp",
       "/pages/lobby/decor/ezipia.png",
       "/slogan/happybirthday.jpg",

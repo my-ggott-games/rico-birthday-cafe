@@ -80,14 +80,12 @@ const LandingPage: React.FC = () => {
           <div className={LANDING_FRAME_CLASS}>
             <ProgressiveBackground
               thumbnailSrc="/pages/landing/background-thumb.jpg"
-              midSrc="/pages/landing/background-mid.webp"
               fullSrc="/pages/landing/background-full-2560.webp"
               previewFetchPriority="high"
               className="z-0"
               overlayClassName="bg-transparent"
               imageClassName="object-cover object-center"
               showVignette={false}
-              fullResLoadDelayMs={320}
             />
 
             {!isOpen && (
