@@ -7,8 +7,12 @@ import {
   PUZZLE_GAMEPLAY_IMAGE_URL,
 } from "../constants/puzzle";
 import {
+  LOADING_ICON_SRC,
   LOBBY_BACKGROUND_FULL_SRC,
   LOBBY_BACKGROUND_THUMB_SRC,
+  LOBBY_CHIKO_ATLAS_SRC,
+  LOBBY_DECOR_SRC,
+  LOBBY_SLOGAN_SRC,
 } from "../constants/lobbyAssets";
 import { getBgmAudio, LOBBY_BGM_SRC, peekActivityBgm } from "./bgm";
 import { CODY_ALL_ASSETS, CODY_EAGER_ASSETS } from "./codyAssets";
@@ -25,27 +29,31 @@ type AssetGroup = {
   // BGM, started right after the first screen and before `rest` images. A
   // function because game tracks are picked at random per visit.
   bgm?: () => string;
-  // Run the rest images one at a time, in order, instead of in parallel.
+  // Fetch these images one at a time, in order, instead of in parallel.
+  sequentialEager?: boolean;
   sequentialRest?: boolean;
 };
 
 const ASSET_GROUPS: Record<AssetGroupId, AssetGroup> = {
   lobby: {
     path: "/lobby",
-    // Loading screen first: it covers the lobby while the rest arrives.
+    // Loading screen first (code and its icon): it covers the lobby while the
+    // rest arrives.
     chunks: [
       () => import("../components/common/GlobalLoading"),
+      () => loadImage(LOADING_ICON_SRC, true),
       () => import("../pages/Lobby"),
     ],
-    // During the landing -> lobby loading screen: blurred background first,
-    // then the buttons (chiko games, slogan) and decor. The loader waits for
+    // During the landing -> lobby loading screen, one at a time: blurred
+    // background, chiko (game buttons), slogan, decor. The loader waits for
     // these only; the BGM and the full background follow in that order.
     eager: [
       LOBBY_BACKGROUND_THUMB_SRC,
-      "/pages/lobby/chiko/atlas.webp",
-      "/slogan/happybirthday.jpg",
-      "/pages/lobby/decor/ezipia.png",
+      LOBBY_CHIKO_ATLAS_SRC,
+      LOBBY_SLOGAN_SRC,
+      LOBBY_DECOR_SRC,
     ],
+    sequentialEager: true,
     bgm: () => LOBBY_BGM_SRC,
     rest: [LOBBY_BACKGROUND_FULL_SRC],
     sequentialRest: true,
@@ -163,7 +171,8 @@ const loadAudio = (src: string) =>
 const groupJobs = (id: AssetGroupId, tier: Job["tier"]): Job[] => {
   const group = ASSET_GROUPS[id];
   const images = tier === "eager" ? group.eager : group.rest;
-  const sequential = tier === "rest" && group.sequentialRest === true;
+  const sequential =
+    (tier === "eager" ? group.sequentialEager : group.sequentialRest) === true;
   const chunkJobs: Job[] =
     tier === "eager"
       ? group.chunks.map((load, index) => ({
@@ -171,7 +180,7 @@ const groupJobs = (id: AssetGroupId, tier: Job["tier"]): Job[] => {
           group: id,
           tier,
           urgent: false,
-          sequential,
+          sequential: false,
           run: load,
         }))
       : [];
