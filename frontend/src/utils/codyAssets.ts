@@ -62,47 +62,13 @@ const CODY_ITEM_ASSETS = [
   "hair_2-3",
 ].map(WEBP_ASSET);
 
-const EAGER_CODY_ASSETS = [
+export const CODY_EAGER_ASSETS = [
   ...CODY_BASE_ASSETS,
   "/assets/codygame/background_1-1.webp",
   "/assets/codygame/background_2-1.webp",
   "/assets/codygame/background_3-1.webp",
 ];
 
-const ALL_CODY_ASSETS = Array.from(
-  new Set([...EAGER_CODY_ASSETS, ...CODY_BACKGROUND_ASSETS, ...CODY_ITEM_ASSETS]),
+export const CODY_ALL_ASSETS = Array.from(
+  new Set([...CODY_EAGER_ASSETS, ...CODY_BACKGROUND_ASSETS, ...CODY_ITEM_ASSETS]),
 );
-
-const requestedAssets = new Set<string>();
-let hasStarted = false;
-
-const preloadImage = (src: string) => {
-  if (requestedAssets.has(src)) return;
-
-  requestedAssets.add(src);
-
-  const image = new Image();
-  image.decoding = "async";
-  image.src = src;
-};
-
-const scheduleIdlePreload = (callback: () => void) => {
-  if (typeof window === "undefined") return;
-
-  if (typeof window.requestIdleCallback === "function") {
-    window.requestIdleCallback(callback, { timeout: 1500 });
-    return;
-  }
-
-  globalThis.setTimeout(callback, 250);
-};
-
-export const startCodyAssetPreload = () => {
-  if (typeof window === "undefined" || hasStarted) return;
-
-  hasStarted = true;
-  EAGER_CODY_ASSETS.forEach(preloadImage);
-  scheduleIdlePreload(() => {
-    ALL_CODY_ASSETS.forEach(preloadImage);
-  });
-};

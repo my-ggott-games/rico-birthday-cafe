@@ -16,6 +16,7 @@ import {
 import { EASTER_EGG_NOTE_ACCESS_STORAGE_KEY } from "../constants/noteAccess";
 import { AppIcon } from "../components/common/AppIcon";
 import { LOBBY_BGM_SRC } from "../utils/bgm";
+import { startBackgroundGamePreload } from "../utils/assetPreloadQueue";
 import { useAuthStore } from "../store/useAuthStore";
 import { BASE_URL, fetchWithAuth } from "../utils/api";
 import { useToastStore } from "../store/useToastStore";
@@ -40,6 +41,18 @@ const CLICK_SHAKE_MILESTONES = new Set(
 
 const Lobby: React.FC = () => {
   usePageBgm(LOBBY_BGM_SRC);
+
+  useEffect(() => {
+    if (typeof window.requestIdleCallback === "function") {
+      const idleId = window.requestIdleCallback(startBackgroundGamePreload, {
+        timeout: 3000,
+      });
+      return () => window.cancelIdleCallback(idleId);
+    }
+
+    const timeoutId = window.setTimeout(startBackgroundGamePreload, 1500);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
   const isGuest = useAuthStore((state) => state.isGuest);
   const isAdmin = useAuthStore((state) => state.isAdmin);
   const token = useAuthStore((state) => state.token);

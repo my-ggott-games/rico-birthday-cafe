@@ -48,10 +48,8 @@ import {
   pickTrapKind,
   getNextSpawnDelay,
 } from "./adventureTrap";
-import {
-  ADVENTURE_PLAYER_FRAME_PATHS,
-  startAdventureAssetPreload,
-} from "./adventureAssets";
+import { ADVENTURE_PLAYER_FRAME_PATHS } from "./adventureAssets";
+import { prioritizeAssetGroup } from "../../utils/assetPreloadQueue";
 
 const submitAdventureBestScore = (bestScore: number) => {
   fetchWithAuth(`/adventure/score`, {
@@ -143,7 +141,7 @@ export function useAdventureGame() {
   }, [isGuest, token]);
 
   useEffect(() => {
-    startAdventureAssetPreload();
+    prioritizeAssetGroup("adventure");
   }, []);
 
   useLayoutEffect(() => {

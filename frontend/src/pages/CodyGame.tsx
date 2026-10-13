@@ -18,7 +18,7 @@ import { CodyDisplayStage } from "../components/game/cody/CodyDisplayStage";
 import { CodyInventoryPanel } from "../components/game/cody/CodyInventoryPanel";
 import { getCodyCharacterScale } from "../components/game/cody/codyStageLayout";
 import { domToJpeg } from "modern-screenshot";
-import { startCodyAssetPreload } from "../utils/codyAssetPreload";
+import { prioritizeAssetGroup } from "../utils/assetPreloadQueue";
 import { CODY_TUTORIAL_SLIDES } from "../constants/tutorialSlides";
 import { usePageBgm } from "../hooks/usePageBgm";
 import { pickRandomActivityBgm } from "../utils/bgm";
@@ -222,7 +222,7 @@ const CodyGame: React.FC = () => {
   React.useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
-    startCodyAssetPreload();
+    prioritizeAssetGroup("cody");
     return () => window.removeEventListener("resize", handleResize);
   }, [setWindowWidth]);
 

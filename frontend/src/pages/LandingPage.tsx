@@ -2,12 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProgressiveBackground from "../components/common/ProgressiveBackground";
 import { pushEvent } from "../utils/analytics";
-import { startLobbyAssetPreload } from "../utils/lobbyAssetPreload";
-
-const prefetchLobbyTransition = () => {
-  import("./Lobby");
-  import("../components/common/GlobalLoading");
-};
+import {
+  enqueueAssetGroup,
+  prioritizeAssetGroup,
+} from "../utils/assetPreloadQueue";
 
 const LANDING_IMAGE_ASPECT = "aspect-[3847/2885]";
 const MOBILE_DOOR_FRAME_CLASS =
@@ -28,8 +26,7 @@ const LandingPage: React.FC = () => {
   useEffect(() => {
     let timeoutId: number;
     const prefetch = () => {
-      prefetchLobbyTransition();
-      startLobbyAssetPreload();
+      enqueueAssetGroup("lobby");
     };
 
     if (typeof window.requestIdleCallback === "function") {
@@ -57,8 +54,7 @@ const LandingPage: React.FC = () => {
 
   const triggerEnterAnimation = () => {
     setIsOpen(true);
-    prefetchLobbyTransition();
-    startLobbyAssetPreload();
+    prioritizeAssetGroup("lobby");
     setTimeout(() => {
       navigate("/lobby");
     }, ENTER_ANIMATION_DURATION_MS);
