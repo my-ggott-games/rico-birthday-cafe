@@ -13,16 +13,17 @@ import { usePageBgm } from "../hooks/usePageBgm";
 import { type Direction } from "../components/asparagus/types";
 import { AppIcon } from "../components/common/AppIcon";
 import { ASPARAGUS_TUTORIAL_SLIDES } from "../constants/tutorialSlides";
-import { pickRandomActivityBgm } from "../utils/bgm";
+import { useActivityBgm } from "../hooks/useActivityBgm";
 import { useAuthStore } from "../store/useAuthStore";
 import { pushEvent } from "../utils/analytics";
 import { useViewEvent } from "../hooks/usePageTracking";
 
 const AsparagusMerge: React.FC = () => {
-  const [bgmSrc] = React.useState(() => pickRandomActivityBgm());
+  const bgmSrc = useActivityBgm();
   const isAdmin = useAuthStore((state) => state.isAdmin);
 
-  usePageBgm(bgmSrc);
+  // The preload queue starts the BGM after this page's first-screen assets.
+  usePageBgm(bgmSrc, { deferLoad: true });
   useViewEvent("view_game", { game_name: "아스파라거스 키우기" });
 
   const {

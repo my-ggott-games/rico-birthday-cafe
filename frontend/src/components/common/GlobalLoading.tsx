@@ -1,33 +1,50 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useState } from "react";
 import { useLocation, matchPath } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+  useTransform,
+} from "framer-motion";
 import { LOADING_MESSAGES } from "../../constants/loadingMessages";
-import { setPageTransitionLoading } from "../../utils/pageTransitionLoading";
+import {
+  getPreviousPathname,
+  setPageTransitionLoading,
+} from "../../utils/pageTransitionLoading";
 import { useAuthStore } from "../../store/useAuthStore";
+import {
+  getAssetGroupForPath,
+  getAssetGroupProgress,
+  prioritizeAssetGroup,
+} from "../../utils/assetPreloadQueue";
+
+const MAX_LOADING_MS = 8000;
 
 const GlobalLoading: React.FC = () => {
   const location = useLocation();
   const [loading, setLoading] = useState(false);
-  const [percent, setPercent] = useState(0);
+  const progress = useMotionValue(0);
+  const smoothProgress = useSpring(progress, {
+    stiffness: 70,
+    damping: 20,
+    mass: 0.6,
+  });
+  const progressWidth = useTransform(smoothProgress, (value) => `${value}%`);
   const [animationType, setAnimationType] = useState<"rotate" | "zoom" | "bob">(
     "rotate",
   );
   const [message, setMessage] = useState("");
   const isGuest = useAuthStore((state) => state.isGuest);
-  // Keep previous path in ref so we can skip initial direct-entry loading and
-  // avoid StrictMode double-mount side effects.
-  const prevPathRef = useRef<string | null>(null);
 
   useLayoutEffect(() => {
-    const prevPath = prevPathRef.current;
-    const isInitialMount = prevPath === null;
-    prevPathRef.current = location.pathname;
-
-    if (location.pathname === prevPath) return;
+    // Read from the app-level path history: this component is not mounted on
+    // the landing page, so its own first mount can still be a transition.
+    const prevPath = getPreviousPathname(location.pathname);
 
     // Skip loader for initial hard entry (direct URL / reload) to prevent
     // page -> loading -> page flicker.
-    if (isInitialMount) {
+    if (prevPath === null) {
       setLoading(false);
       setPageTransitionLoading(false);
       return;
@@ -54,7 +71,6 @@ const GlobalLoading: React.FC = () => {
 
     setLoading(true);
     setPageTransitionLoading(true);
-    setPercent(0);
     // Randomly choose animation type for this loading session
     const types: ("rotate" | "zoom" | "bob")[] = ["rotate", "zoom", "bob"];
     setAnimationType(types[Math.floor(Math.random() * types.length)]);
@@ -65,45 +81,54 @@ const GlobalLoading: React.FC = () => {
       : LOADING_MESSAGES[Math.floor(Math.random() * LOADING_MESSAGES.length)];
     setMessage(nextMessage);
 
-    // Random duration between 3000ms (3s) and 5000ms (5s)
-    const duration = Math.floor(Math.random() * 2000) + 3000;
-    const startTime = Date.now();
+    const groupId = getAssetGroupForPath(location.pathname);
+    if (groupId) {
+      prioritizeAssetGroup(groupId);
+    }
 
-    // Random speed simulation:
-    // We define a set of "breakpoints" or just use noise.
-    // Let's use a simpler approach that guarantees 100% at end:
-    // Current progress is time-based, but we add "jitter" to the displayed number.
+    // Stay up at least this long (landing already plays an enter animation),
+    // then until the page's first-screen assets arrive, capped at MAX_LOADING_MS.
+    const minDuration = isLandingToLobby ? 2000 : 3000;
+    const startTime = performance.now();
+    let targetPercent = 0;
+    let frameId = 0;
+    let hideTimeoutId: number | undefined;
 
-    const interval = setInterval(() => {
-      const now = Date.now();
-      const elapsed = now - startTime;
-      const rawProgress = (elapsed / duration) * 100;
+    progress.jump(0);
+    smoothProgress.jump(0);
 
-      // Add sine wave based jitter to make speed appear random
-      // Frequency of 3 full waves over the duration
-      const jitter = Math.sin((elapsed / duration) * Math.PI * 6) * 5;
+    const tick = () => {
+      const elapsed = performance.now() - startTime;
+      const { loaded, total } = groupId
+        ? getAssetGroupProgress(groupId)
+        : { loaded: 0, total: 0 };
+      const assetRatio = total === 0 ? 1 : loaded / total;
+      const isDone =
+        elapsed >= MAX_LOADING_MS || (assetRatio === 1 && elapsed >= minDuration);
 
-      // Ensure we don't exceed 100 or go below 0 purely due to jitter
-      // But we want to reach 100 exactly at the end.
-      let displayedProgress = rawProgress + jitter;
-
-      // Clamp
-      displayedProgress = Math.max(0, Math.min(99, displayedProgress));
-
-      setPercent(Math.floor(displayedProgress));
-
-      if (elapsed >= duration) {
-        clearInterval(interval);
-        setPercent(100);
+      if (isDone) {
+        progress.set(100);
         // Allow a small moment to see 100%
-        setTimeout(() => {
-          setLoading(false);
-        }, 500);
+        hideTimeoutId = window.setTimeout(() => setLoading(false), 500);
+        return;
       }
-    }, 30); // Higher frequency for smoother spring physics
 
-    return () => clearInterval(interval);
-  }, [location.pathname]);
+      // Keep creeping toward 90% so the bar never looks stuck, and jump ahead
+      // as assets land; real progress is spread over the minimum duration.
+      const creep = 90 * (1 - Math.exp(-elapsed / 2500));
+      const real = 90 * assetRatio * Math.min(1, elapsed / minDuration);
+      targetPercent = Math.max(targetPercent, creep, real);
+      progress.set(targetPercent);
+      frameId = window.requestAnimationFrame(tick);
+    };
+
+    frameId = window.requestAnimationFrame(tick);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.clearTimeout(hideTimeoutId);
+    };
+  }, [location.pathname, progress, smoothProgress]);
 
   return (
     <AnimatePresence
@@ -188,13 +213,7 @@ const GlobalLoading: React.FC = () => {
               {/* Inner fill with spring animation */}
               <motion.div
                 className="h-full bg-[#5EC7A5] relative"
-                animate={{ width: `${percent}%` }}
-                transition={{
-                  type: "spring",
-                  stiffness: 60,
-                  damping: 15,
-                  mass: 0.5,
-                }}
+                style={{ width: progressWidth }}
               >
                 {/* Shimmer Effect overlay */}
                 <motion.div

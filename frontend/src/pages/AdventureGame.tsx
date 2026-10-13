@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { GameContainer } from "../components/common/GameContainer";
 import { ScoreStatCard } from "../components/common/ScoreStatCard";
 import { ScoreStatGroup } from "../components/common/ScoreStatGroup";
@@ -9,13 +9,14 @@ import { ADVENTURE_HELP_SLIDES } from "../constants/tutorialSlides";
 import { AdventureStageScene } from "../features/adventure/AdventureStageScene";
 import { useAdventureGame } from "../features/adventure/useAdventureGame";
 import { usePageBgm } from "../hooks/usePageBgm";
-import { pickRandomActivityBgm } from "../utils/bgm";
+import { useActivityBgm } from "../hooks/useActivityBgm";
 import { pushEvent } from "../utils/analytics";
 import { useViewEvent } from "../hooks/usePageTracking";
 
 export default function AdventureGame() {
-  const [bgmSrc] = useState(() => pickRandomActivityBgm());
-  usePageBgm(bgmSrc, { volume: 0.48 });
+  const bgmSrc = useActivityBgm();
+  // The preload queue starts the BGM after this page's first-screen assets.
+  usePageBgm(bgmSrc, { volume: 0.48, deferLoad: true });
   useViewEvent("view_game", { game_name: "용사 리코 이야기 1" });
 
   const gameOverFiredRef = useRef(false);

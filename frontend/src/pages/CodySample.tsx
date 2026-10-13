@@ -12,7 +12,7 @@ const CodySample: React.FC = () => {
   React.useLayoutEffect(() => {
     initGame({
       isFinished: true,
-      resultImage: "/assets/codygame/riko_body_smile.png",
+      resultImage: "/assets/codygame/riko_body_smile.webp",
     });
   }, [initGame]);
 
@@ -23,11 +23,11 @@ const CodySample: React.FC = () => {
       </h1>
       <div className="flex flex-wrap gap-8 justify-center items-center">
         {AVAILABLE_BGS.map((bgId) => {
-          const bgUrl = `/assets/codygame/background_${bgId}.jpg`;
+          const bgUrl = `/assets/codygame/background_${bgId}.webp`;
           return (
             <div key={bgId} className="flex flex-col items-center">
               <h2 className="text-xl font-bold text-[#5EC7A5] mb-4">
-                background_{bgId}.jpg
+                background_{bgId}.webp
               </h2>
               <div className="w-[400px] h-[500px] relative flex items-center justify-center pointer-events-none scale-75 origin-top">
                 <PolaroidFrame

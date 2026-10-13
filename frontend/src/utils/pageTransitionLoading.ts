@@ -18,3 +18,15 @@ export const setPageTransitionLoading = (loading: boolean) => {
     }),
   );
 };
+
+let currentPathname: string | null = null;
+let previousPathname: string | null = null;
+
+export const recordPathname = (pathname: string) => {
+  if (pathname === currentPathname) return;
+  previousPathname = currentPathname;
+  currentPathname = pathname;
+};
+
+export const getPreviousPathname = (pathname: string) =>
+  pathname === currentPathname ? previousPathname : null;

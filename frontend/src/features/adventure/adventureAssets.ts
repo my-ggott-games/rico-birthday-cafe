@@ -29,31 +29,9 @@ export const ADVENTURE_PLAYER_FRAME_PATHS = ADVENTURE_PLAYER_TEXTURE_PATHS.defau
 
 export const ADVENTURE_CAKE_ASSET_PATHS = Array.from(
   { length: 13 },
-  (_, index) => `/assets/adventuregame/cake${index}.png`,
+  (_, index) => `/assets/adventuregame/cake${index}.webp`,
 );
 
-const ADVENTURE_EAGER_ASSET_PATHS = Array.from(
+export const ADVENTURE_EAGER_ASSET_PATHS = Array.from(
   new Set([...ADVENTURE_PLAYER_FRAME_PATHS, ...ADVENTURE_CAKE_ASSET_PATHS]),
 );
-
-const requestedAdventureAssets = new Set<string>();
-let hasStartedAdventureAssetPreload = false;
-
-const preloadAdventureImage = (src: string) => {
-  if (typeof window === "undefined" || requestedAdventureAssets.has(src)) return;
-
-  requestedAdventureAssets.add(src);
-
-  const image = new Image();
-  image.decoding = "async";
-  image.src = src;
-
-  void image.decode().catch(() => undefined);
-};
-
-export const startAdventureAssetPreload = () => {
-  if (typeof window === "undefined" || hasStartedAdventureAssetPreload) return;
-
-  hasStartedAdventureAssetPreload = true;
-  ADVENTURE_EAGER_ASSET_PATHS.forEach(preloadAdventureImage);
-};

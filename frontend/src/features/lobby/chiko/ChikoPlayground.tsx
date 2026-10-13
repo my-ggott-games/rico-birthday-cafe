@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import type { LobbyNoteKey } from "../lobbyNotes";
 import { ChikoActor, type ChikoArea, type ChikoPosition } from "./ChikoActor";
 import { LOBBY_CHIKO_GAMES, type LobbyChikoGame } from "./chikoConfig";
+import { prioritizeAssetGroup } from "../../../utils/assetPreloadQueue";
 
 const DESKTOP_FIXED_POSITIONS: ChikoPosition[] = LOBBY_CHIKO_GAMES.map(
   (_, index) => ({
@@ -101,8 +102,19 @@ export const ChikoPlayground: React.FC<ChikoPlaygroundProps> = ({
     [],
   );
 
+  // Selecting a game is the first sign of intent; start its download then.
+  const handleSelect = useCallback((id: LobbyNoteKey | null) => {
+    if (id !== null) {
+      prioritizeAssetGroup(id);
+    }
+    setSelectedId(id);
+  }, []);
+
   const handleEnter = useCallback(
-    (game: LobbyChikoGame) => navigate(game.to),
+    (game: LobbyChikoGame) => {
+      prioritizeAssetGroup(game.id);
+      navigate(game.to);
+    },
     [navigate],
   );
 
@@ -136,7 +148,7 @@ export const ChikoPlayground: React.FC<ChikoPlaygroundProps> = ({
             isSelected={selectedId === game.id}
             noteVisible={noteVisible}
             getAreaRect={getAreaRect}
-            onSelect={setSelectedId}
+            onSelect={handleSelect}
             onEnter={handleEnter}
             onOpenNote={onOpenNote}
           />

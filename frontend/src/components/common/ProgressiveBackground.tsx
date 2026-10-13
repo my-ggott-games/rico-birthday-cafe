@@ -2,118 +2,89 @@ import React from "react";
 
 type ProgressiveBackgroundProps = {
   thumbnailSrc?: string;
-  midSrc?: string;
   fullSrc: string;
+  // Hold off requesting the full image, e.g. until a preload queue fetched it.
+  loadFull?: boolean;
   alt?: string;
   className?: string;
   overlayClassName?: string;
   imageClassName?: string;
   previewFetchPriority?: "high" | "low" | "auto";
   showVignette?: boolean;
-  fullResLoadDelayMs?: number;
   onHighResVisible?: () => void;
 };
 
-const FADE_DURATION_MS = 220;
-
 const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
   thumbnailSrc,
-  midSrc,
   fullSrc,
+  loadFull = true,
   alt = "",
   className = "",
   overlayClassName = "bg-black/20",
   imageClassName = "object-cover",
   previewFetchPriority = "auto",
   showVignette = true,
-  fullResLoadDelayMs = 0,
   onHighResVisible,
 }) => {
-  const previewSrc = thumbnailSrc ?? midSrc ?? fullSrc;
-  const [activeSrc, setActiveSrc] = React.useState(previewSrc);
-  const [nextSrc, setNextSrc] = React.useState<string | null>(
-    midSrc && midSrc !== previewSrc
-      ? midSrc
-      : fullSrc !== previewSrc
-        ? fullSrc
-        : null,
+  const [isFullReady, setIsFullReady] = React.useState(!thumbnailSrc);
+  const [isFullVisible, setIsFullVisible] = React.useState(!thumbnailSrc);
+  const [isThumbnailRemoved, setIsThumbnailRemoved] = React.useState(
+    !thumbnailSrc,
   );
-  const [isNextVisible, setIsNextVisible] = React.useState(false);
-  const fullLoadTimerRef = React.useRef<number | null>(null);
 
+  // The blurred thumbnail stays up until the full image is downloaded and
+  // decoded, so the focus-in transition never shows a half-painted image.
   React.useEffect(() => {
-    const initialNextSrc =
-      midSrc && midSrc !== previewSrc
-        ? midSrc
-        : fullSrc !== previewSrc
-          ? fullSrc
-          : null;
+    if (!thumbnailSrc || !loadFull) return;
 
-    setActiveSrc(previewSrc);
-    setNextSrc(initialNextSrc);
-    setIsNextVisible(false);
+    setIsFullReady(false);
+    setIsFullVisible(false);
+    setIsThumbnailRemoved(false);
 
-    if (fullLoadTimerRef.current !== null) {
-      window.clearTimeout(fullLoadTimerRef.current);
-      fullLoadTimerRef.current = null;
-    }
-  }, [fullSrc, midSrc, previewSrc]);
+    let isCancelled = false;
+    const image = new Image();
+    image.decoding = "async";
+    image.src = fullSrc;
 
-  React.useEffect(() => {
-    return () => {
-      if (fullLoadTimerRef.current !== null) {
-        window.clearTimeout(fullLoadTimerRef.current);
+    const markReady = () => {
+      if (!isCancelled && image.naturalWidth > 0) {
+        setIsFullReady(true);
       }
     };
-  }, []);
 
-  const queueFullImage = React.useCallback(() => {
-    if (fullSrc === activeSrc || fullSrc === nextSrc) {
-      return;
-    }
-
-    if (fullResLoadDelayMs > 0) {
-      fullLoadTimerRef.current = window.setTimeout(() => {
-        setNextSrc(fullSrc);
-        setIsNextVisible(false);
-      }, fullResLoadDelayMs);
-      return;
-    }
-
-    setNextSrc(fullSrc);
-    setIsNextVisible(false);
-  }, [activeSrc, fullResLoadDelayMs, fullSrc, nextSrc]);
-
-  const handleNextLoad = React.useCallback(() => {
-    window.requestAnimationFrame(() => {
-      setIsNextVisible(true);
-    });
-
-    window.setTimeout(() => {
-      setActiveSrc((currentActive) => {
-        if (!nextSrc) {
-          return currentActive;
-        }
-
-        const resolvedSrc = nextSrc;
-
-        if (resolvedSrc === fullSrc) {
-          onHighResVisible?.();
-        }
-
-        return resolvedSrc;
-      });
-
-      setIsNextVisible(false);
-
-      if (nextSrc && nextSrc === midSrc && fullSrc !== nextSrc) {
-        queueFullImage();
+    image.decode().then(markReady, () => {
+      if (image.complete) {
+        markReady();
         return;
       }
+      image.onload = markReady;
+    });
 
-      setNextSrc(null);
-    }, FADE_DURATION_MS);
-  }, [fullSrc, midSrc, nextSrc, onHighResVisible, queueFullImage]);
+    return () => {
+      isCancelled = true;
+      image.onload = null;
+    };
+  }, [fullSrc, loadFull, thumbnailSrc]);
+
+  // Mount the full image hidden first, then flip it visible on the next frame
+  // so the opacity/blur transition actually runs.
+  React.useEffect(() => {
+    if (!isFullReady || isFullVisible) return;
+
+    const frameId = window.requestAnimationFrame(() => {
+      setIsFullVisible(true);
+    });
+    return () => window.cancelAnimationFrame(frameId);
+  }, [isFullReady, isFullVisible]);
+
+  const handleFullTransitionEnd = (
+    event: React.TransitionEvent<HTMLImageElement>,
+  ) => {
+    if (event.propertyName !== "opacity" || isThumbnailRemoved) return;
+
+    setIsThumbnailRemoved(true);
+    onHighResVisible?.();
+  };
 
   return (
     <div
@@ -123,36 +94,33 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
         className,
       ].join(" ")}
     >
-      <img
-        src={activeSrc}
-        alt={alt}
-        draggable={false}
-        fetchPriority={previewFetchPriority}
-        decoding="async"
-        style={{ willChange: nextSrc ? "opacity, filter, transform" : "auto" }}
-        className={[
-          "absolute inset-0 h-full w-full transition-[opacity,filter,transform] duration-[1800ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
-          nextSrc
-            ? "scale-100 opacity-25 blur-[10px] saturate-[0.96] brightness-[0.96] md:scale-[1.03]"
-            : "scale-100 opacity-100 blur-0 saturate-100 brightness-100",
-          imageClassName,
-        ].join(" ")}
-      />
-
-      {nextSrc ? (
+      {thumbnailSrc && !isThumbnailRemoved ? (
         <img
-          src={nextSrc}
+          src={thumbnailSrc}
+          alt={alt}
+          draggable={false}
+          fetchPriority={previewFetchPriority}
+          decoding="async"
+          className={[
+            // Scaled up so the blurred edges stay outside the frame.
+            "absolute inset-0 h-full w-full scale-[1.06] blur-[12px]",
+            imageClassName,
+          ].join(" ")}
+        />
+      ) : null}
+
+      {isFullReady ? (
+        <img
+          src={fullSrc}
           alt={alt}
           draggable={false}
           decoding="async"
-          fetchPriority={nextSrc === fullSrc ? "low" : "high"}
-          onLoad={handleNextLoad}
-          style={{ willChange: "opacity, filter, transform" }}
+          onTransitionEnd={handleFullTransitionEnd}
           className={[
-            "absolute inset-0 h-full w-full transition-[opacity,filter,transform] duration-[1800ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
-            isNextVisible
-              ? "scale-100 opacity-100 blur-0 saturate-100 brightness-100"
-              : "scale-[1.01] opacity-0 blur-[12px] saturate-[1.04] brightness-[1.03] md:scale-[1.025]",
+            "absolute inset-0 h-full w-full transition-[opacity,filter,transform] duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
+            isFullVisible
+              ? "scale-100 opacity-100 blur-0"
+              : "scale-[1.06] opacity-0 blur-[12px]",
             imageClassName,
           ].join(" ")}
         />

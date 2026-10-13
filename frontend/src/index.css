@@ -141,19 +141,19 @@ button {
 @font-face {
   font-family: "OneStoreMobilePop";
   src:
-    url("./assets/fonts/ONE-Mobile-POP-subset.woff") format("woff"),
-    url("./assets/fonts/ONE-Mobile-POP.woff") format("woff"),
+    url("./assets/fonts/ONE-Mobile-POP-subset.woff2") format("woff2"),
+    url("./assets/fonts/ONE-Mobile-POP.woff2") format("woff2"),
     url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-POP.woff") format("woff");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 
+/* Glyph subset of JoseonPalace for the lobby slogan's text2 ("유즈하 리코").
+   Regenerate with pyftsubset if that text changes. */
 @font-face {
-  font-family: "JoseonPalace";
-  src:
-    url("./assets/fonts/JoseonPalace.woff") format("woff"),
-    url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/ChosunGs.woff") format("woff");
+  font-family: "JoseonPalaceSlogan";
+  src: url("./assets/fonts/JoseonPalace-slogan.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -423,6 +423,12 @@ button {
 
 .lobby-slogan-stage__back {
   z-index: 20;
+}
+
+/* k-celebrate-slogan sets JoseonPalace inline and injects a @font-face for the
+   full 3.6MB CDN font; point it at the local subset so that file is never used. */
+.slogan-lobby .k-celebrate-slogan-container h1 {
+  font-family: "JoseonPalaceSlogan", "궁서", "궁서체", "Gungsuh", serif !important;
 }
 
 .slogan-lobby .k-celebrate-slogan-container>div {

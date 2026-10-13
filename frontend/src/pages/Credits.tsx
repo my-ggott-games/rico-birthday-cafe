@@ -14,7 +14,7 @@ import { AppIcon } from "../components/common/AppIcon";
 import { PushableButton } from "../components/common/PushableButton";
 import { CommonModal } from "../components/common/CommonModal";
 import { playDiriringSfx, preloadDiriringSfx } from "../utils/soundEffects";
-import { pickRandomActivityBgm } from "../utils/bgm";
+import { useActivityBgm } from "../hooks/useActivityBgm";
 import { useAudioStore } from "../store/useAudioStore";
 
 const THANK_YOU_ALL_CODE = "THANK_YOU_ALL";
@@ -171,7 +171,7 @@ export default function Credits() {
   const [needsManualStart, setNeedsManualStart] = useState(false);
   const [highlightClaim, setHighlightClaim] = useState(false);
   const [manualScrollEnabled, setManualScrollEnabled] = useState(false);
-  const [bgmSrc] = useState(() => pickRandomActivityBgm());
+  const bgmSrc = useActivityBgm();
   const isMuted = useAudioStore((state) => state.isMuted);
   const [creditsMotion, setCreditsMotion] = useState({
     startY: window.innerHeight,

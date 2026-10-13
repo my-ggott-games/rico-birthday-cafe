@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProgressiveBackground from "../components/common/ProgressiveBackground";
 import { pushEvent } from "../utils/analytics";
+import {
+  enqueueAssetGroupCode,
+  prioritizeAssetGroup,
+} from "../utils/assetPreloadQueue";
 
 const LANDING_IMAGE_ASPECT = "aspect-[3847/2885]";
 const MOBILE_DOOR_FRAME_CLASS =
@@ -10,6 +14,13 @@ const LANDING_FRAME_CLASS = `${LANDING_IMAGE_ASPECT} absolute left-1/2 top-1/2 h
 const DESKTOP_DOOR_FRAME_CLASS =
   "absolute left-1/2 top-[60%] flex -translate-x-1/2 -translate-y-1/2 cursor-pointer flex-col items-center";
 const ENTER_ANIMATION_DURATION_MS = 1850;
+// Fallback if the landing background never finishes (e.g. a failed request).
+const LOBBY_CODE_PREFETCH_FALLBACK_MS = 8000;
+
+// The landing background gets the line to itself; only the lobby's code (so
+// the loading screen can appear at once) is fetched after it is on screen.
+// Lobby images download during the landing -> lobby loading screen.
+const prefetchLobbyCode = () => enqueueAssetGroupCode("lobby");
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -20,16 +31,11 @@ const LandingPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    let timeoutId: number;
-    const prefetch = () => { import("./Lobby"); };
-
-    if (typeof window.requestIdleCallback === "function") {
-      window.requestIdleCallback(prefetch, { timeout: 4000 });
-    } else {
-      timeoutId = window.setTimeout(prefetch, 3000);
-    }
-
-    return () => { window.clearTimeout(timeoutId); };
+    const timeoutId = window.setTimeout(
+      prefetchLobbyCode,
+      LOBBY_CODE_PREFETCH_FALLBACK_MS,
+    );
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   const preventDrag = (event: React.DragEvent<HTMLElement>) => {
@@ -48,6 +54,7 @@ const LandingPage: React.FC = () => {
 
   const triggerEnterAnimation = () => {
     setIsOpen(true);
+    prioritizeAssetGroup("lobby");
     setTimeout(() => {
       navigate("/lobby");
     }, ENTER_ANIMATION_DURATION_MS);
@@ -73,14 +80,13 @@ const LandingPage: React.FC = () => {
           <div className={LANDING_FRAME_CLASS}>
             <ProgressiveBackground
               thumbnailSrc="/pages/landing/background-thumb.jpg"
-              midSrc="/pages/landing/background-mid.webp"
-              fullSrc="/pages/landing/background-full.webp"
+              fullSrc="/pages/landing/background-full-2560.webp"
               previewFetchPriority="high"
               className="z-0"
               overlayClassName="bg-transparent"
               imageClassName="object-cover object-center"
               showVignette={false}
-              fullResLoadDelayMs={320}
+              onHighResVisible={prefetchLobbyCode}
             />
 
             {!isOpen && (

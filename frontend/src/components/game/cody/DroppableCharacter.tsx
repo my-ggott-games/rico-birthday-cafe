@@ -148,7 +148,7 @@ export const DroppableCharacter: React.FC<DroppableCharacterProps> = ({
         {renderHairBackLayer()}
 
         <motion.img
-          src="/assets/codygame/riko_body_default.png"
+          src="/assets/codygame/riko_body_default.webp"
           alt="Base Character"
           className={`${overlayStyle} z-10`}
           animate={{ opacity: isFinished ? 0 : 1 }}

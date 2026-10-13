@@ -4,15 +4,19 @@ import {
   PAGE_TRANSITION_LOADING_EVENT,
 } from "../utils/pageTransitionLoading";
 import { useAudioStore } from "../store/useAudioStore";
+import { getBgmAudio } from "../utils/bgm";
 
 type UsePageBgmOptions = {
   loop?: boolean;
   volume?: number;
+  // Leave loading to someone else (the preload queue); playback still starts
+  // the download if it has not begun by the time the loading screen ends.
+  deferLoad?: boolean;
 };
 
 export const usePageBgm = (
   src: string,
-  { loop = true, volume = 1 }: UsePageBgmOptions = {},
+  { loop = true, volume = 1, deferLoad = false }: UsePageBgmOptions = {},
 ) => {
   const isMuted = useAudioStore((state) => state.isMuted);
   const setCurrentBgmSrc = useAudioStore((state) => state.setCurrentBgmSrc);
@@ -21,19 +25,19 @@ export const usePageBgm = (
 
   useEffect(() => {
     setCurrentBgmSrc(src);
-    const audio = new Audio(src);
+    const audio = getBgmAudio(src);
     audio.loop = loop;
     audio.volume = volume;
-    audio.preload = "auto";
     audio.muted = useAudioStore.getState().isMuted;
     audioRef.current = audio;
-    audio.addEventListener("error", () => {
+    const handleError = () => {
       console.error("BGM load/play error", {
         src,
         networkState: audio.networkState,
         readyState: audio.readyState,
       });
-    });
+    };
+    audio.addEventListener("error", handleError);
 
     let isDisposed = false;
     let unlockListenersAttached = false;
@@ -95,12 +99,18 @@ export const usePageBgm = (
       handleLoadingChange as EventListener,
     );
 
-    audio.load();
+    if (!deferLoad) {
+      audio.preload = "auto";
+      if (audio.readyState === HTMLMediaElement.HAVE_NOTHING) {
+        audio.load();
+      }
+    }
     void tryStartPlayback();
 
     return () => {
       isDisposed = true;
       removeUnlockListeners();
+      audio.removeEventListener("error", handleError);
       window.removeEventListener(
         PAGE_TRANSITION_LOADING_EVENT,
         handleLoadingChange as EventListener,
@@ -115,7 +125,7 @@ export const usePageBgm = (
         setCurrentBgmSrc(null);
       }
     };
-  }, [loop, setCurrentBgmSrc, src, volume]);
+  }, [deferLoad, loop, setCurrentBgmSrc, src, volume]);
 
   useEffect(() => {
     const audio = audioRef.current;

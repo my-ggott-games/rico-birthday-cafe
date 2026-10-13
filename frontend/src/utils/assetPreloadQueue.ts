@@ -1,0 +1,315 @@
+import {
+  ADVENTURE_EAGER_ASSET_PATHS,
+  ADVENTURE_PLAYER_TEXTURE_PATHS,
+} from "../features/adventure/adventureAssets";
+import {
+  PUZZLE_DETAIL_IMAGE_URL,
+  PUZZLE_GAMEPLAY_IMAGE_URL,
+} from "../constants/puzzle";
+import {
+  LOBBY_BACKGROUND_FULL_SRC,
+  LOBBY_BACKGROUND_THUMB_SRC,
+} from "../constants/lobbyAssets";
+import { getBgmAudio, LOBBY_BGM_SRC, peekActivityBgm } from "./bgm";
+import { CODY_ALL_ASSETS, CODY_EAGER_ASSETS } from "./codyAssets";
+
+export type AssetGroupId = "lobby" | "cody" | "puzzle" | "asparagus" | "adventure";
+
+type AssetGroup = {
+  path: string;
+  chunks: (() => Promise<unknown>)[];
+  // Needed for the first screen; the loading screen waits for these.
+  eager: string[];
+  // Fetched after every group's eager assets, or right away once prioritized.
+  rest: string[];
+  // BGM, started right after the first screen and before `rest` images. A
+  // function because game tracks are picked at random per visit.
+  bgm?: () => string;
+  // Run the rest images one at a time, in order, instead of in parallel.
+  sequentialRest?: boolean;
+};
+
+const ASSET_GROUPS: Record<AssetGroupId, AssetGroup> = {
+  lobby: {
+    path: "/lobby",
+    // Loading screen first: it covers the lobby while the rest arrives.
+    chunks: [
+      () => import("../components/common/GlobalLoading"),
+      () => import("../pages/Lobby"),
+    ],
+    // During the landing -> lobby loading screen: blurred background first,
+    // then the buttons (chiko games, slogan) and decor. The loader waits for
+    // these only; the BGM and the full background follow in that order.
+    eager: [
+      LOBBY_BACKGROUND_THUMB_SRC,
+      "/pages/lobby/chiko/atlas.webp",
+      "/slogan/happybirthday.jpg",
+      "/pages/lobby/decor/ezipia.png",
+    ],
+    bgm: () => LOBBY_BGM_SRC,
+    rest: [LOBBY_BACKGROUND_FULL_SRC],
+    sequentialRest: true,
+  },
+  cody: {
+    path: "/game/cody",
+    chunks: [() => import("../pages/CodyGame")],
+    eager: CODY_EAGER_ASSETS,
+    bgm: peekActivityBgm,
+    rest: CODY_ALL_ASSETS.filter((src) => !CODY_EAGER_ASSETS.includes(src)),
+  },
+  puzzle: {
+    path: "/game/puzzle",
+    chunks: [() => import("../pages/PuzzleGame")],
+    eager: [PUZZLE_GAMEPLAY_IMAGE_URL],
+    bgm: peekActivityBgm,
+    rest: [PUZZLE_DETAIL_IMAGE_URL],
+  },
+  asparagus: {
+    path: "/game/asparagus",
+    chunks: [() => import("../pages/AsparagusMerge")],
+    eager: [],
+    bgm: peekActivityBgm,
+    rest: [],
+  },
+  adventure: {
+    path: "/game/adventure",
+    chunks: [() => import("../pages/AdventureGame")],
+    eager: ADVENTURE_EAGER_ASSET_PATHS,
+    bgm: peekActivityBgm,
+    rest: [
+      ...ADVENTURE_PLAYER_TEXTURE_PATHS.shock,
+      ...ADVENTURE_PLAYER_TEXTURE_PATHS.anger,
+    ],
+  },
+};
+
+// Background prefetch order from the lobby. Reorder by game popularity.
+const BACKGROUND_GAME_ORDER: AssetGroupId[] = [
+  "cody",
+  "puzzle",
+  "asparagus",
+  "adventure",
+];
+
+const MAX_CONCURRENT_JOBS = 2;
+
+// Give up waiting on a track after this; downloading continues in the
+// background, the queue just moves on.
+const AUDIO_PRELOAD_TIMEOUT_MS = 4000;
+// iOS ignores preload, so if the track is not loading by now, move on.
+const AUDIO_LOADING_CHECK_MS = 300;
+
+type Job = {
+  key: string;
+  group: AssetGroupId;
+  tier: "eager" | "rest";
+  urgent: boolean;
+  sequential: boolean;
+  run: (urgent: boolean) => Promise<unknown>;
+};
+
+const pending: Job[] = [];
+const queuedKeys = new Set<string>();
+const finishedKeys = new Set<string>();
+const listeners = new Set<() => void>();
+let runningJobs = 0;
+let isSequentialJobRunning = false;
+
+const loadImage = (src: string, urgent: boolean) =>
+  new Promise<void>((resolve) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.fetchPriority = urgent ? "high" : "low";
+    image.onload = () => resolve();
+    image.onerror = () => resolve();
+    image.src = src;
+  });
+
+// Resolves once the track can play through (or clearly will not load now).
+const loadAudio = (src: string) =>
+  new Promise<void>((resolve) => {
+    const audio = getBgmAudio(src);
+    // Already loading or loaded (requested by another group or by playback).
+    if (
+      audio.preload === "auto" ||
+      audio.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA
+    ) {
+      resolve();
+      return;
+    }
+
+    const finish = () => {
+      window.clearTimeout(timeoutId);
+      window.clearTimeout(loadingCheckId);
+      audio.removeEventListener("canplaythrough", finish);
+      audio.removeEventListener("error", finish);
+      resolve();
+    };
+    const timeoutId = window.setTimeout(finish, AUDIO_PRELOAD_TIMEOUT_MS);
+    const loadingCheckId = window.setTimeout(() => {
+      if (audio.networkState !== HTMLMediaElement.NETWORK_LOADING) {
+        finish();
+      }
+    }, AUDIO_LOADING_CHECK_MS);
+    audio.addEventListener("canplaythrough", finish);
+    audio.addEventListener("error", finish);
+
+    audio.preload = "auto";
+    if (audio.paused && audio.readyState === HTMLMediaElement.HAVE_NOTHING) {
+      audio.load();
+    }
+  });
+
+const groupJobs = (id: AssetGroupId, tier: Job["tier"]): Job[] => {
+  const group = ASSET_GROUPS[id];
+  const images = tier === "eager" ? group.eager : group.rest;
+  const sequential = tier === "rest" && group.sequentialRest === true;
+  const chunkJobs: Job[] =
+    tier === "eager"
+      ? group.chunks.map((load, index) => ({
+          key: `${id}:chunk:${index}`,
+          group: id,
+          tier,
+          urgent: false,
+          sequential,
+          run: load,
+        }))
+      : [];
+  // Keyed by track, so games sharing a track queue it once. Runs alone so
+  // the track gets a head start before the remaining images.
+  const bgmSrc = tier === "rest" ? group.bgm?.() : undefined;
+  const audioJobs: Job[] = bgmSrc
+    ? [
+        {
+          key: bgmSrc,
+          group: id,
+          tier,
+          urgent: false,
+          sequential: true,
+          run: () => loadAudio(bgmSrc),
+        },
+      ]
+    : [];
+
+  return [
+    ...chunkJobs,
+    ...audioJobs,
+    ...images.map((src) => ({
+      key: src,
+      group: id,
+      tier,
+      urgent: false,
+      sequential,
+      run: (urgent: boolean) => loadImage(src, urgent),
+    })),
+  ];
+};
+
+const notify = () => listeners.forEach((listener) => listener());
+
+const pump = () => {
+  while (
+    runningJobs < MAX_CONCURRENT_JOBS &&
+    pending.length > 0 &&
+    !isSequentialJobRunning
+  ) {
+    if (pending[0].sequential && runningJobs > 0) return;
+
+    const job = pending.shift()!;
+    runningJobs += 1;
+    isSequentialJobRunning = job.sequential;
+    job
+      .run(job.urgent)
+      .catch(() => undefined)
+      .finally(() => {
+        runningJobs -= 1;
+        if (job.sequential) {
+          isSequentialJobRunning = false;
+        }
+        finishedKeys.add(job.key);
+        notify();
+        pump();
+      });
+  }
+};
+
+const enqueue = (jobs: Job[], position: "front" | "back") => {
+  const fresh = jobs.filter(
+    (job) => !queuedKeys.has(job.key) && !finishedKeys.has(job.key),
+  );
+  fresh.forEach((job) => queuedKeys.add(job.key));
+
+  if (position === "back") {
+    pending.push(...fresh);
+  } else {
+    const keys = new Set(jobs.map((job) => job.key));
+    const moved = pending.filter((job) => keys.has(job.key));
+    const others = pending.filter((job) => !keys.has(job.key));
+    const front = [...fresh, ...moved].sort(
+      (a, b) =>
+        jobs.findIndex((job) => job.key === a.key) -
+        jobs.findIndex((job) => job.key === b.key),
+    );
+    front.forEach((job) => {
+      job.urgent = true;
+    });
+    pending.splice(0, pending.length, ...front, ...others);
+  }
+
+  pump();
+};
+
+// Queue only a group's code, e.g. so the loading screen itself is ready.
+export const enqueueAssetGroupCode = (id: AssetGroupId) => {
+  enqueue(
+    groupJobs(id, "eager").filter((job) => job.key.startsWith(`${id}:chunk:`)),
+    "back",
+  );
+};
+
+// Queue a group's first-screen assets behind everything already waiting.
+export const enqueueAssetGroup = (id: AssetGroupId) => {
+  enqueue(groupJobs(id, "eager"), "back");
+};
+
+// Move a group to the front: first-screen assets, then the rest of the group.
+export const prioritizeAssetGroup = (id: AssetGroupId) => {
+  enqueue([...groupJobs(id, "eager"), ...groupJobs(id, "rest")], "front");
+};
+
+// After the lobby is up: game code and first screens in popularity order, then
+// every game's remaining assets.
+export const startBackgroundGamePreload = () => {
+  BACKGROUND_GAME_ORDER.forEach(enqueueAssetGroup);
+  enqueue(
+    BACKGROUND_GAME_ORDER.flatMap((id) => groupJobs(id, "rest")),
+    "back",
+  );
+};
+
+export const getAssetGroupForPath = (pathname: string) =>
+  (Object.keys(ASSET_GROUPS) as AssetGroupId[]).find(
+    (id) => ASSET_GROUPS[id].path === pathname,
+  ) ?? null;
+
+const eagerKeysByGroup = new Map<AssetGroupId, string[]>();
+
+// Read every animation frame by the loading screen, so keys are cached.
+export const getAssetGroupProgress = (id: AssetGroupId) => {
+  let keys = eagerKeysByGroup.get(id);
+  if (!keys) {
+    keys = groupJobs(id, "eager").map((job) => job.key);
+    eagerKeysByGroup.set(id, keys);
+  }
+  const loaded = keys.filter((key) => finishedKeys.has(key)).length;
+  return { loaded, total: keys.length };
+};
+
+export const isAssetLoaded = (key: string) => finishedKeys.has(key);
+
+export const subscribeAssetProgress = (listener: () => void) => {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+};
