@@ -1,9 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useSyncExternalStore,
-} from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useAnimationControls } from "framer-motion";
 import { KCelebrateSlogan } from "k-celebrate-slogan";
@@ -22,14 +17,15 @@ import { EASTER_EGG_NOTE_ACCESS_STORAGE_KEY } from "../constants/noteAccess";
 import { AppIcon } from "../components/common/AppIcon";
 import { LOBBY_BGM_SRC } from "../utils/bgm";
 import {
-  isAssetLoaded,
   prioritizeAssetGroup,
   startBackgroundGamePreload,
-  subscribeAssetProgress,
 } from "../utils/assetPreloadQueue";
+import { useIsAssetLoaded } from "../hooks/useIsAssetLoaded";
 import {
   LOBBY_BACKGROUND_FULL_SRC,
   LOBBY_BACKGROUND_THUMB_SRC,
+  LOBBY_DECOR_SRC,
+  LOBBY_SLOGAN_SRC,
 } from "../constants/lobbyAssets";
 import { useAuthStore } from "../store/useAuthStore";
 import { BASE_URL, fetchWithAuth } from "../utils/api";
@@ -56,10 +52,11 @@ const CLICK_SHAKE_MILESTONES = new Set(
 const Lobby: React.FC = () => {
   // The queue starts the BGM after the lobby's first-screen images.
   usePageBgm(LOBBY_BGM_SRC, { deferLoad: true });
-  const isFullBackgroundLoaded = useSyncExternalStore(
-    subscribeAssetProgress,
-    () => isAssetLoaded(LOBBY_BACKGROUND_FULL_SRC),
-  );
+  const isFullBackgroundLoaded = useIsAssetLoaded(LOBBY_BACKGROUND_FULL_SRC);
+  // Rendered only once the queue fetched them, so the browser does not request
+  // them ahead of the chiko atlas.
+  const isSloganLoaded = useIsAssetLoaded(LOBBY_SLOGAN_SRC);
+  const isDecorLoaded = useIsAssetLoaded(LOBBY_DECOR_SRC);
 
   useEffect(() => {
     // Direct entry skips the loading screen, so queue the lobby here too.
@@ -467,12 +464,14 @@ const Lobby: React.FC = () => {
           style={{ minHeight: isMobile ? "8rem" : "11rem" }}
         >
           <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 flex h-[25%] w-full -translate-x-1/2 -translate-y-1/2 items-center justify-center overflow-hidden">
-            <img
-              src="/pages/lobby/decor/ezipia.png"
-              alt=""
-              className="w-[33rem] select-none rotate-90 object-contain"
-              draggable={false}
-            />
+            {isDecorLoaded && (
+              <img
+                src={LOBBY_DECOR_SRC}
+                alt=""
+                className="w-[33rem] select-none rotate-90 object-contain"
+                draggable={false}
+              />
+            )}
           </div>
           {!isHappyBirthdayHidden && (
             <motion.button
@@ -490,12 +489,14 @@ const Lobby: React.FC = () => {
               <div
                 className={`relative overflow-hidden rounded-[1.1rem] ${isMobile ? "h-[6.4rem]" : "h-[10rem]"}`}
               >
-                <img
-                  src="/slogan/happybirthday.jpg"
-                  alt="리코 해피버스데이 슬로건"
-                  className="h-full w-full select-none object-cover object-center"
-                  draggable={false}
-                />
+                {isSloganLoaded && (
+                  <img
+                    src={LOBBY_SLOGAN_SRC}
+                    alt="리코 해피버스데이 슬로건"
+                    className="h-full w-full select-none object-cover object-center"
+                    draggable={false}
+                  />
+                )}
                 <div
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-0 rounded-[1.1rem]"

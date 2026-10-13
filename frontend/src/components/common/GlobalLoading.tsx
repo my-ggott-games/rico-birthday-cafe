@@ -8,6 +8,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { LOADING_MESSAGES } from "../../constants/loadingMessages";
+import { LOADING_ICON_SRC } from "../../constants/lobbyAssets";
 import {
   getPreviousPathname,
   setPageTransitionLoading,
@@ -193,8 +194,9 @@ const GlobalLoading: React.FC = () => {
               className="mb-8 rounded-full border-2 border-[#166D77] bg-pale-custard p-3 shadow-lg"
             >
               <img
-                src="/app/favicon.png"
+                src={LOADING_ICON_SRC}
                 alt="Loading"
+                fetchPriority="high"
                 className="w-20 h-20 object-contain"
                 draggable={false}
               />

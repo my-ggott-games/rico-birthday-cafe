@@ -1,3 +1,4 @@
+import { LOBBY_CHIKO_ATLAS_SRC } from "../../../constants/lobbyAssets";
 import type { LobbyNoteKey } from "../lobbyNotes";
 
 export type ChikoDirection =
@@ -21,7 +22,7 @@ export const CHIKO_ATLAS_FRAMES: ChikoDirection[] = [
   "diag-back-left",
 ];
 
-const DEFAULT_CHIKO_ATLAS = "/pages/lobby/chiko/atlas.webp";
+const DEFAULT_CHIKO_ATLAS = LOBBY_CHIKO_ATLAS_SRC;
 
 export const CHIKO_SPRITE_ASPECT = 349 / 320;
 
