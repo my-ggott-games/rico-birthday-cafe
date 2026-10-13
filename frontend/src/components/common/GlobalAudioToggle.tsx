@@ -2,6 +2,7 @@ import React from "react";
 import { matchPath, useLocation } from "react-router-dom";
 import { useAudioStore } from "../../store/useAudioStore";
 import { pushEvent } from "../../utils/analytics";
+import { LOBBY_BGM_SRC } from "../../utils/bgm";
 import { AppIcon } from "./AppIcon";
 import { NoteModal, type NoteModalContent } from "./NoteModal";
 
@@ -15,7 +16,7 @@ const AUDIO_ENABLED_ROUTES = [
 ];
 
 const AUDIO_NOTE_BY_BGM: Record<string, NoteModalContent> = {
-  "/sound/lobby-bgm.m4a": {
+  [LOBBY_BGM_SRC]: {
     title: "감자튀김 옴뇸뇸",
     eyebrow: "로비 BGM",
     icon: "StickyNote",
@@ -84,7 +85,7 @@ const AUDIO_NOTE_BY_BGM: Record<string, NoteModalContent> = {
 };
 
 const AUDIO_NOTE_BY_ROUTE: Record<string, NoteModalContent> = {
-  "/lobby": AUDIO_NOTE_BY_BGM["/sound/lobby-bgm.m4a"],
+  "/lobby": AUDIO_NOTE_BY_BGM[LOBBY_BGM_SRC],
 };
 
 export const GlobalAudioToggle: React.FC = () => {

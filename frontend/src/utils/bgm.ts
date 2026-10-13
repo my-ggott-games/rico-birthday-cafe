@@ -1,4 +1,4 @@
-export const LOBBY_BGM_SRC = "/sound/lobby-bgm.m4a";
+export const LOBBY_BGM_SRC = "/sound/lobby-bgm-128k.m4a";
 
 export const ACTIVITY_BGM_SOURCES = [
   "/sound/activity-bgm-1.m4a",
