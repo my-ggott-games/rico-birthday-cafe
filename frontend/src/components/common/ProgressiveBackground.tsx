@@ -14,7 +14,8 @@ type ProgressiveBackgroundProps = {
   onHighResVisible?: () => void;
 };
 
-const FADE_DURATION_MS = 220;
+// Must match the duration-[700ms] fade on the incoming image.
+const FADE_DURATION_MS = 700;
 
 const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
   thumbnailSrc,
@@ -129,12 +130,11 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
         draggable={false}
         fetchPriority={previewFetchPriority}
         decoding="async"
-        style={{ willChange: nextSrc ? "opacity, filter, transform" : "auto" }}
         className={[
-          "absolute inset-0 h-full w-full transition-[opacity,filter,transform] duration-[1800ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
-          nextSrc
-            ? "scale-100 opacity-25 blur-[10px] saturate-[0.96] brightness-[0.96] md:scale-[1.03]"
-            : "scale-100 opacity-100 blur-0 saturate-100 brightness-100",
+          // Only the tiny thumbnail is blurred (scaled up to hide blurred
+          // edges). Never dimmed: on slow lines it stays up for seconds.
+          "absolute inset-0 h-full w-full",
+          activeSrc === thumbnailSrc ? "scale-[1.04] blur-[10px]" : "",
           imageClassName,
         ].join(" ")}
       />
@@ -149,10 +149,8 @@ const ProgressiveBackground: React.FC<ProgressiveBackgroundProps> = ({
           onLoad={handleNextLoad}
           style={{ willChange: "opacity, filter, transform" }}
           className={[
-            "absolute inset-0 h-full w-full transition-[opacity,filter,transform] duration-[1800ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
-            isNextVisible
-              ? "scale-100 opacity-100 blur-0 saturate-100 brightness-100"
-              : "scale-[1.01] opacity-0 blur-[12px] saturate-[1.04] brightness-[1.03] md:scale-[1.025]",
+            "absolute inset-0 h-full w-full transition-[opacity,filter] duration-[700ms] ease-out",
+            isNextVisible ? "opacity-100 blur-0" : "opacity-0 blur-[6px]",
             imageClassName,
           ].join(" ")}
         />
