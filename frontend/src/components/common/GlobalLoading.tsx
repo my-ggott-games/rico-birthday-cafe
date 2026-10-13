@@ -22,7 +22,7 @@ import {
 
 const MAX_LOADING_MS = 8000;
 // Slow lines get longer to fetch the first screen before it is revealed.
-const SLOW_MAX_LOADING_MS = 12000;
+const SLOW_MAX_LOADING_MS = 8000;
 
 const GlobalLoading: React.FC = () => {
   const location = useLocation();
