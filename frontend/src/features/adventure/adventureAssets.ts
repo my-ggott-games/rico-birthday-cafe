@@ -29,7 +29,7 @@ export const ADVENTURE_PLAYER_FRAME_PATHS = ADVENTURE_PLAYER_TEXTURE_PATHS.defau
 
 export const ADVENTURE_CAKE_ASSET_PATHS = Array.from(
   { length: 13 },
-  (_, index) => `/assets/adventuregame/cake${index}.png`,
+  (_, index) => `/assets/adventuregame/cake${index}.webp`,
 );
 
 const ADVENTURE_EAGER_ASSET_PATHS = Array.from(

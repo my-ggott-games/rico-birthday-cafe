@@ -26,7 +26,7 @@ export const EMPTY_EQUIPMENT: EquippedState = {
 
 export const INVALID_POLAROID_SCALE = 0.5;
 export const VALID_POLAROID_SCALE = 1;
-const PNG_ASSET = (name: string) => `/assets/codygame/${name}.png`;
+const WEBP_ASSET = (name: string) => `/assets/codygame/${name}.webp`;
 
 export const LEGEND_ACHIEVEMENT_CODE = "LEGEND_COORDINATOR";
 export const CODY_DISCOVERED_COMBOS_KEY = "cody_discovered_combos";
@@ -66,8 +66,8 @@ export const AVAILABLE_ITEMS: CodyItem[] = [
     category: "hair" as const,
     slot: "hair" as const,
     layers: {
-      front: PNG_ASSET(front),
-      back: PNG_ASSET(back),
+      front: WEBP_ASSET(front),
+      back: WEBP_ASSET(back),
     },
   })),
   {
@@ -75,39 +75,39 @@ export const AVAILABLE_ITEMS: CodyItem[] = [
     category: "top",
     slot: "top",
     layerPriority: 28,
-    layers: { main: PNG_ASSET("top_1") },
+    layers: { main: WEBP_ASSET("top_1") },
   },
   {
     id: "skirt_1",
     category: "skirt",
     slot: "skirt",
-    layers: { main: PNG_ASSET("skirt_1") },
+    layers: { main: WEBP_ASSET("skirt_1") },
   },
   ...["dress_1", "dress_2", "dress_3", "dress_4", "dress_5"].map((id) => ({
     id,
     category: "dress" as const,
     slot: "dress" as const,
-    layers: { main: PNG_ASSET(id) },
+    layers: { main: WEBP_ASSET(id) },
   })),
   {
     id: "jacket_1",
     category: "jacket",
     slot: "jacket",
     layerPriority: 32,
-    layers: { main: PNG_ASSET("jacket_1") },
+    layers: { main: WEBP_ASSET("jacket_1") },
   },
   ...["shoes_1", "shoes_2", "shoes_3", "shoes_4", "shoes_5"].map((id) => ({
     id,
     category: "shoes" as const,
     slot: "shoes" as const,
-    layers: { main: PNG_ASSET(id) },
+    layers: { main: WEBP_ASSET(id) },
   })),
   ...DECO_ITEMS.map(({ id, slot, layerPriority }) => ({
     id,
     category: "deco" as const,
     slot,
     layerPriority,
-    layers: { main: PNG_ASSET(id) },
+    layers: { main: WEBP_ASSET(id) },
   })),
 ];
 

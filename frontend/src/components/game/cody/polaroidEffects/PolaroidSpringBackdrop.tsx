@@ -20,7 +20,7 @@ const randomBackgroundId =
   AVAILABLE_BACKGROUNDS[
     Math.floor(Math.random() * AVAILABLE_BACKGROUNDS.length)
   ];
-const cachedRandomBackground = `/assets/codygame/background_${randomBackgroundId}.jpg`;
+const cachedRandomBackground = `/assets/codygame/background_${randomBackgroundId}.webp`;
 
 export const PolaroidSpringBackdrop: React.FC<{ isFinished?: boolean }> = ({
   isFinished,

@@ -1,10 +1,9 @@
-const PNG_ASSET = (name: string) => `/assets/codygame/${name}.png`;
-const JPG_ASSET = (name: string) => `/assets/codygame/${name}.jpg`;
+const WEBP_ASSET = (name: string) => `/assets/codygame/${name}.webp`;
 
 const CODY_BASE_ASSETS = [
-  "/assets/codygame/riko_body_default.png",
-  "/assets/codygame/riko_body_smile.png",
-  "/assets/codygame/riko_body_wink.png",
+  "/assets/codygame/riko_body_default.webp",
+  "/assets/codygame/riko_body_smile.webp",
+  "/assets/codygame/riko_body_wink.webp",
 ];
 
 const CODY_BACKGROUND_ASSETS = [
@@ -24,7 +23,7 @@ const CODY_BACKGROUND_ASSETS = [
   "background_5-2",
   "background_5-3",
   "background_6-1",
-].map(JPG_ASSET);
+].map(WEBP_ASSET);
 
 const CODY_ITEM_ASSETS = [
   "top_1",
@@ -61,13 +60,13 @@ const CODY_ITEM_ASSETS = [
   "hair_2-1",
   "hair_2-2",
   "hair_2-3",
-].map(PNG_ASSET);
+].map(WEBP_ASSET);
 
 const EAGER_CODY_ASSETS = [
   ...CODY_BASE_ASSETS,
-  "/assets/codygame/background_1-1.jpg",
-  "/assets/codygame/background_2-1.jpg",
-  "/assets/codygame/background_3-1.jpg",
+  "/assets/codygame/background_1-1.webp",
+  "/assets/codygame/background_2-1.webp",
+  "/assets/codygame/background_3-1.webp",
 ];
 
 const ALL_CODY_ASSETS = Array.from(

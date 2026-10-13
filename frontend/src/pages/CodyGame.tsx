@@ -118,25 +118,25 @@ const CodyGame: React.FC = () => {
 
     if (matchedCombo) {
       const bgMap: Record<string, string> = {
-        oriental: "/assets/codygame/background_2-1.jpg",
-        rain: "/assets/codygame/background_3-1.jpg",
-        beer: "/assets/codygame/background_6-1.jpg",
-        knight: "/assets/codygame/background_4-1.jpg",
+        oriental: "/assets/codygame/background_2-1.webp",
+        rain: "/assets/codygame/background_3-1.webp",
+        beer: "/assets/codygame/background_6-1.webp",
+        knight: "/assets/codygame/background_4-1.webp",
       };
       initGame({
         equippedIds: equipped,
         formattedDate,
-        resultImage: "/assets/codygame/riko_body_smile.png",
+        resultImage: "/assets/codygame/riko_body_smile.webp",
         activeBackground:
           matchedCombo.backgroundClass || matchedCombo.backgroundUrl || null,
         orientalBgUrl: bgMap[matchedCombo.backgroundClass ?? ""] ?? null,
         springBgUrl:
           matchedCombo.backgroundClass === "spring"
-            ? "/assets/codygame/background_1-1.jpg"
+            ? "/assets/codygame/background_1-1.webp"
             : null,
         trainingBgUrl:
           matchedCombo.backgroundClass === "training"
-            ? "/assets/codygame/background_5-1.jpg"
+            ? "/assets/codygame/background_5-1.webp"
             : null,
         isFinished: true,
         showInventory: false,
@@ -145,7 +145,7 @@ const CodyGame: React.FC = () => {
       initGame({
         equippedIds: equipped,
         formattedDate,
-        resultImage: "/assets/codygame/riko_body_default.png",
+        resultImage: "/assets/codygame/riko_body_default.webp",
         activeBackground: "linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)",
         isFinished: true,
         showInventory: false,
@@ -306,8 +306,8 @@ const CodyGame: React.FC = () => {
           setIsFinished(true);
           setResultImage(
             [
-              "/assets/codygame/riko_body_smile.png",
-              "/assets/codygame/riko_body_wink.png",
+              "/assets/codygame/riko_body_smile.webp",
+              "/assets/codygame/riko_body_wink.webp",
             ][Math.floor(Math.random() * 2)],
           );
           setActiveBackground(
@@ -317,43 +317,43 @@ const CodyGame: React.FC = () => {
           if (matchedCombo.backgroundClass === "oriental") {
             setOrientalBgUrl(
               [
-                "/assets/codygame/background_2-1.jpg",
-                "/assets/codygame/background_2-2.jpg",
-                "/assets/codygame/background_2-3.jpg",
+                "/assets/codygame/background_2-1.webp",
+                "/assets/codygame/background_2-2.webp",
+                "/assets/codygame/background_2-3.webp",
               ][Math.floor(Math.random() * 3)],
             );
           } else if (matchedCombo.backgroundClass === "spring") {
             setSpringBgUrl(
               [
-                "/assets/codygame/background_1-1.jpg",
-                "/assets/codygame/background_1-2.jpg",
-                "/assets/codygame/background_1-3.jpg",
+                "/assets/codygame/background_1-1.webp",
+                "/assets/codygame/background_1-2.webp",
+                "/assets/codygame/background_1-3.webp",
               ][Math.floor(Math.random() * 3)],
             );
           } else if (matchedCombo.backgroundClass === "rain") {
             setOrientalBgUrl(
               [
-                "/assets/codygame/background_3-1.jpg",
-                "/assets/codygame/background_3-2.jpg",
-                "/assets/codygame/background_3-3.jpg",
+                "/assets/codygame/background_3-1.webp",
+                "/assets/codygame/background_3-2.webp",
+                "/assets/codygame/background_3-3.webp",
               ][Math.floor(Math.random() * 3)],
             );
           } else if (matchedCombo.backgroundClass === "beer") {
-            setOrientalBgUrl("/assets/codygame/background_6-1.jpg");
+            setOrientalBgUrl("/assets/codygame/background_6-1.webp");
           } else if (matchedCombo.backgroundClass === "knight") {
             setOrientalBgUrl(
               [
-                "/assets/codygame/background_4-1.jpg",
-                "/assets/codygame/background_4-2.jpg",
-                "/assets/codygame/background_4-3.jpg",
+                "/assets/codygame/background_4-1.webp",
+                "/assets/codygame/background_4-2.webp",
+                "/assets/codygame/background_4-3.webp",
               ][Math.floor(Math.random() * 3)],
             );
           } else if (matchedCombo.backgroundClass === "training") {
             setTrainingBgUrl(
               [
-                "/assets/codygame/background_5-1.jpg",
-                "/assets/codygame/background_5-2.jpg",
-                "/assets/codygame/background_5-3.jpg",
+                "/assets/codygame/background_5-1.webp",
+                "/assets/codygame/background_5-2.webp",
+                "/assets/codygame/background_5-3.webp",
               ][Math.floor(Math.random() * 3)],
             );
           }
@@ -413,7 +413,7 @@ const CodyGame: React.FC = () => {
         }, 100);
       } else {
         setIsFinished(true);
-        setResultImage("/assets/codygame/riko_body_default.png");
+        setResultImage("/assets/codygame/riko_body_default.webp");
 
         const gradients = [
           "linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)",

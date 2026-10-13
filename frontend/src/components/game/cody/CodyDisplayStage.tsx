@@ -81,7 +81,7 @@ export const CodyDisplayStage: React.FC<CodyDisplayStageProps> = ({
                 activeBackground === "spring" && (
                   <div className="absolute inset-0 z-0">
                     <img
-                      src={springBgUrl || "/assets/codygame/background_1-1.jpg"}
+                      src={springBgUrl || "/assets/codygame/background_1-1.webp"}
                       className="h-full w-full object-cover object-[center_30%]"
                       alt="background-scene"
                     />
@@ -93,7 +93,7 @@ export const CodyDisplayStage: React.FC<CodyDisplayStageProps> = ({
                   <div className="absolute inset-0 z-0">
                     <img
                       src={
-                        trainingBgUrl || "/assets/codygame/background_5-1.jpg"
+                        trainingBgUrl || "/assets/codygame/background_5-1.webp"
                       }
                       className="h-full w-full object-cover object-center"
                       alt="background-training"
@@ -108,7 +108,7 @@ export const CodyDisplayStage: React.FC<CodyDisplayStageProps> = ({
                   <div className="absolute inset-0 z-0">
                     <img
                       src={
-                        orientalBgUrl || "/assets/codygame/background_3-1.jpg"
+                        orientalBgUrl || "/assets/codygame/background_3-1.webp"
                       }
                       className="h-full w-full object-cover object-[center_10%]"
                       alt="background-scene"
